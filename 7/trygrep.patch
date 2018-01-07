@@ -1,0 +1,367 @@
+? trygrep.patch
+Index: doc/man/scons.1
+===================================================================
+RCS file: /cvsroot/scons/scons/doc/man/scons.1,v
+retrieving revision 1.196
+diff -u -3 -p -r1.196 scons.1
+--- doc/man/scons.1	25 Sep 2003 05:18:22 -0000	1.196
++++ doc/man/scons.1	4 Oct 2003 19:24:19 -0000
+@@ -5317,6 +5317,106 @@ this method returns 1 on success and 0 o
+ .I self.lastTarget 
+ is set to the build target node, if the build was successful.
+ 
++----------------------------
++
++.TP
++.RI CheckContext.TryGrepOutput( self ", " pattern ", " text ", " extension ", [" flags ] )
++Checks if a file with the specified 
++.I extension
++(e.g. '.c') containing 
++.I text 
++can be run using 
++.BR self.TryRun() .
++On success the program's output is searched for
++.IR pattern .
++
++.I pattern
++may be any pattern as defined by the Python module 
++.BR re ,
++the behaviour can be modified by specifying a flags
++value (see Module
++.B re
++for details).
++
++Returns the corresponding
++.IR re.MatchObject ,
++on success, 
++.I None
++if pattern is not found, and
++.I zero (0) 
++if compile or run failed.
++
++
++.TP
++.RI CheckContext.TryCPP( self ", " text ", " extension )
++Checks if a file with the specified 
++.I extension
++(e.g. '.c') containing 
++.I text 
++can be preprocessed using the environment's
++.B C
++preprocessor. On success,
++.I (1, outputStr)
++is returned, where
++.I outputStr
++is the output of the preprocessor.
++On failure
++.I (0, '')
++is returned.
++
++
++.B Known Bug:
++This currently only uses the C preprocessor.
++
++
++.TP
++.RI CheckContext.TryGrepCPP( self ", " pattern ", " text ", " extension ", [" flags ] )
++Checks if a file with the specified 
++.I extension
++(e.g. '.c') containing 
++.I text 
++can be preprocessed using 
++.BR TryCPP() .
++On success the preprocessor output is searched for
++.IR pattern .
++
++.I pattern
++may be any pattern as defined by the Python module 
++.BR re ,
++the behaviour can be modified by specifying a flags
++value (see Module
++.B re
++for details).
++
++Returns the corresponding
++.IR re.MatchObject ,
++on success, 
++.I None
++if pattern is not found, and
++.I zero (0) 
++if preprocessing failed.
++
++.B Known Bug:
++This currently only uses the C preprocessor.
++
++
++.TP
++.RI CheckContext.TryGrepHeader( self ", " pattern ", " headerfile ", " extension ", [" include_quotes ", " flags ])
++Looks whether 
++.I pattern
++is defined in the preprocessed header file
++.IR headerfile .
++This is done by passing a simple programm, which just includes the headfile,
++with the specified 
++.I extension
++(e.g. '.c') to
++.BR TryGrepCPP.
++See there for more inforamtion.
++
++
++----------------------------
++
++
+ .EE
+ Example for implementing and using custom tests:
+ 
+Index: src/engine/SCons/Conftest.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Conftest.py,v
+retrieving revision 1.1
+diff -u -3 -p -r1.1 Conftest.py
+--- src/engine/SCons/Conftest.py	30 Aug 2003 07:58:08 -0000	1.1
++++ src/engine/SCons/Conftest.py	4 Oct 2003 19:24:19 -0000
+@@ -425,7 +425,7 @@ def _Have(context, key, have):
+     string - Feature is defined to this string "#define key have".
+              Give "have" as is should appear in the header file, include quotes
+              when desired and escape special characters!
+-    """
++    """ # ' emacs happy
+     key_up = string.upper(key)
+     key_up = string.replace(key_up, ':', '_')
+     key_up = string.replace(key_up, '.', '_')
+Index: src/engine/SCons/SConf.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/SConf.py,v
+retrieving revision 1.9
+diff -u -3 -p -r1.9 SConf.py
+--- src/engine/SCons/SConf.py	17 Sep 2003 12:01:39 -0000	1.9
++++ src/engine/SCons/SConf.py	4 Oct 2003 19:24:20 -0000
+@@ -31,6 +31,7 @@ __revision__ = "__FILE__ __REVISION__ __
+ import cPickle
+ import os
+ import sys
++import re
+ import traceback
+ from types import *
+ 
+@@ -272,7 +273,8 @@ class SConf:
+         """Tries to execute the given action with optional source file
+         contents <text> and optional source file extension <extension>,
+         Returns the status (0 : failed, 1 : ok) and the contents of the
+-        output file.
++        output file. The target (a file containing the program text)
++        is saved in self.lastTarget (for further processing).
+         """
+         builder = SCons.Builder.Builder(action=action)
+         self.env.Append( BUILDERS = {'SConfActionBuilder' : builder} )
+@@ -316,6 +318,81 @@ class SConf:
+                 return( 1, outputStr)
+         return (0, "")
+ 
++
++    def TryCPP(self, text, extension):
++        """Tries to preprocess the program given in <text>, using <extension>
++        as file extension (e.g. '.c'). Returns (1, outputStr) on success,
++        (0, '') otherwise. The target (a file containing the program text)
++        is saved in self.lastTarget (for further processing).
++
++        Know bug: This currently only uses the C preprocessor.
++        """
++        # todo: simply appending '-E' to the end may not work on all plattforms
++        return self.TryAction('$CCCOM -E', text=text, extension=extension)
++
++    def TryGrepOutput(self, pattern, text, extension, flags=0):
++        """Tries to run the program given in text, using extension as
++        file extension (e.g. '.c') and searches the output for
++        <pattern>. <pattern> may be any pattern as defined by the Python
++        module 're'.
++        
++        The search's behaviour can be modified by specifying a flags
++        value (see Module 're' for details).
++
++        Returns the corresponding re.MatchObject on success, None if
++        not found, and zero (0) if compile or run failed.
++        """
++        # rationale: These return values allow easy testing on success
++        #      while differenciating between "failed on preprocessing"
++        #      and "not found"
++        # Note: implements autoconf's AC_EGREP_CPP
++        ok, outputStr = self.TryRun(text, extension)
++        if not ok: return 0
++        return re.search(pattern, outputStr, flags)
++
++    def TryGrepCPP(self, pattern, text, extension, flags=0):
++        """Tries to preprocess the given program given in <text>,
++        using <extension> as file extension (e.g. '.c') and searches
++        the content of the outputfile for <pattern>. <pattern> may be
++        any pattern as defined by the Python module 're'.
++
++        The search's behaviour can be modified by specifying a flags
++        value (see Module 're' for details).
++
++        Returns the corresponding re.MatchObject on success, None if
++        not found, and zero (0) if preprocessing failed.
++
++        Know bug: This currently only uses the C preprocessor.
++        """
++        # rationale: These return values allow easy testing on success
++        #      while differenciating between "failed on preprocessing"
++        #      and "not found"
++        # Note: implements autoconf's AC_EGREP_CPP
++        ok, outputStr = self.TryCPP(text, extension)
++        if not ok: return 0
++        return re.search(pattern, outputStr, flags)
++
++
++    def TryGrepHeader(self, pattern, header_name, extension, include_quotes = '<>', flags=0):
++        """Looks whether a certain symbol <pattern> is defined in header file
++        <header>. This is done by preprocessing a simple program
++        using <extension> as file extension (e.g. '.c') and searching
++        the content of the outputfile for <pattern>. <pattern> may be
++        any pattern as defined by the Python module 're'.
++
++        The search's behaviour can be modified by specifying a flags
++        value (see Module 're' for details).
++
++        Returns the corresponding re.MatchObject on success, None if
++        not found, and zero (0) if preprocessing failed.
++
++        Know bug: This currently only uses the C preprocessor.
++        """
++        # Note: implements autoconf's AC_EGREP_HEADER
++        text = "#include %s%s%s" % (include_quotes[0], header_name, include_quotes[1])
++        return self.TryGrepCPP(pattern, text, extension, flags)
++
++
+     class TestWrapper:
+         """A wrapper around Tests (to ensure sanity)"""
+         def __init__(self, test, sconf):
+@@ -562,6 +639,19 @@ class CheckContext:
+ 
+     def TryRun(self, *args, **kw):
+         return apply(self.sconf.TryRun, args, kw)
++
++    def TryGrepOutput(self, *args, **kw):
++        return apply(self.sconf.TryGrepOutput, args, kw)
++
++    def TryCPP(self, *args, **kw):
++        return apply(self.sconf.TryCPP, args, kw)
++
++    def TryGrepCPP(self, *args, **kw):
++        return apply(self.sconf.TryGrepCPP, args, kw)
++
++    def TryGrepHeader(self, *args, **kw):
++        return apply(self.sconf.TryGrepHeader, args, kw)
++
+ 
+     def __getattr__( self, attr ):
+         if( attr == 'env' ):
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/SConfTests.py,v
+retrieving revision 1.5
+diff -u -3 -p -r1.5 SConfTests.py
+--- src/engine/SCons/SConfTests.py	18 Jul 2003 17:52:20 -0000	1.5
++++ src/engine/SCons/SConfTests.py	4 Oct 2003 19:24:20 -0000
+@@ -253,8 +253,100 @@ int main() {
+             assert not ret and output == ""
+         finally:
+             sconf.Finish()
+-            
++
+         
++    def test_TryCPP(self):
++        """Test SConf.TryCPP
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                  conf_dir=self.test.workpath('config.tests'),
++                                  log_file=self.test.workpath('config.log'))
++        try:
++            (ret, output) = sconf.TryCPP('#include <stdio.h>', '.c')
++            assert ret and output != ""
++            (ret, output) = sconf.TryCPP('#include "no_std_header.h"', '.c')
++            assert not ret and output == ""
++        finally:
++            sconf.Finish()
++
++
++    def test_TryGrepCPP(self):
++        """Test SConf.TryGrepCPP and SConf.TryGrepHeader
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                  conf_dir=self.test.workpath('config.tests'),
++                                  log_file=self.test.workpath('config.log'))
++
++        header = 'stdio.h'
++        prog = '#include <%s>' % header
++        # htgoebel: I hope this is in stdio.h on all plattforms
++        pattern1 = 'extern int remove'
++        pattern2 = 'EXTERN .* REMOVE'
++        match1 = match2 = 'extern int remove'
++
++        try:
++            match = sconf.TryGrepCPP(pattern1, prog, '.c')
++            assert match and match.group() == match1
++            match = sconf.TryGrepCPP(pattern2, prog, '.c', flags=re.IGNORECASE)
++            assert match and match.group() == match2
++
++            match = sconf.TryGrepHeader(pattern1, header, '.c')
++            assert match and match.group() == match1
++            match = sconf.TryGrepHeader(pattern2, header, '.c', include_quotes="<>", flags=re.IGNORECASE)
++            #raise  match.group()
++            assert match and match.group() == match2
++
++            # wrong string
++            match = sconf.TryGrepCPP('XXXXX', prog, '.c')
++            assert match is None
++            match = sconf.TryGrepHeader('XXXXX', header, '.c')
++            assert match is None
++
++            match = sconf.TryGrepCPP(pattern1, 'no include direction', '.c')
++            assert match is None
++
++            # no header, can't preprocess
++            match = sconf.TryGrepCPP(pattern1, '#include <XXxxXX.h>', '.c')
++            assert match is 0
++            match = sconf.TryGrepHeader(pattern1, 'non_existing_include_file_.h', '.c')
++            assert match is 0
++        finally:
++            sconf.Finish()
++
++
++
++    def test_TryGrepOutput(self):
++        """Test SConf.TryGrepOutput
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                  conf_dir=self.test.workpath('config.tests'),
++                                  log_file=self.test.workpath('config.log'))
++        prog = """
++#include <stdio.h>
++int main() {
++  printf( "Hello" );
++  return 0;
++}
++"""
++        try:
++            # simple string
++            match = sconf.TryGrepOutput('Hello', prog, '.c')
++            assert match and match.group() == 'Hello'
++            # simple pattern + ignore case flag
++            match = sconf.TryGrepOutput('HEL+O', prog, '.c', flags=re.IGNORECASE)
++            assert match and match.group() == 'Hello'
++            # wrong string
++            match = sconf.TryGrepOutput('XXXXX', prog, '.c')
++            assert match is None, match
++            # no programm / can't run
++            match = sconf.TryGrepOutput('XXXXX', 'not a c program', '.c')
++            assert match is 0, match
++        finally:
++            sconf.Finish()
++
+ 
+     def test_StandardTests(self):
+         """Test standard checks
