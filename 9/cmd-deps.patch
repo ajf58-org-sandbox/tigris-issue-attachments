@@ -1,0 +1,825 @@
+Index: etc/TestSCons.py
+===================================================================
+RCS file: /cvsroot/scons/scons/etc/TestSCons.py,v
+retrieving revision 1.32
+diff -u -r1.32 TestSCons.py
+--- etc/TestSCons.py	10 Nov 2003 16:13:14 -0000	1.32
++++ etc/TestSCons.py	23 Nov 2003 18:50:22 -0000
+@@ -232,6 +232,19 @@
+         except KeyError:
+             return None
+ 
++    def whereis(self, var, prog=None):
++        import SCons.Environment
++        env = SCons.Environment.Environment()
++        try:
++            if prog is None:
++                prog = env[var]
++            if env[var] == prog:
++                return env.WhereIs(prog)
++            else:
++                return None
++        except KeyError:
++            return None
++
+     def detect_tool(self, tool, prog=None):
+         """
+         Given a tool (i.e., tool specification that would be passed
+Index: src/engine/SCons/Action.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Action.py,v
+retrieving revision 1.49
+diff -u -r1.49 Action.py
+--- src/engine/SCons/Action.py	18 Nov 2003 07:10:57 -0000	1.49
++++ src/engine/SCons/Action.py	23 Nov 2003 18:50:24 -0000
+@@ -294,6 +294,20 @@
+                                       SCons.Util.target_prep(target),
+                                       SCons.Util.source_prep(source))
+ 
++    def get_implicit_deps(self, target, source, env):
++        import SCons.Node.FS
++        cmd_list = SCons.Util.scons_subst_list(self.cmd_list, env,
++                                               SCons.Util.SUBST_CMD,
++                                               target,
++                                               source)
++        res = []
++        for cmd_line in cmd_list:
++            d = env.WhereIs(str(cmd_line[0]))
++            if d:
++                res.append(SCons.Node.FS.default_fs.File(d))
++        return res
++            
++
+ class CommandGeneratorAction(ActionBase):
+     """Class for command-generator actions."""
+     def __init__(self, generator):
+@@ -333,6 +347,9 @@
+         """
+         return self.__generate(target, source, env, 1).get_contents(target, source, env)
+ 
++    def get_implicit_deps(self, target, source, env):
++        return self.__generate(target, source, env, 0).get_implicit_deps(target, source, env)
++
+ class LazyCmdGenerator:
+     """This is a simple callable class that acts as a command generator.
+     It holds on to a key into an Environment dictionary, then waits
+@@ -412,6 +429,9 @@
+         return str(code) + env.subst(string.join(map(lambda v: '${'+v+'}',
+                                                      self.varlist)))
+ 
++    def get_implicit_deps(self, target, source, env):
++        return []
++
+ class ListAction(ActionBase):
+     """Class for lists of other actions."""
+     def __init__(self, list):
+@@ -448,3 +468,9 @@
+                                       x.get_contents(t, s, e),
+                                self.list),
+                            "")
++
++    def get_implicit_deps(self, target, source, env):
++        res = []
++        for a in self.list:
++            res.extend(a.get_implicit_deps(target, source, env))
++        return res
+Index: src/engine/SCons/ActionTests.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/ActionTests.py,v
+retrieving revision 1.44
+diff -u -r1.44 ActionTests.py
+--- src/engine/SCons/ActionTests.py	13 Oct 2003 13:20:28 -0000	1.44
++++ src/engine/SCons/ActionTests.py	23 Nov 2003 18:50:28 -0000
+@@ -135,6 +135,11 @@
+         d['SOURCES'] = ['__s1__', '__s2__', '__s3__', '__s4__', '__s5__', '__s6__']
+         d['SOURCE'] = d['SOURCES'][0]
+         return d
++    def WhereIs(self,x):
++        if x != "nocmd":
++            return x
++        else:
++            return None
+ 
+ class DummyNode:
+     def __init__(self, name):
+@@ -751,6 +756,41 @@
+         c = a.get_contents(target=t, source=s, env=env)
+         assert c == "s4 s5", c
+ 
++    def test_get_implcit_deps(self):
++        """Testing implicit dependencies of command actions
++        """
++        a = SCons.Action.CommandAction(["x"])
++        id = map(str, a.get_implicit_deps([], [], Environment()))
++        assert id == ["x"], id
++
++        a = SCons.Action.CommandAction(["nocmd"])
++        id = map(str, a.get_implicit_deps([], [], Environment()))
++        assert id == [], id
++
++        # We might want to detect situations like the two following.
++        # For now, this stands out as a possible bug ...
++        a = SCons.Action.CommandAction(["a && b"])
++        id = map(str, a.get_implicit_deps([], [], Environment()))
++        #assert id == ["a", "b"], id
++
++        a = SCons.Action.CommandAction(["a || b"])
++        id = map(str, a.get_implicit_deps([], [], Environment()))
++        #assert id == ["a", "b"], id
++
++        a = SCons.Action.CommandAction(["$FOO"])
++        id = map(str, a.get_implicit_deps([], [], Environment(FOO="cmd")))
++        assert id == ["cmd"], id
++
++        id = map(str, a.get_implicit_deps([], [], Environment(FOO="cmd X")))
++        assert id == ["cmd"], id
++
++        id = map(str, a.get_implicit_deps([], [], Environment(FOO="nocmd")))
++        assert id == [], id
++
++        id = map(str, a.get_implicit_deps([], [], Environment(FOO="nocmd X")))
++        assert id == [], id
++
++
+ class CommandGeneratorActionTestCase(unittest.TestCase):
+ 
+     def test_init(self):
+@@ -847,7 +887,15 @@
+                                            ignore = 'foo', test=test))
+         assert c == "guux FFF BBB test", c
+ 
+-
++    def test_implicit_deps(self):
++        """Test implicit dependencies of command generator actions
++        """
++        def f(target,source,env,for_signature):
++            return [["cmd"]]
++        a = SCons.Action.CommandGeneratorAction(f)
++        id = map(str, a.get_implicit_deps([],[],Environment()))
++        assert id == ["cmd"], id
++        
+ class FunctionActionTestCase(unittest.TestCase):
+ 
+     def test_init(self):
+@@ -964,6 +1012,13 @@
+         c = a.get_contents(target=[], source=[], env=Environment(XYZ = 'foo'))
+         assert c == "\177\036\000\177\037\000d\000\000Sfoo", repr(c)
+ 
++    def test_get_implcit_deps(self):
++        """Test implicit dependencies of function actions
++        """
++        a = SCons.Action.FunctionAction(Func)
++        id = map(str, a.get_implicit_deps([],[],Environment()))
++        assert id == []
++
+ class ListActionTestCase(unittest.TestCase):
+ 
+     def test_init(self):
+@@ -1047,6 +1102,13 @@
+         assert self.foo==1, self.foo
+         assert c == "xyz", c
+ 
++    def test_get_implcit_deps(self):
++        """Test implicit dependencies of list actions
++        """
++        a = SCons.Action.ListAction(["x", "y", "nocmd"])
++        id = map(str, a.get_implicit_deps([],[],Environment()))
++        assert id == ["x", "y"], id
++
+ class LazyActionTestCase(unittest.TestCase):
+     def test_init(self):
+         """Test creation of a lazy-evaluation Action
+@@ -1090,6 +1152,15 @@
+                            env = Environment(FOO = [["This", "is", "$(", "$a", "$)", "test"]]))
+         assert c == "This is test", c
+ 
++    def test_get_implicit_deps(self):
++        """Test implicit dependencies of a lazy-evaluation action
++        """
++        a = SCons.Action.Action("$FOO")
++        id = map(str, a.get_implicit_deps([],[], Environment(FOO = "cmd")))
++        assert id == ["cmd"], id
++        
++        id = map(str, a.get_implicit_deps([],[], Environment(FOO = "nocmd")))
++        assert id == [], id
+ 
+ if __name__ == "__main__":
+     suite = unittest.TestSuite()
+Index: src/engine/SCons/Builder.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Builder.py,v
+retrieving revision 1.102
+diff -u -r1.102 Builder.py
+--- src/engine/SCons/Builder.py	20 Sep 2003 14:36:55 -0000	1.102
++++ src/engine/SCons/Builder.py	23 Nov 2003 18:50:32 -0000
+@@ -441,6 +441,11 @@
+         """
+         self.emitter[suffix] = emitter
+ 
++    def get_implicit_deps(self, target, source, env):
++        """Return the implicit dependencies for this builder, i.e.
++        the nodes of the commands to be executed"""
++        return self.action.get_implicit_deps(target, source, env)
++
+ class ListBuilder(SCons.Util.Proxy):
+     """A Proxy to support building an array of targets (for example,
+     foo.o and foo.h from foo.y) from a single Action execution.
+Index: src/engine/SCons/Executor.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Executor.py,v
+retrieving revision 1.2
+diff -u -r1.2 Executor.py
+--- src/engine/SCons/Executor.py	18 Oct 2003 19:22:24 -0000	1.2
++++ src/engine/SCons/Executor.py	23 Nov 2003 18:50:32 -0000
+@@ -139,3 +139,9 @@
+         timestamp module.
+         """
+         return 0
++
++    def get_implicit_deps(self):
++        """Return the executor's implicit dependencies, i.e. the nodes of
++        the commands to be executed."""
++        res=self.builder.get_implicit_deps(self.targets, self.sources, self.get_build_env())
++        return res
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Node/FS.py,v
+retrieving revision 1.140
+diff -u -r1.140 FS.py
+--- src/engine/SCons/Node/FS.py	12 Nov 2003 15:14:47 -0000	1.140
++++ src/engine/SCons/Node/FS.py	23 Nov 2003 18:50:37 -0000
+@@ -492,12 +492,18 @@
+     class."""
+ 
+     def rfile(self):
+-        """We're a generic Entry, but the caller is actually looking for
+-        a File at this point, so morph into one."""
+-        self.__class__ = File
+-        self._morph()
+-        self.clear()
+-        return File.rfile(self)
++        """Though named r*file*, this may also be a directory, so we have
++        to check the filesystem"""
++        if os.path.isdir(self.abspath):
++            self.__class__ = Dir
++            self._morph()
++            self.clear()
++            return Dir.rfile(self)
++        else:
++            self.__class__ = File
++            self._morph()
++            self.clear()
++            return File.rfile(self)
+ 
+     def get_found_includes(self, env, scanner, target):
+         """If we're looking for included files, it's because this Entry
+Index: src/engine/SCons/Node/FSTests.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Node/FSTests.py,v
+retrieving revision 1.111
+diff -u -r1.111 FSTests.py
+--- src/engine/SCons/Node/FSTests.py	9 Nov 2003 04:16:29 -0000	1.111
++++ src/engine/SCons/Node/FSTests.py	23 Nov 2003 18:50:42 -0000
+@@ -101,6 +101,9 @@
+     def source_factory(self, name):
+         return self.factory(name)
+ 
++    def get_implicit_deps(self, target, source, env):
++        return []
++
+ class BuildDirTestCase(unittest.TestCase):
+     def runTest(self):
+         """Test build dir functionality"""
+Index: src/engine/SCons/Node/NodeTests.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Node/NodeTests.py,v
+retrieving revision 1.73
+diff -u -r1.73 NodeTests.py
+--- src/engine/SCons/Node/NodeTests.py	24 Jul 2003 08:11:18 -0000	1.73
++++ src/engine/SCons/Node/NodeTests.py	23 Nov 2003 18:50:45 -0000
+@@ -42,6 +42,7 @@
+ class MyAction:
+     def __init__(self):
+         self.order = 0
++        self.my_implicit_deps = []
+         
+     def __call__(self, target, source, env):
+         global built_it, built_target, built_source, built_args, built_order
+@@ -56,12 +57,16 @@
+     def get_actions(self):
+         return [self]
+ 
++    def get_implicit_deps(self, target, source, env):
++        return self.my_implicit_deps
++
+ class MyNonGlobalAction:
+     def __init__(self):
+         self.order = 0
+         self.built_it = None
+         self.built_target =  None
+         self.built_source =  None
++        self.my_implicit_deps = []
+ 
+     def __call__(self, target, source, env):
+         # Okay, so not ENTIRELY non-global...
+@@ -77,6 +82,9 @@
+     def get_actions(self):
+         return [self]
+ 
++    def get_implicit_deps(self, target, source, env):
++        return self.my_implicit_deps
++
+ class Environment:
+     def Dictionary(self, *args):
+         return {}
+@@ -94,6 +102,8 @@
+         return [self.action]
+     def get_contents(self, target, source, env):
+         return 7
++    def get_implicit_deps(self, target, source, env):
++        return self.action.get_implicit_deps(target,source,env)
+ 
+ class NoneBuilder(Builder):
+     def execute(self, target, source, env):
+@@ -610,6 +620,15 @@
+         e.found_includes = [f]
+         deps = node.get_implicit_deps(env, s, target)
+         assert deps == [d, e, f], map(str, deps)
++
++        # Builder implicit dependencies
++        f = SCons.Node.Node()
++        g = SCons.Node.Node()
++        f.builder = Builder()
++        f.builder.action.my_implicit_deps = [g]
++        deps = f.get_implicit_deps(env, s, target)
++        assert deps == [g], map(str, deps)
++        
+ 
+     def test_scan(self):
+         """Test Scanner functionality
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Node/__init__.py,v
+retrieving revision 1.115
+diff -u -r1.115 __init__.py
+--- src/engine/SCons/Node/__init__.py	7 Oct 2003 03:37:15 -0000	1.115
++++ src/engine/SCons/Node/__init__.py	23 Nov 2003 18:50:48 -0000
+@@ -305,23 +305,33 @@
+ 
+     def get_implicit_deps(self, env, scanner, target):
+         """Return a list of implicit dependencies for this node.
++        Implicit dependencies are the dependencies returned from the
++        scanner plus the dependencies returned from the executor.
+ 
+         This method exists to handle recursive invocation of the scanner
+         on the implicit dependencies returned by the scanner, if the
+         scanner's recursive flag says that we should.
+         """
++        
++        nodes = [self]
++        seen = {}
++        seen[self] = 1
++        
++        if self.has_builder():
++            deps = self.get_executor().get_implicit_deps()
++            for n in deps:
++                seen[n] = 1
++        else:
++            deps = []
++        
+         if not scanner:
+-            return []
++            return deps
+ 
+         try:
+             recurse = scanner.recursive
+         except AttributeError:
+             recurse = None
+ 
+-        nodes = [self]
+-        seen = {}
+-        seen[self] = 1
+-        deps = []
+         while nodes:
+            n = nodes.pop(0)
+            d = filter(lambda x, seen=seen: not seen.has_key(x),
+Index: test/option--debug.py
+===================================================================
+RCS file: /cvsroot/scons/scons/test/option--debug.py,v
+retrieving revision 1.18
+diff -u -r1.18 option--debug.py
+--- test/option--debug.py	18 Jun 2003 18:35:59 -0000	1.18
++++ test/option--debug.py	23 Nov 2003 18:50:49 -0000
+@@ -32,6 +32,10 @@
+ 
+ test = TestSCons.TestSCons()
+ 
++CC = test.whereis('CC')
++LINK = test.whereis('LINK')
++if LINK is None: LINK = CC
++
+ test.write('SConstruct', """
+ env = Environment(OBJSUFFIX = '.ooo', PROGSUFFIX = '.xxx')
+ env.Program('foo', Split('foo.c bar.c'))
+@@ -73,11 +77,14 @@
+   | +-foo.c
+   | +-foo.h
+   | +-bar.h
++  | +-%s
+   +-bar.ooo
+-    +-bar.c
+-    +-bar.h
+-    +-foo.h
+-"""
++  | +-bar.c
++  | +-bar.h
++  | +-foo.h
++  | +-%s
++  +-%s
++""" % (CC, CC, LINK)
+ 
+ test.fail_test(string.find(test.stdout(), tree) == -1)
+ 
+@@ -117,22 +124,27 @@
+   | +-bar.c
+   | +-bar.h
+   | +-foo.h
++  | +-%s
+   +-foo.c
+   +-foo.h
+   +-foo.ooo
+   | +-foo.c
+   | +-foo.h
+   | +-bar.h
++  | +-%s
+   +-foo.xxx
+     +-foo.ooo
+     | +-foo.c
+     | +-foo.h
+     | +-bar.h
++    | +-%s
+     +-bar.ooo
+-      +-bar.c
+-      +-bar.h
+-      +-foo.h
+-"""
++    | +-bar.c
++    | +-bar.h
++    | +-foo.h
++    | +-%s
++    +-%s
++""" % (CC, CC, CC, CC, LINK)
+ test.run(arguments = "--debug=tree .")
+ test.fail_test(string.find(test.stdout(), tree) == -1)
+ 
+Index: test/sconsign-script.py
+===================================================================
+RCS file: /cvsroot/scons/scons/test/sconsign-script.py,v
+retrieving revision 1.7
+diff -u -r1.7 sconsign-script.py
+--- test/sconsign-script.py	3 Nov 2003 23:29:02 -0000	1.7
++++ test/sconsign-script.py	23 Nov 2003 18:50:50 -0000
+@@ -42,16 +42,19 @@
+     test.no_result(1)
+ 
+ def sort_match(test, lines, expect):
++    #import sys; sys.stderr.write("expect = \n" + expect + "\nlines = \n" + lines)
+     lines = string.split(lines, '\n')
+     lines.sort()
+     expect = string.split(expect, '\n')
+     expect.sort()
+     return test.match_re(lines, expect)
+ 
+-test = TestSCons.TestSCons(match = TestCmd.match_re)
+-
+-
++test = TestSCons.TestSCons(match = TestCmd.match_re_dotall)
+ 
++CC = test.whereis('CC')
++LINK = test.whereis('LINK')
++if LINK is None:
++    LINK = CC
+ 
+ test.subdir('work1', ['work1', 'sub1'], ['work1', 'sub2'],
+             'work2', ['work2', 'sub1'], ['work2', 'sub2'])
+@@ -100,8 +103,10 @@
+          arguments = "work1/sub1/.sconsign",
+          stdout = """\
+ hello.exe: None \S+ None
++        %s
+ hello.obj: None \S+ None
+-""")
++        %s
++""" % (LINK,LINK) )
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+@@ -111,11 +116,15 @@
+     timestamp: None
+     bsig: \S+
+     csig: None
++    implicit:
++        %s
+ hello.obj:
+     timestamp: None
+     bsig: \S+
+     csig: None
+-""")
++    implicit:
++        %s
++""" % (LINK,CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+@@ -142,39 +151,52 @@
+          arguments = "-e hello.obj work1/sub1/.sconsign",
+          stdout = """\
+ hello.obj: None \S+ None
+-""")
++        %s
++""" % (CC) )
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-e hello.obj -e hello.exe -e hello.obj work1/sub1/.sconsign",
+          stdout = """\
+ hello.obj: None \S+ None
++        %s
+ hello.exe: None \S+ None
++        %s
+ hello.obj: None \S+ None
+-""")
++        %s
++""" % (CC, LINK, CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "work1/sub2/.sconsign",
+          stdout = """\
+ hello.exe: None \S+ None
++        %s
+ hello.obj: None \S+ None
+         %s
+         %s
+-""" % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++        %s
++""" % (LINK,
++       string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
++       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++       CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-i -v work1/sub2/.sconsign",
+          stdout = """\
+ hello.exe:
++    implicit:
++        %s
+ hello.obj:
+     implicit:
+         %s
+         %s
+-""" % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++        %s
++""" % (LINK,
++       string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
++       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++       CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+@@ -183,9 +205,13 @@
+ hello.obj: None \S+ None
+         %s
+         %s
++        %s
+ hello.obj: None \S+ None
++        %s
+ """ % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++       CC,
++       CC))
+ 
+ test.run(chdir = 'work1', arguments = '--clean .')
+ 
+@@ -208,9 +234,11 @@
+ 
+ test.fail_test(not sort_match(test, test.stdout(), """\
+ hello.exe: None \S+ None
++        %s
+ hello.c: \d+ None \d+
+ hello.obj: None \S+ None
+-"""))
++        %s
++""" % (LINK, CC)))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+@@ -218,9 +246,11 @@
+ 
+ test.fail_test(not sort_match(test, test.stdout(), """\
+ hello.exe: None \S+ None
++        %s
+ hello.c: '\S+ \S+ [ \d]\d \d\d:\d\d:\d\d \d\d\d\d' None \d+
+ hello.obj: None \S+ None
+-"""))
++        %s
++""" % (LINK, CC)))
+ 
+ 
+ ##############################################################################
+@@ -269,35 +299,49 @@
+          program = sconsign,
+          arguments = "work2/.sconsign.dbm",
+          stdout = """\
+-=== sub1:
++.*=== sub1:
+ hello.exe: None \S+ None
++        %s
+ hello.obj: None \S+ None
++        %s
+ === sub2:
+ hello.exe: None \S+ None
++        %s
+ hello.obj: None \S+ None
+         %s
+         %s
+-""" % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++        %s
++.*""" % (LINK,
++         CC,
++         LINK,
++         string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
++         string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++         CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-v work2/.sconsign.dbm",
+          stdout = """\
+-=== sub1:
++.*=== sub1:
+ hello.exe:
+     timestamp: None
+     bsig: \S+
+     csig: None
++    implicit:
++        %s
+ hello.obj:
+     timestamp: None
+     bsig: \S+
+     csig: None
++    implicit:
++        %s
+ === sub2:
+ hello.exe:
+     timestamp: None
+     bsig: \S+
+     csig: None
++    implicit:
++        %s
+ hello.obj:
+     timestamp: None
+     bsig: \S+
+@@ -305,14 +349,19 @@
+     implicit:
+         %s
+         %s
+-""" % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++        %s
++.*""" % (LINK,
++         CC,
++         LINK,
++         string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
++         string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++         CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-b -v work2/.sconsign.dbm",
+          stdout = """\
+-=== sub1:
++.*=== sub1:
+ hello.exe:
+     bsig: \S+
+ hello.obj:
+@@ -322,13 +371,13 @@
+     bsig: \S+
+ hello.obj:
+     bsig: \S+
+-""")
++.*""")
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-c -v work2/.sconsign.dbm",
+          stdout = """\
+-=== sub1:
++.*=== sub1:
+ hello.exe:
+     csig: None
+ hello.obj:
+@@ -338,57 +387,88 @@
+     csig: None
+ hello.obj:
+     csig: None
+-""")
++.*""")
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-e hello.obj work2/.sconsign.dbm",
++         # Fix me: Should these messages really appear on stderr ?
++         stderr = r"""(sconsign: no entry[^\n]*\n)*""",
+          stdout = """\
+-=== sub1:
++.*=== sub1:
+ hello.obj: None \S+ None
++        %s
+ === sub2:
+ hello.obj: None \S+ None
+         %s
+         %s
+-""" % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++        %s
++.*""" % (CC,
++         string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
++         string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++         CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-e hello.obj -e hello.exe -e hello.obj work2/.sconsign.dbm",
++         # Fix me: Should these messages really appear on stderr ?
++         stderr = r"""(sconsign: no entry[^\n]*\n)*""",
+          stdout = """\
+-=== sub1:
++.*=== sub1:
+ hello.obj: None \S+ None
++        %s
+ hello.exe: None \S+ None
++        %s
+ hello.obj: None \S+ None
++        %s
+ === sub2:
+ hello.obj: None \S+ None
+         %s
+         %s
++        %s
+ hello.exe: None \S+ None
++        %s
+ hello.obj: None \S+ None
+         %s
+         %s
+-""" % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
++        %s
++.*""" % (CC,
++       LINK,
++       CC,
++       string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+        string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++       CC,
++       LINK,
+        string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++       CC))
+ 
+ test.run(interpreter = TestSCons.python,
+          program = sconsign,
+          arguments = "-i -v work2/.sconsign.dbm",
+          stdout = """\
+-=== sub1:
++.*=== sub1:
+ hello.exe:
++    implicit:
++        %s
+ hello.obj:
++    implicit:
++        %s
+ === sub2:
+ hello.exe:
++    implicit:
++        %s
+ hello.obj:
+     implicit:
+         %s
+         %s
+-""" % (string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
+-       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\')))
++        %s
++""" % (LINK,
++       CC,
++       LINK,
++       string.replace(os.path.join('sub2', 'inc1.h'), '\\', '\\\\'),
++       string.replace(os.path.join('sub2', 'inc2.h'), '\\', '\\\\'),
++       CC))
+ 
+ test.run(chdir = 'work2', arguments = '--clean .')
+ 
