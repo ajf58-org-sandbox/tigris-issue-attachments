@@ -1,0 +1,28 @@
+*** C:\Documents and Settings\jkint\My Documents\scons-local-0.92\SCons\Platform\win32.py	Tue Aug 19 19:35:54 2003
+--- win32.py	Fri Aug 29 11:06:29 2003
+***************
+*** 179,184 ****
+--- 179,201 ----
+          return 127
+      else:
+          try:
++             exe = args[0]
++             # find the command in the path
++             path = string.split( env['PATH'], ';' )
++             for dir in path:
++                 fullcmd = dir
++                 # make sure the command is a full path
++                 if dir[-1] != os.sep:
++                     fullcmd += os.sep
++                 fullcmd += exe
++                 if len(exe) < 4 or exe[-4] != '.exe':
++                     fullcmd += '.exe'
++                 #if it exists at this location, run it
++                 #(this assumes that some idiot didn't name a file/directory with a .exe)
++                 if os.path.exists(fullcmd):
++                     args[0] = escape(fullcmd)
++                     return os.spawnve( os.P_WAIT, fullcmd, args, env )
++             # try the original approach
+              args = [sh, '/C', escape(string.join(args)) ]
+              ret = os.spawnve(os.P_WAIT, sh, args, env)
+          except OSError, e:
