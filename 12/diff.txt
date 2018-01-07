@@ -1,0 +1,203 @@
+Index: doc/man/scons.1
+===================================================================
+RCS file: /cvsroot/scons/scons/doc/man/scons.1,v
+retrieving revision 1.237
+diff -u -r1.237 scons.1
+--- doc/man/scons.1	19 May 2004 17:53:13 -0000	1.237
++++ doc/man/scons.1	21 May 2004 21:55:42 -0000
+@@ -3335,6 +3335,7 @@
+ when all the directories in which SConscript files may be found
+ don't necessarily exist locally.)
+ 
++
+ You may enable and disable
+ this ability by calling
+ SConscriptChdir()
+@@ -3347,6 +3348,15 @@
+ env.SConscriptChdir(1)
+ SConscript('bar/SConscript')	# will chdir to bar
+ .EE
++.IP
++
++If you are using build directories, then you can cause SCons to
++change into the build directory rather than the source directory by
++specifying:
++
++.ES
++SConscriptChdir('build')
++.EE
+ 
+ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+Index: src/engine/SCons/Script/SConscript.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Script/SConscript.py,v
+retrieving revision 1.92
+diff -u -r1.92 SConscript.py
+--- src/engine/SCons/Script/SConscript.py	19 Apr 2004 03:43:12 -0000	1.92
++++ src/engine/SCons/Script/SConscript.py	21 May 2004 21:55:46 -0000
+@@ -200,28 +200,27 @@
+                     if os.path.exists(s):
+                         _file_ = open(s, "r")
+                 if _file_:
+-                    # Chdir to the SConscript directory.  Use a path
+-                    # name relative to the SConstruct file so that if
+-                    # we're using the -f option, we're essentially
+-                    # creating a parallel SConscript directory structure
+-                    # in our local directory tree.
++                    # Chdir to the SConscript directory.
+                     #
+                     # XXX This is broken for multiple-repository cases
+                     # where the SConstruct and SConscript files might be
+                     # in different Repositories.  For now, cross that
+                     # bridge when someone comes to it.
+                     ldir = fs.Dir(f.dir.get_path(sd))
+-                    try:
+-                        fs.chdir(ldir, change_os_dir=sconscript_chdir)
+-                    except OSError:
+-                        # There was no local directory, so we should be
+-                        # able to chdir to the Repository directory.
++                    if sconscript_chdir == 'build' and ldir.exists():
++                        fs.chdir(ldir, change_os_dir=1)
++                    elif sconscript_chdir:
++                        # By default We change to the source
++                        # directory because typically
++                        # people want the cwd to be
++                        # the directory that has the source files
++                        # so they can do a glob.
+                         # Note that we do this directly, not through
+                         # fs.chdir(), because we still need to
+                         # interpret the stuff within the SConscript file
+                         # relative to where we are logically.
+                         fs.chdir(ldir, change_os_dir=0)
+-                        os.chdir(f.rfile().dir.get_abspath())
++                        os.chdir(f.srcnode().dir.get_abspath())
+ 
+                     # Append the SConscript directory to the beginning
+                     # of sys.path so Python modules in the SConscript
+Index: test/BuildDir.py
+===================================================================
+RCS file: /cvsroot/scons/scons/test/BuildDir.py,v
+retrieving revision 1.30
+diff -u -r1.30 BuildDir.py
+--- test/BuildDir.py	14 Sep 2003 19:29:01 -0000	1.30
++++ test/BuildDir.py	21 May 2004 21:55:48 -0000
+@@ -59,7 +59,7 @@
+ bar51 = test.workpath('build', 'var5', 'bar1' + _exe)
+ bar52 = test.workpath('build', 'var5', 'bar2' + _exe)
+ 
+-test.subdir('work1', 'work2', 'work3')
++test.subdir('work1', 'work2', 'work3', 'work4', 'work5', 'work6', 'work7')
+ 
+ test.write(['work1', 'SConstruct'], """
+ src = Dir('src')
+@@ -383,4 +383,106 @@
+ non_existing.h:
+ """)
+ 
++# Test globing for sources with BuildDir(duplicate=0)
++test.write( ['work4', 'SConstruct'], """\
++BuildDir('build', '.', duplicate=0) 
++SConscript('build/SConscript')
++""")
++
++test.write( ['work4', 'SConscript'], """\
++import glob
++sources = glob.glob('*.in')
++assert len(sources) == 1, len(sources)
++assert sources[0] == 'foo.in', sources[0]
++InstallAs('bar.in', 'foo.in')
++""")
++
++test.write( ['work4', 'foo.in'], "foo.in")
++
++test.run(chdir='work4')
++test.run(chdir='work4')
++
++# Test globing for sources with BuildDir(duplicate=1)
++test.write( ['work5', 'SConstruct'], """\
++BuildDir('build', '.', duplicate=1) 
++SConscript('build/SConscript')
++""")
++
++test.write( ['work5', 'SConscript'], """\
++import glob
++import os
++sources = glob.glob('*.in')
++print os.getcwd()
++assert len(sources) == 1, len(sources)
++assert sources[0] == 'foo.in', sources[0]
++InstallAs('bar.in', 'foo.in')
++""")
++
++test.write( ['work5', 'foo.in'], "foo.in")
++
++test.run(chdir='work5')
++test.run(chdir='work5')
++
++# Test globing for sources with BuildDir(duplicate=0) and SConscriptChdir('build').
++# The point here is that globing for sources does work with this setup.
++test.write( ['work6', 'SConstruct'], """\
++BuildDir('build', '.', duplicate=0)
++SConscriptChdir('build')
++SConscript('build/SConscript')
++""")
++
++test.write( ['work6', 'SConscript'], """\
++import glob
++sources = glob.glob('*.in')
++assert len(sources) == 1, len(sources)
++assert sources[0] == 'foo.in', sources[0]
++InstallAs('bar.in', 'foo.in')
++""")
++
++test.write( ['work6', 'foo.in'], "foo.in")
++
++test.run(chdir='work6')
++test.write( ['work6', 'SConscript'], """\
++import glob
++sources = glob.glob('*.in')
++assert len(sources) == 1, len(sources)
++assert sources[0] == 'bar.in', sources[0]
++InstallAs('bar.in', 'foo.in')
++""")
++test.run(chdir='work6')
++
++# Test globing for sources with BuildDir(duplicate=1) and SConscriptChdir('build').
++# The point here is that globing for sources does work with this setup.
++test.write( ['work7', 'SConstruct'], """\
++BuildDir('build', '.', duplicate=1)
++SConscriptChdir('build')
++SConscript('build/SConscript')
++""")
++
++test.write( ['work7', 'SConscript'], """\
++import glob
++import os
++sources = glob.glob('*.in')
++print os.getcwd()
++assert len(sources) == 0, len(sources)
++InstallAs('bar.in', 'foo.in')
++""")
++
++test.write( ['work7', 'foo.in'], "foo.in")
++
++test.run(chdir='work7')
++
++test.write( ['work7', 'SConscript'], """\
++import glob
++import os
++sources = glob.glob('*.in')
++print os.getcwd()
++assert len(sources) == 2, len(sources)
++assert sources[0] == 'bar.in', sources[0]
++assert sources[1] == 'foo.in', sources[1]
++InstallAs('bar.in', 'foo.in')
++""")
++
++test.run(chdir='work7')
++
+ test.pass_test()
+
+
+
