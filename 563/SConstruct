@@ -1,0 +1,15 @@
+f=open('foo.c','w')
+f.write('#include <stdio.h>\n')
+f.write('main()\n')
+f.write('{printf("Helloworld\\n");return(0);}\n')
+f.close()
+
+
+env=Environment()
+foo=env.Program('foo.c')
+if False:
+	env.PrependENVPath('PATH','.')
+	env.Command('foo.out', foo, "$SOURCE")
+else:
+	env.Command('foo.out', foo, "./$SOURCE")
+
