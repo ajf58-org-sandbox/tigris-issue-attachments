@@ -1,0 +1,91 @@
+*** doc/man/scons.1	2004-07-13 21:12:59.000000000 +0200
+--- textfile-man.1	2004-07-13 21:52:49.910127984 +0200
+***************
+*** 3706,3711 ****
+--- 3706,3762 ----
+  The default is "build".
+  
+  '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
++ .IP Textfile()
++ .IP env.Textfile()
++ Generates a text file. The source nodes
++ constitute the lines, thereby nested lists are flattened. 
++ $LINESEPERATOR is used to seperate the lines.
++ 
++ Please note: If you pass in a Node as source, you will not get
++ the Node's content, but the string representaion of the Node. If
++ you want to insert the Node's contents, use 
++ .B myfile.get_contents()
++ .
++ 
++ The suffix specified by the $TEXTFILESUFFIX construction variable
++ (.txt by default) is automatically added to the target if it is not
++ already present.  Examples:
++ .ES
++ # builds/writes foo.txt
++ env.Textfile(target = 'foo.txt', source = ['Goethe', 42, 'Schiller'])
++ 
++ # builds/writes bar.txt
++ env.Textfile(target = 'bar',
++              source = ['lalala', 'tanteratei'],
++              LINESEPERATOR='|*')
++ 
++ # nested lists are flattened automatically
++ env.Textfile(target = 'blob', 
++              source = ['lalala', ['Goethe', 42 'Schiller'], 'tanteratei'])
++ 
++ Results are:
++ foo.txt
++   ....8<----
++   Goethe
++   42
++   Schiller
++   ....8<----
++ 
++ bar.txt:
++   ....8<----
++   lalala|*tanteratei|*
++   ....8<---- (no linefeed at the end)
++ 
++ blog.txt
++   ....8<----
++   lalala
++   Goethe
++   42
++   Schiller
++   tanteratei
++   ....8<----
++ 
++ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  .TP
+  .RI Tool( string, toolpath=[] )
+  Returns a callable object
+***************
+*** 4820,4825 ****
+--- 4871,4880 ----
+  above,
+  for the variable that expands to library search path options.
+  
++ .IP LINESEPERATOR
++ The line seperator used by the Textfile builder.
++ Defaults to the current systems line seperator.
++ 
+  .IP LINKCOM
+  The command line used to link object files into an executable.
+  
+***************
+*** 5512,5517 ****
+--- 5567,5577 ----
+  .IP TEXFLAGS
+  General options passed to the TeX formatter and typesetter.
+  
++ .IP TEXTFILESUFFIX
++ The suffix for text files;
++ .B .txt
++ by default.
++ 
+  .IP TOOLS
+  A list of the names of the Tool specifications
+  that are part of this construction environment.
+
+ 	  	 
