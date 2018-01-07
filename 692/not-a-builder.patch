@@ -1,0 +1,186 @@
+Index: test/Builder/not-a-Builder.py
+===================================================================
+--- test/Builder/not-a-Builder.py	(revision 0)
++++ test/Builder/not-a-Builder.py	(revision 0)
+@@ -0,0 +1,62 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test the error when trying to configure a Builder with a non-Builder object.
++"""
++
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++SConstruct_path = test.workpath('SConstruct')
++
++test.write(SConstruct_path, """\
++def mkdir(env, target, source):
++    pass
++mkdir = 1
++env = Environment(BUILDERS={'mkdir': mkdir})
++env.mkdir(env.Dir('src'), None)
++""")
++
++expect_stderr = """\
++
++scons: \\*\\*\\* .* is not a Builder\\.
++""" + test.python_file_line(SConstruct_path, 4)
++
++test.run(arguments='.',
++         stderr=expect_stderr,
++         status=2,
++         match=TestSCons.match_re)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+--- src/engine/SCons/EnvironmentTests.py	(revision 4655)
++++ src/engine/SCons/EnvironmentTests.py	(working copy)
+@@ -82,7 +82,7 @@
+ called_it = {}
+ built_it = {}
+ 
+-class Builder:
++class Builder(SCons.Builder.BuilderBase):
+     """A dummy Builder class for testing purposes.  "Building"
+     a target is simply setting a value in the dictionary.
+     """
+@@ -1628,9 +1628,11 @@
+         assert env3['X'] == {'x1': 8, 'x2': 9}, env3['X']
+         assert env3['Y'] == {'y1': 10}, env3['Y']
+ 
+-        env4 = self.TestEnvironment(BUILDERS = {'z1' : 11})
+-        env4.Append(BUILDERS = {'z2' : 12})
+-        assert env4['BUILDERS'] == {'z1' : 11, 'z2' : 12}, env4['BUILDERS']
++        z1 = Builder()
++        z2 = Builder()
++        env4 = self.TestEnvironment(BUILDERS = {'z1' : z1})
++        env4.Append(BUILDERS = {'z2' : z2})
++        assert env4['BUILDERS'] == {'z1' : z1, 'z2' : z2}, env4['BUILDERS']
+         assert hasattr(env4, 'z1')
+         assert hasattr(env4, 'z2')
+ 
+@@ -1778,10 +1780,10 @@
+         assert not env1.Dictionary('ZZZ').has_key(5)
+ 
+         #
+-        env1 = self.TestEnvironment(BUILDERS = {'b1' : 1})
++        env1 = self.TestEnvironment(BUILDERS = {'b1' : Builder()})
+         assert hasattr(env1, 'b1'), "env1.b1 was not set"
+         assert env1.b1.object == env1, "b1.object doesn't point to env1"
+-        env2 = env1.Clone(BUILDERS = {'b2' : 2})
++        env2 = env1.Clone(BUILDERS = {'b2' : Builder()})
+         assert env2 is env2
+         assert env2 == env2
+         assert hasattr(env1, 'b1'), "b1 was mistakenly cleared from env1"
+@@ -2281,9 +2283,11 @@
+         assert env3['X'] == {'x1': 8, 'x2' : 9}, env3['X']
+         assert env3['Y'] == {'y1': 10}, env3['Y']
+ 
+-        env4 = self.TestEnvironment(BUILDERS = {'z1' : 11})
+-        env4.Prepend(BUILDERS = {'z2' : 12})
+-        assert env4['BUILDERS'] == {'z1' : 11, 'z2' : 12}, env4['BUILDERS']
++        z1 = Builder()
++        z2 = Builder()
++        env4 = self.TestEnvironment(BUILDERS = {'z1' : z1})
++        env4.Prepend(BUILDERS = {'z2' : z2})
++        assert env4['BUILDERS'] == {'z1' : z1, 'z2' : z2}, env4['BUILDERS']
+         assert hasattr(env4, 'z1')
+         assert hasattr(env4, 'z2')
+ 
+@@ -2399,9 +2403,11 @@
+         env2 = self.TestEnvironment(AAA = 'a', BBB = 'bbb', CCC = 'ccc')
+         assert env1 == env2, diff_env(env1, env2)
+ 
+-        env3 = self.TestEnvironment(BUILDERS = {'b1' : 1})
++        b1 = Builder()
++        b2 = Builder()
++        env3 = self.TestEnvironment(BUILDERS = {'b1' : b1})
+         assert hasattr(env3, 'b1'), "b1 was not set"
+-        env3.Replace(BUILDERS = {'b2' : 2})
++        env3.Replace(BUILDERS = {'b2' : b2})
+         assert not hasattr(env3, 'b1'), "b1 was not cleared"
+         assert hasattr(env3, 'b2'), "b2 was not set"
+ 
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 4655)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -168,7 +168,8 @@
+         sconf = self.SConf.SConf(self.scons_env,
+                                  conf_dir=self.test.workpath('config.tests'),
+                                  log_file=self.test.workpath('config.log'))
+-        class MyBuilder:
++        import SCons.Builder
++        class MyBuilder(SCons.Builder.BuilderBase):
+             def __init__(self):
+                 self.prefix = ''
+                 self.suffix = ''
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 4655)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -152,6 +152,9 @@
+     except KeyError:
+         bd = BuilderDict(kwbd, env)
+         env._dict[key] = bd
++    for k, v in value.items():
++        if not SCons.Builder.is_a_Builder(v):
++            raise SCons.Errors.UserError('%s is not a Builder.' % repr(v))
+     bd.update(value)
+ 
+ def _del_SCANNERS(env, key):
+Index: src/engine/SCons/Builder.py
+===================================================================
+--- src/engine/SCons/Builder.py	(revision 4655)
++++ src/engine/SCons/Builder.py	(working copy)
+@@ -861,6 +861,16 @@
+         self.cmdgen.add_action(suffix, action)
+         self.set_src_suffix(self.cmdgen.src_suffixes())
+ 
++def is_a_Builder(obj):
++    """"Returns True iff the specified obj is one of our Builder classes.
++
++    The test is complicated a bit by the fact that CompositeBuilder
++    is a proxy, not a subclass of BuilderBase.
++    """
++    return (isinstance(obj, BuilderBase)
++            or isinstance(obj, CompositeBuilder)
++            or callable(obj))
++
+ # Local Variables:
+ # tab-width:4
+ # indent-tabs-mode:nil
