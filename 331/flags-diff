@@ -1,0 +1,288 @@
+Index: src/CHANGES.txt
+===================================================================
+*** src/CHANGES.txt	(revision 2687)
+--- src/CHANGES.txt	(working copy)
+***************
+*** 152,157 ****
+--- 152,159 ----
+  
+    - Document the Dir(), File() and Entry() methods of Dir and File Nodes.
+  
++   - Add the parse_flags option when creating Environments
++ 
+    From Gary Oberbrunner:
+  
+    - Make File(), Dir() and Entry() return a list of Nodes when passed
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+*** src/engine/SCons/EnvironmentTests.py	(revision 2687)
+--- src/engine/SCons/EnvironmentTests.py	(working copy)
+***************
+*** 3307,3312 ****
+--- 3307,3348 ----
+          for x in added + ['OVERRIDE']:
+              assert over.has_key(x), bad_msg % x
+  
++     def test_parse_flags(self):
++         '''Test the Base class parse_flags argument'''
++         # all we have to show is that it gets to MergeFlags internally
++         env = Environment(parse_flags = '-X')
++         assert env['CCFLAGS'] == ['-X'], env['CCFLAGS']
++ 
++         env = Environment(CCFLAGS=None, parse_flags = '-Y')
++         assert env['CCFLAGS'] == ['-Y'], env['CCFLAGS']
++ 
++         env = Environment(CPPDEFINES = 'FOO', parse_flags = '-std=c99 -X -DBAR')
++         assert env['CFLAGS']  == ['-std=c99'], env['CFLAGS']
++         assert env['CCFLAGS'] == ['-X'], env['CCFLAGS']
++         assert env['CPPDEFINES'] == ['FOO', 'BAR'], env['CPPDEFINES']
++ 
++     def test_clone_parse_flags(self):
++         '''Test the env.Clone() parse_flags argument'''
++         # all we have to show is that it gets to MergeFlags internally
++         env = Environment(tools = [])
++         env2 = env.Clone(parse_flags = '-X')
++         assert not env.has_key('CCFLAGS')
++         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
++ 
++         env = Environment(tools = [], CCFLAGS=None)
++         env2 = env.Clone(parse_flags = '-Y')
++         assert env['CCFLAGS'] is None, env['CCFLAGS']
++         assert env2['CCFLAGS'] == ['-Y'], env2['CCFLAGS']
++ 
++         env = Environment(tools = [], CPPDEFINES = 'FOO')
++         env2 = env.Clone(parse_flags = '-std=c99 -X -DBAR')
++         assert not env.has_key('CFLAGS')
++         assert env2['CFLAGS']  == ['-std=c99'], env2['CFLAGS']
++         assert not env.has_key('CCFLAGS')
++         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
++         assert env['CPPDEFINES'] == 'FOO', env['CPPDEFINES']
++         assert env2['CPPDEFINES'] == ['FOO','BAR'], env2['CPPDEFINES']
++ 
+  
+  
+  class OverrideEnvironmentTestCase(unittest.TestCase,TestEnvironmentFixture):
+***************
+*** 3535,3540 ****
+--- 3571,3598 ----
+          x = env3.Split('$AAA')
+          assert x == ['x3', 'y3', 'z3'], x
+  
++     def test_parse_flags(self):
++         '''Test the OverrideEnvironment parse_flags argument'''
++         # all we have to show is that it gets to MergeFlags internally
++         env = SubstitutionEnvironment()
++         env2 = env.Override({'parse_flags' : '-X'})
++         assert not env.has_key('CCFLAGS')
++         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
++ 
++         env = SubstitutionEnvironment(CCFLAGS=None)
++         env2 = env.Override({'parse_flags' : '-Y'})
++         assert env['CCFLAGS'] is None, env['CCFLAGS']
++         assert env2['CCFLAGS'] == ['-Y'], env2['CCFLAGS']
++ 
++         env = SubstitutionEnvironment(CPPDEFINES = 'FOO')
++         env2 = env.Override({'parse_flags' : '-std=c99 -X -DBAR'})
++         assert not env.has_key('CFLAGS')
++         assert env2['CFLAGS']  == ['-std=c99'], env2['CFLAGS']
++         assert not env.has_key('CCFLAGS')
++         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
++         assert env['CPPDEFINES'] == 'FOO', env['CPPDEFINES']
++         assert env2['CPPDEFINES'] == ['FOO','BAR'], env2['CPPDEFINES']
++ 
+  
+  
+  class NoSubstitutionProxyTestCase(unittest.TestCase,TestEnvironmentFixture):
+Index: src/engine/SCons/Environment.py
+===================================================================
+*** src/engine/SCons/Environment.py	(revision 2687)
+--- src/engine/SCons/Environment.py	(working copy)
+***************
+*** 574,589 ****
+          environment, and doesn't even create a wrapper object if there
+          are no overrides.
+          """
+!         if overrides:
+!             o = copy_non_reserved_keywords(overrides)
+!             overrides = {}
+!             for key, value in o.items():
+                  overrides[key] = SCons.Subst.scons_subst_once(value, self, key)
+!         if overrides:
+!             env = OverrideEnvironment(self, overrides)
+!             return env
+!         else:
+!             return self
+  
+      def ParseFlags(self, *flags):
+          """
+--- 574,592 ----
+          environment, and doesn't even create a wrapper object if there
+          are no overrides.
+          """
+!         if not overrides: return self
+!         o = copy_non_reserved_keywords(overrides)
+!         if not o: return self
+!         overrides = {}
+!         merges = None
+!         for key, value in o.items():
+!             if key == 'parse_flags':
+!                 merges = value
+!             else:
+                  overrides[key] = SCons.Subst.scons_subst_once(value, self, key)
+!         env = OverrideEnvironment(self, overrides)
+!         if merges: env.MergeFlags(merges)
+!         return env
+  
+      def ParseFlags(self, *flags):
+          """
+***************
+*** 851,856 ****
+--- 854,860 ----
+                   tools=None,
+                   toolpath=None,
+                   options=None,
++                  parse_flags = None,
+                   **kw):
+          """
+          Initialization of a basic SCons construction environment,
+***************
+*** 925,930 ****
+--- 929,937 ----
+          for key, val in save.items():
+              self._dict[key] = val
+  
++         # Finally, apply any flags to be merged in
++         if parse_flags: self.MergeFlags(parse_flags)
++ 
+      #######################################################################
+      # Utility methods that are primarily for internal use by SCons.
+      # These begin with lower-case letters.
+***************
+*** 1170,1176 ****
+                      self._dict[key] = self._dict[key] + val
+          self.scanner_map_delete(kw)
+  
+!     def Clone(self, tools=[], toolpath=None, **kw):
+          """Return a copy of a construction Environment.  The
+          copy is like a Python "deep copy"--that is, independent
+          copies are made recursively of each objects--except that
+--- 1177,1183 ----
+                      self._dict[key] = self._dict[key] + val
+          self.scanner_map_delete(kw)
+  
+!     def Clone(self, tools=[], toolpath=None, parse_flags = None, **kw):
+          """Return a copy of a construction Environment.  The
+          copy is like a Python "deep copy"--that is, independent
+          copies are made recursively of each objects--except that
+***************
+*** 1212,1217 ****
+--- 1219,1227 ----
+          # apply them again in case the tools overwrote them
+          apply(clone.Replace, (), new)        
+  
++         # Finally, apply any flags to be merged in
++         if parse_flags: clone.MergeFlags(parse_flags)
++ 
+          if __debug__: logInstanceCreation(self, 'Environment.EnvironmentClone')
+          return clone
+  
+Index: doc/man/scons.1
+===================================================================
+*** doc/man/scons.1	(revision 2687)
+--- doc/man/scons.1	(working copy)
+***************
+*** 1442,1447 ****
+--- 1442,1481 ----
+  env = Environment()
+  .EE
+  
++ Variables, called
++ .I construction
++ .IR variables ,
++ may be set in a construction environment
++ either by specifyng them as keywords when the object is created
++ or by assigning them a value after the object is created:
++ 
++ .ES
++ env = Environment(FOO = 'foo')
++ env['BAR'] = 'bar'
++ .EE
++ 
++ As a convenience,
++ construction variables may also be set or modified by the
++ .I parse_flags
++ keyword argument, which applies the
++ .B ParseFlags
++ method (described below) to the argument value
++ after all other processing is completed.
++ This is useful either if the exact content of the flags is unknown
++ (for example, read from a control file)
++ or if the flags are distributed to a number of construction variables.
++ 
++ .ES
++ env = Environment(parse_flags = '-Iinclude -DEBUG -lm')
++ .EE
++ 
++ This example adds 'include' to
++ .BR CPPPATH ,
++ \'EBUG' to
++ .BR CPPDEFINES ,
++ and 'm' to
++ .BR LIBS .
++ 
+  By default, a new construction environment is
+  initialized with a set of builder methods
+  and construction variables that are appropriate
+***************
+*** 1847,1852 ****
+--- 1881,1901 ----
+  for dependencies on the non-standard library names;
+  see the descriptions of these variables, below, for more information.)
+  
++ It is also possible to use the
++ .I parse_flags
++ keyword argument in an override:
++ 
++ .ES
++ env = Program('hello', 'hello.c', parse_flags = '-Iinclude -DEBUG -lm')
++ .EE
++ 
++ This example adds 'include' to
++ .BR CPPPATH ,
++ \'EBUG' to
++ .BR CPPDEFINES ,
++ and 'm' to
++ .BR LIBS .
++ 
+  Although the builder methods defined by
+  .B scons
+  are, in fact,
+***************
+*** 3009,3014 ****
+--- 3058,3072 ----
+  env4 = env.Clone(tools = ['msvc', MyTool])
+  .EE
+  
++ The
++ .I parse_flags
++ keyword argument is also recognized:
++ 
++ .ES
++ # create an environment for compiling programs that use wxWidgets
++ wx_env = env.Clone(parse_flags = '!wx-config --cflags --cxxflags')
++ .EE
++ 
+  '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  .TP
+  .RI env.Copy([ key = val ", ...])"
+***************
+*** 4224,4229 ****
+--- 4282,4289 ----
+  # flag and merge the result into the construction variables.
+  env.MergeFlags(['!pkg-config gtk+-2.0 --cflags', '-O3'])
+  
++ # Combine an optimization flag with the flags returned from running pkg-config
++ # twice and merge the result into the construction variables.
+  env.MergeFlags(['-O3',
+                 '!pkg-config gtk+-2.0 --cflags --libs',
+                 '!pkg-config libpng12 --cflags --libs'])
