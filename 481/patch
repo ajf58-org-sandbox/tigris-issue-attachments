@@ -1,0 +1,125 @@
+Index: doc/man/scons.1
+===================================================================
+*** doc/man/scons.1	(revision 3300)
+--- doc/man/scons.1	(working copy)
+***************
+*** 4211,4221 ****
+--- 4211,4228 ----
+  will be ignored when deciding if
+  the target file(s) need to be rebuilt.
+  
++ If you wish to avoid building a target all builds unless explicitly requested, you should specify the directory which the dependency is built in. See the third and fourth examples as samples of how to accomplish this.
++ 
+  Examples:
+  
+  .ES
+  env.Ignore('foo', 'foo.c')
+  env.Ignore('bar', ['bar1.h', 'bar2.h'])
++ 
++ This example will only build foobar.obj if scons run as scons foobar.obj
++ env.Ignore('.','foobar.obj')
++ This example will only build bar/foobar.obj if scons run as scons bar/foobar.obj
++ env.Ignore('bar','bar/foobar.obj')
+  .EE
+  
+  '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Index: doc/user/depends.in
+===================================================================
+*** doc/user/depends.in	(revision 3300)
+--- doc/user/depends.in	(working copy)
+***************
+*** 1520,1525 ****
+--- 1520,1561 ----
+         Ignore(hello, '/usr/include/stdio.h')
+      </programlisting>
+  
++     <para>
++     Another use for Ignore is to mark a generated file to not be built
++     unless it's explicitly requested. It's important to note that by
++     default all directories depend on their contents. So to Ignore a 
++     generated file from the default build, you must use the directory
++     it builds into as the target in your Ignore statement.
++     </para>
++     <programlisting>
++       hello_obj=Object('hello.c'
++       hello = Program(hello_obj])
++       Ignore('.',[hello,hello_obj])
++     </programlisting>
++ 
++     <scons_example name="ignore_explicit">
++       <file name="SConstruct" printme="1">
++       hello_obj=Object('hello.c'
++       hello = Program(hello_obj])
++       Ignore('.',[hello,hello_obj])
++       </file>
++       <file name="hello.c">
++       #include <stdio.h>
++       int main() { printf("Hello!\n"); }
++       </file>
++     </scons_example>
++ 
++     <screen>
++       % <userinput>scons -Q </userinput>
++       scons: `.' is up to date.
++       % <userinput>scons -Q hello</userinput>
++       gcc -o hello.o -c hello.c
++       gcc -o hello hello.o
++       % <userinput>scons -Q hello</userinput>
++       scons: `hello' is up to date.
++     </screen>
++ 
++ 
+    </section>
+  
+    <section>
+Index: doc/user/depends.xml
+===================================================================
+*** doc/user/depends.xml	(revision 3300)
+--- doc/user/depends.xml	(working copy)
+***************
+*** 1478,1483 ****
+--- 1478,1521 ----
+         Ignore(hello, '/usr/include/stdio.h')
+      </programlisting>
+  
++     <para>
++     Another use for Ignore is to mark a generated file to not be built
++     unless it's explicitly requested. It's important to note that by
++     default all directories depend on their contents. So to Ignore a 
++     generated file from the default build, you must use the directory
++     it builds into as the target in your Ignore statement.
++     </para>
++     <programlisting>
++       hello_obj=Object('hello.c')
++       hello = Program(hello_obj])
++       Ignore('.',[hello,hello_obj])
++     </programlisting>
++ 
++     <!--
++     <scons_example name="ignore_explicit">
++       <file name="SConstruct" printme="1">
++       hello_obj=Object('hello.c'
++       hello = Program(hello_obj])
++       Ignore('.',[hello,hello_obj])
++       </file>
++       <file name="hello.c">
++       #include <stdio.h>
++       int main() { printf("Hello!\n"); }
++       </file>
++     </scons_example>
++     -->
++ 
++     <screen>
++       % <userinput>scons -Q </userinput>
++       scons: `.' is up to date.
++       % <userinput>scons -Q hello</userinput>
++       gcc -o hello.o -c hello.c
++       gcc -o hello hello.o
++       % <userinput>scons -Q hello</userinput>
++       scons: `hello' is up to date.
++     </screen>
++ 
++ 
+    </section>
+  
+    <section>
