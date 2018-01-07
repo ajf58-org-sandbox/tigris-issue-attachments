@@ -1,0 +1,17 @@
+Index: src/CHANGES.txt
+===================================================================
+RCS file: /cvsroot/scons/scons/src/CHANGES.txt,v
+retrieving revision 1.410
+diff -u -3 -p -r1.410 CHANGES.txt
+--- src/CHANGES.txt	4 Oct 2003 13:37:54 -0000	1.410
++++ src/CHANGES.txt	5 Oct 2003 21:07:54 -0000
+@@ -120,7 +120,9 @@ RELEASE X.XX - XXX
+   
+   - Fix test/SWIG.py to find the Python include directory in all cases.
+ 
++  From Hartmut Goebel:
+ 
++  - Added TryCPP, TryGrepOutput, TryGrepCPP and TryGrepHeader
+ 
+ RELEASE 0.92 - Wed, 20 Aug 2003 03:45:28 -0500
+ 
