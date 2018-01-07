@@ -1,0 +1,79 @@
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'foo.out'> and its children:
+Taskmaster:        <no_state   0   'foo'>
+Taskmaster:      adjusted ref count: <pending    1   'foo.out'>, child 'foo'
+Taskmaster:     Considering node <no_state   0   'foo'> and its children:
+Taskmaster:        <no_state   0   'foo.o'>
+Taskmaster:        <no_state   0   '/usr/bin/gcc'>
+Taskmaster:      adjusted ref count: <pending    1   'foo'>, child 'foo.o'
+Taskmaster:      adjusted ref count: <pending    2   'foo'>, child '/usr/bin/gcc'
+Taskmaster:     Considering node <no_state   0   'foo.o'> and its children:
+Taskmaster:        <no_state   0   'foo.c'>
+Taskmaster:        <no_state   0   '/usr/bin/gcc'>
+Taskmaster:      adjusted ref count: <pending    1   'foo.o'>, child 'foo.c'
+Taskmaster:      adjusted ref count: <pending    2   'foo.o'>, child '/usr/bin/gcc'
+Taskmaster:     Considering node <no_state   0   'foo.c'> and its children:
+Taskmaster: Evaluating <pending    0   'foo.c'>
+
+Task.make_ready_current(): node <pending    0   'foo.c'>
+Task.prepare():      node <up_to_date 0   'foo.c'>
+Task.executed_with_callbacks(): node <up_to_date 0   'foo.c'>
+Task.postprocess():  node <up_to_date 0   'foo.c'>
+Task.postprocess():  removing <up_to_date 0   'foo.c'>
+Task.postprocess():  adjusted parent ref count <pending    1   'foo.o'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   '/usr/bin/gcc'> and its children:
+Taskmaster: Evaluating <pending    0   '/usr/bin/gcc'>
+
+Task.make_ready_current(): node <pending    0   '/usr/bin/gcc'>
+Task.prepare():      node <up_to_date 0   '/usr/bin/gcc'>
+Task.executed_with_callbacks(): node <up_to_date 0   '/usr/bin/gcc'>
+Task.postprocess():  node <up_to_date 0   '/usr/bin/gcc'>
+Task.postprocess():  removing <up_to_date 0   '/usr/bin/gcc'>
+Task.postprocess():  adjusted parent ref count <pending    1   'foo'>
+Task.postprocess():  adjusted parent ref count <pending    0   'foo.o'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <pending    0   'foo.o'> and its children:
+Taskmaster:        <up_to_date 0   'foo.c'>
+Taskmaster:        <up_to_date 0   '/usr/bin/gcc'>
+Taskmaster: Evaluating <pending    0   'foo.o'>
+
+Task.make_ready_current(): node <pending    0   'foo.o'>
+Task.prepare():      node <up_to_date 0   'foo.o'>
+Task.executed_with_callbacks(): node <up_to_date 0   'foo.o'>
+Task.postprocess():  node <up_to_date 0   'foo.o'>
+Task.postprocess():  removing <up_to_date 0   'foo.o'>
+Task.postprocess():  adjusted parent ref count <pending    0   'foo'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <pending    0   'foo'> and its children:
+Taskmaster:        <up_to_date 0   'foo.o'>
+Taskmaster:        <up_to_date 0   '/usr/bin/gcc'>
+Taskmaster: Evaluating <pending    0   'foo'>
+
+Task.make_ready_current(): node <pending    0   'foo'>
+Task.prepare():      node <up_to_date 0   'foo'>
+Task.executed_with_callbacks(): node <up_to_date 0   'foo'>
+Task.postprocess():  node <up_to_date 0   'foo'>
+Task.postprocess():  removing <up_to_date 0   'foo'>
+Task.postprocess():  adjusted parent ref count <pending    0   'foo.out'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <pending    0   'foo.out'> and its children:
+Taskmaster:        <up_to_date 0   'foo'>
+Taskmaster: Evaluating <pending    0   'foo.out'>
+
+Task.make_ready_current(): node <pending    0   'foo.out'>
+Task.prepare():      node <executing  0   'foo.out'>
+Task.execute():      node <executing  0   'foo.out'>
+Task.executed_with_callbacks(): node <executing  0   'foo.out'>
+Task.postprocess():  node <executed   0   'foo.out'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <up_to_date 0   '/usr/bin/gcc'> and its children:
+Taskmaster:        already handled (executed)
+Taskmaster: No candidate anymore.
+
