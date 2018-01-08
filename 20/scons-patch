@@ -1,0 +1,87 @@
+diff -wur scons-local-0.96.1/SCons/Script/__init__.py scons-local-0.96.1-rootdir/SCons/Script/__init__.py
+--- scons-local-0.96.1/SCons/Script/__init__.py	2004-08-23 10:56:07.000000000 -0400
++++ scons-local-0.96.1-rootdir/SCons/Script/__init__.py	2004-12-01 10:43:35.000000000 -0500
+@@ -405,7 +405,7 @@
+             return sfile
+         if not os.path.isabs(sfile):
+             for rep in repositories:
+-                if os.path.isfile(os.path.join(rep, sfile)):
++                if os.path.isfile(os.path.join(rep, dirname, sfile)):
+                     return sfile
+     return None
+ 
+@@ -565,6 +565,10 @@
+                         dest='include_dir', metavar="DIR",
+                         help="Search DIR for imported Python modules.")
+ 
++        self.add_option('--rootdir', action="store",
++                        dest='rootdir', default=None,
++                        help="Build root location relative to SConstruct location")
++
+         self.add_option('--implicit-cache', action="store_true",
+                         dest='implicit_cache',
+                         help="Cache implicit dependencies")
+@@ -847,13 +851,26 @@
+         else:
+             raise SCons.Errors.UserError, "No SConstruct file found."
+ 
+-    fs.set_toplevel_dir(os.getcwd())
++    if options.rootdir:
++        topdir = os.path.abspath(os.path.join(os.getcwd(), options.rootdir))
++        lastpart = os.path.abspath(os.getcwd())[len(topdir)+1:]
++    	#print '(topdir, lastpart)=', topdir, lastpart
++        if target_top:
++            target_top = os.path.join(lastpart, target_top)
++        else:
++            target_top = lastpart
++    else:
++        topdir = os.getcwd()
++        lastpart=''
++    fs.set_toplevel_dir(topdir)
++    if options.rootdir:
++        os.chdir(topdir)
+ 
+     scripts = []
+     if options.file:
+         scripts.extend(options.file)
+     if not scripts:
+-        sfile = _SConstruct_exists()
++        sfile = _SConstruct_exists(lastpart)
+         if sfile:
+             scripts.append(sfile)
+ 
+@@ -873,6 +890,8 @@
+         d = fs.getcwd()
+     else:
+         d = fs.File(scripts[0]).dir
++    if options.rootdir:
++        d = fs.Dir(os.path.join(d.path, options.rootdir))
+     fs.set_SConstruct_dir(d)
+ 
+     class Unbuffered:
+@@ -969,12 +988,24 @@
+                 def check_dir(x, target_top=target_top):
+                     if hasattr(x, 'cwd') and not x.cwd is None:
+                         cwd = x.cwd.srcnode()
+-                        return cwd == target_top
++                        ret = 0
++                        while cwd:
++                            #print target_top, x, cwd
++                            if cwd == target_top:
++                                ret = 1
++                                break
++                            tmp = cwd.srcnode()
++                            if tmp == cwd:
++                                cwd = None
++                            else:
++                                cwd = tmp
++                        return ret
+                     else:
+                         # x doesn't have a cwd, so it's either not a target,
+                         # or not a file, so go ahead and keep it as a default
+                         # target and let the engine sort it out:
+                         return 1                
++                #print [str(t) for t in SCons.Script.SConscript.DefaultTargets]
+                 d = filter(check_dir, SCons.Script.SConscript.DefaultTargets)
+                 SCons.Script.SConscript.DefaultTargets[:] = d
+                 target_top = None
