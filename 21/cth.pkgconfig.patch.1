@@ -1,0 +1,63 @@
+Index: src/engine/SCons/Environment.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Environment.py,v
+retrieving revision 1.152
+diff -u -r1.152 Environment.py
+--- src/engine/SCons/Environment.py	14 Feb 2005 03:27:11 -0000	1.152
++++ src/engine/SCons/Environment.py	22 Feb 2005 14:42:13 -0000
+@@ -866,6 +866,13 @@
+         command = self.subst(command)
+         return function(self, os.popen(command).read())
+ 
++    def ParsePkgConfig(self, name):
++        """
++        Pass the output of pkg-config --cflags --libs <name> to ParseConfig
++        """
++
++        return self.ParseConfig('pkg-config --cflags --libs %s' % name)
++
+     def ParseDepends(self, filename, must_exist=None, only_one=0):
+         """
+         Parse a mkdep-style file for explicit dependencies.  This is
+Index: src/engine/SCons/SConf.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/SConf.py,v
+retrieving revision 1.23
+diff -u -r1.23 SConf.py
+--- src/engine/SCons/SConf.py	10 Jan 2005 20:39:39 -0000	1.23
++++ src/engine/SCons/SConf.py	22 Feb 2005 14:42:13 -0000
+@@ -360,7 +360,9 @@
+                  'CheckCHeader'       : CheckCHeader,
+                  'CheckCXXHeader'     : CheckCXXHeader,
+                  'CheckLib'           : CheckLib,
+-                 'CheckLibWithHeader' : CheckLibWithHeader
++                 'CheckLibWithHeader' : CheckLibWithHeader,
++                 'CheckPkgConfig'     : CheckPkgConfig,
++                 'CheckPkgConfigPackage' : CheckPkgConfigPackage
+                }
+         self.AddTests(default_tests)
+         self.AddTests(custom_tests)
+@@ -869,3 +871,23 @@
+             call = call, language = language, autoadd = autoadd)
+     context.did_show_result = 1
+     return not res
++
++def CheckPkgConfig(context, version):
++    """
++    Check whether at least the specified version of pkg-config is available
++    """
++    context.Message('Checking for pkg-config version %s... ' % version)
++    ret = context.TryAction('pkg-config --atleast-pkgconfig-version=%s' % version)[0]
++    context.Result(ret)
++    return ret
++
++def CheckPkgConfigPackage(context, desc):
++    """
++    Check to see if a pkg-config package exists.  desc should be something
++    like 'GTK+-2.0 >= 2.4.9'.
++    """
++    context.Message('Checking for %s... ' % desc)
++    ret = context.TryAction('pkg-config --exists \'%s\'' % desc)[0]
++    context.Result(ret)
++    return ret
++
