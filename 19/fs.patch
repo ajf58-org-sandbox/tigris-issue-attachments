@@ -1,0 +1,55 @@
+--- scons-0.96.1/engine/SCons/Node/FS.py	2004-08-23 07:56:04.000000000 -0700
++++ scons-new/engine/SCons/Node/FS.py	2004-11-15 12:54:15.656875000 -0800
+@@ -453,6 +453,7 @@
+         self.dir = directory
+         self.cwd = None # will hold the SConscript directory for target nodes
+         self.duplicate = directory.duplicate
++        self.nodeCachePath = fs.CachePath
+ 
+     def clear(self):
+         """Completely clear a Node.FS.Base object of all its cached
+@@ -1555,7 +1556,7 @@
+         b = self.is_derived()
+         if not b and not self.has_src_builder():
+             return None
+-        if b and self.fs.CachePath:
++        if b and self.nodeCachePath:
+             if self.fs.cache_show:
+                 if CacheRetrieveSilent(self, [], None) == 0:
+                     self.build(presub=0, execute=0)
+@@ -1569,7 +1570,7 @@
+         # Push this file out to cache before the superclass Node.built()
+         # method has a chance to clear the build signature, which it
+         # will do if this file has a source scanner.
+-        if self.fs.CachePath and self.fs.exists(self.path):
++        if self.nodeCachePath and self.fs.exists(self.path):
+             CachePush(self, [], None)
+         SCons.Node.Node.built(self)
+         self.found_includes = {}
+@@ -1583,7 +1584,7 @@
+             pass
+ 
+     def visited(self):
+-        if self.fs.CachePath and self.fs.cache_force and self.fs.exists(self.path):
++        if self.nodeCachePath and self.fs.cache_force and self.fs.exists(self.path):
+             CachePush(self, None, None)
+ 
+     def has_src_builder(self):
+@@ -1792,7 +1793,7 @@
+         return str(self.rfile())
+ 
+     def cachepath(self):
+-        if not self.fs.CachePath:
++        if not self.nodeCachePath:
+             return None, None
+         if self.binfo.bsig is None:
+             raise SCons.Errors.InternalError, "cachepath(%s) found a bsig of None" % self.path
+@@ -1801,7 +1802,7 @@
+         # build signature, and we have to differentiate them somehow.
+         cache_sig = SCons.Sig.MD5.collect([self.binfo.bsig, self.path])
+         subdir = string.upper(cache_sig[0])
+-        dir = os.path.join(self.fs.CachePath, subdir)
++        dir = os.path.join(self.nodeCachePath, subdir)
+         return dir, os.path.join(dir, cache_sig)
+ 
+     def target_from_source(self, prefix, suffix, splitext=SCons.Util.splitext):
