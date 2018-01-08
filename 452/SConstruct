@@ -1,0 +1,83 @@
+import SCons
+import os
+
+DIR_DEST_LIB     = 'Win32/libraries'
+
+
+env = Environment()
+env.Tool('mingw')
+env['BUILDERS']['FileCopy'] = Builder(action = 'cp $SOURCES $TARGET ')
+
+envZlib    =env.Copy()
+envPng     =env.Copy()
+
+
+
+#------------------------------------------------------------------------------
+# the list of input files
+#------------------------------------------------------------------------------
+
+source_libpng=["png.c","pngerror.c","pngget.c","pngmem.c","pngpread.c","pngread.c",
+               "pngrio.c","pngrtran.c","pngrutil.c","pngset.c","pngtrans.c",
+               "pngwio.c","pngwrite.c","pngwtran.c","pngwutil.c",]
+
+source_zlib=["adler32.c","compress.c","crc32.c","deflate.c","gzio.c","infback.c",
+             "inffast.c","inflate.c","inftrees.c","trees.c","uncompr.c",
+             "zutil.c"]
+
+
+#-------------------------------------------------------------------------------
+# Directories
+#-------------------------------------------------------------------------------
+
+DIR_SRC          =  'Win32/srcLibraries/'
+DIR_BUILD        =  'build/'+DIR_SRC
+
+DIR_ZLIB_SRC     =  DIR_SRC + 'zlib-1.2.2'
+DIR_ZLIB_BUILD   =  DIR_BUILD + 'zlib-1.2.2'
+
+DIR_PNG_SRC      =  DIR_SRC + 'libpng-1.2.8'
+DIR_PNG_BUILD    =  DIR_BUILD + 'libpng-1.2.8'
+
+
+
+                        #set the same flags as used by the distributed makefiles
+
+envZlib.Prepend(CCFLAGS = ' -Wall -mno-cygwin -O3')
+envZlib.Replace(ARFLAGS = 'rcs')
+
+envPng.Prepend(CCFLAGS = ' -Wall -mno-cygwin -O2 -I'+DIR_DEST_LIB)
+envPng.Replace(ARFLAGS = 'rcs')
+
+
+                                         #copy the appropriate headers to the library output directory
+zlibHdrs=envZlib.FileCopy(DIR_DEST_LIB + '/zlib.h', DIR_ZLIB_SRC +'/zlib.h' )
+zlibHdrs=zlibHdrs+envZlib.FileCopy(DIR_DEST_LIB+ '/zconf.h',DIR_ZLIB_SRC+ os.sep+'zconf.h' )
+
+
+pnglibHdrs=envPng.FileCopy(DIR_DEST_LIB+ os.sep+'png.h',DIR_PNG_SRC+ os.sep+'png.h')
+
+envZlib.BuildDir(DIR_ZLIB_BUILD, DIR_ZLIB_SRC, duplicate=0)
+zlib_sources = [DIR_ZLIB_BUILD + os.sep+ filename for filename in source_zlib]
+
+envPng.BuildDir(DIR_PNG_BUILD, DIR_PNG_SRC, duplicate=0)
+png_sources = [DIR_PNG_BUILD + os.sep + filename for filename in source_libpng]
+
+###############        HERE IS WHERE Depends FAILS           #################################
+#Neither of these two lines work
+#envPng.Depends(DIR_DEST_LIB+'/libpng.a',zlibHdrs)
+#envPng.Depends('libpng.a',zlibHdrs)
+
+envZlib.StaticLibrary(DIR_DEST_LIB+'/libz.a', zlib_sources)
+envPng.StaticLibrary(DIR_DEST_LIB+'/libpng.a', png_sources)
+
+################################################
+#this prints out the contents of zlibHdrs,
+#and it appears to be correct
+################################################
+print '***'
+for zz in zlibHdrs:
+  print str(zz)
+print '***'
+
+ 	  	 
