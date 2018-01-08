@@ -1,0 +1,234 @@
+--- orig/src/engine/SCons/Action.py
++++ mod/src/engine/SCons/Action.py
+@@ -586,7 +586,7 @@
+         return "%s(%s, %s)" % (name, tstr, sstr)
+ 
+     def __str__(self):
+-        return "%s(target, source, env)" % self.function_name()
++        return "%s(target=.., source=.., env=..)" % self.function_name()
+ 
+     def execute(self, target, source, env):
+         rsources = map(rfile, source)
+
+
+--- orig/src/engine/SCons/ActionTests.py
++++ mod/src/engine/SCons/ActionTests.py
+@@ -482,21 +482,21 @@
+             result = a("out", "in", env, presub=1)
+             assert result == 7, result
+             s = sio.getvalue()
+-            assert s == 'Building out with action:\n  execfunc(target, source, env)\nexecfunc(["out"], ["in"])\n', s
++            assert s == 'Building out with action:\n  execfunc(target=.., source=.., env=..)\nexecfunc(["out"], ["in"])\n', s
+ 
+             sio = StringIO.StringIO()
+             sys.stdout = sio
+             result = b(["out"], "in", env, presub=1)
+             assert result == 7, result
+             s = sio.getvalue()
+-            assert s == 'Building out with action:\n  firstfunc(target, source, env)\nfirstfunc(["out"], ["in"])\nBuilding out with action:\n  execfunc(target, source, env)\nexecfunc(["out"], ["in"])\n', s
++            assert s == 'Building out with action:\n  firstfunc(target=.., source=.., env=..)\nfirstfunc(["out"], ["in"])\nBuilding out with action:\n  execfunc(target=.., source=.., env=..)\nexecfunc(["out"], ["in"])\n', s
+ 
+             sio = StringIO.StringIO()
+             sys.stdout = sio
+             result = b(["out", "list"], "in", env, presub=1)
+             assert result == 7, result
+             s = sio.getvalue()
+-            assert s == 'Building out and list with action:\n  firstfunc(target, source, env)\nfirstfunc(["out", "list"], ["in"])\nBuilding out and list with action:\n  execfunc(target, source, env)\nexecfunc(["out", "list"], ["in"])\n', s
++            assert s == 'Building out and list with action:\n  firstfunc(target=.., source=.., env=..)\nfirstfunc(["out", "list"], ["in"])\nBuilding out and list with action:\n  execfunc(target=.., source=.., env=..)\nexecfunc(["out", "list"], ["in"])\n', s
+ 
+             a2 = SCons.Action.Action(execfunc)
+ 
+@@ -505,7 +505,7 @@
+             result = a2("out", "in", env)
+             assert result == 7, result
+             s = sio.getvalue()
+-            assert s == 'Building out with action:\n  execfunc(target, source, env)\nexecfunc(["out"], ["in"])\n', s
++            assert s == 'Building out with action:\n  execfunc(target=.., source=.., env=..)\nexecfunc(["out"], ["in"])\n', s
+ 
+             sio = StringIO.StringIO()
+             sys.stdout = sio
+@@ -576,7 +576,7 @@
+             pass
+         a = SCons.Action.Action(func)
+         s = a.presub_lines(env)
+-        assert s == ["func(target, source, env)"], s
++        assert s == ["func(target=.., source=.., env=..)"], s
+ 
+         def gen(target, source, env, for_signature):
+             return 'generat' + env.get('GEN', 'or')
+@@ -1265,14 +1265,14 @@
+             pass
+         a = SCons.Action.FunctionAction(func1)
+         s = str(a)
+-        assert s == "func1(target, source, env)", s
++        assert s == "func1(target=.., source=.., env=..)", s
+ 
+         class class1:
+             def __call__(self):
+                 pass
+         a = SCons.Action.FunctionAction(class1())
+         s = str(a)
+-        assert s == "class1(target, source, env)", s
++        assert s == "class1(target=.., source=.., env=..)", s
+ 
+     def test_execute(self):
+         """Test executing a function Action
+@@ -1401,7 +1401,7 @@
+             pass
+         a = SCons.Action.ListAction([f, g, "XXX", f])
+         s = str(a)
+-        assert s == "f(target, source, env)\ng(target, source, env)\nXXX\nf(target, source, env)", s
++        assert s == "f(target=.., source=.., env=..)\ng(target=.., source=.., env=..)\nXXX\nf(target=.., source=.., env=..)", s
+ 
+     def test_genstring(self):
+         """Test the genstring() method for a list of subsidiary Actions
+@@ -1412,7 +1412,7 @@
+             pass
+         a = SCons.Action.ListAction([f, g, "XXX", f])
+         s = a.genstring([], [], Environment())
+-        assert s == "f(target, source, env)\ng(target, source, env)\nXXX\nf(target, source, env)", s
++        assert s == "f(target=.., source=.., env=..)\ng(target=.., source=.., env=..)\nXXX\nf(target=.., source=.., env=..)", s
+ 
+     def test_execute(self):
+         """Test executing a list of subsidiary Actions
+@@ -1485,7 +1485,7 @@
+             pass
+         a = SCons.Action.Action('$BAR')
+         s = a.genstring([], [], env=Environment(BAR=f, s=self))
+-        assert s == "f(target, source, env)", s
++        assert s == "f(target=.., source=.., env=..)", s
+ 
+     def test_execute(self):
+         """Test executing a lazy-evaluation Action
+
+
+--- orig/test/HeaderGen.py
++++ mod/test/HeaderGen.py
+@@ -33,6 +33,10 @@
+ 
+ test = TestSCons.TestSCons()
+ 
++# Note: the command action lambda functions below use different ordering
++# of named arguments to validate that FunctionAction calls its function
++# with keyword arguments rather than positional arguments.
++
+ test.write('SConstruct', """\
+ def writeFile(target, contents):
+     file = open(str(target[0]), 'wb')
+@@ -46,9 +50,9 @@
+ env.Command('gen2.h', [],
+             lambda env,target,source: writeFile(target, 'int foo = 3;\\n'))
+ env.Command('gen.h', [],
+-            lambda env,target,source: writeFile(target, '#include "gen2.h"\\n'))
++            lambda target,source,env: writeFile(target, '#include "gen2.h"\\n'))
+ env.Command('gen.cpp', [],
+-            lambda env,target,source: writeFile(target, '#include "gen.h"\\n'))
++            lambda source,env,target: writeFile(target, '#include "gen.h"\\n'))
+ """)
+ 
+ test.run(stderr=TestSCons.noisy_ar,
+
+
+--- orig/test/actions.py
++++ mod/test/actions.py
+@@ -124,7 +124,7 @@
+ 
+ test.run(arguments = '-Q .', stdout = """\
+ foo
+-func(target, source, env)
++func(target=.., source=.., env=..)
+ arg1
+ arg2
+ scons: `.' is up to date.
+
+
+--- orig/test/explain.py
++++ mod/test/explain.py
+@@ -539,12 +539,12 @@
+          stdout = test.wrap_stdout("""\
+ scons: rebuilding `f1.out' because the build action changed:
+                old: Copy("$TARGET", "$SOURCE")
+-               new: DifferentCopy(target, source, env)
+-                    AltCopyStage2(target, source, env)
++               new: DifferentCopy(target=.., source=.., env=..)
++                    AltCopyStage2(target=.., source=.., env=..)
+ DifferentCopy(["f1.out"], ["f1.in"])
+ AltCopyStage2(["f1.out"], ["f1.in"])
+ scons: rebuilding `f2.out' because the contents of the build action changed
+-               action: ChangingCopy(target, source, env)
++               action: ChangingCopy(target=.., source=.., env=..)
+ ChangingCopy(["f2.out"], ["f2.in"])
+ """))
+ 
+
+
+--- orig/test/multi.py
++++ mod/test/multi.py
+@@ -162,7 +162,7 @@
+ test.run(arguments='file5.out', 
+          stderr="""
+ scons: warning: Two different environments were specified for target file5.out,
+-	but they appear to have the same action: build(target, source, env)
++	but they appear to have the same action: build(target=.., source=.., env=..)
+ File "SConstruct", line 11, in ?
+ """)
+ 
+
+
+--- orig/test/option--debug.py
++++ mod/test/option--debug.py
+@@ -326,13 +326,13 @@
+   $PYTHON cat.py temp $TARGET
+ __PYTHON__ cat.py temp file06.out
+ Building file07.out with action:
+-  cat(target, source, env)
++  cat(target=.., source=.., env=..)
+ cat(["file07.out"], ["file07.in"])
+ Building file08.out with action:
+-  cat(target, source, env)
++  cat(target=.., source=.., env=..)
+ cat(["file08.out"], ["file08.in"])
+ Building file09.out with action:
+-  cat(target, source, env)
++  cat(target=.., source=.., env=..)
+ cat(["file09.out"], ["file09.in"])
+ Building file11.out with action:
+   $PYTHON cat.py $SOURCES $TARGET
+@@ -365,10 +365,10 @@
+   $PYTHON cat.py temp $TARGET
+ __PYTHON__ cat.py temp file16.out
+ Building file17.out with action:
+-  cat(target, source, env)
++  cat(target=.., source=.., env=..)
+ cat(["file17.out"], ["file17.in"])
+ Building file18.out with action:
+-  cat(target, source, env)
++  cat(target=.., source=.., env=..)
+ cat(["file18.out"], ["file18.in"])
+ """
+ expect = string.replace(expect, '__PYTHON__', TestSCons.python)
+
+
+--- orig/test/option--warn.py
++++ mod/test/option--warn.py
+@@ -127,7 +127,7 @@
+ test.run(arguments='file1.out', 
+          stderr=r"""
+ scons: warning: Two different environments were specified for target file1.out,
+-	but they appear to have the same action: build\(target, source, env\)
++	but they appear to have the same action: build\(target=\.\., source=\.\., env=\.\.\)
+ File "SConstruct", line \d+, in .+
+ """)
+ 
+@@ -136,7 +136,7 @@
+ test.run(arguments='--warn=duplicate-environment file1.out', 
+          stderr=r"""
+ scons: warning: Two different environments were specified for target file1.out,
+-	but they appear to have the same action: build\(target, source, env\)
++	but they appear to have the same action: build\(target=\.\., source=\.\., env=\.\.\)
+ File "SConstruct", line \d+, in .+
+ """)
+ 
+
+
+
