@@ -1,0 +1,20 @@
+Index: src/engine/SCons/Options/ListOption.py
+===================================================================
+--- src/engine/SCons/Options/ListOption.py	(révision 2611)
++++ src/engine/SCons/Options/ListOption.py	(copie de travail)
+@@ -87,8 +87,14 @@
+         else:
+             return string.join(self, ',')
+     def __repr__(self):
+-        return self.__str__()
++        repr = self.__str__()
+ 
++        if repr == 'all':
++          return "__repr_all__" 
++
++        else:
++          return repr
++
+ def _converter(val, allowedElems, mapdict):
+     """
+     """
