@@ -1,0 +1,3 @@
+Import("env")
+asdf_install = env.Install("#/install", "#/test/#testfile.txt#");
+env.Default(asdf_install);
