@@ -1,0 +1,31 @@
+--- scons-local-0.96.92/SCons/Node/FS.py 2006-04-11 05:33:22.000000000 +0200
++++ scons/SCons/Node/FS.py	2006-08-15 11:31:23.000000000 +0200
+@@ -1489,9 +1489,13 @@
+     def srcdir_duplicate(self, name):
+         for dir in self.srcdir_list():
+             if dir.entry_exists_on_disk(name):
+-                srcnode = dir.File(name)
++                if os.path.isdir(os.path.join(dir.abspath, name)):
++                    factory = Dir.Dir
++                else:
++                    factory = Dir.File
++                srcnode = factory(dir, name)
+                 if self.duplicate:
+-                    node = self.File(name)
++                    node = factory(self, name)
+                     node.do_duplicate(srcnode)
+                     return node
+                 else:
+@@ -1537,7 +1541,11 @@
+            diskcheck_sccs(self, name):
+             try: return self.File(name)
+             except TypeError: pass
+-        return self.srcdir_duplicate(name)
++        node = self.srcdir_duplicate(name)
++        if isinstance(node, Dir):
++            return None
++        else:
++            return node
+ 
+ class RootDir(Dir):
+     """A class for the root directory of a file system.
