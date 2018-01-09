@@ -1,0 +1,525 @@
+diff -r 2ba70e65d30e doc/man/scons.1
+--- a/doc/man/scons.1	Mon Feb 11 20:27:30 2008 -0500
++++ b/doc/man/scons.1	Tue Feb 12 11:29:03 2008 -0500
+@@ -335,8 +335,9 @@ to the cache.  If an up-to-date target f
+ to the cache.  If an up-to-date target file is found in the cache, it
+ will be retrieved from the cache instead of being rebuilt locally.
+ Caching behavior may be disabled and controlled in other ways by the
++.BR --cache-disable ,
+ .BR --cache-force , 
+-.BR --cache-disable ,
++.BR --cache-populate
+ and
+ .B --cache-show
+ command-line options.  The
+@@ -467,7 +468,34 @@ nor copy files to the cache.
+ nor copy files to the cache.
+ 
+ .TP
+---cache-force, --cache-populate
++--cache-force
++When using
++.BR CacheDir (),
++populate a cache by copying any already-existing, up-to-date
++derived files to the cache,
++in addition to files built by this invocation. 
++This is useful to populate a new cache with
++all the current derived files,
++or to add to the cache any derived files
++recently built with caching disabled via the
++.B --cache-disable
++option.
++
++When using the 
++.B --cache-disable 
++and 
++.B --cache-force 
++options together, scons will not retrieve files from the cache, but
++will still copy derived files to the cache.
++
++When using the 
++.B --cache-force 
++option, derived files will always be copied to the cache, overwriting
++the corresponding file if it is already present. This behavior is
++useful for getting rid of corrupted files that might exist in the cache.
++
++.TP
++--cache-populate
+ When using
+ .BR CacheDir (),
+ populate a cache by copying any already-existing, up-to-date
+@@ -479,6 +507,18 @@ recently built with caching disabled via
+ recently built with caching disabled via the
+ .B --cache-disable
+ option.
++
++When using the 
++.B --cache-disable 
++and 
++.B --cache-populate 
++options together, scons will not retrieve files from the cache, but
++will still copy derived files to the cache.
++
++When using the 
++.B --cache-populate
++option, derived files will not be copied to the cache if the
++corresponding file is already present.
+ 
+ .TP
+ --cache-show
+@@ -492,6 +532,30 @@ This will produce consistent output for 
+ This will produce consistent output for build logs,
+ regardless of whether a target
+ file was rebuilt or retrieved from the cache.
++
++.TP
++--cache-verify
++When using
++.BR CacheDir (),
++verify that already-existing, up-to-date derived files and files built
++by this invocation match the ones present in the cache. This is done
++by performing a binary comparison between each derived file and its
++corresponding cache file. A warning message is printed if they do not
++match. This is useful to identify files that are corrupted in the
++cache.
++
++One has to be careful when interpreting the 
++.B --cache-verify
++warnings. Derived files can hash to same cache entry if their build
++signature is incomplete. 
++
++For example, a scanner that forgets to list all of its implicit
++dependencies could lead to an action producing a different derived
++file on different machines and yet they would all hash to the same
++cache file. In that case, 
++.B --cache-verify
++would complain about files not matching, but the problem is not a
++corrupted cache.
+ 
+ .TP
+ .RI --config= mode
+@@ -900,8 +964,10 @@ command:
+ .ES
+ --cache-debug=FILE
+ --cache-disable, --no-cache
+---cache-force, --cache-populate
++--cache-force, 
++--cache-populate
+ --cache-show
++--cache-verify
+ --debug=TYPE
+ -i, --ignore-errors
+ -j N, --jobs=N
+@@ -3870,8 +3936,14 @@ which corresponds to --cache_disable;
+ .B cache_force
+ which corresponds to --cache_force;
+ .TP 6
++.B cache_populate
++which corresponds to --cache_populate;
++.TP 6
+ .B cache_show
+ which corresponds to --cache_show;
++.TP 6
++.B cache_verify
++which corresponds to --cache_verify;
+ .TP 6
+ .B clean
+ which corresponds to -c, --clean and --remove;
+diff -r 2ba70e65d30e results.qmr
+Binary file results.qmr has changed
+diff -r 2ba70e65d30e src/engine/SCons/CacheDir.py
+--- a/src/engine/SCons/CacheDir.py	Mon Feb 11 20:27:30 2008 -0500
++++ b/src/engine/SCons/CacheDir.py	Tue Feb 12 11:29:03 2008 -0500
+@@ -37,6 +37,7 @@ cache_enabled = True
+ cache_enabled = True
+ cache_debug = False
+ cache_force = False
++cache_populate = False
+ cache_show = False
+ cache_verify = False
+ 
+@@ -45,6 +46,8 @@ def CacheRetrieveFunc(target, source, en
+     fs = t.fs
+     cd = env.get_CacheDir()
+     cachedir, cachefile = cd.cachepath(t)
++    if not cachedir:
++        return 1
+     if not fs.exists(cachefile):
+         cd.CacheDebug('CacheRetrieve(%s):  %s not in cache\n', t, cachefile)
+         return 1
+@@ -63,6 +66,8 @@ def CacheRetrieveString(target, source, 
+     fs = t.fs
+     cd = env.get_CacheDir()
+     cachedir, cachefile = cd.cachepath(t)
++    if not cachedir:
++        return None
+     if t.fs.exists(cachefile):
+         return "Retrieved `%s' from cache" % t.path
+     return None
+@@ -78,18 +83,24 @@ def CachePushFunc(target, source, env):
+     fs = t.fs
+     cd = env.get_CacheDir()
+     cachedir, cachefile = cd.cachepath(t)
++    if not cachedir:
++        return
+     if fs.exists(cachefile):
+-        # Don't bother copying it if it's already there.  Note that
+-        # usually this "shouldn't happen" because if the file already
+-        # existed in cache, we'd have retrieved the file from there,
+-        # not built it.  This can happen, though, in a race, if some
+-        # other person running the same build pushes their copy to
+-        # the cache after we decide we need to build it but before our
+-        # build completes.
+-        cd.CacheDebug('CachePush(%s):  %s already exists in cache\n', t, cachefile)
+-        return
+-
+-    cd.CacheDebug('CachePush(%s):  pushing to %s\n', t, cachefile)
++        if cache_force:
++            cd.CacheDebug(
++                'CachePush(%s):  %s already exists in cache, overwriting.\n', t, cachefile)
++        else:
++            # Don't bother copying it if it's already there.  Note that
++            # usually this "shouldn't happen" because if the file already
++            # existed in cache, we'd have retrieved the file from there,
++            # not built it.  This can happen, though, in a race, if some
++            # other person running the same build pushes their copy to
++            # the cache after we decide we need to build it but before our
++            # build completes.
++            cd.CacheDebug('CachePush(%s):  %s already exists in cache\n', t, cachefile)
++            return
++    else:
++        cd.CacheDebug('CachePush(%s):  pushing to %s\n', t, cachefile)
+ 
+     tempfile = cachefile+'.tmp'+str(os.getpid())
+     errfmt = "Unable to copy %s to cache. Cache file is %s"
+@@ -101,7 +112,7 @@ def CachePushFunc(target, source, env):
+             # We may have received an exception because another process
+             # has beaten us creating the directory.
+             if not fs.isdir(cachedir):
+-                msg = errfmt % (str(target), cachefile)
++                msg = errfmt % (t, cachefile)
+                 raise SCons.Errors.EnvironmentError, msg
+ 
+     try:
+@@ -118,7 +129,7 @@ def CachePushFunc(target, source, env):
+         # the CacheDir being on a separate file system that's full.
+         # In any case, inability to push a file to cache doesn't affect
+         # the correctness of the build, so just print a warning.
+-        msg = errfmt % (str(target), cachefile)
++        msg = errfmt % (t, cachefile)
+         SCons.Warnings.warn(SCons.Warnings.CacheWriteErrorWarning, msg)
+ 
+ CachePush = SCons.Action.Action(CachePushFunc, None)
+@@ -130,13 +141,16 @@ def CacheVerifyFunc(target, source, env)
+     fs = t.fs
+     cd = env.get_CacheDir()
+     cachedir, cachefile = cd.cachepath(t)
++    if not cachedir:
++        return
+     if fs.exists(cachefile) and not fs.islink(t.path):
+-        if not filcmp.cmp(t.path, cachefile, shallow=False):
++        import filecmp
++        if not filecmp.cmp(t.path, cachefile, shallow=False):
+             errfmt = \
+                    "The file %s in the cache dir is different from the file " \
+                    "%s in the build dir. The file in the cache dir may be corrupted."
+-            msg = errfmt % (cachefile,str(target))
+-            raise SCons.Errors.EnvironmentError, msg
++            msg = errfmt % (cachefile, t)
++            SCons.Warnings.warn(SCons.Warnings.CacheVerifyErrorWarning, msg)
+ 
+ CacheVerify = SCons.Action.Action(CacheVerifyFunc, None)
+ 
+@@ -172,7 +186,7 @@ class CacheDir:
+     def cachepath(self, node):
+         """
+         """
+-        if not self.is_enabled():
++        if self.path is None:
+             return None, None
+ 
+         sig = node.get_cachedir_bsig()
+@@ -231,9 +245,11 @@ class CacheDir:
+         return CachePush(node, [], node.get_build_env())
+ 
+     def push_if_forced(self, node):
+-        if cache_force:
+-            return CachePush(node, [], node.get_build_env())
++        actions = []
++        if cache_force or cache_populate:
++            actions.append(CachePush(node, [], node.get_build_env()))
+         if cache_verify:
+-            return CacheVerify(node, [], node.get_build_env())
++            actions.append(CacheVerify(node, [], node.get_build_env()))
++        return actions
+ 
+     
+diff -r 2ba70e65d30e src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Mon Feb 11 20:27:30 2008 -0500
++++ b/src/engine/SCons/Script/Main.py	Tue Feb 12 11:29:03 2008 -0500
+@@ -754,6 +754,7 @@ def _main(parser):
+     # as configured by the user.
+ 
+     default_warnings = [ SCons.Warnings.CorruptSConsignWarning,
++                         SCons.Warnings.CacheVerifyErrorWarning,
+                          SCons.Warnings.DeprecatedWarning,
+                          SCons.Warnings.DuplicateEnvironmentWarning,
+                          SCons.Warnings.MissingSConscriptWarning,
+@@ -1001,7 +1002,9 @@ def _build_targets(fs, options, targets,
+     SCons.CacheDir.cache_enabled = not options.cache_disable
+     SCons.CacheDir.cache_debug = options.cache_debug
+     SCons.CacheDir.cache_force = options.cache_force
++    SCons.CacheDir.cache_populate = options.cache_populate
+     SCons.CacheDir.cache_show = options.cache_show
++    SCons.CacheDir.cache_verify = options.cache_verify
+ 
+     if options.no_exec:
+         CleanTask.execute = CleanTask.show
+diff -r 2ba70e65d30e src/engine/SCons/Script/SConsOptions.py
+--- a/src/engine/SCons/Script/SConsOptions.py	Mon Feb 11 20:27:30 2008 -0500
++++ b/src/engine/SCons/Script/SConsOptions.py	Tue Feb 12 11:29:03 2008 -0500
+@@ -525,20 +525,25 @@ def Parser(version):
+                   action="store_true",
+                   help="Do not retrieve built targets from CacheDir.")
+ 
+-    op.add_option('--cache-force', '--cache-populate',
++    op.add_option('--cache-force',
+                   dest='cache_force', default=False,
+                   action="store_true",
+-                  help="Copy already-built targets into the CacheDir.")
++                  help="Copy already-built targets into the CacheDir even if they are present.")
+ 
+-    op.add_option('--cache-verify',
+-                  dest='cache_verify', default=False,
++    op.add_option('--cache-populate',
++                  dest='cache_populate', default=False,
+                   action="store_true",
+-                  help="Validates already-built targets from the CacheDir.")
++                  help="Copy already-built targets into the CacheDir if not present.")
+ 
+     op.add_option('--cache-show',
+                   dest='cache_show', default=False,
+                   action="store_true",
+                   help="Print build actions for files from CacheDir.")
++
++    op.add_option('--cache-verify',
++                  dest='cache_verify', default=False,
++                  action="store_true",
++                  help="Verify targets present in the CacheDir.")
+ 
+     config_options = ["auto", "force" ,"cache"]
+ 
+diff -r 2ba70e65d30e src/engine/SCons/Warnings.py
+--- a/src/engine/SCons/Warnings.py	Mon Feb 11 20:27:30 2008 -0500
++++ b/src/engine/SCons/Warnings.py	Tue Feb 12 11:29:03 2008 -0500
+@@ -38,6 +38,9 @@ class Warning(SCons.Errors.UserError):
+ # NOTE:  If you add a new warning class, add it to the man page, too!
+ 
+ class CacheWriteErrorWarning(Warning):
++    pass
++
++class CacheVerifyErrorWarning(Warning):
+     pass
+ 
+ class CorruptSConsignWarning(Warning):
+@@ -90,7 +93,7 @@ def suppressWarningClass(clazz):
+     _enabled.insert(0, (clazz, 0))
+     
+ def enableWarningClass(clazz):
+-    """Suppresses all warnings that are of type clazz or
++    """Enables all warnings that are of type clazz or
+     derived from clazz."""
+     _enabled.insert(0, (clazz, 1))
+ 
+diff -r 2ba70e65d30e test/CacheDir/option--cf.py
+--- a/test/CacheDir/option--cf.py	Mon Feb 11 20:27:30 2008 -0500
++++ b/test/CacheDir/option--cf.py	Tue Feb 12 11:29:03 2008 -0500
+@@ -29,6 +29,7 @@ Test populating a CacheDir with the --ca
+ """
+ 
+ import os.path
++import re
+ import shutil
+ 
+ import TestSCons
+@@ -119,5 +120,59 @@ Retrieved `all' from cache
+ 
+ test.fail_test(os.path.exists(test.workpath('src', 'cat.out')))
+ 
++# Verify that --cache-force can be combined with --cache-disable.  DO NOT CLEAN UP.
++test.run(chdir = 'src', arguments = '-c .')
++
++expected = re.escape( test.wrap_stdout("""\
++cat(["aaa.out"], ["aaa.in"])
++CachePush(aaa.out):  HEX already exists in cache, overwriting.
++cat(["bbb.out"], ["bbb.in"])
++CachePush(bbb.out):  HEX already exists in cache, overwriting.
++cat(["ccc.out"], ["ccc.in"])
++CachePush(ccc.out):  HEX already exists in cache, overwriting.
++cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
++CachePush(all):  HEX already exists in cache, overwriting.
++"""))
++
++expected = expected.replace( '\\\n', '\n')
++expected = expected.replace( 'HEX', r'[0-9a-f]+')
++
++test.run(chdir = 'src', arguments = '--cache-disable --cache-force --cache-debug=-', 
++         match = TestSCons.match_re, stdout = expected)
++
++test.fail_test(test.read(['src', 'all']) != "aaa.in\nbbb.in\nccc.in\n")
++test.fail_test(test.read(['src', 'cat.out']) != "aaa.out\nbbb.out\nccc.out\nall\n")
++
++test.up_to_date(chdir = 'src', arguments = '.')
++
++test.unlink(['src', 'cat.out'])
++
++# Verify that --cache-populate can be combined with --cache-disable.  DO NOT CLEAN UP.
++test.run(chdir = 'src', arguments = '-c .')
++
++expected = re.escape( test.wrap_stdout("""\
++cat(["aaa.out"], ["aaa.in"])
++CachePush(aaa.out):  HEX already exists in cache
++cat(["bbb.out"], ["bbb.in"])
++CachePush(bbb.out):  HEX already exists in cache
++cat(["ccc.out"], ["ccc.in"])
++CachePush(ccc.out):  HEX already exists in cache
++cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
++CachePush(all):  HEX already exists in cache
++"""))
++
++expected = expected.replace( '\\\n', '\n')
++expected = expected.replace( 'HEX', r'[0-9a-f]+')
++
++test.run(chdir = 'src', arguments = '--cache-disable --cache-populate --cache-debug=-', 
++         match = TestSCons.match_re, stdout = expected)
++
++test.fail_test(test.read(['src', 'all']) != "aaa.in\nbbb.in\nccc.in\n")
++test.fail_test(test.read(['src', 'cat.out']) != "aaa.out\nbbb.out\nccc.out\nall\n")
++
++test.up_to_date(chdir = 'src', arguments = '.')
++
++test.unlink(['src', 'cat.out'])
++
+ # All done.
+ test.pass_test()
+diff -r 2ba70e65d30e test/CacheDir/option--cv.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/CacheDir/option--cv.py	Tue Feb 12 11:29:03 2008 -0500
+@@ -0,0 +1,117 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test populating a CacheDir with the --cache-force option.
++"""
++
++import os.path
++import re
++import string
++
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++test.subdir('cache', 'src')
++
++test.write(['src', 'SConstruct'], """
++Command('aaa.out', 'aaa.in', Copy('aaa.out', 'aaa.in'))
++CacheDir(r'%s')
++""" % test.workpath('cache'))
++
++test.write(['src', 'aaa.in'], "aaa.in\n")
++
++# Verify that a normal build works correctly.
++# This should populate the cache with our derived files.
++test.run(chdir = 'src', arguments = '--cache-debug=- .')
++
++test.fail_test(test.read(['src', 'aaa.out']) != "aaa.in\n")
++
++cf_re = re.compile(r'CachePush\(aaa\.out\):  pushing to ([0-9a-f]+)')
++m = cf_re.search(test.stdout())
++test.fail_test(not m)
++
++sig = m.group(1)
++subdir = string.upper(sig[0])
++
++test.fail_test(test.read(['cache', subdir, sig]) != "aaa.in\n")
++
++
++# Verify should now pass.
++
++verify_failed = '\n'.join(
++    [ 
++    '',
++    r'scons: warning: The file .* in the cache dir is different from the file .* in the build dir\. '
++    'The file in the cache dir may be corrupted\.',
++    'File .*',
++    ''
++    ])
++
++test.run(chdir = 'src', arguments = '--cache-verify .')
++
++test.fail_test(test.read(['src', 'aaa.out']) != "aaa.in\n")
++test.fail_test(test.read(['cache', subdir, sig]) != "aaa.in\n")
++
++
++test.run(chdir = 'src', arguments = '-c .')
++test.run(chdir = 'src', arguments = '--cache-verify .')
++
++test.fail_test(test.read(['src', 'aaa.out']) != "aaa.in\n")
++test.fail_test(test.read(['cache', subdir, sig]) != "aaa.in\n")
++
++
++# Now corrupt the cache!!!
++test.write(['cache', subdir, sig], "Corrupted!!!\n")
++
++test.run(chdir = 'src', arguments = '--cache-verify .', 
++         stderr=verify_failed, match=TestSCons.match_re)
++
++
++# Fix the corrupted cache and double check that it is up-to-date.
++test.run(chdir = 'src', arguments = '--cache-force --cache-verify .')
++
++test.fail_test(test.read(['src', 'aaa.out']) != "aaa.in\n")
++test.fail_test(test.read(['cache', subdir, sig]) != "aaa.in\n")
++
++# Corrupt the cache again.
++test.write(['cache', subdir, sig], "Corrupted!!!\n")
++
++test.run(chdir = 'src', arguments = '--cache-verify .', 
++         stderr=verify_failed, match=TestSCons.match_re)
++
++
++# Clean and fix the corrupted cache.
++# Double check that it is up-to-date.
++test.run(chdir = 'src', arguments = '-c .')
++test.run(chdir = 'src', arguments = '--cache-disable --cache-force --cache-verify .')
++
++test.fail_test(test.read(['src', 'aaa.out']) != "aaa.in\n")
++test.fail_test(test.read(['cache', subdir, sig]) != "aaa.in\n")
++
++# All done.
++test.pass_test()
