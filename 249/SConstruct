@@ -1,0 +1,68 @@
+import glob
+import SCons.Script
+
+opts = Options("build.conf")
+opts.Add(BoolOption("JAVA_INTERFACE", "Enable the Java interface", "True"))
+opts.Add(PathOption("PREFIX", "Installation directory prefix", "/usr/local"))
+
+env = Environment(
+	options=opts,
+	CPPPATH="include",
+	SWIGFLAGS="-I$CPPPATH -c++ -java -package saimgui2.peerclasses",
+	SWIGCXXFILESUFFIX="_wrap.cxx",
+	SWIGOUTDIR="swig"
+)
+
+
+# Automatically add all .cc-files in src to the list of source files:
+sources = glob.glob("src/*.cc")
+if env["JAVA_INTERFACE"] == 1:
+	sources.append("src/SAIMpara.i")
+
+libSAIMpara = env.SharedLibrary("SAIMpara", sources)
+Default(libSAIMpara)
+print "DEFAULT_TARGETS is now", map(str, DEFAULT_TARGETS)
+# Installation
+prefix="$PREFIX"
+libPrefix="$PREFIX/lib"
+incPrefix="$PREFIX/include"
+
+env.Install(libPrefix, libSAIMpara)
+env.Install(incPrefix+"/SAIMpara", glob.glob("include/SAIMpara/*.h"))
+
+env.Alias("install", prefix)
+
+
+# Add dependency tracking for swig-interface files:
+# (From http://www.scons.org/wiki/SwigBuilder?highlight=%28Builder%24%29)
+SWIGScanner = SCons.Scanner.ClassicCPP(
+	"SWIGScan",
+	".i",
+	"CPPPATH",
+	'^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
+)
+env.Prepend(SCANNERS=[SWIGScanner])
+
+# Remove java files created by swig when building SAIMpara_wrap.cxx:
+env.Clean("src/SAIMpara_wrap.cxx", glob.glob("src/*.java"))
+
+print "DEFAULT_TARGETS is now", map(str, DEFAULT_TARGETS)
+
+java = Environment()
+peerclasses = java.Java('', 'swig')
+
+Default(peerclasses)
+
+print "DEFAULT_TARGETS is now", map(str, DEFAULT_TARGETS)
+
+#jar=Environment()
+#TODO: sollte nur erzeugt werden, wenn die class-dateien auch da sind und erzeugt wurden!
+#package=jar.Jar(target = 'SAIMpara-peerclasses.jar', source = 'saimgui2')
+
+
+#Default(libSAIMpara,peerclasses, package)
+
+#print "DEFAULT_TARGETS is now", map(str, DEFAULT_TARGETS)
+
+
+Help(opts.GenerateHelpText(env))
