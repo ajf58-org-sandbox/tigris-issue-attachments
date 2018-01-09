@@ -1,0 +1,178 @@
+Index: src/engine/SCons/Conftest.py
+===================================================================
+--- src/engine/SCons/Conftest.py	(revision 2480)
++++ src/engine/SCons/Conftest.py	(working copy)
+@@ -318,6 +318,102 @@
+ 
+     return ret
+ 
++def CheckTypeSize(context, type_name, header = None, language = None, expect = None):
++    """This check can be used to get the size of a given type, or to check whether
++    the type is of expected size.
++
++    Arguments:
++        - type : str
++            the type to check
++        - includes : sequence
++            list of headers to include in the test code before testing the type
++        - language : str
++            'C' or 'C++'
++        - expect : int
++            if given, will test wether the type has the given number of bytes.
++            If not given, will automatically find the size.
++
++        Returns:
++            status : int
++                0 if the check failed, or the found size of the type if the check succeeded."""
++    
++    # Include "confdefs.h" first, so that the header can use HAVE_HEADER_H.
++    if context.headerfilename:
++        includetext = '#include "%s"' % context.headerfilename
++    else:
++        includetext = ''
++
++    if not header:
++        header = ""
++
++    lang, suffix, msg = _lang2suffix(language)
++    if msg:
++        context.Display("Cannot check for %s type: %s\n" % (type_name, msg))
++        return msg
++
++    src = includetext + header 
++    if not expect is None:
++        # Only check if the given size is the right one
++        context.Display('Checking %s is %d bytes... ' % (type_name, expect))
++
++        # test code taken from autoconf: this is a pretty clever hack to find that
++        # a type is of a given size using only compilation. This speeds things up
++        # quite a bit compared to straightforward code using TryRun
++        src += r"""
++typedef %s scons_check_type;
++
++int main()
++{
++    static int test_array[1 - 2 * !(((long int) (sizeof(scons_check_type))) == %d)];
++    test_array[0] = 0;
++
++    return 0;
++}
++"""
++
++        # XXX: Try* vs CompileProg ?
++        st = context.TryCompile(src % (type_name, expect), suffix)
++        if st:
++            _Have(context, "SIZEOF_" + type_name, str(expect))
++            context.Display("yes\n")
++            return expect
++        else:
++            context.Display("no\n")
++            _LogFailed(context, src, st)
++            return 0
++    else:
++        # Only check if the given size is the right one
++        context.Message('Checking size of %s ... ' % type_name)
++
++        # We have to be careful with the program we wish to test here since
++        # compilation will be attempted using the current environment's flags.
++        # So make sure that the program will compile without any warning. For
++        # example using: 'int main(int argc, char** argv)' will fail with the
++        # '-Wall -Werror' flags since the variables argc and argv would not be
++        # used in the program...
++        #
++        src += """
++#include <stdlib.h>
++#include <stdio.h>
++int main() {
++    printf("%d", (int)sizeof(""" + type_name + """));
++    return 0;
++}
++    """
++        ret = context.TryRun(src, suffix)
++        st = ret[0]
++        try:
++            size = int(ret[1])
++            _Have(context, "SIZEOF_" + type_name, str(size))
++            context.Display("%d\n" % size)
++        except ValueError:
++            size = 0
++            _LogFailed(context, src, st)
++            context.Display(" Failed !\n")
++        if st:
++            return size
++        else:
++            return 0
+ 
+ def CheckLib(context, libs, func_name = None, header = None,
+                  extra_libs = None, call = None, language = None, autoadd = 1):
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 2480)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -497,6 +497,40 @@
+         finally:
+             sconf.Finish()
+ 
++    def test_CheckTypeSize(self):
++        """Test SConf.CheckTypeSize()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            # CheckTypeSize()
++
++            # In ANSI C, sizeof(char) == 1.
++            r = sconf.CheckTypeSize('char', expect = 1)
++            assert r == 1, "sizeof(char) != 1 ??"
++            r = sconf.CheckTypeSize('char', expect = 0)
++            assert r == 0, "sizeof(char) == 0 ??"
++            r = sconf.CheckTypeSize('char', expect = 2)
++            assert r == 0, "sizeof(char) == 2 ??"
++            r = sconf.CheckTypeSize('char')
++            assert r == 1, "sizeof(char) != 1 ??"
++            r = sconf.CheckTypeSize('const unsigned char')
++            assert r == 1, "sizeof(const unsigned char) != 1 ??"
++
++            # Checking C++
++            r = sconf.CheckTypeSize('const unsigned char', language = 'C++')
++            assert r == 1, "sizeof(const unsigned char) != 1 ??"
++
++            # Checking Non-existing type
++            r = sconf.CheckTypeSize('thistypedefhasnotchancetosexist_scons')
++            assert r == 0, \
++                   "Checking size of thistypedefhasnotchancetosexist_scons succeeded ?"
++
++        finally:
++            sconf.Finish()
++
+     def test_(self):
+         """Test SConf.CheckType()
+         """
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 2480)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -403,6 +403,7 @@
+         default_tests = {
+                  'CheckFunc'          : CheckFunc,
+                  'CheckType'          : CheckType,
++                 'CheckTypeSize'      : CheckTypeSize,
+                  'CheckHeader'        : CheckHeader,
+                  'CheckCHeader'       : CheckCHeader,
+                  'CheckCXXHeader'     : CheckCXXHeader,
+@@ -847,6 +848,13 @@
+     context.did_show_result = 1
+     return not res
+ 
++def CheckTypeSize(context, type_name, includes = "", language = None, expect = None):
++    res = SCons.Conftest.CheckTypeSize(context, type_name,
++                                       header = includes, language = language, 
++                                       expect = expect)
++    context.did_show_result = 1
++    return res
++
+ def createIncludesFromHeaders(headers, leaveLast, include_quotes = '""'):
+     # used by CheckHeader and CheckLibWithHeader to produce C - #include
+     # statements from the specified header (list)
