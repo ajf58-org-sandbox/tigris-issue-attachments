@@ -1,0 +1,69 @@
+--- scons-src-0.96.92\src\engine\SCons\Tool\mslink.py	Mon Apr 10 23:34:52 2006
++++ scons-src-0.96.92.patched\src\engine\SCons\Tool\mslink.py	Mon Sep 18 11:53:48 2006
+@@ -143,10 +143,52 @@
+         return ret
+     return 0
+ 
++def EmbedManifestDLLFunc(target,source,env):
++    if(float(env['MSVS_VERSION']) < 8.0): return 0;
++    embed_manifest = env.has_key('embed_manifest') and env['embed_manifest'];
++    insert_manifest= env.has_key('WINDOWS_INSERT_MANIFEST') and env['WINDOWS_INSERT_MANIFEST'];
++    if(embed_manifest and insert_manifest):
++        manifest = str(target[0])+'.manifest.embedded';
++        ret = (embedManifestDLLAction+SCons.Defaults.Touch(manifest)) ([target[0]],None,env);        
++        env.File(manifest);
++        env.Depends(manifest,target);
++        if ret:
++            raise SCons.Errors.UserError, "Unable to embed manifest into %s" % (target[0]);
++        else:
++            print "Embeded %(target)s.manifest successfully into %(target)s" %{'target':target[0]};
++        return ret;
++    return 0;
++	
++def SignDLLFunc(target,source,env):
++    if(float(env['MSVS_VERSION']) < 7.1): return 0;
++    if(env.has_key('signing_key')):
++        key=env.File(env['signing_key']);
++        env.Depends(target,key);
++        signed=str(target[0])+'.signed';
++        ret = (signDLLAction + SCons.Defaults.Touch(signed))([target[0]],[key],env);
++        env.File(signed);
++        env.Depends(signed,target);
++        if ret:
++            raise SCons.Errors.UserError, "Unable to sign %s" % (target[0]);
++        else:
++            print "Successfully signed %s" %(target[0]);
++        return ret;
++    
++def SetupDelaySignFunc(target,source,env):
++    if(float(env['MSVS_VERSION']) < 7.1): return 0;
++    if(env.has_key('signing_key')):
++        env.Append(LINKFLAGS=['/DELAYSIGN','/KEYFILE:"%s"' % (env['signing_key'])]);
++    return 0;
++    
+ regServerAction = SCons.Action.Action("$REGSVRCOM", "$REGSVRCOMSTR")
+ regServerCheck = SCons.Action.Action(RegServerFunc, None)
++embedManifestDLLAction = SCons.Action.Action("$EMBEDMANIFESTDLLCOM","$EMBEDMANIFESTDLLCOMSTR");
++embedManifestDLLCheck = SCons.Action.Action(EmbedManifestDLLFunc,None);
++signDLLAction = SCons.Action.Action("$SIGNDLLCOM","$SIGNDLLCOMSTR");
++signDLLCheck = SCons.Action.Action(SignDLLFunc,None);
++setupDelaySignAction = SCons.Action.Action(SetupDelaySignFunc,None);
+ shlibLinkAction = SCons.Action.Action('${TEMPFILE("$SHLINK $SHLINKFLAGS $_SHLINK_TARGETS $( $_LIBDIRFLAGS $) $_LIBFLAGS $_PDB $_SHLINK_SOURCES")}')
+-compositeLinkAction = shlibLinkAction + regServerCheck
++compositeLinkAction = setupDelaySignAction + shlibLinkAction + regServerCheck + embedManifestDLLCheck + signDLLCheck;
+ 
+ def generate(env):
+     """Add Builders and construction variables for ar to an Environment."""
+@@ -190,6 +232,12 @@
+     env['REGSVR'] = os.path.join(SCons.Platform.win32.get_system_root(),'System32','regsvr32')
+     env['REGSVRFLAGS'] = '/s '
+     env['REGSVRCOM'] = '$REGSVR $REGSVRFLAGS ${TARGET.windows}'
++    env['MT'] = 'mt';
++    env['MTFLAGS'] = '-nologo';
++    env['EMBEDMANIFESTDLLCOM'] = '$MT $MTFLAGS -outputresource:"${TARGET}";2 -manifest "${TARGET}.manifest"';
++    env['SN'] = 'sn';
++    env['SNFLAGS'] = '-q';
++    env['SIGNDLLCOM'] ='sn ${SNFLAGS} -R "${TARGET}" "${SOURCE}"';
+ 
+     try:
+         version = SCons.Tool.msvs.get_default_visualstudio_version(env)
