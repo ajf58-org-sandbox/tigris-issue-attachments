@@ -1,0 +1,46 @@
+Index: test/TEX/multi-run.py
+===================================================================
+--- test/TEX/multi-run.py	(revision 1853)
++++ test/TEX/multi-run.py	(working copy)
+@@ -42,7 +42,7 @@
+ if not tex and not latex:
+     test.skip_test("Could not find tex or latex; skipping test(s).\n")
+ 
+-test.subdir('work1', 'work2')
++test.subdir('work1', 'work2', 'work4')
+ 
+ 
+ input_file = r"""
+@@ -55,6 +55,15 @@
+ \end{document}
+ """
+ 
++input_file2 = r"""
++\documentclass{article}
++\begin{document}
++Hello world.
++% \bibliography{fooref}
++% \bibliographystyle{plain}
++\end{document}
++"""
++
+ bibfile = r"""
+ @Article{X,
+   author = 	 "Mr. X",
+@@ -106,4 +115,16 @@
+         print foo_log
+         test.fail_test(1)
+ 
++    test.write(['work4', 'SConstruct'], """\
++DVI( "foo.ltx" )
++""")
++    test.write(['work4', 'foo.ltx'], input_file2)
++    # run latex
++    test.run(chdir = 'work4', arguments = '.')
++    # try to run scons again; should be up to date
++    test.run(chdir = 'work4', arguments = '.')
++    if string.find(test.stdout(), r"scons: `.' is up to date.") == -1:
++        test.fail_test()
++
++
+ test.pass_test()
