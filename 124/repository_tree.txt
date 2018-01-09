@@ -1,0 +1,51 @@
+
+scons -n --debug=tree
+
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+/opt/SUNWspro/bin/CC -o mylib/mylib.os -c -mt -KPIC -library=rwtools7_std -g -Imylib mylib/mylib.cpp
+/opt/SUNWspro/bin/CC -o mylib/mylib1.os -c -mt -KPIC -library=rwtools7_std -g -Imylib mylib/mylib1.cpp
+/opt/SUNWspro/bin/CC -o mylib/mylib2.os -c -mt -KPIC -library=rwtools7_std -g -Imylib mylib/mylib2.cpp
+/opt/SUNWspro/bin/CC -o mylib/libmylib.so -library=rwtools7_std -mt -R -KPIC -g -shared mylib/mylib.os mylib/mylib1.os mylib/mylib2.os -Lmylib
+/opt/SUNWspro/bin/CC -o bin/binmain -library=rwtools7_std -mt -KPIC -g bin/binmain.o -Lmylib -Lbin -lmylib
+Install file: "bin/binmain" as "delivery/binmain"
+
++-delivery/binmain
+  +-bin/binmain
+    +-bin/binmain.o
+    | +-bin/binmain.cpp
+    | +-mylib/mylib.h
+    | +-mylib/mylib.cpp
+    | +-mylib/mylib1.h
+    | +-mylib/mylib2.h
+    +-mylib/libmylib.so
+      +-mylib/mylib.os
+      | +-mylib/mylib.cpp
+      | +-mylib/mylib.h
+      | +-mylib/mylib1.h
+      | +-mylib/mylib2.h
+      +-mylib/mylib1.os
+      | +-mylib/mylib1.cpp
+      | +-mylib/mylib1.h
+      | +-mylib/mylib2.h
+      +-mylib/mylib2.os
+        +-mylib/mylib2.cpp
+        +-mylib/mylib2.h
+Install file: "mylib/libmylib.so" as "delivery/libmylib.so"
+
++-delivery/libmylib.so
+  +-mylib/libmylib.so
+    +-mylib/mylib.os
+    | +-mylib/mylib.cpp
+    | +-mylib/mylib.h
+    | +-mylib/mylib1.h
+    | +-mylib/mylib2.h
+    +-mylib/mylib1.os
+    | +-mylib/mylib1.cpp
+    | +-mylib/mylib1.h
+    | +-mylib/mylib2.h
+    +-mylib/mylib2.os
+      +-mylib/mylib2.cpp
+      +-mylib/mylib2.h
+scons: done building targets.
