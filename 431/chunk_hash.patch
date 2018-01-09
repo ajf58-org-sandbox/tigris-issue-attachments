@@ -1,0 +1,92 @@
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 3065)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -2211,6 +2211,21 @@
+             raise
+         return r
+ 
++    def get_fileobject(self):
++        """
++        Return an open file object with read access.
++        """
++        if not self.rexists():
++            return None
++        fname = self.rfile().abspath
++        try:
++            r = open(fname, "rb")
++        except EnvironmentError, e:
++            if not e.filename:
++                e.filename = fname
++            raise
++        return r        
++
+     memoizer_counters.append(SCons.Memoize.CountValue('get_size'))
+ 
+     def get_size(self):
+@@ -2674,15 +2689,17 @@
+         if csig is None:
+ 
+             try:
+-                contents = self.get_contents()
++                fo = self.get_fileobject()
++                if not fo:
++                    csig = SCons.Util.MD5signature('')
++                else:
++                    csig = SCons.Util.MD5filesignature(fo)
+             except IOError:
+                 # This can happen if there's actually a directory on-disk,
+                 # which can be the case if they've disabled disk checks,
+                 # or if an action with a File target actually happens to
+                 # create a same-named directory by mistake.
+                 csig = ''
+-            else:
+-                csig = SCons.Util.MD5signature(contents)
+ 
+         ninfo.csig = csig
+ 
+@@ -2810,8 +2827,8 @@
+ 
+         cachedir, cachefile = self.get_build_env().get_CacheDir().cachepath(self)
+         if not self.exists() and cachefile and os.path.exists(cachefile):
+-            contents = open(cachefile, 'rb').read()
+-            self.cachedir_csig = SCons.Util.MD5signature(contents)
++            fo = open(cachefile, 'rb')
++            self.cachedir_csig = SCons.Util.MD5filesignature(fo)
+         else:
+             self.cachedir_csig = self.get_csig()
+         return self.cachedir_csig
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 3065)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -1442,6 +1442,11 @@
+ def MD5signature(s):
+     return str(s)
+ 
++def MD5filesignature(f, chunksize=65536):
++    s = f.read()
++    f.close()
++    return str(s)
++
+ try:
+     import hashlib
+ except ImportError:
+@@ -1454,6 +1459,17 @@
+             m.update(str(s))
+             return m.hexdigest()
+ 
++        def MD5filesignature(f, chunksize=65536):
++            m = hashlib.md5()
++            while 1:
++                blck = f.read(chunksize)
++                if not blck:
++                    break
++                m.update(str(blck))
++            f.close()
++            return m.hexdigest()
++            
++
+ def MD5collect(signatures):
+     """
+     Collects a list of signatures into an aggregate signature.
