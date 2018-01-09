@@ -1,0 +1,40 @@
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Node/FS.py,v
+retrieving revision 1.238
+diff -u -r1.238 FS.py
+--- src/engine/SCons/Node/FS.py	1 Dec 2005 21:00:01 -0000	1.238
++++ src/engine/SCons/Node/FS.py	10 Jan 2006 19:46:19 -0000
+@@ -1934,9 +1958,6 @@
+         except AttributeError:
+             pass
+ 
+-        if calc is None:
+-            calc = self.calculator()
+-
+         max_drift = self.fs.max_drift
+         mtime = self.get_timestamp()
+         use_stored = max_drift >= 0 and (time.time() - mtime) > max_drift
+@@ -1945,16 +1966,21 @@
+         if use_stored:
+             old = self.get_stored_info().ninfo
+             try:
+-                if old.timestamp and old.csig and old.timestamp == mtime:
++                if old.csig_timestamp and old.csig and old.csig_timestamp == mtime:
+                     csig = old.csig
++                    csig_timestamp = old.csig_timestamp
+             except AttributeError:
+                 pass
+         if csig is None:
++            if calc is None:
++                calc = self.calculator()
+             csig = calc.module.signature(self)
++            csig_timestamp = self.get_timestamp()
+ 
+         binfo = self.get_binfo()
+         ninfo = binfo.ninfo
+         ninfo.csig = csig
++        ninfo.csig_timestamp = csig_timestamp
+         ninfo.update(self)
+ 
+         if use_stored:
