@@ -1,0 +1,15 @@
+Index: intelc.py
+===================================================================
+--- intelc.py	(revision 1850)
++++ intelc.py	(working copy)
+@@ -353,7 +353,9 @@
+     else:
+         env['CC']        = 'icc'
+         env['CXX']       = 'icpc'
+-        env['LINK']      = '$CC'
++        # Don't reset LINK here;
++        # use smart_link which should already be here from link.py.
++        #env['LINK']      = '$CC'
+         env['AR']        = 'xiar'
+         env['LD']        = 'xild' # not used by default
+ 
