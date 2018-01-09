@@ -1,0 +1,22 @@
+# Bug: AddPostAction doesn't honour the exitstatfunc
+
+
+def create_c(target, source, env):
+    test_c = """
+int main() {
+  return 0;
+}
+"""
+    cfile = file(str(target[0]), "w")
+    cfile.write(test_c)
+    cfile.close()
+    return 0
+
+# arbitrary program
+Command("test.c", None, Action(create_c))
+p = Program(source="test.c")
+def always_succeed(s): return 0
+# I use a regression test in my code which returns > 0 if the test fails
+# which shouldn't exit scons, but honour the exitstatfunc
+act=Action("exit 2", exitstatfunc=always_succeed)
+AddPostAction(p, act)
