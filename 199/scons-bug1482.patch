@@ -1,0 +1,79 @@
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+--- src/engine/SCons/EnvironmentTests.py	(revision 1981)
++++ src/engine/SCons/EnvironmentTests.py	(working copy)
+@@ -2355,24 +2355,50 @@
+         """Test the AddPostAction() method"""
+         env = self.TestEnvironment(FOO='fff', BAR='bbb')
+ 
++        env.Command(target='$FOO', source=['foo1.in'],
++                    action='buildfoo $target $source')
+         n = env.AddPostAction('$FOO', lambda x: x)
+         assert str(n[0]) == 'fff', n[0]
+ 
++        env.Command(target=['ggg', '$BAR'], source=['foo1.in'],
++                    action='buildfoo $target $source')
+         n = env.AddPostAction(['ggg', '$BAR'], lambda x: x)
+         assert str(n[0]) == 'ggg', n[0]
+         assert str(n[1]) == 'bbb', n[1]
+ 
++        exc_caught = None
++        try:
++            n = env.AddPostAction('lala', lambda x: x)
++        except SCons.Errors.UserError, e:
++            exc_caught = 1
++        assert exc_caught, "UserError should be thrown for an AddPostAction on a node with no Builder."
++        expect = "Can't add PostAction <lambda>(target, source, env) to node lala yet; it doesn't have a Builder defined."
++        assert str(e) == expect, e
++
+     def test_AddPreAction(self):
+         """Test the AddPreAction() method"""
+         env = self.TestEnvironment(FOO='fff', BAR='bbb')
+ 
++        env.Command(target='$FOO', source=['foo1.in'],
++                    action='buildfoo $target $source')
+         n = env.AddPreAction('$FOO', lambda x: x)
+         assert str(n[0]) == 'fff', n[0]
+ 
++        env.Command(target=['ggg', '$BAR'], source=['foo1.in'],
++                    action='buildfoo $target $source')
+         n = env.AddPreAction(['ggg', '$BAR'], lambda x: x)
+         assert str(n[0]) == 'ggg', n[0]
+         assert str(n[1]) == 'bbb', n[1]
+ 
++        exc_caught = None
++        try:
++            n = env.AddPreAction('lala', lambda x: x)
++        except SCons.Errors.UserError, e:
++            exc_caught = 1
++        assert exc_caught, "UserError should be thrown for an AddPreAction on a node with no Builder."
++        expect = "Can't add PreAction <lambda>(target, source, env) to node lala yet; it doesn't have a Builder defined."
++        assert str(e) == expect, e
++
+     def test_Alias(self):
+         """Test the Alias() method"""
+         env = self.TestEnvironment(FOO='kkk', BAR='lll', EA='export_alias')
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 1981)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -1396,6 +1396,9 @@
+         for executor in map(lambda n: n.get_executor(), nodes):
+             uniq[executor] = 1
+         for executor in uniq.keys():
++            if isinstance(executor, SCons.Executor.Null):
++                fmt = "Can't add PreAction %s to node %s yet; it doesn't have a Builder defined."%(action, ','.join(map(lambda n: str(n), nodes)))
++                raise SCons.Errors.UserError, fmt
+             executor.add_pre_action(action)
+         return nodes
+ 
+@@ -1406,6 +1409,9 @@
+         for executor in map(lambda n: n.get_executor(), nodes):
+             uniq[executor] = 1
+         for executor in uniq.keys():
++            if isinstance(executor, SCons.Executor.Null):
++                fmt = "Can't add PostAction %s to node %s yet; it doesn't have a Builder defined."%(action, ','.join(map(lambda n: str(n), nodes)))
++                raise SCons.Errors.UserError, fmt
+             executor.add_post_action(action)
+         return nodes
+ 
