@@ -1,0 +1,72 @@
+[0;33m=== modified file 'src/engine/SCons/Conftest.py'
+[0m[0;31m--- src/engine/SCons/Conftest.py	2007-12-21 12:02:26 +0000
+[0m[0;34m+++ src/engine/SCons/Conftest.py	2007-12-21 12:52:53 +0000
+[0m[0;32m@@ -371,15 +371,11 @@
+[0m[0;37m }
+[0m[0;37m """
+[0m[0;37m 
+[0m[0;31m-        # XXX: Try* vs CompileProg ?
+[0m[0;31m-        st = context.TryCompile(src % (type_name, expect), suffix)
+[0m[0;31m-        if st:
+[0m[0;31m-            _Have(context, "SIZEOF_" + type_name, str(expect))
+[0m[0;31m-            context.Display("yes\n")
+[0m[0;34m+        st = context.CompileProg(src % (type_name, expect), suffix)
+[0m[0;34m+        _YesNoResult(context, st, "SIZEOF_%s %d" % (type_name, expect), src)
+[0m[0;34m+        if not st:
+[0m[0;37m             return expect
+[0m[0;37m         else:
+[0m[0;31m-            context.Display("no\n")
+[0m[0;31m-            _LogFailed(context, src, st)
+[0m[0;37m             return 0
+[0m[0;37m     else:
+[0m[0;37m         # Only check if the given size is the right one
+[0m[0;32m@@ -400,20 +396,19 @@
+[0m[0;37m     return 0;
+[0m[0;37m }
+[0m[0;37m     """
+[0m[0;31m-        ret = context.TryRun(src, suffix)
+[0m[0;31m-        st = ret[0]
+[0m[0;34m+        st, out = context.RunProg(src, suffix)
+[0m[0;37m         try:
+[0m[0;31m-            size = int(ret[1])
+[0m[0;31m-            _Have(context, "SIZEOF_" + type_name, str(size))
+[0m[0;31m-            context.Display("%d\n" % size)
+[0m[0;34m+            size = int(out)
+[0m[0;37m         except ValueError:
+[0m[0;34m+            # If cannot convert output of test prog to an integer (the size),
+[0m[0;34m+            # something went wront, so just fail
+[0m[0;34m+            # XXX: this breaks if sizeof(symbol) == 0; I don't think this can
+[0m[0;34m+            # happen, but I can't find a reference that says that
+[0m[0;34m+            # sizeof(something) is at least 1.
+[0m[0;37m             size = 0
+[0m[0;31m-            _LogFailed(context, src, st)
+[0m[0;31m-            context.Display(" Failed !\n")
+[0m[0;31m-        if st:
+[0m[0;31m-            return size
+[0m[0;31m-        else:
+[0m[0;31m-            return 0
+[0m[0;34m+
+[0m[0;34m+        _YesNoResult(context, st, "SIZEOF_%s %d" % (type_name, size), src)
+[0m[0;34m+        return size
+[0m[0;37m 
+[0m[0;37m def CheckDeclaration(context, symbol, includes = None, language = None):
+[0m[0;37m     """Checks whether symbol is declared.
+[0m[0;37m
+[0m[0;33m=== modified file 'src/engine/SCons/SConf.py'
+[0m[0;31m--- src/engine/SCons/SConf.py	2007-12-21 12:02:26 +0000
+[0m[0;34m+++ src/engine/SCons/SConf.py	2007-12-21 12:33:18 +0000
+[0m[0;32m@@ -798,6 +798,12 @@
+[0m[0;37m         # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
+[0m[0;37m         return not self.TryBuild(self.env.Object, text, ext)
+[0m[0;37m 
+[0m[0;34m+    def RunProg(self, text, ext):
+[0m[0;34m+        self.sconf.cached = 1
+[0m[0;34m+        # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
+[0m[0;34m+        st, out = self.TryRun(text, ext)
+[0m[0;34m+        return not st, out
+[0m[0;34m+
+[0m[0;37m     def AppendLIBS(self, lib_name_list):
+[0m[0;37m         oldLIBS = self.env.get( 'LIBS', [] )
+[0m[0;37m         self.env.Append(LIBS = lib_name_list)
+[0m[0;37m
+[0m
