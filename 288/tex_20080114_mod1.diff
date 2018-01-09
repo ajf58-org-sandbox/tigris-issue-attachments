@@ -1,0 +1,68 @@
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 2611)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -122,7 +122,7 @@
+         tocContents = open(tocfilename, "rb").read()
+ 
+     # Run LaTeX once to generate a new aux file and log file.
+-    XXXLaTeXAction(target, source, env)
++    result = XXXLaTeXAction(target, source, env)
+ 
+     # Decide if various things need to be run, or run again.  We check
+     # for the existence of files before opening them--even ones like the
+@@ -163,7 +163,7 @@
+         must_rerun_latex = 1
+ 
+     if must_rerun_latex == 1:
+-        XXXLaTeXAction(target, source, env)
++        result = XXXLaTeXAction(target, source, env)
+ 
+     # Now decide if latex needs to be run yet again to resolve warnings.
+     logfilename = targetbase + '.log'
+@@ -175,7 +175,7 @@
+            not rerun_citations_re.search(content) and \
+            not undefined_references_re.search(content):
+             break
+-        XXXLaTeXAction(target, source, env)
++        result = XXXLaTeXAction(target, source, env)
+ 
+     env['ENV']['TEXINPUTS'] = texinputs_save
+     env['ENV']['BIBINPUTS'] = bibinputs_save
+@@ -185,10 +185,11 @@
+     # later on Mac OSX so leave it,
+     # env['ENV']['TEXPICTS']  = texpicts_save
+ 
+-    return 0
++    return result
+ 
+ def LaTeXAuxAction(target = None, source= None, env=None):
+-    InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    result = InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    return result
+ 
+ LaTeX_re = re.compile("\\\\document(style|class)")
+ 
+@@ -205,10 +206,10 @@
+     decide the "flavor" of the source and then executes the appropriate
+     program."""
+     if is_LaTeX(source):
+-        LaTeXAuxAction(target,source,env)
++        result = LaTeXAuxAction(target,source,env)
+     else:
+-        TeXAction(target,source,env)
+-    return 0
++        result = TeXAction(target,source,env)
++    return result
+ 
+ def tex_emitter(target, source, env):
+     base = SCons.Util.splitext(str(source[0]))[0]
+@@ -290,7 +291,7 @@
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['LATEX']        = 'latex'
+-    env['LATEXFLAGS']   = SCons.Util.CLVar('')
++    env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
