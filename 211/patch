@@ -1,0 +1,25 @@
+*** /work/home/tclarke/tmp/scons-0.96.90/engine/SCons/Node/FS.py	Tue Feb 15 21:12:10 2005
+--- /usr/local/lib/scons/SCons/Node/FS.py	Tue Apr 19 16:23:18 2005
+***************
+*** 1617,1623 ****
+          # method has a chance to clear the build signature, which it
+          # will do if this file has a source scanner.
+          if self.fs.CachePath and self.fs.exists(self.path):
+!             CachePush(self, [], None)
+          self.fs.clear_cache()
+          SCons.Node.Node.built(self)
+  
+--- 1617,1629 ----
+          # method has a chance to clear the build signature, which it
+          # will do if this file has a source scanner.
+          if self.fs.CachePath and self.fs.exists(self.path):
+!             try:
+!                 CachePush(self, [], None)
+!             except SCons.Errors.BuildError,e:
+!                 if e.errstr != 'Permission Denied':
+!                     SCons.Warnings.warn(SCons.Warnings.CacheWriteErrorWarning,
+!                          "Unable to copy %s to cache."
+!                              % (str(e.node)))
+          self.fs.clear_cache()
+          SCons.Node.Node.built(self)
+  
