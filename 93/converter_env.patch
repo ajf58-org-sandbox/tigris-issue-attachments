@@ -1,0 +1,82 @@
+Index: test/Options/Options.py
+===================================================================
+--- test/Options/Options.py	(revision 1696)
++++ test/Options/Options.py	(working copy)
+@@ -47,6 +47,14 @@
+     environ[key] = "v"
+     environ["valid_key"] = "v"
+ 
++
++def old_converter (value):
++    return "old_converter"
++
++def new_converter (value, env):
++    return "new_converter"
++
++
+ opts = Options('custom.py')
+ opts.Add('RELEASE_BUILD',
+          'Set to 1 to build a release build',
+@@ -69,6 +77,18 @@
+          validator,
+          None)
+ 
++opts.Add('OLD_CONVERTER',
++         'An option for testing converters that take one parameter',
++         "foo",
++         None,
++         old_converter)
++
++opts.Add('NEW_CONVERTER',
++         'An option for testing converters that take two parameters',
++         "foo",
++         None,
++         new_converter)
++
+ opts.Add('UNSPECIFIED',
+          'An option with no value')
+ 
+@@ -168,6 +188,14 @@
+     default: notset
+     actual: v
+ 
++OLD_CONVERTER: An option for testing converters that take one parameter
++    default: foo
++    actual: old_converter
++
++NEW_CONVERTER: An option for testing converters that take two parameters
++    default: foo
++    actual: new_converter
++
+ UNSPECIFIED: An option with no value
+     default: None
+     actual: None
+Index: src/engine/SCons/Options/__init__.py
+===================================================================
+--- src/engine/SCons/Options/__init__.py	(revision 1696)
++++ src/engine/SCons/Options/__init__.py	(working copy)
+@@ -163,7 +163,10 @@
+             if option.converter and values.has_key(option.key):
+                 value = env.subst('${%s}'%option.key)
+                 try:
+-                    env[option.key] = option.converter(value)
++                    try:
++                        env[option.key] = option.converter(value, env)
++                    except TypeError:
++                        env[option.key] = option.converter(value)
+                 except ValueError, x:
+                     raise SCons.Errors.UserError, 'Error converting option: %s\n%s'%(option.key, x)
+ 
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 1696)
++++ doc/man/scons.1	(working copy)
+@@ -4925,7 +4925,7 @@
+ to raise an exception (see example below).
+ .I converter
+ is called to convert the value before putting it in the environment, and
+-should take a single argument: value.
++should take either a value, or the value and environment, as parameters.
+ The
+ .I converter
+ must return a value,
