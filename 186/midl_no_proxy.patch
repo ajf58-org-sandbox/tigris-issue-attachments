@@ -1,0 +1,22 @@
+--- midl.py~	2007-04-12 10:13:20.000000000 -0400
++++ midl.py	2007-05-01 14:23:22.208794000 -0400
+@@ -46,11 +46,15 @@
+     tlb = target[0]
+     incl = base + '.h'
+     interface = base + '_i.c'
+-    proxy = base + '_p.c'
+-    dlldata = base + '_data.c'
+-
+-    t = [tlb, incl, interface, proxy, dlldata]
++    t = [tlb, incl, interface]
+ 
++    if env['MIDLCOM'].find('/proxy') != -1:
++        proxy = base + '_p.c'
++        t.append(proxy)
++    if env['MIDLCOM'].find('/dlldata') != -1:
++        dlldata = base + '_data.c'
++        t.append(dlldata)
++    
+     return (t,source)
+ 
+ idl_scanner = SCons.Scanner.IDL.IDLScan()
