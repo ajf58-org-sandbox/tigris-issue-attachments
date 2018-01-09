@@ -1,0 +1,19 @@
+Index: scons-local-0.96.1/SCons/Tool/qt.py
+===================================================================
+RCS file: /mycustompath/scons-local-0.96.1/SCons/Tool/qt.py,v
+retrieving revision 1.1
+diff -u -r1.1 qt.py
+--- Tools/SCons/scons-local-0.96.1/SCons/Tool/qt.py	11 Apr 2005 02:31:47 -0000	1.1
++++ Tools/SCons/scons-local-0.96.1/SCons/Tool/qt.py	8 May 2006 03:07:08 -0000
+@@ -215,6 +215,11 @@
+     env['QT_UIC'] = os.path.join('$QTDIR','bin','uic')
+     env['QT_LIB'] = 'qt' # may be set to qt-mt
+ 
++    # Handle spaces in the path
++    if env['QTDIR'].find(' ') != -1:
++        env['QT_MOC'] = '"' + env['QT_MOC'] + '"'
++        env['QT_UIC'] = '"' + env['QT_UIC'] + '"'
++
+     # Should the qt tool try to figure out, which sources are to be moc'ed ?
+     env['QT_AUTOSCAN'] = 1
+ 
