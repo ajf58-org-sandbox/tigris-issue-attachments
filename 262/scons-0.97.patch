@@ -1,0 +1,23 @@
+Index: src/engine/SCons/Options/ListOption.py
+===================================================================
+--- src/engine/SCons/Options/ListOption.py	(révision 2486)
++++ src/engine/SCons/Options/ListOption.py	(copie de travail)
+@@ -80,10 +80,10 @@
+         raise NotImplementedError
+     def __str__(self):
+         if len(self) == 0:
+-            return 'none'
++            return 'None'
+         self.data.sort()
+         if self.data == self.allowedElems:
+-            return 'all'
++            return 'All'
+         else:
+             return string.join(self, ',')
+     def __repr__(self):
+@@ -130,4 +130,4 @@
+         '\n    ')
+     return (key, help, default,
+             None, #_validator,
+-            lambda val, elems=names, m=map: _converter(val, elems, m))
++            lambda val, elems=names, m=map: _converter(val.lower(), elems, m))
