@@ -1,0 +1,79 @@
+Index: SCons/Tool/javac.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Tool/javac.py,v
+retrieving revision 1.13
+diff -u -r1.13 javac.py
+--- SCons/Tool/javac.py	21 Nov 2004 21:14:32 -0000	1.13
++++ SCons/Tool/javac.py	19 Feb 2005 15:18:10 -0000
+@@ -39,7 +39,7 @@
+ 
+ import SCons.Action
+ import SCons.Builder
+-from SCons.Node.FS import _my_normcase
++from SCons.Node.FS import _my_normcase, File, Dir
+ from SCons.Tool.JavaCommon import parse_java_file
+ import SCons.Util
+ 
+@@ -47,6 +47,30 @@
+     """Turn a string (path name) into a Java class name."""
+     return string.replace(os.path.normpath(path), os.sep, '.')
+ 
++def find_sources(sdir, slist, suffix):
++    def visit(arg, dirname, names, suffix=suffix, dirnode=sdir.rdir()):
++        java_files = filter(lambda n, suffix=suffix:
++                            _my_normcase(n[-len(suffix):]) == suffix,
++                            names)
++        mydir = dirnode.Dir(dirname)
++        java_paths = map(lambda f, d=mydir: d.File(f), java_files)
++        arg.extend(java_paths)
++
++    os.path.walk(sdir.rdir().get_abspath(), visit, slist)
++
++def expand_sources(source, suffix):
++    slist = []
++    for src in source:
++        src.disambiguate()
++        print "src = %r (%s)" % (src, src)
++        if isinstance(src, File):
++            slist.append(src)
++        elif isinstance(src, Dir):
++            find_sources(src, slist, suffix)
++        else:
++            raise RuntimeError("expected File or Dir node, not %s" % `src`)
++    return slist
++
+ def emit_java_classes(target, source, env):
+     """Create and return lists of source java files
+     and their corresponding target class files.
+@@ -54,17 +78,11 @@
+     java_suffix = env.get('JAVASUFFIX', '.java')
+     class_suffix = env.get('JAVACLASSSUFFIX', '.class')
+ 
+-    slist = []
+-    js = _my_normcase(java_suffix)
+-    for sdir in source:
+-        def visit(arg, dirname, names, js=js, dirnode=sdir.rdir()):
+-            java_files = filter(lambda n, js=js:
+-                                _my_normcase(n[-len(js):]) == js,
+-                                names)
+-            mydir = dirnode.Dir(dirname)
+-            java_paths = map(lambda f, d=mydir: d.File(f), java_files)
+-            arg.extend(java_paths)
+-        os.path.walk(sdir.rdir().get_abspath(), visit, slist)
++    # Expand source list: each directory in the list of recursively
++    # scanned for *.java, and replaced by the resulting File nodes.
++    slist = expand_sources(source, _my_normcase(java_suffix))
++    print "expanded java sources:"
++    print "  " + "\n  ".join(map(str, slist))
+ 
+     tlist = []
+     for f in slist:
+@@ -97,7 +115,7 @@
+ JavaBuilder = SCons.Builder.Builder(action = JavaAction,
+                     emitter = emit_java_classes,
+                     target_factory = SCons.Node.FS.default_fs.Dir,
+-                    source_factory = SCons.Node.FS.default_fs.Dir)
++                    source_factory = SCons.Node.FS.default_fs.Entry)
+ 
+ def generate(env):
+     """Add Builders and construction variables for javac to an Environment."""
