@@ -1,0 +1,21 @@
+Index: src/engine/SCons/Tool/mingw.py
+===================================================================
+*** src/engine/SCons/Tool/mingw.py	(revision 3140)
+--- src/engine/SCons/Tool/mingw.py	(working copy)
+***************
+*** 111,117 ****
+          
+  
+      # Most of mingw is the same as gcc and friends...
+!     gnu_tools = ['gcc', 'g++', 'gnulink', 'ar', 'gas', 'm4']
+      for tool in gnu_tools:
+          SCons.Tool.Tool(tool)(env)
+  
+--- 111,117 ----
+          
+  
+      # Most of mingw is the same as gcc and friends...
+!     gnu_tools = ['gcc', 'g++', 'gnulink', 'ar', 'gas', 'm4','g77']
+      for tool in gnu_tools:
+          SCons.Tool.Tool(tool)(env)
+  
