@@ -1,0 +1,21 @@
+Index: __init__.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Node/__init__.py,v
+retrieving revision 1.164
+diff -u -r1.164 __init__.py
+--- __init__.py	23 Jan 2005 14:11:50 -0000	1.164
++++ __init__.py	10 Jun 2005 22:22:27 -0000
+@@ -482,7 +479,12 @@
+                 implicit = map(self.implicit_factory, implicit)
+                 self._add_child(self.implicit, self.implicit_dict, implicit)
+                 calc = build_env.get_calculator()
+-                if implicit_deps_unchanged or self.current(calc):
++                any_implicit_missing = 0
++                for i in implicit:
++                    if i.missing():
++                        any_implicit_missing = 1
++                        break
++                if implicit_deps_unchanged or (not any_implicit_missing and self.current(calc)):
+                     return
+                 else:
+                     # one of this node's sources has changed, so
