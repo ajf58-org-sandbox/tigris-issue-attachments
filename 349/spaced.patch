@@ -1,0 +1,160 @@
+Index: test/LINK/LINKFLAGS.py
+===================================================================
+--- test/LINK/LINKFLAGS.py	(revision 2716)
++++ test/LINK/LINKFLAGS.py	(working copy)
+@@ -45,8 +45,10 @@
+ 
+ test.write('SConstruct', """
+ foo = Environment()
+-bar = Environment(LINK = foo.subst(r'%(_python_)s wrapper.py $LINK'),
++link = foo['LINK']
++bar = Environment(LINK = r'%(_python_)s',
+                   LINKFLAGS = foo.subst('$LINKFLAGS fake_link_flag'))
++bar.Prepend( LINKFLAGS=['wrapper.py', link] )
+ foo.Program(target = 'foo', source = 'foo.c')
+ bar.Program(target = 'bar', source = 'bar.c')
+ """ % locals())
+Index: test/LINK/LINK.py
+===================================================================
+--- test/LINK/LINK.py	(revision 2716)
++++ test/LINK/LINK.py	(working copy)
+@@ -45,7 +45,8 @@
+ test.write('SConstruct', """
+ foo = Environment()
+ link = foo.subst("$LINK")
+-bar = Environment(LINK = r'%(_python_)s wrapper.py ' + link)
++bar = Environment(LINK = r'%(_python_)s')
++bar.Prepend( LINKFLAGS=['wrapper.py', link] )
+ foo.Program(target = 'foo', source = 'foo.c')
+ bar.Program(target = 'bar', source = 'bar.c')
+ """ % locals())
+Index: test/AR/AR.py
+===================================================================
+--- test/AR/AR.py	(revision 2716)
++++ test/AR/AR.py	(working copy)
+@@ -45,7 +45,8 @@
+ test.write('SConstruct', """
+ foo = Environment(LIBS = ['foo'], LIBPATH = ['.'])
+ ar = foo.Dictionary('AR')
+-bar = Environment(LIBS = ['bar'], LIBPATH = ['.'], AR = r'%(_python_)s wrapper.py ' + ar)
++bar = Environment(LIBS = ['bar'], LIBPATH = ['.'], AR = r'%(_python_)s')
++bar.Prepend( ARFLAGS=['wrapper.py', ar] )
+ foo.Library(target = 'foo', source = 'foo.c')
+ bar.Library(target = 'bar', source = 'bar.c')
+ 
+Index: src/engine/SCons/Subst.py
+===================================================================
+--- src/engine/SCons/Subst.py	(revision 2716)
++++ src/engine/SCons/Subst.py	(working copy)
+@@ -338,21 +338,22 @@
+ # that we need to process in some way, and is used for substitutions.
+ # The expressions it matches are:
+ #
+-#       "$$"
+-#       "$("
+-#       "$)"
+-#       "$variable"             [must begin with alphabetic or underscore]
+-#       "${any stuff}"
++#       '$$'
++#       '$('
++#       '$)'
++#       '$variable'             [must begin with alphabetic or underscore]
++#       '${any stuff}'
++#       '$"any stuff"'
+ #
+ # The second expression compiled is used for splitting strings into tokens
+ # to be processed, and it matches all of the tokens listed above, plus
+ # the following that affect how arguments do or don't get joined together:
+ #
+-#       "   "                   [white space]
+-#       "non-white-space"       [without any dollar signs]
+-#       "$"                     [single dollar sign]
++#       '   '                   [white space]
++#       'non-white-space'       [without any dollar signs]
++#       '$'                     [single dollar sign]
+ #
+-_dollar_exps_str = r'\$[\$\(\)]|\$[_a-zA-Z][\.\w]*|\${[^}]*}'
++_dollar_exps_str = r'\$[\$\(\)]|\$[_a-zA-Z][\.\w]*|\${[^}]*}|\$"[^"]*"'
+ _dollar_exps = re.compile(r'(%s)' % _dollar_exps_str)
+ _separate_args = re.compile(r'(%s|\s+|[^\s\$]+|\$)' % _dollar_exps_str)
+ 
+@@ -409,7 +410,10 @@
+                 elif s1 in '()':
+                     return s
+                 else:
+-                    key = s[1:]
++                    if s1 == '"' :
++                        key = s[2:-1]
++                    else :
++                        key = s[1:]
+                     if key[0] == '{' or string.find(key, '.') >= 0:
+                         if key[0] == '{':
+                             key = key[1:-1]
+@@ -430,7 +434,9 @@
+                             raise_exception(NameError(key), self.target, s)
+                         else:
+                             return ''
+-    
++                    if s1 == '"' :
++                        return s
++
+                     # Before re-expanding the result, handle
+                     # recursive expansion by copying the local
+                     # variable dictionary and overwriting a null
+@@ -625,7 +631,10 @@
+                 elif s1 == ')':
+                     self.close_strip('$)')
+                 else:
+-                    key = s[1:]
++                    if s1 == '"' :
++                        key = s[2:-1]
++                    else :
++                        key = s[1:]
+                     if key[0] == '{' or string.find(key, '.') >= 0:
+                         if key[0] == '{':
+                             key = key[1:-1]
+@@ -646,6 +655,9 @@
+                             raise_exception(NameError(), self.target, s)
+                         else:
+                             return
++                    if s1 == '"' :
++                        self.append( s )
++                        return
+ 
+                     # Before re-expanding the result, handle
+                     # recursive expansion by copying the local
+Index: src/engine/SCons/Tool/mslib.py
+===================================================================
+--- src/engine/SCons/Tool/mslib.py	(revision 2716)
++++ src/engine/SCons/Tool/mslib.py	(working copy)
+@@ -59,7 +59,7 @@
+ 
+     env['AR']          = 'lib'
+     env['ARFLAGS']     = SCons.Util.CLVar('/nologo')
+-    env['ARCOM']       = "${TEMPFILE('$AR $ARFLAGS /OUT:$TARGET $SOURCES')}"
++    env['ARCOM']       = "${TEMPFILE('$\"AR\" $ARFLAGS /OUT:$TARGET $SOURCES')}"
+     env['LIBPREFIX']   = ''
+     env['LIBSUFFIX']   = '.lib'
+ 
+Index: src/engine/SCons/Tool/mslink.py
+===================================================================
+--- src/engine/SCons/Tool/mslink.py	(revision 2716)
++++ src/engine/SCons/Tool/mslink.py	(working copy)
+@@ -167,7 +167,7 @@
+     SCons.Tool.createSharedLibBuilder(env)
+     SCons.Tool.createProgBuilder(env)
+ 
+-    env['SHLINK']      = '$LINK'
++    env['SHLINK']      = '$"LINK"'
+     env['SHLINKFLAGS'] = SCons.Util.CLVar('$LINKFLAGS /dll')
+     env['_SHLINK_TARGETS'] = windowsShlinkTargets
+     env['_SHLINK_SOURCES'] = windowsShlinkSources
+@@ -176,7 +176,7 @@
+     env['LINK']        = 'link'
+     env['LINKFLAGS']   = SCons.Util.CLVar('/nologo')
+     env['_PDB'] = pdbGenerator
+-    env['LINKCOM'] = '${TEMPFILE("$LINK $LINKFLAGS /OUT:$TARGET.windows $( $_LIBDIRFLAGS $) $_LIBFLAGS $_PDB $SOURCES.windows")}'
++    env['LINKCOM'] = "${TEMPFILE('$\"LINK\" $LINKFLAGS /OUT:$TARGET.windows $( $_LIBDIRFLAGS $) $_LIBFLAGS $_PDB $SOURCES.windows')}"
+     env.Append(PROGEMITTER = [prog_emitter])
+     env['LIBDIRPREFIX']='/LIBPATH:'
+     env['LIBDIRSUFFIX']=''
