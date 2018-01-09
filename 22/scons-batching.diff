@@ -1,0 +1,902 @@
+? etc/.cvsignore
+Index: src/engine/SCons/Action.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Action.py,v
+retrieving revision 1.79
+diff -u -r1.79 Action.py
+--- src/engine/SCons/Action.py	1 Feb 2005 12:02:11 -0000	1.79
++++ src/engine/SCons/Action.py	16 Feb 2005 00:55:24 -0000
+@@ -333,7 +333,7 @@
+ 
+ class CommandAction(_ActionAction):
+     """Class for command-execution actions."""
+-    def __init__(self, cmd, cmdstr=None, *args, **kw):
++    def __init__(self, cmd, cmdstr=None, conv_batch_action=None, *args, **kw):
+         # Cmd can actually be a list or a single item; if it's a
+         # single item it should be the command string to execute; if a
+         # list then it should be the words of the command string to
+@@ -351,6 +351,7 @@
+                       "a single command"
+         self.cmd_list = cmd
+         self.cmdstr = cmdstr
++        self.conv_batch_action = conv_batch_action
+ 
+     def __str__(self):
+         if SCons.Util.is_List(self.cmd_list):
+@@ -362,7 +363,10 @@
+             c = env.subst(self.cmdstr, 0, target, source)
+             if c:
+                 return c
+-        cmd_list = env.subst_list(self.cmd_list, 0, target, source)
++        conv = None
++        if self.conv_batch_action:
++            conv = self.conv_batch_action(target, source)
++        cmd_list = env.subst_list(self.cmd_list, 0, target, source, conv)
+         return _string_from_cmd_list(cmd_list[0])
+ 
+     def execute(self, target, source, env):
+@@ -413,8 +417,11 @@
+                     # reasonable for just about everything else:
+                     ENV[key] = str(value)
+ 
++        conv = None
++        if self.conv_batch_action:
++            conv = self.conv_batch_action(target, source)
+         cmd_list = env.subst_list(self.cmd_list, 0, target,
+-                                  map(rfile, source))
++                                  map(rfile, source), conv)
+ 
+         # Use len() to filter out any "command" that's zero-length.
+         for cmd_line in filter(len, cmd_list):
+Index: src/engine/SCons/ActionTests.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/ActionTests.py,v
+retrieving revision 1.73
+diff -u -r1.73 ActionTests.py
+--- src/engine/SCons/ActionTests.py	1 Feb 2005 12:02:12 -0000	1.73
++++ src/engine/SCons/ActionTests.py	11 Feb 2005 21:31:21 -0000
+@@ -131,8 +131,8 @@
+     def subst(self, strSubst, raw=0, target=[], source=[]):
+         return SCons.Util.scons_subst(strSubst, self, raw, target, source, self.d)
+     subst_target_source = subst
+-    def subst_list(self, strSubst, raw=0, target=[], source=[]):
+-        return SCons.Util.scons_subst_list(strSubst, self, raw, target, source, self.d)
++    def subst_list(self, strSubst, raw=0, target=[], source=[], conv=None):
++        return SCons.Util.scons_subst_list(strSubst, self, raw, target, source, self.d, conv=conv)
+     def __getitem__(self, item):
+         return self.d[item]
+     def __setitem__(self, item, value):
+Index: src/engine/SCons/Builder.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Builder.py,v
+retrieving revision 1.136
+diff -u -r1.136 Builder.py
+--- src/engine/SCons/Builder.py	21 Jan 2005 17:01:48 -0000	1.136
++++ src/engine/SCons/Builder.py	11 Feb 2005 20:52:08 -0000
+@@ -152,12 +152,20 @@
+         self[suffix] = action
+ 
+     def __call__(self, target, source, env, for_signature):
+-        ext = None
+-        for src in map(str, source):
+-            my_ext = SCons.Util.splitext(src)[1]
+-            if ext and my_ext != ext:
+-                raise UserError("While building `%s' from `%s': Cannot build multiple sources with different extensions: %s, %s" % (repr(map(str, target)), src, ext, my_ext))
+-            ext = my_ext
++        if 0:
++            # Is this really necessary? At least for batch builders, sources
++            # may have different extension but be built by the same action.
++            ext = None
++            for src in map(str, source):
++                my_ext = SCons.Util.splitext(src)[1]
++                if ext and my_ext != ext:
++                    raise UserError("While building `%s' from `%s': Cannot build multiple sources with different extensions: %s, %s" % (repr(map(str, target)), src, ext, my_ext))
++                ext = my_ext
++        else:
++            # Is it safe to assume that if sources got up to this point
++            # as a list, like this, then they have the same action, so
++            # we can simply use source[0] here?
++            ext = SCons.Util.splitext(str(source[0]))[1]
+ 
+         if not ext:
+             raise UserError("While building `%s': Cannot deduce file extension from source files: %s" % (repr(map(str, target)), repr(map(str, source))))
+@@ -324,6 +332,17 @@
+             pass
+         else:
+             executor.add_sources(slist)
++    if builder.calc_batch_executor:
++        executor_key = builder.calc_batch_executor(
++            builder.action, env or builder.env, tlist, slist)
++        try:
++            # See if suitable batch executor already exists so
++            # we could ask it to generate yet another target.
++            executor = SCons.Executor.get_batch_executor(executor_key)
++        except KeyError:
++            pass
++        else:
++            executor.add_batch(tlist, slist)
+     if executor is None:
+         if not builder.action:
+             raise UserError, "Builder %s must have an action to build %s."%(builder.get_name(env or builder.env), map(str,tlist))
+@@ -333,6 +352,10 @@
+                                            tlist,
+                                            slist,
+                                            executor_kw)
++        # Register the newly created batch executor so that other
++        # batch builders could ask it to generate more targets.
++        if builder.calc_batch_executor:
++            SCons.Executor.add_batch_executor(executor_key, executor)
+ 
+     # Now set up the relevant information in the target Nodes themselves.
+     for t in tlist:
+@@ -390,6 +413,7 @@
+                         source_scanner = None,
+                         emitter = None,
+                         multi = 0,
++                        calc_batch_executor = None,
+                         env = None,
+                         single_source = 0,
+                         name = None,
+@@ -399,6 +423,7 @@
+         if __debug__: logInstanceCreation(self, 'BuilderBase')
+         self.action = SCons.Action.Action(action)
+         self.multi = multi
++        self.calc_batch_executor = calc_batch_executor
+         if SCons.Util.is_Dict(prefix):
+             prefix = CallableSelector(prefix)
+         self.prefix = prefix
+@@ -656,6 +681,7 @@
+         self.env = env
+         self.tlist = tlist
+         self.multi = builder.multi
++        self.calc_batch_executor = builder.calc_batch_executor
+         self.single_source = builder.single_source
+ 
+     def targets(self, node):
+@@ -688,13 +714,15 @@
+                         source_factory = SCons.Node.FS.default_fs.File,
+                         target_scanner = None,
+                         source_scanner = None,
+-                        emitter=None,
+-                        single_source=0):
++                        emitter = None,
++                        single_source = 0,
++                        calc_batch_executor = None):
+         if __debug__: logInstanceCreation(self)
+         BuilderBase.__init__(self, action, prefix, suffix, src_suffix,
+                              target_factory, source_factory,
+                              target_scanner, source_scanner, emitter,
+-                             single_source = single_source)
++                             single_source = single_source,
++                             calc_batch_executor = calc_batch_executor)
+         if not SCons.Util.is_List(src_builder):
+             src_builder = [ src_builder ]
+         self.src_builder = src_builder
+Index: src/engine/SCons/BuilderTests.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/BuilderTests.py,v
+retrieving revision 1.118
+diff -u -r1.118 BuilderTests.py
+--- src/engine/SCons/BuilderTests.py	21 Jan 2005 17:01:48 -0000	1.118
++++ src/engine/SCons/BuilderTests.py	11 Feb 2005 21:36:09 -0000
+@@ -104,6 +104,8 @@
+         return list
+     def get_scanner(self, ext):
+         return self.scanner
++    def get_calculator(self):
++        return SCons.Sig.default_calc
+     def Dictionary(self):
+         return {}
+     def autogenerate(self, dir=''):
+Index: src/engine/SCons/Executor.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Executor.py,v
+retrieving revision 1.21
+diff -u -r1.21 Executor.py
+--- src/engine/SCons/Executor.py	23 Jan 2005 03:05:05 -0000	1.21
++++ src/engine/SCons/Executor.py	18 Feb 2005 01:26:07 -0000
+@@ -35,6 +35,12 @@
+ import SCons.Util
+ 
+ 
++class Batch:
++    """Remembers exact association between targets
++    and sources of executor."""
++    def __init__(self, targets = [], sources = []):
++        self.targets, self.sources = targets, sources
++
+ class Executor:
+     """A class for controlling instances of executing an action.
+ 
+@@ -53,9 +59,29 @@
+         self.action = action
+         self.env = env
+         self.overridelist = overridelist
+-        self.targets = targets
+-        self.sources = sources[:]
+         self.builder_kw = builder_kw
++        # Note that we must create a copy of the lists here because
++        # caller modifies them after we return. May want to look into
++        # this later and change callers.
++        self.batches = [Batch(targets[:], sources[:])]
++
++    def get_all_targets(self):
++        """Returns all targets of this executable regardless of whether
++        it runs in batch mode or not. Sometimes this is useful, but use
++        this function with caution!"""
++        all_targets = []
++        for batch in self.batches:
++            all_targets.extend(batch.targets)
++        return all_targets
++
++    def get_all_sources(self):
++        """Returns all sources of this executable regardless of whether
++        it runs in batch mode or not. Sometimes this is useful, but use
++        this function with caution!"""
++        all_sources = []
++        for batch in self.batches:
++            all_sources.extend(batch.sources)
++        return all_sources
+ 
+     def get_build_env(self):
+         """Fetch or create the appropriate build Environment
+@@ -83,10 +109,12 @@
+         """
+         env = self.get_build_env()
+         try:
+-            cwd = self.targets[0].cwd
++            # This assumes that all batch builders and targets
++            # have the same scanner paths, which is true.
++            cwd = self.batches[0].targets[0].cwd
+         except (IndexError, AttributeError):
+             cwd = None
+-        return scanner.path(env, cwd, self.targets, self.sources)
++        return scanner.path(env, cwd, self.get_all_targets(), self.get_all_sources())
+ 
+     def do_nothing(self, target, errfunc, kw):
+         pass
+@@ -95,7 +123,23 @@
+         """Actually execute the action list."""
+         kw = kw.copy()
+         kw.update(self.builder_kw)
+-        apply(self.action, (self.targets, self.sources,
++        # For batch executor, ensure that up-to-date targets are
++        # not included into action. Batch executor builds several
++        # independent target-source pairs at once, so we can and
++        # should do this optimization for it.
++        targets_for_action = []
++        sources_for_action = []
++        for batch in self.batches:
++            assert (SCons.Util.is_List(batch.targets) and
++                    SCons.Util.is_List(batch.sources))
++            for t in batch.targets:
++                # If at least one target inside of the batch is out of date,
++                # add the entire batch to the action.
++                if not t.current(self.get_build_env().get_calculator()):
++                    targets_for_action.extend(batch.targets)
++                    sources_for_action.extend(batch.sources)
++                    break
++        apply(self.action, (targets_for_action, sources_for_action,
+                             self.get_build_env(), errfunc), kw)
+ 
+     # use extra indirection because with new-style objects (Python 2.2
+@@ -113,14 +157,28 @@
+         """Add source files to this Executor's list.  This is necessary
+         for "multi" Builders that can be called repeatedly to build up
+         a source file list for a given target."""
+-        slist = filter(lambda x, s=self.sources: x not in s, sources)
+-        self.sources.extend(slist)
++        # todo: In order to make this completely correct, this function
++        # should also get targets, and add sources to the correct batch.
++        # This would be easy to accomplish, but for now, just add them
++        # to first batch, and assume that multi builders have not more
++        # than one batch.
++        assert len(self.batches) == 1
++        slist = filter(lambda x, s=self.batches[0].sources: x not in s, sources)
++        self.batches[0].sources.extend(slist)
++
++    def add_batch(self, targets, sources):
++        """Add pair of associated target and source to this Executor's list.
++        This is necessary for "batch" Builders that can be called repeatedly
++        to build up a list of matching target and source files that will be
++        used in order to update multiple target files at once from multiple
++        corresponding source files, for tools like MSVC that support it."""
++        self.batches.append(Batch(targets, sources))
+ 
+     # another extra indirection for new-style objects and nullify...
+     
+     def my_str(self):
+-        return self.action.genstring(self.targets,
+-                                     self.sources,
++        return self.action.genstring(self.get_all_targets(),
++                                     self.get_all_sources(),
+                                      self.get_build_env())
+ 
+     def __str__(self):
+@@ -139,8 +197,8 @@
+         or source Nodes there are.
+         __cacheable__
+         """
+-        return self.action.get_contents(self.targets,
+-                                        self.sources,
++        return self.action.get_contents(self.get_all_targets(),
++                                        self.get_all_sources(),
+                                         self.get_build_env())
+ 
+     def get_timestamp(self):
+@@ -164,30 +222,50 @@
+             initial_scanners = lambda src, s=scanner: (src, s)
+         else:
+             initial_scanners = lambda src, e=env: (src, e.get_scanner(src.scanner_key()))
+-        scanner_list = map(initial_scanners, self.sources)
+-        scanner_list = filter(remove_null_scanners, scanner_list)
+-        scanner_list = map(select_specific_scanner, scanner_list)
+-        scanner_list = filter(remove_null_scanners, scanner_list)
+-        scanner_path_list = map(add_scanner_path, scanner_list)
+-        deps = []
+-        for src, scanner, path in scanner_path_list:
+-            deps.extend(src.get_implicit_deps(env, scanner, path))
++        for batch in self.batches:
++            scanner_list = map(initial_scanners, batch.sources)
++            scanner_list = filter(remove_null_scanners, scanner_list)
++            scanner_list = map(select_specific_scanner, scanner_list)
++            scanner_list = filter(remove_null_scanners, scanner_list)
++            scanner_path_list = map(add_scanner_path, scanner_list)
++
++            deps = []
++            for src, scanner, path in scanner_path_list:
++                deps.extend(src.get_implicit_deps(env, scanner, path))
+ 
+-        for tgt in self.targets:
+-            tgt.add_to_implicit(deps)
++            for tgt in batch.targets:
++                tgt.add_to_implicit(deps)
+ 
+     def get_missing_sources(self):
+         """
+         __cacheable__
+         """
+-        return filter(lambda s: s.missing(), self.sources)
++        # todo: This could be optimized, for batch mode, to only report
++        # those targets as having missing sources that actually need to.
++        return filter(lambda s: s.missing(), self.get_all_sources())
+ 
+-    def get_source_binfo(self, calc):
++    def get_source_binfo(self, calc, target):
+         """
+         __cacheable__
+         """
++        sources_for_signature = []
++        for batch in self.batches:
++            if target in batch.targets:
++                sources_for_signature = batch.sources
++                break
+         calc_signature = lambda node, calc=calc: node.calc_signature(calc)
+-        return map(lambda s, c=calc_signature: (s, c(s), str(s)), self.sources)
++        return map(lambda s, c=calc_signature: (s, c(s), str(s)), sources_for_signature)
++
++
++
++_batch_executors = {}
++
++def get_batch_executor(key):
++    return _batch_executors[key]
++
++def add_batch_executor(key, executor):
++    assert not _batch_executors.has_key(key)
++    _batch_executors[key] = executor
+ 
+ 
+ 
+@@ -212,7 +290,7 @@
+         pass
+     def get_missing_sources(self):
+         return []
+-    def get_source_binfo(self, calc):
++    def get_source_binfo(self, calc, target):
+         return []
+ 
+ 
+Index: src/engine/SCons/ExecutorTests.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/ExecutorTests.py,v
+retrieving revision 1.18
+diff -u -r1.18 ExecutorTests.py
+--- src/engine/SCons/ExecutorTests.py	23 Jan 2005 03:05:05 -0000	1.18
++++ src/engine/SCons/ExecutorTests.py	15 Feb 2005 01:43:32 -0000
+@@ -102,9 +102,9 @@
+         assert x.action == 'a', x.builder
+         assert x.env == 'e', x.env
+         assert x.overridelist == ['o'], x.overridelist
+-        assert x.targets == 't', x.targets
++        assert x.batches[0].targets == 't', x.batches[0].targets
+         source_list.append('s3')
+-        assert x.sources == ['s1', 's2'], x.sources
++        assert x.batches[0].sources == ['s1', 's2'], x.batches[0].sources
+         try:
+             x = SCons.Executor.Executor(None, 'e', ['o'], 't', source_list)
+         except SCons.Errors.UserError:
+@@ -231,11 +231,11 @@
+     def test_add_sources(self):
+         """Test adding sources to an Executor"""
+         x = SCons.Executor.Executor('b', 'e', 'o', 't', ['s1', 's2'])
+-        assert x.sources == ['s1', 's2'], x.sources
++        assert x.batches[0].sources == ['s1', 's2'], x.batches[0].sources
+         x.add_sources(['s1', 's2'])
+-        assert x.sources == ['s1', 's2'], x.sources
++        assert x.batches[0].sources == ['s1', 's2'], x.batches[0].sources
+         x.add_sources(['s3', 's1', 's4'])
+-        assert x.sources == ['s1', 's2', 's3', 's4'], x.sources
++        assert x.batches[0].sources == ['s1', 's2', 's3', 's4'], x.batches[0].sources
+ 
+     def test___str__(self):
+         """Test the __str__() method"""
+@@ -316,7 +316,7 @@
+         targets = [MyNode('t')]
+         sources = [MyNode('s1'), MyNode('s2')]
+         x = SCons.Executor.Executor('b', env, [{}], targets, sources)
+-        b = x.get_source_binfo('C')
++        b = x.get_source_binfo('C', targets[0])
+         assert b == [(sources[0], 'cs-C-s1', 's1'),
+                      (sources[1], 'cs-C-s2', 's2')], b
+ 
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Taskmaster.py,v
+retrieving revision 1.62
+diff -u -r1.62 Taskmaster.py
+--- src/engine/SCons/Taskmaster.py	31 Dec 2004 01:08:05 -0000	1.62
++++ src/engine/SCons/Taskmaster.py	23 Feb 2005 01:37:57 -0000
+@@ -93,6 +93,10 @@
+         prepare(), executed() or failed()."""
+ 
+         try:
++            # todo: For batch executor, ensure that cached targets are
++            # not included into action. Batch executor builds several
++            # independent target-source pairs at once, so we can and
++            # should do this optimization for it.
+             everything_was_cached = 1
+             for t in self.targets:
+                 if not t.retrieve_from_cache():
+@@ -104,6 +108,7 @@
+             raise
+         except SystemExit:
+             exc_value = sys.exc_info()[1]
++            # todo: Change exceptions to take many targets, for batch case?
+             raise SCons.Errors.ExplicitExit(self.targets[0], exc_value.code)
+         except SCons.Errors.UserError:
+             raise
+@@ -111,6 +116,7 @@
+             raise
+         except:
+             exc_type, exc_value, exc_traceback = sys.exc_info()
++            # todo: Change exceptions to take many targets, for batch case?
+             raise SCons.Errors.BuildError(self.targets[0],
+                                           "Exception",
+                                           exc_type,
+@@ -131,14 +137,13 @@
+         Taskmaster to put any node tasks waiting on this one
+         back on the pending list."""
+ 
+-        if self.targets[0].get_state() == SCons.Node.executing:
+-            for t in self.targets:
++        for t in self.targets:
++            if t.get_state() == SCons.Node.executing:
+                 for side_effect in t.side_effects:
+                     side_effect.set_state(None)
+                 t.set_state(SCons.Node.executed)
+                 t.built()
+-        else:
+-            for t in self.targets:
++            else:
+                 t.visited()
+ 
+         self.tm.executed(self.node)
+@@ -193,7 +198,11 @@
+         visited--the canonical example being the "scons -c" option.
+         """
+         self.out_of_date = self.targets[:]
+-        self.mark_targets_and_side_effects(SCons.Node.executing)
++        for t in self.targets:
++            # Mark target and side effects
++            for s in t.side_effects:
++                s.set_state(SCons.Node.executing)
++            t.set_state(SCons.Node.executing)
+ 
+     def make_ready_current(self):
+         """Mark all targets in a task ready for execution if any target
+@@ -201,11 +210,16 @@
+ 
+         This is the default behavior for building only what's necessary.
+         """
+-        self.out_of_date = filter(lambda T: not T.current(), self.targets)
+-        if self.out_of_date:
+-            self.mark_targets_and_side_effects(SCons.Node.executing)
+-        else:
+-            self.mark_targets(SCons.Node.up_to_date)
++        self.out_of_date = []
++        for t in self.targets:
++            if not t.current():
++                self.out_of_date.append(t)
++                # Mark target and side effects
++                for s in t.side_effects:
++                    s.set_state(SCons.Node.executing)
++                t.set_state(SCons.Node.executing)
++            else:
++                t.set_state(SCons.Node.up_to_date)
+ 
+     make_ready = make_ready_current
+ 
+@@ -286,7 +300,8 @@
+                 continue
+ 
+             # Mark this node as being on the execution stack:
+-            node.set_state(SCons.Node.stack)
++            for t in node.get_executor().get_all_targets():
++                t.set_state(SCons.Node.stack)
+ 
+             try:
+                 childinfo = map(lambda N: (N.get_state(),
+@@ -348,9 +363,13 @@
+ 
+             # Skip this node if it has side-effects that are
+             # currently being built:
++            side_effects = []
++            for t in node.get_executor().get_all_targets():
++                for s in t.side_effects:
++                    side_effects.append(s)
+             if reduce(lambda E,N:
+                       E or N.get_state() == SCons.Node.executing,
+-                      node.side_effects,
++                      side_effects,
+                       0):
+                 self.pending.append(node)
+                 node.set_state(SCons.Node.pending)
+@@ -382,11 +401,12 @@
+             return None
+ 
+         try:
+-            tlist = node.builder.targets(node)
++            tlist = node.get_executor().get_all_targets()
+         except AttributeError:
+             tlist = [node]
+         self.executing.extend(tlist)
+-        self.executing.extend(node.side_effects)
++        for t in tlist:
++            self.executing.extend(t.side_effects)
+         
+         task = self.tasker(self, tlist, node in self.targets, node)
+         try:
+@@ -429,23 +449,23 @@
+ 
+     def failed(self, node):
+         try:
+-            tlist = node.builder.targets(node)
++            tlist = node.get_executor().get_all_targets()
+         except AttributeError:
+             tlist = [node]
+         for t in tlist:
+             self.executing.remove(t)
+-        for side_effect in node.side_effects:
+-            self.executing.remove(side_effect)
++            for s in t.side_effects:
++                self.executing.remove(s)
+ 
+     def executed(self, node):
+         try:
+-            tlist = node.builder.targets(node)
++            tlist = node.get_executor().get_all_targets()
+         except AttributeError:
+             tlist = [node]
+         for t in tlist:
+             self.executing.remove(t)
+-        for side_effect in node.side_effects:
+-            self.executing.remove(side_effect)
++            for s in t.side_effects:
++                self.executing.remove(s)
+ 
+         # move the current pending nodes to the candidates list:
+         # (they may not all be ready to build, but _find_next_ready_node()
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Node/FS.py,v
+retrieving revision 1.195
+diff -u -r1.195 FS.py
+--- src/engine/SCons/Node/FS.py	1 Feb 2005 13:47:33 -0000	1.195
++++ src/engine/SCons/Node/FS.py	16 Feb 2005 01:27:12 -0000
+@@ -1287,7 +1287,7 @@
+     def current(self, calc=None):
+         """If all of our children were up-to-date, then this
+         directory was up-to-date, too."""
+-        if not self.builder is MkdirBuilder and not self.exists():
++        if self.builder is MkdirBuilder and not self.exists():
+             return 0
+         state = 0
+         for kid in self.children():
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Node/__init__.py,v
+retrieving revision 1.164
+diff -u -r1.164 __init__.py
+--- src/engine/SCons/Node/__init__.py	23 Jan 2005 14:11:50 -0000	1.164
++++ src/engine/SCons/Node/__init__.py	28 Feb 2005 21:04:57 -0000
+@@ -583,7 +584,7 @@
+ 
+         executor = self.get_executor()
+ 
+-        sourcelist = executor.get_source_binfo(calc)
++        sourcelist = executor.get_source_binfo(calc, self)
+         depends = self.depends
+         implicit = self.implicit or []
+ 
+Index: src/engine/SCons/Platform/win32.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Platform/win32.py,v
+retrieving revision 1.30
+diff -u -r1.30 win32.py
+--- src/engine/SCons/Platform/win32.py	24 Oct 2004 14:29:53 -0000	1.30
++++ src/engine/SCons/Platform/win32.py	9 Feb 2005 21:47:52 -0000
+@@ -193,7 +193,13 @@
+ 
+ # Windows does not allow special characters in file names anyway, so
+ # no need for a complex escape function, we will just quote the arg.
+-escape = lambda x: '"' + x + '"'
++def escape(x):
++    # There is a special case with 'cmd /c' when if argument ends with
++    # a backslash it needs to be escaped so that not to interfere with
++    # closing double quote that we add here.
++    if x[-1] == '\\':
++        x += '\\'
++    return '"' + x + '"'
+ 
+ # Get the windows system directory name
+ def get_system_root():
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Script/Main.py,v
+retrieving revision 1.4
+diff -u -r1.4 Main.py
+--- src/engine/SCons/Script/Main.py	13 Jan 2005 18:28:05 -0000	1.4
++++ src/engine/SCons/Script/Main.py	23 Feb 2005 01:35:41 -0000
+@@ -79,11 +79,14 @@
+         display('scons: ' + message)
+ 
+     def execute(self):
+-        target = self.targets[0]
+-        if target.get_state() == SCons.Node.up_to_date:
+-            if self.top and target.has_builder():
+-                display("scons: `%s' is up to date." % str(self.node))
+-        elif target.has_builder() and not hasattr(target.builder, 'status'):
++        up_to_date = True
++        for target in self.targets:
++            if target.get_state() == SCons.Node.up_to_date:
++                if self.top and target.has_builder():
++                    display("scons: `%s' is up to date." % str(self.node))
++            elif target.has_builder() and not hasattr(target.builder, 'status'):
++                up_to_date = False
++        if not up_to_date:
+             if print_time:
+                 start_time = time.time()
+             SCons.Taskmaster.Task.execute(self)
+@@ -105,18 +108,19 @@
+             exit_status = status
+             
+     def executed(self):
+-        t = self.targets[0]
+-        if self.top and not t.has_builder() and not t.side_effect:
+-            if not t.exists():
+-                sys.stderr.write("scons: *** Do not know how to make target `%s'." % t)
+-                if not keep_going_on_error:
+-                    sys.stderr.write("  Stop.")
+-                sys.stderr.write("\n")
+-                self.do_failed()
+-            else:
+-                print "scons: Nothing to be done for `%s'." % t
+-                SCons.Taskmaster.Task.executed(self)
+-        else:
++        succeeded = True
++        for t in self.targets:
++            if self.top and not t.has_builder() and not t.side_effect:
++                if not t.exists():
++                    sys.stderr.write("scons: *** Do not know how to make target `%s'." % t)
++                    if not keep_going_on_error:
++                        sys.stderr.write("  Stop.")
++                    sys.stderr.write("\n")
++                    self.do_failed()
++                    succeesed = False
++                else:
++                    print "scons: Nothing to be done for `%s'." % t
++        if succeeded:
+             SCons.Taskmaster.Task.executed(self)
+ 
+     def failed(self):
+@@ -163,21 +167,22 @@
+ 
+     def postprocess(self):
+         if self.top:
+-            t = self.targets[0]
+-            if print_tree:
+-                print
+-                SCons.Util.print_tree(t, get_all_children)
+-            if print_stree:
+-                print
+-                SCons.Util.print_tree(t, get_all_children, showtags=2)
+-            if print_dtree:
+-                print
+-                SCons.Util.print_tree(t, get_derived_children)
+-            if print_includes:
+-                tree = t.render_include_tree()
+-                if tree:
++            for t in self.targets:
++                t = self.targets[0]
++                if print_tree:
++                    print
++                    SCons.Util.print_tree(t, get_all_children)
++                if print_stree:
++                    print
++                    SCons.Util.print_tree(t, get_all_children, showtags=2)
++                if print_dtree:
+                     print
+-                    print tree
++                    SCons.Util.print_tree(t, get_derived_children)
++                if print_includes:
++                    tree = t.render_include_tree()
++                    if tree:
++                        print
++                        print tree
+         SCons.Taskmaster.Task.postprocess(self)
+ 
+     def make_ready(self):
+@@ -230,10 +235,11 @@
+         pass
+     
+     def execute(self):
+-        if self.targets[0].get_state() != SCons.Node.up_to_date:
+-            global exit_status
+-            exit_status = 1
+-            self.tm.stop()
++        for target in self.targets:
++            if target.get_state() != SCons.Node.up_to_date:
++                global exit_status
++                exit_status = 1
++                self.tm.stop()
+ 
+     def executed(self):
+         pass
+@@ -866,7 +872,7 @@
+             else:
+                 script_dir = ''
+         if script_dir:
+-            display("scons: Entering directory `%s'" % script_dir)
++            progress_display("scons: Entering directory `%s'" % script_dir)
+             os.chdir(script_dir)
+         else:
+             raise SCons.Errors.UserError, "No SConstruct file found."
+Index: src/engine/SCons/Tool/__init__.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Tool/__init__.py,v
+retrieving revision 1.52
+diff -u -r1.52 __init__.py
+--- src/engine/SCons/Tool/__init__.py	8 Jan 2005 20:20:03 -0000	1.52
++++ src/engine/SCons/Tool/__init__.py	2 Mar 2005 23:04:13 -0000
+@@ -194,7 +194,7 @@
+ 
+     return ld_module
+ 
+-def createObjBuilders(env):
++def createObjBuilders(env, calc_batch_executor = None):
+     """This is a utility function that creates the StaticObject
+     and SharedObject Builders in an Environment if they
+     are not there already.
+@@ -209,25 +209,35 @@
+ 
+     try:
+         static_obj = env['BUILDERS']['StaticObject']
++        # See if the builder was created with the same parameters.
++        if static_obj.calc_batch_executor != calc_batch_executor:
++            raise KeyError
+     except KeyError:
+         static_obj = SCons.Builder.Builder(action = {},
+                                            emitter = {},
+                                            prefix = '$OBJPREFIX',
+                                            suffix = '$OBJSUFFIX',
+                                            src_builder = ['CFile', 'CXXFile'],
+-                                           source_scanner = SCons.Defaults.ObjSourceScan, single_source=1)
++                                           source_scanner = SCons.Defaults.ObjSourceScan,
++                                           calc_batch_executor = calc_batch_executor,
++                                           single_source = 1)
+         env['BUILDERS']['StaticObject'] = static_obj
+         env['BUILDERS']['Object'] = static_obj
+ 
+     try:
+         shared_obj = env['BUILDERS']['SharedObject']
++        # See if the builder was created with the same parameters.
++        if shared_obj.calc_batch_executor != calc_batch_executor:
++            raise KeyError
+     except KeyError:
+         shared_obj = SCons.Builder.Builder(action = {},
+                                            emitter = {},
+                                            prefix = '$SHOBJPREFIX',
+                                            suffix = '$SHOBJSUFFIX',
+                                            src_builder = ['CFile', 'CXXFile'],
+-                                           source_scanner = SCons.Defaults.ObjSourceScan, single_source=1)
++                                           source_scanner = SCons.Defaults.ObjSourceScan,
++                                           calc_batch_executor = calc_batch_executor,
++                                           single_source = 1)
+         env['BUILDERS']['SharedObject'] = shared_obj
+ 
+     return (static_obj, shared_obj)
+Index: src/engine/SCons/Tool/msvc.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Tool/msvc.py,v
+retrieving revision 1.43
+diff -u -r1.43 msvc.py
+--- src/engine/SCons/Tool/msvc.py	7 Jan 2005 00:42:00 -0000	1.43
++++ src/engine/SCons/Tool/msvc.py	18 Mar 2005 02:37:38 -0000
+@@ -406,19 +406,62 @@
+                                     source_scanner=SCons.Defaults.ObjSourceScan)
+ SCons.Defaults.ObjSourceScan.add_scanner('.rc', SCons.Defaults.CScan)
+ 
++def calc_batch_executor(action, env, targets, sources):
++    # todo: This may need special handling for Python function actions.
++    key = "'" + action.genstring(targets, sources, env) + "'"
++    if len(targets):
++        obj_name = os.path.basename(os.path.splitext(str(targets[0]))[0])
++        src_name = os.path.basename(os.path.splitext(str(sources[0]))[0])
++        if obj_name != src_name:
++            # If object name is changed from source name then
++            # it definitely wants to be in a separate batch.
++            key += ", '" + str(targets[0]) + "'"
++        else:
++            key += ", '" + os.path.dirname(str(targets[0])) + "'"
++    # todo: This probably could be optimized by only checking overrides.
++    key += ', ' + str(env._dict)
++    return key
++
++class conv_batch_action:
++    """ Performs adjustment of action text for batch versus non-batch mode."""
++    pattern = re.compile('/Fo.+')
++
++    def __init__(self, targets, sources):
++        assert len(targets) == len(sources)
++        self.perform_adjustment = (len(sources) > 1)
++        if self.perform_adjustment:
++            self.target_directory = str(targets[0].get_dir())
++
++    def __call__(self, command_word):
++        word = str(command_word)
++        if self.perform_adjustment:
++            # The replace string can't end with a backslash, so need first to do
++            # the match, and only then a subst and an append one after the other.
++            if self.pattern.match(word):
++                # Need to escape all backslashes in the replace string.
++                output_directory = self.target_directory.replace('\\', '\\\\')
++                word = self.pattern.sub('/Fo%s'%output_directory, word)
++                word += '\\'
++        return word
++
++CAction = SCons.Action.Action("$CCCOM", "$CCCOMSTR", conv_batch_action=conv_batch_action)
++ShCAction = SCons.Action.Action("$SHCCCOM", "$SHCCCOMSTR", conv_batch_action=conv_batch_action)
++CXXAction = SCons.Action.Action("$CXXCOM", "$CXXCOMSTR", conv_batch_action=conv_batch_action)
++ShCXXAction = SCons.Action.Action("$SHCXXCOM", "$SHCXXCOMSTR", conv_batch_action=conv_batch_action)
++
+ def generate(env):
+     """Add Builders and construction variables for MSVC++ to an Environment."""
+-    static_obj, shared_obj = SCons.Tool.createObjBuilders(env)
++    static_obj, shared_obj = SCons.Tool.createObjBuilders(env, calc_batch_executor = calc_batch_executor)
+ 
+     for suffix in CSuffixes:
+-        static_obj.add_action(suffix, SCons.Defaults.CAction)
+-        shared_obj.add_action(suffix, SCons.Defaults.ShCAction)
++        static_obj.add_action(suffix, CAction)
++        shared_obj.add_action(suffix, ShCAction)
+         static_obj.add_emitter(suffix, static_object_emitter)
+         shared_obj.add_emitter(suffix, shared_object_emitter)
+ 
+     for suffix in CXXSuffixes:
+-        static_obj.add_action(suffix, SCons.Defaults.CXXAction)
+-        shared_obj.add_action(suffix, SCons.Defaults.ShCXXAction)
++        static_obj.add_action(suffix, CXXAction)
++        shared_obj.add_action(suffix, ShCXXAction)
+         static_obj.add_emitter(suffix, static_object_emitter)
+         shared_obj.add_emitter(suffix, shared_object_emitter)
