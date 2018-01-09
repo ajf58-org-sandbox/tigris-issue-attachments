@@ -1,0 +1,39 @@
+import SCons.Defaults
+import os
+env = Environment()
+#create source tree
+if not os.access("src",os.F_OK):
+   for i in range(5):
+      path=os.path.join("src",str(i))
+      os.makedirs (path)
+      for j in range(1000):
+         f=open(os.path.join(path,str(j)), 'w')
+         f.writelines("Writing file %s"%j)
+         f.close()
+
+#Slowest case: adding targets to Alias one by one: Total SConscript file execution time: 91.191000 seconds 
+for root, dirs, names  in os.walk("src"):
+   for name in names:
+      source=os.path.join(root,name)
+      target=os.path.join("buildout",root,name)
+      env.Alias("install",env.Command(target,source,
+                           SCons.Defaults.Copy('$TARGET', '$SOURCE')))
+
+
+#Still very slow by adding targets in 5 blocks: Total SConscript file execution time: 72.394000 seconds
+# for root, dirs, names  in os.walk("src"):
+#    aliases=[]
+#    for name in names:
+#       source=os.path.join(root,name)
+#       target=os.path.join("buildout",root,name)
+#       aliases.append(env.Command(target,source,SCons.Defaults.Copy('$TARGET', '$SOURCE')))
+#    env.Alias("install",aliases)
+
+#Fastes case: adding targets to Alias as one: Total SConscript file execution time: 4.250000 seconds 
+# aliases=[]
+# for root, dirs, names  in os.walk("src"):
+#    for name in names:
+#       source=os.path.join(root,name)
+#       target=os.path.join("buildout",root,name)
+#       aliases.append(env.Command(target,source,SCons.Defaults.Copy('$TARGET', '$SOURCE')))
+# env.Alias("install",aliases)
