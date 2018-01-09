@@ -1,0 +1,164 @@
+Index: src/engine/SCons/Conftest.py
+===================================================================
+--- src/engine/SCons/Conftest.py	(revision 2601)
++++ src/engine/SCons/Conftest.py	(working copy)
+@@ -97,6 +97,7 @@
+ import re
+ import string
+ from types import IntType
++from SCons.Util import is_String
+ 
+ #
+ # PUBLIC VARIABLES
+@@ -572,6 +573,30 @@
+ 
+     return ret
+ 
++def Define(context, name, value, comment):
++    """
++    Define a pre processor symbol name, with the optional given value in the
++    current config header.
++
++    If value is None (default), then #define name is written. If value is not
++    none, then #define name value is written.
++    
++    comment is a string which will be put as a C comment in the
++    header, to explain the meaning of the value (appropriate C comments /* and
++    */ will be put automatically."""
++    lines = []
++    if comment:
++        comment_str = "/* %s */" % comment
++        lines.append(comment_str)
++
++    if value is not None:
++        define_str = "#define %s %s" % (name, value)
++    else:
++        define_str = "#define %s" % name
++    lines.append(define_str)
++    lines.append('')
++
++    context.config_h = context.config_h + '\n'.join(lines)
+ #
+ # END OF PUBLIC FUNCTIONS
+ #
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 2601)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -497,6 +497,42 @@
+         finally:
+             sconf.Finish()
+ 
++    def test_Define(self):
++        """Test SConf.Define()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'),
++                                 config_h = self.test.workpath('config.h'))
++        try:
++            # XXX: we test the generated config.h string. This is not so good,
++            # ideally, we would like to test if the generated file included in
++            # a test program does what we want.
++
++            # Test defining one symbol wo value
++            sconf.config_h_text = ''
++            sconf.Define('YOP')
++            assert sconf.config_h_text == '#define YOP\n'
++
++            # Test defining one symbol with integer value
++            sconf.config_h_text = ''
++            sconf.Define('YOP', 1)
++            assert sconf.config_h_text == '#define YOP 1\n'
++
++            # Test defining one symbol with string value
++            sconf.config_h_text = ''
++            sconf.Define('YOP', '"YIP"')
++            assert sconf.config_h_text == '#define YOP "YIP"\n'
++
++            # Test defining one symbol with string value
++            sconf.config_h_text = ''
++            sconf.Define('YOP', "YIP")
++            assert sconf.config_h_text == '#define YOP YIP\n'
++
++        finally:
++            sconf.Finish()
++
+     def test_CheckTypeSize(self):
+         """Test SConf.CheckTypeSize()
+         """
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 2601)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -409,7 +409,8 @@
+                  'CheckCHeader'       : CheckCHeader,
+                  'CheckCXXHeader'     : CheckCXXHeader,
+                  'CheckLib'           : CheckLib,
+-                 'CheckLibWithHeader' : CheckLibWithHeader
++                 'CheckLibWithHeader' : CheckLibWithHeader,
++                 'Define'             : Define,
+                }
+         self.AddTests(default_tests)
+         self.AddTests(custom_tests)
+@@ -897,6 +898,13 @@
+     context.did_show_result = 1
+     return not res
+ 
++def Define(context, name, value = None, comment = None):
++    """
++    A test for a C header file.
++    """
++    return SCons.Conftest.Define(context, name, value, comment)
++
++
+ # Bram: Make this function obsolete?  CheckHeader() is more generic.
+ 
+ def CheckCHeader(context, header, include_quotes = '""'):
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 2601)
++++ doc/man/scons.1	(working copy)
+@@ -6431,6 +6431,41 @@
+ and selects the compiler to be used for the check;
+ the default is "C".
+ 
++.TP
++.RI Configure.Define(self ", " symbol ", [" value ", " comment ])
++This function does not check for anything, but can be used to define a
++preprocessor symbol, to an optional value, in the configuration header. It is
++the equivalent of AC_DEFINE.
++Define the symbol
++.I name
++with the optional value
++.B value
++and the optional comment
++.B comment
++
++.IP
++For example:
++
++.ES
++Define('A_SYMBOL') will put the line #define A_SYMBOL in the config header
++Define('A_SYMBOL', 1) will put the line #define A_SYMBOL 1 in the config header
++.EE
++
++.IP
++Take care about string values, though:
++
++.ES
++Define('A_SYMBOL', "YA") will put the line #define A_SYMBOL YA
++Define('A_SYMBOL', '"YA"') will put the line #define A_SYMBOL "YA"
++.EE
++
++.IP
++For comment:
++
++.ES
++Define('A_SYMBOL', 1, 'Set to 1 if you have a symbol') will put the comment /* Set to 1 if you have a symbol */ just above the #define line.
++.EE
++
+ .EE
+ You can define your own custom checks. 
+ in addition to the predefined checks.
