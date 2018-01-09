@@ -1,0 +1,57 @@
+--- SCons/Tool/javac.py.01.java-files	2005-02-19 10:17:12.000000000 -0500
++++ SCons/Tool/javac.py	2005-02-20 10:00:20.000000000 -0500
+@@ -36,6 +36,7 @@
+ import os
+ import os.path
+ import string
++from types import StringType
+ 
+ import SCons.Action
+ import SCons.Builder
+@@ -117,13 +118,44 @@
+                     target_factory = SCons.Node.FS.default_fs.Dir,
+                     source_factory = SCons.Node.FS.default_fs.Entry)
+ 
++class pathopt:
++    """
++    Callable object for generating javac-style path options from
++    a construction variable (e.g. -classpath, -sourcepath).
++    """
++    def __init__(self, opt, var):
++        self.opt = opt
++        self.var = var
++
++    def __call__(self, target, source, env, for_signature):
++        path = env[self.var]
++        if path and type(path) is StringType:
++            path = [path]
++        if path:
++            return [self.opt, string.join(path, os.pathsep)]
++            #return self.opt + " " + string.join(path, os.pathsep)
++        else:
++            return []
++            #return ""
++
+ def generate(env):
+     """Add Builders and construction variables for javac to an Environment."""
+     env['BUILDERS']['Java'] = JavaBuilder
+ 
+     env['JAVAC']            = 'javac'
+     env['JAVACFLAGS']       = SCons.Util.CLVar('')
+-    env['JAVACCOM']         = '$JAVAC $JAVACFLAGS -d ${TARGET.attributes.java_classdir} -sourcepath ${SOURCE.dir.rdir()} $SOURCES'
++    env['JAVABOOTCLASSPATH'] = []
++    env['JAVACLASSPATH']     = []
++    env['JAVASOURCEPATH']    = []
++    #env['JAVASOURCEPATH']    = [".", "/foo", "/bar"]
++    env['_javapathopt']      = pathopt
++    env['JAVACCOM']          = (
++        '$JAVAC $JAVACFLAGS '
++        '-d ${TARGET.attributes.java_classdir} '
++        '${_javapathopt("-bootclasspath", "JAVABOOTCLASSPATH")} '
++        '${_javapathopt("-classpath",     "JAVACLASSPATH")} '
++        '${_javapathopt("-sourcepath",    "JAVASOURCEPATH")} '
++        '$SOURCES')
+     env['JAVACLASSSUFFIX']  = '.class'
+     env['JAVASUFFIX']       = '.java'
+ 
+
