@@ -1,0 +1,270 @@
+Index: test/CacheDir/NoCache.py
+===================================================================
+--- test/CacheDir/NoCache.py	(revision 0)
++++ test/CacheDir/NoCache.py	(revision 0)
+@@ -0,0 +1,75 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Verify that the NoCache environment method works.
++"""
++
++import TestSCons, os.path
++
++test = TestSCons.TestSCons()
++
++test.subdir('cache', 'alpha', 'beta')
++
++sconstruct = """
++import os
++CacheDir('%s')
++
++
++# This is bad form, but the easiest way to produce a test case.
++# Obviously, this could be cached if the inputs were passed in a
++# reasonable fashion.
++g = '%s'
++
++def ActionWithUndeclaredInputs(target,source,env):
++    open(target[0].abspath,'w').write(g)
++
++Command('foo_cached', [], ActionWithUndeclaredInputs)
++NoCache(Command('foo_notcached', [], ActionWithUndeclaredInputs))
++Command('bar_cached', [], ActionWithUndeclaredInputs)
++Command('bar_notcached', [], ActionWithUndeclaredInputs)
++NoCache('bar_notcached')
++
++# Make sure NoCache doesn't vomit when applied to a Dir
++NoCache(Command(Dir('aoeu'), [], Mkdir('$TARGET')))
++"""
++
++test.write('alpha/SConstruct', sconstruct % (test.workpath('cache'), 'alpha'))
++
++test.write('beta/SConstruct', sconstruct % (test.workpath('cache'), 'beta'))
++
++# First build, would populate the cache without NoCache
++test.run(chdir = 'alpha', arguments = '.')
++
++# Second build, without NoCache there would be a cache hit
++test.run(chdir = 'beta', arguments = '.')
++
++test.fail_test(open(os.path.join(test.workpath('beta'),'foo_cached')).read() != 'alpha')
++test.fail_test(open(os.path.join(test.workpath('beta'),'foo_notcached')).read() != 'beta')
++test.fail_test(open(os.path.join(test.workpath('beta'),'bar_cached')).read() != 'alpha')
++test.fail_test(open(os.path.join(test.workpath('beta'),'bar_notcached')).read() != 'beta')
++
++test.pass_test()
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 1783)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -249,6 +249,8 @@
+ 
+ def CachePushFunc(target, source, env):
+     t = target[0]
++    if t.nocache:
++        return
+     fs = t.fs
+     cachedir, cachefile = t.cachepath()
+     if fs.exists(cachefile):
+@@ -2033,6 +2035,8 @@
+ 
+         Returns true iff the node was successfully retrieved.
+         """
++        if self.nocache:
++            return None
+         b = self.is_derived()
+         if not b and not self.has_src_builder():
+             return None
+@@ -2298,7 +2302,7 @@
+         return str(self.rfile())
+ 
+     def cachepath(self):
+-        if not self.fs.CachePath:
++        if self.nocache or not self.fs.CachePath:
+             return None, None
+         ninfo = self.get_binfo().ninfo
+         if not hasattr(ninfo, 'bsig'):
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 1783)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -202,6 +202,7 @@
+         self.state = no_state
+         self.precious = None
+         self.noclean = 0
++        self.nocache = 0
+         self.always_build = None
+         self.found_includes = {}
+         self.includes = None
+@@ -765,6 +766,12 @@
+         # output in Util.py can use it as an index.
+         self.noclean = noclean and 1 or 0
+ 
++    def set_nocache(self, nocache = 1):
++        """Set the Node's nocache value."""
++        # Make sure nocache is an integer so the --debug=stree
++        # output in Util.py can use it as an index.
++        self.nocache = nocache and 1 or 0
++
+     def set_always_build(self, always_build = 1):
+         """Set the Node's always_build value."""
+         self.always_build = always_build
+Index: src/engine/SCons/Script/__init__.py
+===================================================================
+--- src/engine/SCons/Script/__init__.py	(revision 1783)
++++ src/engine/SCons/Script/__init__.py	(working copy)
+@@ -289,6 +289,7 @@
+     'Depends',
+     'Dir',
+     'NoClean',
++    'NoCache',
+     'Entry',
+     'Execute',
+     'File',
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 1783)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -1514,6 +1514,15 @@
+             t.set_noclean()
+         return tlist
+ 
++    def NoCache(self, *targets):
++        """Tags a target so that it will not be cached"""
++        tlist = []
++        for t in targets:
++            tlist.extend(self.arg2nodes(t, self.fs.Entry))
++        for t in tlist:
++            t.set_nocache()
++        return tlist
++
+     def Entry(self, name, *args, **kw):
+         """
+         """
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 1783)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -284,15 +284,16 @@
+     if showtags:
+ 
+         if showtags == 2:
+-            print ' E        = exists'
+-            print '  R       = exists in repository only'
+-            print '   b      = implicit builder'
+-            print '   B      = explicit builder'
+-            print '    S     = side effect'
+-            print '     P    = precious'
+-            print '      A   = always build'
+-            print '       C  = current'
+-            print '        N = no clean'
++            print ' E         = exists'
++            print '  R        = exists in repository only'
++            print '   b       = implicit builder'
++            print '   B       = explicit builder'
++            print '    S      = side effect'
++            print '     P     = precious'
++            print '      A    = always build'
++            print '       C   = current'
++            print '        N  = no clean'
++            print '         H = no cache'
+             print ''
+ 
+         tags = ['[']
+@@ -305,6 +306,7 @@
+         tags.append(' A'[IDX(root.always_build)])
+         tags.append(' C'[IDX(root.current())])
+         tags.append(' N'[IDX(root.noclean)])
++        tags.append(' H'[IDX(root.nocache)])
+         tags.append(']')
+ 
+     else:
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 1783)
++++ doc/man/scons.1	(working copy)
+@@ -2174,6 +2174,12 @@
+ a given derived file has been built in-place
+ or retrieved from the cache.
+ 
++The
++.BR NoCache ()
++method can be used to disable caching of specific files.  This can be
++useful if inputs and/or outputs of some tool are impossible to
++predict or prohibitively large.
++
+ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP 
+ .RI Clean( targets ", " files_or_dirs )
+@@ -3026,6 +3032,46 @@
+ 
+ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
++.RI NoCache( target ", ...)"
++.TP
++.RI env.NoCache( target ", ...)"
++Specifies a list of files which should
++.I not
++be cached whenever the 
++.BR CacheDir ()
++method has been activated.
++The specified targets may be a list
++or an individual target.
++Multiple calls to
++.BR NoCache ()
++are legal,
++and prevent each specified target
++from being removed by calls to the
++.B -c
++option.
++
++Multiple files should be specified
++either as separate arguments to the
++.BR NoCache ()
++method, or as a list.
++.BR NoCache ()
++will also accept the return value of any of the construction environment
++Builder methods.
++
++Calling
++.BR NoCache ()
++on directories and other non-File Node types has no effect because
++only File Nodes are cached.
++
++Examples:
++
++.ES
++NoCache('foo.elf')
++NoCache(env.Program('hello', 'hello.c'))
++.EE
++
++'\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
++.TP
+ .RI NoClean( target ", ...)"
+ .TP
+ .RI env.NoClean( target ", ...)"
