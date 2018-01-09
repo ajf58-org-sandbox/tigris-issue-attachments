@@ -1,0 +1,68 @@
+diff --exclude='*.pyc' --exclude='*.pyo' -Naur SCons.patched/Scanner/LaTeX.py SCons/Scanner/LaTeX.py
+--- SCons.patched/Scanner/LaTeX.py	2008-04-29 00:26:37.000000000 +0930
++++ SCons/Scanner/LaTeX.py	2008-04-29 00:42:40.000000000 +0930
+@@ -36,7 +36,9 @@
+ import SCons.Scanner
+ 
+ def LaTeXScanner():
+-    """Return a prototype Scanner instance for scanning LaTeX source files"""
++    """Return a prototype Scanner instance for scanning LaTeX source files
++    when built with latex.
++    """
+     ds = LaTeX(name = "LaTeXScanner",
+                suffixes =  '$LATEXSUFFIXES',
+                # in the search order, see below in LaTeX class docstring
+@@ -44,6 +46,17 @@
+                recursive = 0)
+     return ds
+ 
++def PDFLaTeXScanner():
++    """Return a prototype Scanner instance for scanning LaTeX source files
++    when built with pdflatex.
++    """
++    ds = LaTeX(name = "PDFLaTeXScanner",
++               suffixes =  '$LATEXSUFFIXES',
++               # in the search order, see below in LaTeX class docstring
++               graphics_extensions = ['.png', '.pdf', '.jpg', '.tif'],
++               recursive = 0)
++    return ds
++
+ class LaTeX(SCons.Scanner.Base):
+     """Class for scanning LaTeX files for included files.
+ 
+diff --exclude='*.pyc' --exclude='*.pyo' -Naur SCons.patched/Tool/__init__.py SCons/Tool/__init__.py
+--- SCons.patched/Tool/__init__.py	2008-04-23 21:21:07.000000000 +0930
++++ SCons/Tool/__init__.py	2008-04-29 00:42:19.000000000 +0930
+@@ -55,6 +55,7 @@
+ CScanner = SCons.Scanner.C.CScanner()
+ DScanner = SCons.Scanner.D.DScanner()
+ LaTeXScanner = SCons.Scanner.LaTeX.LaTeXScanner()
++PDFLaTeXScanner = SCons.Scanner.LaTeX.PDFLaTeXScanner()
+ ProgramScanner = SCons.Scanner.Prog.ProgramScanner()
+ SourceFileScanner = SCons.Scanner.Base({}, name='SourceFileScanner')
+ 
+@@ -76,8 +77,11 @@
+ for suffix in DSuffixes:
+     SourceFileScanner.add_scanner(suffix, DScanner)
+ 
++# FIXME: what should be done here? Two scanners scan the same extensions,
++# but look for different files, e.g., "picture.eps" vs. "picture.pdf".
+ for suffix in LaTeXSuffixes:
+-     SourceFileScanner.add_scanner(suffix, LaTeXScanner)
++    SourceFileScanner.add_scanner(suffix, LaTeXScanner)
++#    SourceFileScanner.add_scanner(suffix, PDFLaTeXScanner)
+ 
+ class Tool:
+     def __init__(self, name, toolpath=[], **kw):
+diff --exclude='*.pyc' --exclude='*.pyo' -Naur SCons.patched/Tool/pdf.py SCons/Tool/pdf.py
+--- SCons.patched/Tool/pdf.py	2008-04-23 21:21:07.000000000 +0930
++++ SCons/Tool/pdf.py	2008-04-29 00:44:25.000000000 +0930
+@@ -41,7 +41,7 @@
+         global PDFBuilder
+         if PDFBuilder is None:
+             PDFBuilder = SCons.Builder.Builder(action = {},
+-                                               source_scanner = SCons.Tool.LaTeXScanner,
++                                               source_scanner = SCons.Tool.PDFLaTeXScanner,
+                                                prefix = '$PDFPREFIX',
+                                                suffix = '$PDFSUFFIX',
+                                                emitter = {},
