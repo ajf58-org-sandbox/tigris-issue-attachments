@@ -1,0 +1,71 @@
+=== modified file 'src/engine/SCons/Conftest.py'
+--- src/engine/SCons/Conftest.py	2007-12-21 12:02:26 +0000
++++ src/engine/SCons/Conftest.py	2007-12-21 13:17:09 +0000
+@@ -371,11 +371,10 @@
+ }
+ """
+ 
+-        # XXX: Try* vs CompileProg ?
+-        st = context.TryCompile(src % (type_name, expect), suffix)
+-        if st:
+-            _Have(context, "SIZEOF_" + type_name, str(expect))
++        st = context.CompileProg(src % (type_name, expect), suffix)
++        if not st:
+             context.Display("yes\n")
++            _Have(context, "SIZEOF_%s" % type_name, expect)
+             return expect
+         else:
+             context.Display("no\n")
+@@ -400,21 +399,26 @@
+     return 0;
+ }
+     """
+-        ret = context.TryRun(src, suffix)
+-        st = ret[0]
++        st, out = context.RunProg(src, suffix)
+         try:
+-            size = int(ret[1])
+-            _Have(context, "SIZEOF_" + type_name, str(size))
+-            context.Display("%d\n" % size)
++            size = int(out)
+         except ValueError:
++            # If cannot convert output of test prog to an integer (the size),
++            # something went wront, so just fail
++            st = 1
+             size = 0
+-            _LogFailed(context, src, st)
+-            context.Display(" Failed !\n")
+-        if st:
++
++        if not st:
++            context.Display("yes\n")
++            _Have(context, "SIZEOF_%s" % type_name, size)
+             return size
+         else:
++            context.Display("no\n")
++            _LogFailed(context, src, st)
+             return 0
+ 
++    return 0
++
+ def CheckDeclaration(context, symbol, includes = None, language = None):
+     """Checks whether symbol is declared.
+ 
+
+=== modified file 'src/engine/SCons/SConf.py'
+--- src/engine/SCons/SConf.py	2007-12-21 12:02:26 +0000
++++ src/engine/SCons/SConf.py	2007-12-21 12:33:18 +0000
+@@ -798,6 +798,12 @@
+         # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
+         return not self.TryBuild(self.env.Object, text, ext)
+ 
++    def RunProg(self, text, ext):
++        self.sconf.cached = 1
++        # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
++        st, out = self.TryRun(text, ext)
++        return not st, out
++
+     def AppendLIBS(self, lib_name_list):
+         oldLIBS = self.env.get( 'LIBS', [] )
+         self.env.Append(LIBS = lib_name_list)
+
