@@ -1,0 +1,24 @@
+--- old-scons-0.96.93/engine/SCons/Tool/qt.py	2006-11-06 15:32:51.000000000 +0100
++++ new-scons-0.96.93/engine/SCons/Tool/qt.py	2006-11-29 17:31:05.000000000 +0100
+@@ -140,7 +140,10 @@
+                 # c or fortran source
+                 continue
+             #cpp_contents = comment.sub('', cpp.get_contents())
+-            cpp_contents = cpp.get_contents()
++            try:
++                cpp_contents = cpp.get_contents()
++            except AttributeError: # non-existant file
++                cpp_contents = None   
+             h=None
+             for h_ext in header_extensions:
+                 # try to find the header file in the corresponding source
+@@ -163,7 +166,7 @@
+                 #moc_cpp.target_scanner = SCons.Defaults.CScan
+                 if debug:
+                     print "scons: qt: found Q_OBJECT macro in '%s', moc'ing to '%s'" % (str(h), str(moc_cpp))
+-            if cpp and q_object_search.search(cpp_contents):
++            if cpp_contents and cpp and q_object_search.search(cpp_contents):
+                 # cpp file with Q_OBJECT macro found -> add moc
+                 # (to be included in cpp)
+                 moc = env.Moc(cpp)
+
