@@ -1,0 +1,96 @@
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 2927)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -44,7 +44,8 @@
+ PDFLaTeXAction = None
+ 
+ def PDFLaTeXAuxAction(target = None, source= None, env=None):
+-    SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    result = SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    return result
+ 
+ def PDFTeXLaTeXFunction(target = None, source= None, env=None):
+     """A builder for TeX and LaTeX that scans the source file to
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 2927)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -9,7 +9,7 @@
+ """
+ 
+ #
+-# __COPYRIGHT__
++# Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007 The SCons Foundation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining
+ # a copy of this software and associated documentation files (the
+@@ -31,7 +31,7 @@
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
+ 
+-__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++__revision__ = "src/engine/SCons/Tool/pdflatex.py 2611 2008/01/29 11:58:38 managan"
+ 
+ import SCons.Action
+ import SCons.Util
+@@ -41,7 +41,8 @@
+ PDFLaTeXAction = None
+ 
+ def PDFLaTeXAuxFunction(target = None, source= None, env=None):
+-    SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    result = SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    return result
+ 
+ PDFLaTeXAuxAction = None
+ 
+@@ -66,7 +67,7 @@
+     bld.add_emitter('.latex', SCons.Tool.tex.tex_emitter)
+ 
+     env['PDFLATEX']      = 'pdflatex'
+-    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
++    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES']  = 3
+ 
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 2927)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -9,7 +9,7 @@
+ """
+ 
+ #
+-# __COPYRIGHT__
++# Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007 The SCons Foundation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining
+ # a copy of this software and associated documentation files (the
+@@ -31,7 +31,7 @@
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
+ 
+-__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++__revision__ = "src/engine/SCons/Tool/latex.py 2611 2008/01/29 11:58:38 managan"
+ 
+ import SCons.Action
+ import SCons.Defaults
+@@ -43,7 +43,8 @@
+ LaTeXAction = None
+ 
+ def LaTeXAuxFunction(target = None, source= None, env=None):
+-    SCons.Tool.tex.InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    result = SCons.Tool.tex.InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    return result
+ 
+ LaTeXAuxAction = SCons.Action.Action(LaTeXAuxFunction, strfunction=None)
+ 
+@@ -63,7 +64,7 @@
+     bld.add_emitter('.latex', SCons.Tool.tex.tex_emitter)
+ 
+     env['LATEX']        = 'latex'
+-    env['LATEXFLAGS']   = SCons.Util.CLVar('')
++    env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
