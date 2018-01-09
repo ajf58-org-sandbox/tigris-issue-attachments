@@ -1,0 +1,302 @@
+Index: test/Library.py
+===================================================================
+--- test/Library.py	(revision 2486)
++++ test/Library.py	(working copy)
+@@ -114,7 +114,7 @@
+ int
+ main(int argc, char *argv[])
+ {
+-        argv[argc++] = "--";
++        argv[argc++] = (char *)"--";
+         f1();
+         f2a();
+         f2b();
+Index: test/Object.py
+===================================================================
+--- test/Object.py	(revision 2486)
++++ test/Object.py	(working copy)
+@@ -100,7 +100,7 @@
+ int
+ main(int argc, char *argv[])
+ {
+-        argv[argc++] = "--";
++        argv[argc++] = (char *)"--";
+         f1();
+         f2();
+         f3();
+Index: test/option/debug-includes.py
+===================================================================
+--- test/option/debug-includes.py	(revision 2486)
++++ test/option/debug-includes.py	(working copy)
+@@ -56,6 +56,7 @@
+ 
+ test.write('bar.c', """
+ #include "bar.h"
++int local = 1;
+ """)
+ 
+ test.write('foo.h', """
+Index: test/option/tree-all.py
+===================================================================
+--- test/option/tree-all.py	(revision 2486)
++++ test/option/tree-all.py	(working copy)
+@@ -64,6 +64,7 @@
+ 
+ test.write('Bar.c', """
+ #include "Bar.h"
++int local = 1;
+ """)
+ 
+ test.write('Foo.h', """
+Index: test/option/debug-stree.py
+===================================================================
+--- test/option/debug-stree.py	(revision 2486)
++++ test/option/debug-stree.py	(working copy)
+@@ -60,6 +60,7 @@
+ 
+ test.write('bar.c', """
+ #include "bar.h"
++int local = 1;
+ """)
+ 
+ test.write('foo.h', """
+Index: test/option/tree-derived.py
+===================================================================
+--- test/option/tree-derived.py	(revision 2486)
++++ test/option/tree-derived.py	(working copy)
+@@ -56,6 +56,7 @@
+ 
+ test.write('bar.c', """
+ #include "bar.h"
++int local = 1;
+ """)
+ 
+ test.write('foo.h', """
+Index: test/option/debug-tree.py
+===================================================================
+--- test/option/debug-tree.py	(revision 2486)
++++ test/option/debug-tree.py	(working copy)
+@@ -64,6 +64,7 @@
+ 
+ test.write('Bar.c', """
+ #include "Bar.h"
++int local = 1;
+ """)
+ 
+ test.write('Foo.h', """
+Index: test/option/debug-dtree.py
+===================================================================
+--- test/option/debug-dtree.py	(revision 2486)
++++ test/option/debug-dtree.py	(working copy)
+@@ -56,6 +56,7 @@
+ 
+ test.write('bar.c', """
+ #include "bar.h"
++int local = 1;
+ """)
+ 
+ test.write('foo.h', """
+Index: test/Repository/variants.py
+===================================================================
+--- test/Repository/variants.py	(revision 2486)
++++ test/Repository/variants.py	(working copy)
+@@ -204,7 +204,8 @@
+ #ifdef  BAR
+ #define MAIN_OS         "BAR"
+ #endif
+-main()
++int
++main(int argc, char *argv[])
+ {
+         printf(INCLUDE_STRING, INCLUDE_OS);
+         printf(XXX_STRING, XXX_OS);
+Index: test/LINK/SHLINKCOMSTR.py
+===================================================================
+--- test/LINK/SHLINKCOMSTR.py	(revision 2486)
++++ test/LINK/SHLINKCOMSTR.py	(working copy)
+@@ -64,6 +64,7 @@
+ env = Environment(SHCCCOM = r'%(_python_)s mycc.py $TARGET $SOURCES',
+                   SHLINKCOM = r'%(_python_)s mylink.py $TARGET $SOURCES',
+                   SHLINKCOMSTR = 'Linking shared $TARGET from $SOURCES',
++                  SHOBJPREFIX = '',
+                   SHOBJSUFFIX = '.obj',
+                   SHLIBPREFIX = '',
+                   SHLIBSUFFIX = '.dll')
+Index: test/CXX/SHCXX.py
+===================================================================
+--- test/CXX/SHCXX.py	(revision 2486)
++++ test/CXX/SHCXX.py	(working copy)
+@@ -55,7 +55,7 @@
+ int
+ main(int argc, char *argv[])
+ {
+-        argv[argc++] = "--";
++        argv[argc++] = (char *)"--";
+         printf("foo.c\n");
+         exit (0);
+ }
+@@ -67,7 +67,7 @@
+ int
+ main(int argc, char *argv[])
+ {
+-        argv[argc++] = "--";
++        argv[argc++] = (char *)"--";
+         printf("foo.c\n");
+         exit (0);
+ }
+Index: test/CXX/CXX.py
+===================================================================
+--- test/CXX/CXX.py	(revision 2486)
++++ test/CXX/CXX.py	(working copy)
+@@ -199,7 +199,7 @@
+ int
+ main(int argc, char *argv[])
+ {
+-        argv[argc++] = "--";
++        argv[argc++] = (char *)"--";
+         printf("foo.cxx\n");
+         exit (0);
+ }
+@@ -211,7 +211,7 @@
+ int
+ main(int argc, char *argv[])
+ {
+-        argv[argc++] = "--";
++        argv[argc++] = (char *)"--";
+         printf("foo.cxx\n");
+         exit (0);
+ }
+Index: test/CXX/SHCXXCOMSTR.py
+===================================================================
+--- test/CXX/SHCXXCOMSTR.py	(revision 2486)
++++ test/CXX/SHCXXCOMSTR.py	(working copy)
+@@ -58,7 +58,7 @@
+ test.write('SConstruct', """
+ env = Environment(SHCXXCOM = r'%(_python_)s mycc.py $TARGET $SOURCE',
+                   SHCXXCOMSTR = 'Building shared object $TARGET from $SOURCE',
+-                  SHOBJSUFFIX='.obj')
++                  SHOBJPREFIX='', SHOBJSUFFIX='.obj')
+ env.SharedObject(target = 'test1', source = 'test1.cpp')
+ env.SharedObject(target = 'test2', source = 'test2.cc')
+ env.SharedObject(target = 'test3', source = 'test3.cxx')
+Index: test/AR/ARFLAGS.py
+===================================================================
+--- test/AR/ARFLAGS.py	(revision 2486)
++++ test/AR/ARFLAGS.py	(working copy)
+@@ -78,6 +78,9 @@
+ test.write('main.c', r"""
+ #include <stdlib.h>
+ 
++extern void
++library_function();
++
+ int
+ main(int argc, char *argv[])
+ {
+Index: test/AR/AR.py
+===================================================================
+--- test/AR/AR.py	(revision 2486)
++++ test/AR/AR.py	(working copy)
+@@ -79,6 +79,9 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++extern void
++library_function(void);
++
+ int
+ main(int argc, char *argv[])
+ {
+Index: test/BuildDir/Sconscript-build_dir.py
+===================================================================
+--- test/BuildDir/Sconscript-build_dir.py	(revision 2486)
++++ test/BuildDir/Sconscript-build_dir.py	(working copy)
+@@ -225,6 +225,9 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++extern void
++bar(void);
++
+ int
+ main(int argc, char *argv[]) {
+         bar();
+Index: test/NodeOps.py
+===================================================================
+--- test/NodeOps.py	(revision 2486)
++++ test/NodeOps.py	(working copy)
+@@ -59,8 +59,8 @@
+ test.subdir('bld', 'src', ['src', 'subsrcdir'])
+ 
+ sconstruct = r"""
+-foo = Environment(SHCXXFLAGS = '%(fooflags)s', WINDOWS_INSERT_DEF=1)
+-bar = Environment(SHCXXFLAGS = '%(barflags)s', WINDOWS_INSERT_DEF=1)
++foo = Environment(SHOBJPREFIX='', SHCXXFLAGS = '%(fooflags)s', WINDOWS_INSERT_DEF=1)
++bar = Environment(SHOBJPREFIX='', SHCXXFLAGS = '%(barflags)s', WINDOWS_INSERT_DEF=1)
+ src = Dir('src')
+ BuildDir('bld', src, duplicate=1)
+ Nodes=[]
+Index: test/Fortran/SHFORTRANCOMSTR.py
+===================================================================
+--- test/Fortran/SHFORTRANCOMSTR.py	(revision 2486)
++++ test/Fortran/SHFORTRANCOMSTR.py	(working copy)
+@@ -56,7 +56,7 @@
+                   SHFORTRANCOMSTR = 'Building fortran $TARGET from $SOURCES',
+                   SHFORTRANPPCOM = r'%(_python_)s myfc.py fortranpp $TARGET $SOURCES',
+                   SHFORTRANPPCOMSTR = 'Building fortranpp $TARGET from $SOURCES',
+-                  SHOBJSUFFIX='.shobj')
++                  SHOBJPREFIX='', SHOBJSUFFIX='.shobj')
+ env.SharedObject(source = 'test01.f')
+ env.SharedObject(source = 'test02.F')
+ env.SharedObject(source = 'test03.for')
+Index: test/Fortran/SHF90COMSTR.py
+===================================================================
+--- test/Fortran/SHF90COMSTR.py	(revision 2486)
++++ test/Fortran/SHF90COMSTR.py	(working copy)
+@@ -56,7 +56,7 @@
+                   SHF90COMSTR = 'Building f90 $TARGET from $SOURCES',
+                   SHF90PPCOM = r'%(_python_)s myfc.py f90pp $TARGET $SOURCES',
+                   SHF90PPCOMSTR = 'Building f90pp $TARGET from $SOURCES',
+-                  SHOBJSUFFIX='.shobj')
++                  SHOBJPREFIX='', SHOBJSUFFIX='.shobj')
+ env.SharedObject(source = 'test01.f90')
+ env.SharedObject(source = 'test02.F90')
+ """ % locals())
+Index: test/Fortran/SHF77COMSTR.py
+===================================================================
+--- test/Fortran/SHF77COMSTR.py	(revision 2486)
++++ test/Fortran/SHF77COMSTR.py	(working copy)
+@@ -56,7 +56,7 @@
+                   SHF77COMSTR = 'Building f77 $TARGET from $SOURCES',
+                   SHF77PPCOM = r'%(_python_)s myfc.py f77pp $TARGET $SOURCES',
+                   SHF77PPCOMSTR = 'Building f77pp $TARGET from $SOURCES',
+-                  SHOBJSUFFIX='.shobj')
++                  SHOBJPREFIX='', SHOBJSUFFIX='.shobj')
+ env.SharedObject(source = 'test01.f')
+ env.SharedObject(source = 'test02.F')
+ env.SharedObject(source = 'test03.for')
+Index: test/Fortran/SHF95COMSTR.py
+===================================================================
+--- test/Fortran/SHF95COMSTR.py	(revision 2486)
++++ test/Fortran/SHF95COMSTR.py	(working copy)
+@@ -56,7 +56,7 @@
+                   SHF95COMSTR = 'Building f95 $TARGET from $SOURCES',
+                   SHF95PPCOM = r'%(_python_)s myfc.py f95pp $TARGET $SOURCES',
+                   SHF95PPCOMSTR = 'Building f95pp $TARGET from $SOURCES',
+-                  SHOBJSUFFIX='.shobj')
++                  SHOBJPREFIX='', SHOBJSUFFIX='.shobj')
+ env.SharedObject(source = 'test01.f95')
+ env.SharedObject(source = 'test02.F95')
+ """ % locals())
+Index: test/CC/SHCCCOMSTR.py
+===================================================================
+--- test/CC/SHCCCOMSTR.py	(revision 2486)
++++ test/CC/SHCCCOMSTR.py	(working copy)
+@@ -58,6 +58,7 @@
+ test.write('SConstruct', """
+ env = Environment(SHCCCOM = r'%(_python_)s mycc.py $TARGET $SOURCE',
+                   SHCCCOMSTR = 'Building $TARGET from $SOURCE',
++		  SHOBJPREFIX='',
+                   SHOBJSUFFIX='.obj')
+ env.SharedObject(target = 'test1', source = 'test1.c')
+ env.SharedObject(target = 'test2', source = 'test2%(alt_c_suffix)s')
