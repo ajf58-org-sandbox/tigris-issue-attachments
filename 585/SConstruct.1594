@@ -1,0 +1,57 @@
+import os.path
+
+open('test.java','w').write("""
+class test
+{
+    test()
+    {
+    super();
+    new inner();
+    }
+    
+    private static class inner
+    {
+    private inner() {}
+    }
+    }
+""")
+
+open('NestedExample.java','w').write("""
+                         // import java.util.*;
+
+public class NestedExample
+{
+        public NestedExample()
+        {
+                Thread t = new Thread() {
+                        public void start()
+                        {
+                                Thread t = new Thread() {
+                                        public void start()
+                                        {
+                                                try {Thread.sleep(200);}
+                                                catch (Exception e) {}
+                                        }
+                                };
+                                while (true)
+                                {
+                                        try {Thread.sleep(200);}
+                                        catch (Exception e) {}
+                                }
+                        }
+                };
+        }
+
+
+        public static void main(String argv[])
+        {
+                NestedExample e = new NestedExample();
+        }
+}
+""")
+
+
+env=Environment()
+env.Tool('javac')
+env.Java(target='classes',source='test.java')
+env.Java(target='classes2',source='NestedExample.java')
