@@ -1,0 +1,66 @@
+*** c:\Documents and Settings\jbl\My Documents\scons-0.96.92\engine\SCons\Tool\__init__.py	Tue Apr 11 05:33:26 2006
+--- c:\Python24\Lib\SCons\Tool\__init__.py	Wed Apr 19 11:14:55 2006
+***************
+*** 99,105 ****
+                      if file:
+                          file.close()
+              except ImportError, e:
+!                 pass
+          finally:
+              sys.path = oldpythonpath
+  
+--- 99,112 ----
+                      if file:
+                          file.close()
+              except ImportError, e:
+!                 import zipimport
+!                 for aPath in self.toolpath:
+!                     try:
+!                         importer = zipimport.zipimporter(aPath)
+!                         module = importer.load_module(self.name)
+!                         return module
+!                     except ImportError, e:
+!                         pass
+          finally:
+              sys.path = oldpythonpath
+  
+***************
+*** 109,122 ****
+          except KeyError:
+              try:
+                  smpath = sys.modules['SCons.Tool'].__path__
+-                 file, path, desc = imp.find_module(self.name, smpath)
+                  try:
+                      module = imp.load_module(full_name, file, path, desc)
+                      setattr(SCons.Tool, self.name, module)
+-                     return module
+-                 finally:
+                      if file:
+                          file.close()
+              except ImportError, e:
+                  m = "No tool named '%s': %s" % (self.name, e)
+                  raise SCons.Errors.UserError, m
+--- 116,138 ----
+          except KeyError:
+              try:
+                  smpath = sys.modules['SCons.Tool'].__path__
+                  try:
++                     file, path, desc = imp.find_module(self.name, smpath)
+                      module = imp.load_module(full_name, file, path, desc)
+                      setattr(SCons.Tool, self.name, module)
+                      if file:
+                          file.close()
++                     return module
++                 except ImportError, e:
++                     try:
++                         import zipimport
++                         importer = zipimport.zipimporter( sys.modules['SCons.Tool'].__path__[0] )
++                         module = importer.load_module(full_name)
++                         setattr(SCons.Tool, self.name, module)
++                         return module
++                     except ImportError, e:
++                         m = "No tool named '%s': %s" % (self.name, e)
++                         raise SCons.Errors.UserError, m
+              except ImportError, e:
+                  m = "No tool named '%s': %s" % (self.name, e)
+                  raise SCons.Errors.UserError, m
