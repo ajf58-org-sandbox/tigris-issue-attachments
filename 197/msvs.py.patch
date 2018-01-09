@@ -1,0 +1,24 @@
+--- msvs.py.orig	2007-05-17 07:36:38.000000000 -0400
++++ msvs.py	2007-05-22 16:21:51.345763400 -0400
+@@ -575,8 +575,8 @@
+ \t\t\t\tReBuildCommandLine="%(rebuildcmd)s"
+ \t\t\t\tCleanCommandLine="%(cleancmd)s"
+ \t\t\t\tOutput="%(runfile)s"
+-\t\t\t\tPreprocessorDefinitions=""
+-\t\t\t\tIncludeSearchPath=""
++\t\t\t\tPreprocessorDefinitions="%(preprocdefs)s"
++\t\t\t\tIncludeSearchPath="%(includepath)s"
+ \t\t\t\tForcedIncludes=""
+ \t\t\t\tAssemblySearchPath=""
+ \t\t\t\tForcedUsingAssemblies=""
+@@ -666,6 +666,10 @@
+             rebuildcmd  = xmlify(starting + self.env.subst('$MSVSREBUILDCOM', 1) + cmdargs)
+             cleancmd    = xmlify(starting + self.env.subst('$MSVSCLEANCOM', 1) + cmdargs)
+ 
++            if self.version_num >= 8.0:
++                preprocdefs = xmlify(';'.join(self.env['CPPDEFINES']))
++                includepath = xmlify(';'.join(self.env['CPPPATH']))
++
+             if not env_has_buildtarget:
+                 del self.env['MSVSBUILDTARGET']
+ 
