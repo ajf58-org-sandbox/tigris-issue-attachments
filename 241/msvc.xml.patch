@@ -1,0 +1,89 @@
+Index: src/engine/SCons/Tool/msvc.xml
+===================================================================
+--- src/engine/SCons/Tool/msvc.xml	(revision 20)
++++ src/engine/SCons/Tool/msvc.xml	(working copy)
+@@ -54,22 +54,42 @@
+ 
+ <builder name="PCH">
+ <summary>
+-Builds a Microsoft Visual C++ precompiled header.
+-Calling this builder method
+-returns a list of two targets: the PCH as the first element, and the object
+-file as the second element. Normally the object file is ignored.
+-This builder method is only
+-provided when Microsoft Visual C++ is being used as the compiler.
+-The PCH builder method is generally used in
+-conjuction with the PCH construction variable to force object files to use
+-the precompiled header:
++A synonym for the StaticPCH() builder method.
++</summary>
++</builder>
+ 
++<builder name="StaticPCH">
++<summary>
++Builds a C++ precompiled header. Calling this builder method returns a
++list of two targets: the PCH as the first element, and a static object
++file as the second element. Normally the object file is ignored. This
++builder method is only provided whith the following compilers:
++Microsoft Visual C++ and Intel C++. The PCH builder method is
++generally used in conjuction with the PCH construction variable to
++force object files to use the precompiled header:
++
+ <example>
+-env['PCH'] = env.PCH('StdAfx.cpp')[0]
++env['PCH'] = env.StaticPCH('StdAfx.cpp')[0]
+ </example>
+ </summary>
+ </builder>
+ 
++<builder name="SharedPCH">
++<summary>
++Builds a C++ precompiled header. Calling this builder method returns a
++list of two targets: the PCH as the first element, and the shared
++object file as the second element. Normally the object file is
++ignored. This builder method is only provided whith the following
++compilers: Microsoft Visual C++ and Intel C++. The PCH builder method
++is generally used in conjuction with the PCH construction variable to
++force object files to use the precompiled header:
++
++<example>
++env['PCH'] = env.SharedPCH('StdAfx.cpp')[0]
++</example>
++</summary>
++</builder>
++
+ <builder name="RES">
+ <summary>
+ Builds a Microsoft Visual C++ resource file.
+@@ -93,8 +113,7 @@
+ <summary>
+ Options added to the compiler command line
+ to support building with precompiled headers.
+-The default value expands expands to the appropriate
+-Microsoft Visual C++ command-line options
++The default value expands expands to the appropriate command-line options
+ when the &cv-link-PCH; construction variable is set.
+ </summary>
+ </cvar>
+@@ -140,8 +159,9 @@
+ 
+ <cvar name="PCH">
+ <summary>
+-The Microsoft Visual C++ precompiled header that will be used when compiling
+-object files. This variable is ignored by tools other than Microsoft Visual C++.
++The C++ precompiled header that will be used when compiling
++object files. This variable is ignored by tools other than Microsoft
++Visual C++ and Intel C++.
+ When this variable is
+ defined SCons will add options to the compiler command line to
+ cause it to use the precompiled header, and will also set up the
+@@ -180,7 +200,8 @@
+ <cvar name="PCHSTOP">
+ <summary>
+ This variable specifies how much of a source file is precompiled. This
+-variable is ignored by tools other than Microsoft Visual C++, or when
++variable is ignored by tools other than Microsoft Visual C++ and Intel
++C++, or when
+ the PCH variable is not being used. When this variable is define it
+ must be a string that is the name of the header that
+ is included at the end of the precompiled portion of the source files, or
