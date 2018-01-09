@@ -1,0 +1,57 @@
+Index: TimeStamp.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Sig/TimeStamp.py,v
+retrieving revision 1.9
+diff -u -r1.9 TimeStamp.py
+--- TimeStamp.py	20 Jan 2003 04:29:51 -0000	1.9
++++ TimeStamp.py	18 Jun 2005 01:01:42 -0000
+@@ -30,6 +30,10 @@
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
++import MD5
++import string
++from SCons.Errors import InternalError
++
+ def current(new, old):
+     """Return whether a new timestamp is up-to-date with
+     respect to an old timestamp.
+@@ -41,16 +45,31 @@
+     Collect a list of timestamps, returning
+     the most-recent timestamp from the list 
+ 
+-    signatures - a list of timestamps
++    signatures - a list of timestamps (for FS nodes) and/or strings (for Value nodes)
+     returns - the most recent timestamp
+     """
+ 
+-    if len(signatures) == 0:
+-        return 0
+-    elif len(signatures) == 1:
+-        return signatures[0]
+-    else:
+-        return max(signatures)
++    timestamps = []
++    strvalues = []
++    for s in signatures:
++        if type(s) is int:
++            timestamps.append(s)
++        elif type(s) is str:
++            strvalues.append(s)
++        elif type(s) is tuple and len(s) == 2 and type(s[0]) is int and type(s[1]) == str:
++            timestamps.append(s[0])
++            strvalues.append(s[1])
++        else:
++            raise InternalError, "Signature must either be int for file system nodes or str for value nodes"
++
++    sig = 0
++    if len(timestamps) > 0:
++        sig = max(timestamps)
++
++    if len(strvalues) > 0:
++        sig = (sig, MD5.hexdigest(MD5.md5.new(string.join(strvalues, ', ')).digest()))
++
++    return sig
+ 
+ def signature(obj):
+     """Generate a timestamp.
