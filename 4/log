@@ -1,0 +1,36 @@
+scons: Reading SConscript files ...
+ValueError: invalid literal for float(): 9.1.038:
+  File "SConstruct", line 3:
+    env=Environment(tools=['default', 'intelc'])
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Memoize.py", line 819:
+    klassdict['__init__'] = lambda self, *args, **kw: newinit(self, args, kw)
+  File ".../SCons/Memoizer-init-lambda</nethome/grigoren/system//lib/scons-0.96.92/SCons/Memoize.py>", line 1:
+    None
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Memoize.py", line 778:
+    apply(actual_init, (self,)+args, kw)
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Memoize.py", line 1:
+    """Memoizer
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Memoize.py", line 781:
+    apply(super(cls, self).__init__, args, kw)
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Memoize.py", line 819:
+    klassdict['__init__'] = lambda self, *args, **kw: newinit(self, args, kw)
+  File ".../SCons/Memoizer-init-lambda</nethome/grigoren/system//lib/scons-0.96.92/SCons/Environment.py>", line 488:
+    None
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Memoize.py", line 778:
+    apply(actual_init, (self,)+args, kw)
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Environment.py", line 533:
+    apply_tools(self, tools, toolpath)
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Environment.py", line 134:
+    env.Tool(tool)
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Environment.py", line 1108:
+    tool(self)
+  File "/nethome/grigoren/system//lib/scons-0.96.92/SCons/Tool/__init__.py", line 135:
+    apply(self.generate, ( env, ) + args, kw)
+  File "/nethome/grigoren/system/lib/scons-0.96.92/SCons/Tool/intelc.py", line 253:
+    vlist = get_all_compiler_versions()
+  File "/nethome/grigoren/system/lib/scons-0.96.92/SCons/Tool/intelc.py", line 199:
+    versions.sort(vercmp)
+  File "/nethome/grigoren/system/lib/scons-0.96.92/SCons/Tool/intelc.py", line 111:
+    return cmp(linux_ver_normalize(b), linux_ver_normalize(a))
+  File "/nethome/grigoren/system/lib/scons-0.96.92/SCons/Tool/intelc.py", line 74:
+    f = float(vstr)
