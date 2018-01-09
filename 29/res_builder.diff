@@ -1,0 +1,5 @@
+405c405,406
+< res_builder = SCons.Builder.Builder(action=res_action, suffix='.res',
+---
+> res_builder = SCons.Builder.Builder(action=res_action, src_suffix='.rc', suffix='.res',
+>                                     src_builder=[],
