@@ -1,0 +1,61 @@
+Index: src/engine/SCons/Tool/msvc.py
+===================================================================
+--- src/engine/SCons/Tool/msvc.py	(revision 1637)
++++ src/engine/SCons/Tool/msvc.py	(working copy)
+@@ -9,7 +9,7 @@
+ """
+ 
+ #
+-# __COPYRIGHT__
++# Copyright (c) 2001, 2002, 2003, 2004 The SCons Foundation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining
+ # a copy of this software and associated documentation files (the
+@@ -473,6 +473,18 @@
+     exe_paths = []
+     lib_paths = []
+     include_paths = []
++
++    MSVS_PLATFORM=env.get('MSVS8_PLATFORM','x86');
++    PLATFORM_SUBDIR='';
++
++    if(MSVS_PLATFORM=='x86'):
++        MSVS_PLATFORM='';
++    else:
++        # if cross-compiling
++        pos = MSVS_PLATFORM.find('_');
++        if(pos!=-1):
++            PLATFORM_SUBDIR=MSVS_PLATFORM[pos+1:];
++
+     try:
+         paths = SCons.Tool.msvs.get_msvs_install_dirs(version, suite)
+         MVSdir = paths['VSINSTALLDIR']
+@@ -492,10 +504,18 @@
+         MVSCommondir = os.path.join(MVSdir, 'Common7')
+         include_paths.append( os.path.join(MVSVCdir, 'include') )
+         lib_paths.append( os.path.join(MVSVCdir, 'lib') )
+-        for base, subdir in [(MVSCommondir,'IDE'), (MVSVCdir,'bin'),
++        for base, subdir in [(MVSCommondir,'IDE'), (MVSVCdir,os.path.join('bin',MSVS_PLATFORM)),
+                              (MVSCommondir,'Tools'), (MVSCommondir,r'Tools\bin')]:
+             exe_paths.append( os.path.join( base, subdir) )
+ 
++        if(version >= 8):
++            SDKDIR=os.path.join(MVSdir,'SDK','v2.0');
++        else:
++            SDKDIR=os.path.join(MVSdir,'SDK','v1.1');
++
++        lib_paths.append(os.path.join(SDKDIR,'lib'));    
++        exe_paths.append(os.path.join(SDKDIR,'bin'));
++
+         if paths.has_key('PLATFORMSDKDIR'):
+             PlatformSdkDir = paths['PLATFORMSDKDIR']
+         else:
+@@ -524,6 +544,8 @@
+         if SCons.Util.can_read_reg and paths.has_key('FRAMEWORKDIR') and paths.has_key('FRAMEWORKVERSION'):
+             exe_paths.append( os.path.join( paths['FRAMEWORKDIR'], paths['FRAMEWORKVERSION'] ) )
+ 
++    lib_paths=[os.path.join(libbpath,PLATFORM_SUBDIR) for libbpath in lib_paths];
++
+     include_path = string.join( include_paths, os.pathsep )
+     lib_path = string.join(lib_paths, os.pathsep )
+     exe_path = string.join(exe_paths, os.pathsep )
