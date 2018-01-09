@@ -1,0 +1,29 @@
+# -*- mode: python -*-
+
+import os.path
+
+# Create source files
+if not os.path.exists('example1.c'):
+    f = open('example1.c', 'w')
+    f.write("""#include "bheader.h"\n#include "bheader_aliased.h"\n""")
+    f.close()
+
+if not os.path.exists('example2.c'):
+    f = open('example2.c', 'w')
+    f.write("""#include "bheader.h"\n""")
+    f.close()
+
+
+# Do actual SConstructing
+env = Environment()
+
+bheader = env.Command('bheader.h', None, Touch('$TARGET'))
+bheader_aliased = env.Command('bheader_aliased.h', None, Touch('$TARGET'))
+
+# example1.c references bheader_aliased.h; bheader.h is *not* cleaned
+object1 = env.Object('example1')
+env.Alias('example1', [bheader_aliased, object1])
+
+# example2.c does not reference bheader_aliased.h; bheader.h *is* cleaned
+object2 = env.Object('example2')
+env.Alias('example2', [bheader_aliased, object2])
