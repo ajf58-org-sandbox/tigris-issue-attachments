@@ -1,0 +1,31 @@
+*** SCons/Tool/jar.py.orig	Mon Sep 24 16:18:12 2007
+--- SCons/Tool/jar.py	Mon Sep 24 16:20:20 2007
+***************
+*** 45,53 ****
+      for src in source:
+          contents = src.get_contents()
+          if contents[:16] != "Manifest-Version":
+!             if jarchdir:
+                  # If we are changing the dir with -C, then sources should
+                  # be relative to that directory.
+                  src = SCons.Subst.Literal(src.get_path(jarchdir))
+                  result.append('-C')
+                  result.append(jarchdir)
+--- 45,61 ----
+      for src in source:
+          contents = src.get_contents()
+          if contents[:16] != "Manifest-Version":
+!             try:
+!                 reldir = src.attributes.java_classdir
+                  # If we are changing the dir with -C, then sources should
+                  # be relative to that directory.
++                 src = SCons.Subst.Literal(src.get_path(reldir))
++                 result.append('-C')
++                 result.append(reldir)
++             except AttributeError:
++               if jarchdir:
++                 # If we are changing the dir with -C, then sources should
++                 # be relative to that directory.
+                  src = SCons.Subst.Literal(src.get_path(jarchdir))
+                  result.append('-C')
+                  result.append(jarchdir)
