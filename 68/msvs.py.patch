@@ -1,0 +1,48 @@
+*** msvs_new.py	Tue Aug 29 14:05:26 2006
+--- msvs.py	Tue Apr 11 00:33:32 2006
+***************
+*** 1337,1343 ****
+      K = 'Software\\Microsoft\\VisualStudio\\' + str(version_num)
+      if (version_num >= 8.0):
+          try:
+!             SCons.Util.RegOpenKeyEx(SCons.Util.HKEY_LOCAL_MACHINE, K + r'\Setup\VC\ProductDir')
+          except SCons.Util.RegError:
+              K = 'Software\\Microsoft\\VCExpress\\' + str(version_num)
+  
+--- 1337,1343 ----
+      K = 'Software\\Microsoft\\VisualStudio\\' + str(version_num)
+      if (version_num >= 8.0):
+          try:
+!             SCons.Util.RegOpenKeyEx(SCons.Util.HKEY_LOCAL_MACHINE, K )
+          except SCons.Util.RegError:
+              K = 'Software\\Microsoft\\VCExpress\\' + str(version_num)
+  
+***************
+*** 1406,1418 ****
+          rv['FRAMEWORKVERSIONS'] = versions
+          # assume that the highest version is the latest version installed
+          rv['FRAMEWORKVERSION'] = versions[0]
+-         
+  
+      # .NET framework SDK install dir
+      try:
+!     	key = r'Software\Microsoft\.NETFramework\sdkInstallRoot'
+!         if rv.has_key('FRAMEWORKVERSION'):
+!             key = key + rv['FRAMEWORKVERSION'][:4]
+  
+          (rv['FRAMEWORKSDKDIR'], t) = SCons.Util.RegGetValue(SCons.Util.HKEY_LOCAL_MACHINE,key)
+  
+--- 1406,1418 ----
+          rv['FRAMEWORKVERSIONS'] = versions
+          # assume that the highest version is the latest version installed
+          rv['FRAMEWORKVERSION'] = versions[0]
+  
+      # .NET framework SDK install dir
+      try:
+!         if rv.has_key('FRAMEWORKVERSION') and rv['FRAMEWORKVERSION'][:4] == 'v1.1':
+!             key = r'Software\Microsoft\.NETFramework\sdkInstallRootv1.1'
+!         else:
+!             key = r'Software\Microsoft\.NETFramework\sdkInstallRoot'
+  
+          (rv['FRAMEWORKSDKDIR'], t) = SCons.Util.RegGetValue(SCons.Util.HKEY_LOCAL_MACHINE,key)
+  
