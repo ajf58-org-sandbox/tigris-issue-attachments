@@ -1,0 +1,88 @@
+Index: src/engine/SCons/Tool/javac.py
+===================================================================
+*** src/engine/SCons/Tool/javac.py	(Revision 4076)
+--- src/engine/SCons/Tool/javac.py	(Arbeitskopie)
+***************
+*** 162,185 ****
+              return []
+              #return ""
+  
+! def Java(env, target, source, *args, **kw):
+      """
+!     A pseudo-Builder wrapper around the separate JavaClass{File,Dir}
+!     Builders.
+      """
+!     if not SCons.Util.is_List(target):
+!         target = [target]
+!     if not SCons.Util.is_List(source):
+!         source = [source]
+! 
+!     # Pad the target list with repetitions of the last element in the
+!     # list so we have a target for every source element.
+!     target = target + ([target[-1]] * (len(source) - len(target)))
+! 
+      java_suffix = env.subst('$JAVASUFFIX')
+!     result = []
+! 
+!     for t, s in zip(target, source):
+          if isinstance(s, SCons.Node.FS.Base):
+              if isinstance(s, SCons.Node.FS.File):
+                  b = env.JavaClassFile
+--- 162,178 ----
+              return []
+              #return ""
+  
+! def _map_sources_to_builder(env, sources):
+      """
+!     Infer source node types and return a list of the associated builder methods.
+!     True is returned as the second return value if all sources are of the same
+!     type.
+      """
+!     builder = []
+      java_suffix = env.subst('$JAVASUFFIX')
+!     last = None
+!     homogen = 1
+!     for s in sources:
+          if isinstance(s, SCons.Node.FS.Base):
+              if isinstance(s, SCons.Node.FS.File):
+                  b = env.JavaClassFile
+***************
+*** 194,199 ****
+--- 187,223 ----
+                  b = env.JavaClassFile
+              else:
+                  b = env.JavaClassDir
++ 
++         if b != last and last != None:
++             homogen = 0
++         last = b
++         builder.append(b)
++     return builder, homogen
++ 
++ 
++ def Java(env, target, source, *args, **kw):
++     """
++     A pseudo-Builder wrapper around the separate JavaClass{File,Dir}
++     Builders.
++     """
++     if not SCons.Util.is_List(target):
++         target = [target]
++     if not SCons.Util.is_List(source):
++         source = [source]
++ 
++     builder, homogen = _map_sources_to_builder(env, source)
++ 
++     # Short-circuit the common case of a single target and one or more sources
++     # of the same type with a single Builder call / javac invocation.
++     if len(target) == 1 and homogen:
++         return apply(builder[0], (target, source) + args, kw)
++ 
++     # Pad the target list with repetitions of the last element in the
++     # list so we have a target for every source element.
++     target = target + ([target[-1]] * (len(source) - len(target)))
++ 
++     result = []
++     for t, s, b in zip(target, source, builder):
+          result.extend(apply(b, (t, s) + args, kw))
+  
+      return result
