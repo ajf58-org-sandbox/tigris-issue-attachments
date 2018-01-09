@@ -1,0 +1,39 @@
+# Test case SConstruct
+env = Environment ()
+
+import re
+
+rom_re = re.compile (r'rom\s+"(\S+)"', re.M)
+
+def kml_scanner_fn (node, env, path):
+    contents = node.get_contents ()
+    n = [env.File (f) for f in rom_re.findall (contents)]
+    return (n)
+
+kml_scanner = env.Scanner (function = kml_scanner_fn,
+                           skeys = ['.kml'])
+
+def ncz_generator_fn (source, target, env, for_signature):
+    return  "echo 'ncz test' | cat %s %s - >%s" % (source [0], source [1],
+target [0])
+
+def ncz_emitter_fn (target, source, env):
+    return (target, source + kml_scanner_fn (source [0], env, None))
+
+ncz_builder = env.Builder (generator = ncz_generator_fn,
+                           suffix = ".ncz",
+                           src_suffix = ".kml",
+                           source_scanner = kml_scanner,
+                           emitter = ncz_emitter_fn)
+
+def uasm_generator_fn (source, target, env, for_signature):
+    return "echo 'uasm test' | cat %s - >%s" % (source [0], target [0])
+
+uasm_builder = env.Builder (generator = uasm_generator_fn,
+                            suffix = ".rom",
+                            src_suffix = ".asm")
+
+env.Append (BUILDERS = {'NCZ': ncz_builder,
+                        'UASM': uasm_builder})
+
+env.NCZ ('foo')
