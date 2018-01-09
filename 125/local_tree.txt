@@ -1,0 +1,51 @@
+scons -n --debug=tree
+
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+g++ -o bin/binmain.o -c -Imylib -I/UNIONFS/root/indirect_includes/repository/mylib -Ibin -I/UNIONFS/root/indirect_includes/repository/bin bin/binmain.cpp
+g++ -o mylib/mylib.os -c -fPIC -Imylib -I/UNIONFS/root/indirect_includes/repository/mylib mylib/mylib.cpp
+g++ -o mylib/mylib1.os -c -fPIC -Imylib -I/UNIONFS/root/indirect_includes/repository/mylib /UNIONFS/root/indirect_includes/repository/mylib/mylib1.cpp
+g++ -o mylib/mylib2.os -c -fPIC -Imylib -I/UNIONFS/root/indirect_includes/repository/mylib mylib/mylib2.cpp
+g++ -o mylib/libmylib.so -shared mylib/mylib.os mylib/mylib1.os mylib/mylib2.os -Lmylib -L/UNIONFS/root/indirect_includes/repository/mylib
+g++ -o bin/binmain bin/binmain.o -Lmylib -L/UNIONFS/root/indirect_includes/repository/mylib -Lbin -L/UNIONFS/root/indirect_includes/repository/bin -lmylib
+Install file: "bin/binmain" as "delivery/binmain"
+
++-delivery/binmain
+  +-bin/binmain
+    +-bin/binmain.o
+    | +-bin/binmain.cpp
+    | +-mylib/mylib.h
+    | +-mylib/mylib.cpp
+    | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib1.h
+    | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib2.h
+    +-mylib/libmylib.so
+      +-mylib/mylib.os
+      | +-mylib/mylib.cpp
+      | +-mylib/mylib.h
+      | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib1.h
+      | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib2.h
+      +-mylib/mylib1.os
+      | +-mylib/mylib1.cpp
+      | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib1.h
+      | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib2.h
+      +-mylib/mylib2.os
+        +-mylib/mylib2.cpp
+        +-mylib/mylib2.h
+Install file: "mylib/libmylib.so" as "delivery/libmylib.so"
+
++-delivery/libmylib.so
+  +-mylib/libmylib.so
+    +-mylib/mylib.os
+    | +-mylib/mylib.cpp
+    | +-mylib/mylib.h
+    | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib1.h
+    | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib2.h
+    +-mylib/mylib1.os
+    | +-mylib/mylib1.cpp
+    | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib1.h
+    | +-/UNIONFS/root/indirect_includes/repository/mylib/mylib2.h
+    +-mylib/mylib2.os
+      +-mylib/mylib2.cpp
+      +-mylib/mylib2.h
+scons: done building targets.
