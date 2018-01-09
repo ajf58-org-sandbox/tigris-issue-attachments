@@ -1,0 +1,30 @@
+Index: doc/SConscript
+===================================================================
+--- doc/SConscript	(revision 1631)
++++ doc/SConscript	(working copy)
+@@ -28,6 +28,7 @@
+ import os.path
+ import re
+ import string
++import sys
+ 
+ Import('env', 'whereis')
+ 
+@@ -169,7 +170,7 @@
+                         variables_gen, variables_mod]
+     b = env.Command(doc_output_files,
+                     scons_doc_files,
+-                    "python $SCONS_PROC_PY --sgml -b ${TARGETS[0]},${TARGETS[1]} -t ${TARGETS[2]},${TARGETS[3]} -v ${TARGETS[4]},${TARGETS[5]} $( $SOURCES $)")
++                    sys.executable + " $SCONS_PROC_PY --sgml -b ${TARGETS[0]},${TARGETS[1]} -t ${TARGETS[2]},${TARGETS[3]} -v ${TARGETS[4]},${TARGETS[5]} $( $SOURCES $)")
+     env.Depends(b, "$SCONS_PROC_PY")
+ 
+     env.Local(b)
+@@ -387,7 +388,7 @@
+ man_intermediate_files = map(lambda x: os.path.join(build, 'man', x),
+                              man_i_files)
+ 
+-cmd = "python $SCONS_PROC_PY --man -b ${TARGETS[0]} -t ${TARGETS[1]} -v ${TARGETS[2]} $( $SOURCES $)"
++cmd = sys.executable + " $SCONS_PROC_PY --man -b ${TARGETS[0]} -t ${TARGETS[1]} -v ${TARGETS[2]} $( $SOURCES $)"
+ man_intermediate_files = env.Command(man_intermediate_files,
+                                      scons_doc_files,
+                                      cmd)
