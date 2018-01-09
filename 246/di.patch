@@ -1,0 +1,11 @@
+Index: src/engine/SCons/Scanner/D.py
+===================================================================
+--- src/engine/SCons/Scanner/D.py	(revision 2492)
++++ src/engine/SCons/Scanner/D.py	(working copy)
+@@ -50,4 +50,6 @@
+         inc = string.replace(include, '.', '/')
+ 
+         i = SCons.Node.FS.find_file(inc + '.d', (source_dir,) + path)
++        if (i is None):
++            i = SCons.Node.FS.find_file (inc + '.di', (source_dir,) + path)
+         return i, include
