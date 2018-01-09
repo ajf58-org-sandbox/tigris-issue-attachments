@@ -1,0 +1,14 @@
+env = Environment()
+env['JAVAVERSION'] = "1.6"
+
+jclasses = env.Java('.', '.')
+
+print '-' * 60
+print 'Java parser found classes:'
+print '-' * 60
+
+for jc in jclasses:
+    print jc
+
+print '-' * 60
+
