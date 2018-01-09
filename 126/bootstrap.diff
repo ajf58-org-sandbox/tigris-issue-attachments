@@ -1,0 +1,51 @@
+Index: bootstrap.py
+===================================================================
+--- bootstrap.py	(revision 1791)
++++ bootstrap.py	(working copy)
+@@ -82,13 +82,16 @@
+ 
+ requires_an_argument = 'bootstrap.py:  %s requires an argument\n'
+ 
+-command_line_args = sys.argv[1:]
+-
+ def must_copy(dst, src):
+     if not os.path.exists(dst):
+         return 1
+     return open(dst, 'rb').read() != open(src, 'rb').read()
+ 
++search = [os.path.split(sys.argv[0])[0]]
++if search[0] == '': search[0] = '.'
++
++command_line_args = sys.argv[1:]
++
+ while command_line_args:
+     arg = command_line_args.pop(0)
+ 
+@@ -102,6 +105,16 @@
+     elif arg[:16] == '--bootstrap_dir=':
+         bootstrap_dir = arg[16:]
+ 
++    elif arg == '--bootstrap_src':
++        try:
++            search.insert(0, command_line_args.pop(0))
++        except IndexError:
++            sys.stderr.write(requires_an_argument % arg)
++            sys.exit(1)
++
++    elif arg[:16] == '--bootstrap_src=':
++        search.insert(0, arg[16:])
++
+     elif arg == '--bootstrap_force':
+         def must_copy(dst, src):
+             return 1
+@@ -144,8 +157,8 @@
+ def find(file, search=search):
+     for dir in search:
+         f = os.path.join(dir, file)
+-	if os.path.exists(f):
+-	    return os.path.normpath(f)
++        if os.path.exists(f):
++            return os.path.normpath(f)
+     sys.stderr.write("could not find `%s' in search path:\n" % file)
+     sys.stderr.write("\t" + string.join(search, "\n\t") + "\n")
+     sys.exit(2)
