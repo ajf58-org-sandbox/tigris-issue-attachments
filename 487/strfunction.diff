@@ -1,0 +1,466 @@
+Index: test/DVIPS/DVIPSFLAGS.py
+===================================================================
+--- test/DVIPS/DVIPSFLAGS.py	(revision 3321)
++++ test/DVIPS/DVIPSFLAGS.py	(working copy)
+@@ -39,8 +39,10 @@
+ test.write('mytex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:4] != '#tex':
+@@ -51,8 +53,10 @@
+ test.write('mylatex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:6] != '#latex':
+Index: test/DVIPS/DVIPS.py
+===================================================================
+--- test/DVIPS/DVIPS.py	(revision 3321)
++++ test/DVIPS/DVIPS.py	(working copy)
+@@ -39,8 +39,10 @@
+ test.write('mytex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:4] != '#tex':
+@@ -51,8 +53,10 @@
+ test.write('mylatex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:6] != '#latex':
+Index: test/DVIPDF/DVIPDFFLAGS.py
+===================================================================
+--- test/DVIPDF/DVIPDFFLAGS.py	(revision 3321)
++++ test/DVIPDF/DVIPDFFLAGS.py	(working copy)
+@@ -39,8 +39,10 @@
+ test.write('mytex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:4] != '#tex':
+@@ -51,8 +53,10 @@
+ test.write('mylatex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:6] != '#latex':
+Index: test/DVIPDF/DVIPDF.py
+===================================================================
+--- test/DVIPDF/DVIPDF.py	(revision 3321)
++++ test/DVIPDF/DVIPDF.py	(working copy)
+@@ -39,8 +39,10 @@
+ test.write('mytex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:4] != '#tex':
+@@ -51,8 +53,10 @@
+ test.write('mylatex.py', r"""
+ import os
+ import sys
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ out_file = open(base_name+'.dvi', 'wb')
+ for l in infile.readlines():
+     if l[:6] != '#latex':
+@@ -63,8 +67,10 @@
+ test.write('mydvipdf.py', r"""
+ import os
+ import sys
+-infile = open(sys.argv[1], 'rb')
+-out_file = open(sys.argv[2], 'wb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++infile = open(arg[0], 'rb')
++out_file = open(arg[1], 'wb')
+ for l in infile.readlines():
+     if l[:7] != '#dvipdf':
+         out_file.write(l)
+Index: test/TEX/TEXCOMSTR.py
+===================================================================
+--- test/TEX/TEXCOMSTR.py	(revision 3321)
++++ test/TEX/TEXCOMSTR.py	(working copy)
+@@ -53,7 +53,7 @@
+ test.write('SConstruct', """
+ env = Environment(TOOLS = ['tex'],
+                   TEXCOM = r'%(_python_)s mytex.py $TARGET $SOURCE',
+-                  TEXCOMSTR = 'Building $TARGET from $SOURCE')
++                  TEXCOMSTR = 'Building $TARGET from $SOURCE ...')
+ env.DVI('test1')
+ """ % locals())
+ 
+@@ -63,7 +63,8 @@
+ """)
+ 
+ test.run(stdout = test.wrap_stdout("""\
+-Building test1.dvi from test1.tex
++"/usr/bin/python" mytex.py test1.dvi test1.tex ...
++Building test1.dvi from test1.tex ...
+ """ % locals()))
+ 
+ test.must_match('test1.dvi', "test1.tex\n")
+Index: test/TEX/PDFTEX.py
+===================================================================
+--- test/TEX/PDFTEX.py	(revision 3321)
++++ test/TEX/PDFTEX.py	(working copy)
+@@ -45,8 +45,10 @@
+ test.write('mypdftex.py', r"""
+ import sys
+ import os
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[2:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ pdf_file = open(base_name+'.pdf', 'wb')
+ aux_file = open(base_name+'.aux', 'wb')
+ log_file = open(base_name+'.log', 'wb')
+Index: test/TEX/PDFLATEXCOMSTR.py
+===================================================================
+--- test/TEX/PDFLATEXCOMSTR.py	(revision 3321)
++++ test/TEX/PDFLATEXCOMSTR.py	(working copy)
+@@ -64,6 +64,7 @@
+ """)
+ 
+ test.run(stdout = test.wrap_stdout("""\
++ ...
+ Building test1.pdf from test1.latex
+ """ % locals()))
+ 
+Index: test/TEX/TEX.py
+===================================================================
+--- test/TEX/TEX.py	(revision 3321)
++++ test/TEX/TEX.py	(working copy)
+@@ -45,8 +45,10 @@
+ test.write('mytex.py', r"""
+ import sys
+ import os
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ dvi_file = open(base_name+'.dvi', 'wb')
+ aux_file = open(base_name+'.aux', 'wb')
+ log_file = open(base_name+'.log', 'wb')
+@@ -175,9 +177,11 @@
+     test.run(stderr = None)
+     output_lines = string.split(test.stdout(), '\n')
+ 
+-    reruns = filter(lambda x: string.find(x, 'latex rerun.tex') != -1, output_lines)
+-    if len(reruns) != 2:
+-        print "Expected 2 latex calls, got %s:" % len(reruns)
++    reruns = filter(lambda x: string.find(x, 'latex -interaction=nonstopmode rerun.tex') != -1, output_lines)
++
++# subtract 1 since we have one extra line from the new strfunction
++    if len(reruns)-1 != 2:
++        print "Expected 2 latex calls, got %d:" % (len(reruns)-1)
+         print string.join(reruns, '\n')
+         test.fail_test()
+ 
+Index: test/TEX/LATEXCOMSTR.py
+===================================================================
+--- test/TEX/LATEXCOMSTR.py	(revision 3321)
++++ test/TEX/LATEXCOMSTR.py	(working copy)
+@@ -63,8 +63,9 @@
+ """)
+ 
+ test.run(stdout = test.wrap_stdout("""\
++ ...
+ Building test1.dvi from test1.latex
+-""" % locals()))
++"""))
+ 
+ test.must_match('test1.dvi', "test1.latex\n")
+ 
+Index: test/TEX/PDFLATEX.py
+===================================================================
+--- test/TEX/PDFLATEX.py	(revision 3321)
++++ test/TEX/PDFLATEX.py	(working copy)
+@@ -45,8 +45,10 @@
+ test.write('mypdflatex.py', r"""
+ import sys
+ import os
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ pdf_file = open(base_name+'.pdf', 'wb')
+ aux_file = open(base_name+'.aux', 'wb')
+ log_file = open(base_name+'.log', 'wb')
+Index: test/TEX/LATEX.py
+===================================================================
+--- test/TEX/LATEX.py	(revision 3321)
++++ test/TEX/LATEX.py	(working copy)
+@@ -45,8 +45,10 @@
+ test.write('mylatex.py', r"""
+ import sys
+ import os
+-base_name = os.path.splitext(sys.argv[1])[0]
+-infile = open(sys.argv[1], 'rb')
++import getopt
++cmd_opts, arg = getopt.getopt(sys.argv[1:], 'i:', [])
++base_name = os.path.splitext(arg[0])[0]
++infile = open(arg[0], 'rb')
+ dvi_file = open(base_name+'.dvi', 'wb')
+ aux_file = open(base_name+'.aux', 'wb')
+ log_file = open(base_name+'.log', 'wb')
+@@ -112,9 +114,10 @@
+ foo = Environment(ENV = ENV)
+ latex = foo.Dictionary('LATEX')
+ makeindex = foo.Dictionary('MAKEINDEX')
++python_path = r'%(_python_)s'
+ bar = Environment(ENV = ENV,
+-                  LATEX = r'%(_python_)s wrapper.py ' + latex,
+-                  MAKEINDEX =  r' wrapper.py ' + makeindex)
++                  LATEX = python_path + ' wrapper.py ' + latex,
++                  MAKEINDEX =  python_path + ' wrapper.py ' + makeindex)
+ foo.DVI(target = 'foo.dvi', source = 'foo.ltx')
+ bar.DVI(target = 'bar', source = 'bar.latex')
+ 
+@@ -130,7 +133,7 @@
+ """
+ 
+     makeindex =  r"""
+-\documentclass{letter}
++\documentclass{report}
+ \usepackage{makeidx}
+ \makeindex
+ \begin{document}
+@@ -141,7 +144,7 @@
+ """
+ 
+     latex1 = r"""
+-\documentclass{letter}
++\documentclass{report}
+ \usepackage{makeidx}
+ \makeindex
+ \begin{document}
+Index: test/TEX/PDFTEXCOMSTR.py
+===================================================================
+--- test/TEX/PDFTEXCOMSTR.py	(revision 3321)
++++ test/TEX/PDFTEXCOMSTR.py	(working copy)
+@@ -64,6 +64,7 @@
+ """)
+ 
+ test.run(stdout = test.wrap_stdout("""\
++ ...
+ Building test1.pdf from test1.tex
+ """ % locals()))
+ 
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 3321)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -71,7 +71,7 @@
+     global PDFTeXLaTeXAction
+     if PDFTeXLaTeXAction is None:
+         PDFTeXLaTeXAction = SCons.Action.Action(PDFTeXLaTeXFunction,
+-                                                strfunction=None)
++                              strfunction=SCons.Tool.tex.TeXLaTeXStrFunction)
+ 
+     import pdf
+     pdf.generate(env)
+@@ -81,12 +81,12 @@
+     bld.add_emitter('.tex', SCons.Tool.tex.tex_emitter)
+ 
+     env['PDFTEX']      = 'pdftex'
+-    env['PDFTEXFLAGS'] = SCons.Util.CLVar('')
++    env['PDFTEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['PDFTEXCOM']   = 'cd ${TARGET.dir} && $PDFTEX $PDFTEXFLAGS ${SOURCE.file}'
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['PDFLATEX']      = 'pdflatex'
+-    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
++    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES']  = 3
+ 
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 3321)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -9,7 +9,7 @@
+ """
+ 
+ #
+-# __COPYRIGHT__
++# Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007 The SCons Foundation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining
+ # a copy of this software and associated documentation files (the
+@@ -31,7 +31,7 @@
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
+ 
+-__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++__revision__ = "src/engine/SCons/Tool/pdflatex.py 2611 2008/01/29 11:58:38 managan"
+ 
+ import SCons.Action
+ import SCons.Util
+@@ -54,7 +54,7 @@
+     global PDFLaTeXAuxAction
+     if PDFLaTeXAuxAction is None:
+         PDFLaTeXAuxAction = SCons.Action.Action(PDFLaTeXAuxFunction,
+-                                                strfunction=None)
++                              strfunction=SCons.Tool.tex.TeXLaTeXStrFunction)
+ 
+     import pdf
+     pdf.generate(env)
+@@ -66,7 +66,7 @@
+     bld.add_emitter('.latex', SCons.Tool.tex.tex_emitter)
+ 
+     env['PDFLATEX']      = 'pdflatex'
+-    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
++    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES']  = 3
+ 
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 3321)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -208,8 +208,17 @@
+         LaTeXAuxAction(target,source,env)
+     else:
+         TeXAction(target,source,env)
+-    return 0
+ 
++def TeXLaTeXStrFunction(target = None, source= None, env=None):
++    """A strfunction for TeX and LaTeX that scans the source file to
++    decide the "flavor" of the source and then returns the appropriate
++    command string."""
++    if is_LaTeX(source):
++        result = env.subst('$LATEXCOM',0,target,source)+" ..."
++    else:
++        result = env.subst("$TEXCOM",0,target,source)+" ..."
++    return result
++
+ def tex_emitter(target, source, env):
+     base = SCons.Util.splitext(str(source[0]))[0]
+     targetbase = SCons.Util.splitext(str(target[0]))[0]
+@@ -275,7 +284,8 @@
+ 
+     global TeXLaTeXAction
+     if TeXLaTeXAction is None:
+-        TeXLaTeXAction = SCons.Action.Action(TeXLaTeXFunction, strfunction=None)
++        TeXLaTeXAction = SCons.Action.Action(TeXLaTeXFunction,
++                              strfunction=TeXLaTeXStrFunction)
+ 
+     import dvi
+     dvi.generate(env)
+@@ -285,12 +295,12 @@
+     bld.add_emitter('.tex', tex_emitter)
+ 
+     env['TEX']      = 'tex'
+-    env['TEXFLAGS'] = SCons.Util.CLVar('')
++    env['TEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['TEXCOM']   = 'cd ${TARGET.dir} && $TEX $TEXFLAGS ${SOURCE.file}'
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['LATEX']        = 'latex'
+-    env['LATEXFLAGS']   = SCons.Util.CLVar('')
++    env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 3321)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -9,7 +9,7 @@
+ """
+ 
+ #
+-# __COPYRIGHT__
++# Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007 The SCons Foundation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining
+ # a copy of this software and associated documentation files (the
+@@ -31,7 +31,7 @@
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
+ 
+-__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++__revision__ = "src/engine/SCons/Tool/latex.py 2611 2008/01/29 11:58:38 managan"
+ 
+ import SCons.Action
+ import SCons.Defaults
+@@ -45,7 +45,8 @@
+ def LaTeXAuxFunction(target = None, source= None, env=None):
+     SCons.Tool.tex.InternalLaTeXAuxAction( LaTeXAction, target, source, env )
+ 
+-LaTeXAuxAction = SCons.Action.Action(LaTeXAuxFunction, strfunction=None)
++LaTeXAuxAction = SCons.Action.Action(LaTeXAuxFunction,
++                              strfunction=SCons.Tool.tex.TeXLaTeXStrFunction)
+ 
+ def generate(env):
+     """Add Builders and construction variables for LaTeX to an Environment."""
+@@ -63,7 +64,7 @@
+     bld.add_emitter('.latex', SCons.Tool.tex.tex_emitter)
+ 
+     env['LATEX']        = 'latex'
+-    env['LATEXFLAGS']   = SCons.Util.CLVar('')
++    env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
