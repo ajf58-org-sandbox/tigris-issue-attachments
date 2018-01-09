@@ -1,0 +1,35 @@
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+--- src/engine/SCons/Taskmaster.py	(revision 1889)
++++ src/engine/SCons/Taskmaster.py	(working copy)
+@@ -311,6 +311,8 @@
+             for p in t.waiting_parents.keys():
+                 parents[p] = parents.get(p, 0) + 1
+ 
++        add_back_to_candidates = []
++
+         for t in self.targets:
+             for s in t.side_effects:
+                 if s.get_state() == SCons.Node.executing:
+@@ -320,16 +322,19 @@
+                             parents[p] = 1
+                 for p in s.waiting_s_e.keys():
+                     if p.ref_count == 0:
+-                        self.tm.candidates.append(p)
++                        add_back_to_candidates.append(p)
+ 
+         for p, subtract in parents.items():
++            op = p.ref_count
+             p.ref_count = p.ref_count - subtract
+             if p.ref_count == 0:
+-                self.tm.candidates.append(p)
++                add_back_to_candidates.append(p)
+ 
+         for t in self.targets:
+             t.postprocess()
+ 
++        self.tm.candidates.extend(add_back_to_candidates)
++
+     # Exception handling subsystem.
+     #
+     # Exceptions that occur while walking the DAG or examining Nodes
