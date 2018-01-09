@@ -1,0 +1,31 @@
+*** c:\Documents and Settings\jbl\My Documents\scons-0.96.92\engine\SCons\Platform\__init__.py	Tue Apr 11 05:33:23 2006
+--- c:\Python24\Lib\SCons\Platform\__init__.py	Wed Apr 19 11:11:57 2006
+***************
+*** 100,109 ****
+                                          sys.modules['SCons.Platform'].__path__)
+                  mod = imp.load_module(full_name, file, path, desc)
+                  setattr(SCons.Platform, name, mod)
+              except ImportError:
+!                 raise SCons.Errors.UserError, "No platform named '%s'" % name
+!             if file:
+!                 file.close()
+      return sys.modules[full_name]
+  
+  def DefaultToolList(platform, env):
+--- 100,115 ----
+                                          sys.modules['SCons.Platform'].__path__)
+                  mod = imp.load_module(full_name, file, path, desc)
+                  setattr(SCons.Platform, name, mod)
++                 if file:
++                     file.close()
+              except ImportError:
+!                 try:
+!                     import zipimport
+!                     importer = zipimport.zipimporter( sys.modules['SCons.Platform'].__path__[0] )
+!                     mod = importer.load_module(full_name)
+!                     setattr(SCons.Platform, name, mod)
+!                 except ImportError:
+!                     raise SCons.Errors.UserError, "No platform named '%s'" % name
+      return sys.modules[full_name]
+  
+  def DefaultToolList(platform, env):
