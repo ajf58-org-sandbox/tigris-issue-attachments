@@ -1,0 +1,15 @@
+Index: Script/Main.py
+===================================================================
+--- Script/Main.py	(revision 395)
++++ Script/Main.py	(working copy)
+@@ -1464,7 +1464,9 @@
+ 
+     if print_time:
+         total_time = time.time() - SCons.Script.start_time
+-        if num_jobs == 1:
++        if num_jobs == None:
++            ct = 0
++        elif num_jobs == 1:
+             ct = cumulative_command_time
+         else:
+             ct = last_command_end - first_command_start
