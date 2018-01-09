@@ -1,0 +1,71 @@
+=== modified file 'src/engine/SCons/Conftest.py'
+--- src/engine/SCons/Conftest.py	2007-12-21 12:02:26 +0000
++++ src/engine/SCons/Conftest.py	2007-12-21 12:52:53 +0000
+@@ -371,15 +371,11 @@
+ }
+ """
+ 
+-        # XXX: Try* vs CompileProg ?
+-        st = context.TryCompile(src % (type_name, expect), suffix)
+-        if st:
+-            _Have(context, "SIZEOF_" + type_name, str(expect))
+-            context.Display("yes\n")
++        st = context.CompileProg(src % (type_name, expect), suffix)
++        _YesNoResult(context, st, "SIZEOF_%s %d" % (type_name, expect), src)
++        if not st:
+             return expect
+         else:
+-            context.Display("no\n")
+-            _LogFailed(context, src, st)
+             return 0
+     else:
+         # Only check if the given size is the right one
+@@ -400,20 +396,19 @@
+     return 0;
+ }
+     """
+-        ret = context.TryRun(src, suffix)
+-        st = ret[0]
++        st, out = context.RunProg(src, suffix)
+         try:
+-            size = int(ret[1])
+-            _Have(context, "SIZEOF_" + type_name, str(size))
+-            context.Display("%d\n" % size)
++            size = int(out)
+         except ValueError:
++            # If cannot convert output of test prog to an integer (the size),
++            # something went wront, so just fail
++            # XXX: this breaks if sizeof(symbol) == 0; I don't think this can
++            # happen, but I can't find a reference that says that
++            # sizeof(something) is at least 1.
+             size = 0
+-            _LogFailed(context, src, st)
+-            context.Display(" Failed !\n")
+-        if st:
+-            return size
+-        else:
+-            return 0
++
++        _YesNoResult(context, st, "SIZEOF_%s %d" % (type_name, size), src)
++        return size
+ 
+ def CheckDeclaration(context, symbol, includes = None, language = None):
+     """Checks whether symbol is declared.
+
+=== modified file 'src/engine/SCons/SConf.py'
+--- src/engine/SCons/SConf.py	2007-12-21 12:02:26 +0000
++++ src/engine/SCons/SConf.py	2007-12-21 12:33:18 +0000
+@@ -798,6 +798,12 @@
+         # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
+         return not self.TryBuild(self.env.Object, text, ext)
+ 
++    def RunProg(self, text, ext):
++        self.sconf.cached = 1
++        # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
++        st, out = self.TryRun(text, ext)
++        return not st, out
++
+     def AppendLIBS(self, lib_name_list):
+         oldLIBS = self.env.get( 'LIBS', [] )
+         self.env.Append(LIBS = lib_name_list)
+
