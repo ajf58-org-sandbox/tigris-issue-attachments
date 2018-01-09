@@ -1,0 +1,34 @@
+Index: src/engine/SCons/Script/Interactive.py
+===================================================================
+--- src/engine/SCons/Script/Interactive.py	(revision 2611)
++++ src/engine/SCons/Script/Interactive.py	(working copy)
+@@ -223,7 +223,11 @@
+             # particular to clear cached implicit dependencies on the
+             # source file, since the scanner will scan it if the
+             # BuildDir was created with duplicate=0.
+-            rfile = node.rfile()
++            try:
++                rfile = node.rfile()
++            except AttributeError:
++                # Alias nodes don't have rfile(); ignore them here.
++                return
+             if rfile != node:
+                 seen_nodes[rfile] = 1
+ 
+Index: src/engine/SCons/Action.py
+===================================================================
+--- src/engine/SCons/Action.py	(revision 2611)
++++ src/engine/SCons/Action.py	(working copy)
+@@ -208,6 +208,12 @@
+                         # classes are unpickable. Just do the best we
+                         # can.
+                         return str(obj)
++                    except TypeError:
++                        # Trying to pickle a non-top-level function
++                        # can give a TypeError.
++                        # Python docs say it should always be a
++                        # PicklingError, but whatever.
++                        return str(obj)
+ 
+ 
+ def _code_contents(code):
