@@ -1,0 +1,152 @@
+*** /usr/local/lib/scons-0.96.96/SCons/Node/FS.py	Thu Apr 12 14:13:17 2007
+--- /home/knight/SCons/Issues/1655/FS.py	Mon May  7 20:38:53 2007
+***************
+*** 231,236 ****
+--- 231,237 ----
+          fs.CacheDebug('CacheRetrieve(%s):  %s not in cache\n', t, cachefile)
+          return 1
+      fs.CacheDebug('CacheRetrieve(%s):  retrieving from %s\n', t, cachefile)
++     print "retrieving: %s" % os.path.basename(t.path)
+      if SCons.Action.execute_actions:
+          fs.copy2(cachefile, t.path)
+          st = fs.stat(cachefile)
+***************
+*** 1497,1502 ****
+--- 1498,1504 ----
+          """
+          if not scanner:
+              return []
++ 
+          # Clear cached info for this Dir.  If we already visited this
+          # directory on our walk down the tree (because we didn't know at
+          # that point it was being used as the source for another Node)
+***************
+*** 1872,1877 ****
+--- 1874,1914 ----
+  class BuildInfo(FileBuildInfo):
+      pass
+  
++ 
++ # Increase version, if structure changes...
++ QDI_version = 5
++ 
++ class DependencyCache():
++     """A class to register a set of dependencies for File objects.
++     """
++     def __init__(self, dependencies, timestamp):
++         self.dependencies = []
++         self.version	  = QDI_version
++         self.timestamp    = timestamp
++ 
++         for d in dependencies :
++             self.dependencies.append(d.get_path())
++ 
++     def convert_to_sconsign(self):
++         pass
++ 
++     def convert_from_sconsign(self, dir, name):
++         pass
++ 
++     def valid(self):
++         return self.version == QDI_version
++ 
++     def up_to_date(self, timestamp):
++         return self.timestamp == timestamp
++ 
++     def retrieve(self):
++         if self.version != QDI_version:
++             print "*** Bad QDI_version, ignoring cache."
++             raise AttributeError
++ 
++         return self.dependencies
++ 
++ 
+  class File(Base):
+      """A class for files in a file system.
+      """
+***************
+*** 1953,1958 ****
+--- 1990,2008 ----
+          entry.merge(obj)
+          self.dir.sconsign().set_entry(self.name, entry)
+  
++     def store_cached_dependencies(self, obj):
++         self.dir.sconsign().set_entry(self.name + "_quick_deps", obj)
++ 
++     def get_cached_dependencies(self):
++         return self.dir.sconsign().get_entry(self.name + "_quick_deps")
++ 
++     def has_cached_dependencies(self):
++         try:
++             a = self.dir.sconsign().get_entry(self.name + "_quick_deps")
++             return True
++         except:
++             return False
++ 
+      def get_stored_info(self):
+          try:
+              stored = self.dir.sconsign().get_entry(self.name)
+***************
+*** 2002,2015 ****
+              except KeyError:
+                  pass
+  
+          if scanner:
+              result = scanner(self, env, path)
+              result = map(lambda N: N.disambiguate(), result)
+!         else:
+!             result = []
+  
+          memo_dict[memo_key] = result
+  
+          return result
+  
+      def _createDir(self):
+--- 2052,2098 ----
+              except KeyError:
+                  pass
+  
++         result = []
++ #        status = "NO SCANNER"
++ 
+          if scanner:
++ 
++ #            status		= "CACHE MISS"
++             bCacheValid	= False
++ 
++             if self.has_cached_dependencies():
++                 cached_deps	= self.get_cached_dependencies()
++ 
++                 if cached_deps.valid():
++ #                    status = "CACHE OUT OF DATE"
++ 
++                     if cached_deps.up_to_date(self.get_timestamp()):
++                         status		= "CACHE HIT"
++                         bCacheValid	= True
++                         depList		= cached_deps.retrieve()
++ 
++                         for x in depList:
++                             result.append(self.File(x))
++ #                else:
++ #                    status = "INVALID CACHE ID"
++ 
++             if not bCacheValid:
++ 
++                 print "scanning: %s" % os.path.basename(self.get_path())
++ 
+                  result = scanner(self, env, path)
+                  result = map(lambda N: N.disambiguate(), result)
+! 
+!                 qdi = DependencyCache(result, self.get_timestamp())
+!                 self.store_cached_dependencies(qdi)
+  
+          memo_dict[memo_key] = result
+  
++ #        if status != "CACHE HIT":
++ #            print "*** %s: %s" % (status, self.get_path())
++ #            for x in result :
++ #                print "  - %s " % x.get_path()
++ 
+          return result
+  
+      def _createDir(self):
