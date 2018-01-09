@@ -1,0 +1,75 @@
+--- /python24/scons-0.96.94/SCons/Tool/intelc.py	2007-01-30 09:36:54.000000000 -0500
++++ ./intelc.py	2007-02-16 17:01:31.975450500 -0500
+@@ -32,13 +32,17 @@
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
+ 
+-__revision__ = "src/engine/SCons/Tool/intelc.py 0.96.94 2007/01/30 09:36:51 garyo"
++__revision__ = "src/engine/SCons/Tool/intelc.py 0.96.94 2007/01/19 17:17:00 garyo"
+ 
+ import math, sys, os.path, glob, string, re
+ 
+ is_windows = sys.platform == 'win32'
++is_win64 = is_windows and (os.environ['PROCESSOR_ARCHITECTURE'] == 'AMD64' or 
++                           (os.environ.has_key('PROCESSOR_ARCHITEW6432') and
++                            os.environ['PROCESSOR_ARCHITEW6432'] == 'AMD64'))
+ is_linux = sys.platform == 'linux2'
+ 
++
+ if is_windows:
+     import SCons.Tool.msvc
+ elif is_linux:
+@@ -138,7 +142,10 @@
+     Return a value from the Intel compiler registry tree. (Windows only)
+     """
+     # Open the key:
+-    K = 'Software\\Intel\\Compilers\\C++\\' + version + '\\'+abi.upper()
++    if is_win64:
++        K = 'Software\\Wow6432Node\\Intel\\Compilers\\C++\\' + version + '\\'+abi.upper()
++    else:
++        K = 'Software\\Intel\\Compilers\\C++\\' + version + '\\'+abi.upper()
+     try:
+         k = SCons.Util.RegOpenKeyEx(SCons.Util.HKEY_LOCAL_MACHINE, K)
+     except SCons.Util.RegError:
+@@ -160,7 +167,10 @@
+     """
+     versions=[]
+     if is_windows:
+-        keyname = 'Software\\Intel\\Compilers\\C++'
++        if is_win64:
++            keyname = 'Software\\WoW6432Node\\Intel\\Compilers\\C++'
++        else:
++            keyname = 'Software\\Intel\\Compilers\\C++'
+         try:
+             k = SCons.Util.RegOpenKeyEx(SCons.Util.HKEY_LOCAL_MACHINE,
+                                         keyname)
+@@ -178,7 +188,7 @@
+                 # than uninstalling properly), so the registry values
+                 # are still there.
+                 ok = False
+-                for try_abi in ('IA32', 'IA32e',  'IA64'):
++                for try_abi in ('IA32', 'IA32e',  'IA64', 'EM64T'):
+                     try:
+                         d = get_intel_registry_value('ProductDir', subkey, try_abi)
+                     except MissingRegistryError:
+@@ -212,6 +222,7 @@
+     The compiler will be in <top>/bin/icl.exe (icc on linux),
+     the include dir is <top>/include, etc.
+     """
++
+     if is_windows:
+         if not SCons.Util.can_read_reg:
+             raise NoRegistryModuleError, "No Windows registry module was found"
+@@ -282,8 +293,10 @@
+             else:
+                 abi = 'ia32'
+         else:
+-            # XXX: how would we do the same test on Windows?
+-            abi = "ia32"
++            if is_win64:
++                abi = 'em64t'
++            else:
++                abi = 'ia32'
+ 
+     if version and not topdir:
+         try:
