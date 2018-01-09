@@ -1,0 +1,16 @@
+import SCons.Script
+
+# you need to have two drives for this a C:\ and a D:\ which you can write to .. 
+# or you can make a network drive to your self to a different drive like J: and change the path to this 
+
+BuildDir='#d:/build'
+#BuildDir='d:/build'
+
+env = Environment()
+
+bdir= env.Dir(BuildDir)
+print 'bdir.path',bdir.path
+print 'bdir.abspath',bdir.abspath
+
+#Will cause crash
+SCons.Node.Node.build(bdir)
