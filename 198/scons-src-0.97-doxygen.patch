@@ -1,0 +1,965 @@
+diff -Nacr scons-src-0.97/bin/scons-proc.py scons-src-0.97-doxygen/bin/scons-proc.py
+*** scons-src-0.97/bin/scons-proc.py	2007-05-17 09:50:40.000000000 -0700
+--- scons-src-0.97-doxygen/bin/scons-proc.py	2007-05-30 21:56:10.000000000 -0700
+***************
+*** 210,215 ****
+--- 210,226 ----
+          body = string.replace(body, '<para>\n', '')
+          body = string.replace(body, '<para>', '\n')
+          body = string.replace(body, '</para>\n', '')
++ 
++         # Simple list support, based somewhat on the DocBook list tags.
++         # We can't do correct parsing of the real DocBook tags without properly
++         # parsing the XML.
++         body = re.sub('\n?<(variablelist|itemizedlist)>\n?', '\n.RS\n', body)
++         body = re.sub('\n?</(variablelist|itemizedlist)>\n?', '\n.RE\n.IP\n',
++                       body)
++         body = re.sub('\n?<listitem>\n?', '\n.IP "\\(bu"\n', body)
++         body = re.sub('\n?</listitem>\n?', '\n', body)
++         body = re.sub('\n?<term>([^\n]*)</term>\n?', '\n.TP\n\\1\n', body)
++ 
+          body = re.sub('\.EE\n\n+(?!\.IP)', '.EE\n.IP\n', body)
+          body = re.sub('&(scons|SConstruct|SConscript|jar);', r'\\fB\1\\fP', body)
+          body = string.replace(body, '&Dir;', r'\fBDir\fP')
+diff -Nacr scons-src-0.97/src/engine/MANIFEST-xml.in scons-src-0.97-doxygen/src/engine/MANIFEST-xml.in
+*** scons-src-0.97/src/engine/MANIFEST-xml.in	2007-05-17 09:50:26.000000000 -0700
+--- scons-src-0.97-doxygen/src/engine/MANIFEST-xml.in	2007-05-30 17:54:10.000000000 -0700
+***************
+*** 21,26 ****
+--- 21,27 ----
+  SCons/Tool/c++.xml
+  SCons/Tool/default.xml
+  SCons/Tool/dmd.xml
++ SCons/Tool/doxygen.xml
+  SCons/Tool/dvi.xml
+  SCons/Tool/dvipdf.xml
+  SCons/Tool/dvips.xml
+diff -Nacr scons-src-0.97/src/engine/MANIFEST.in scons-src-0.97-doxygen/src/engine/MANIFEST.in
+*** scons-src-0.97/src/engine/MANIFEST.in	2007-05-17 09:50:24.000000000 -0700
+--- scons-src-0.97-doxygen/src/engine/MANIFEST.in	2007-05-30 17:54:08.000000000 -0700
+***************
+*** 78,83 ****
+--- 78,84 ----
+  SCons/Tool/CVS.py
+  SCons/Tool/dmd.py
+  SCons/Tool/default.py
++ SCons/Tool/doxygen.py
+  SCons/Tool/dvi.py
+  SCons/Tool/dvipdf.py
+  SCons/Tool/dvips.py
+diff -Nacr scons-src-0.97/src/engine/SCons/Tool/__init__.py scons-src-0.97-doxygen/src/engine/SCons/Tool/__init__.py
+*** scons-src-0.97/src/engine/SCons/Tool/__init__.py	2007-05-17 09:50:32.000000000 -0700
+--- scons-src-0.97-doxygen/src/engine/SCons/Tool/__init__.py	2007-05-30 17:50:47.000000000 -0700
+***************
+*** 437,443 ****
+          ar = FindTool(ars, env) or ars[0]
+  
+      other_tools = FindAllTools(['BitKeeper', 'CVS',
+!                                 'dmd',
+                                  'dvipdf', 'dvips', 'gs',
+                                  'jar', 'javac', 'javah',
+                                  'latex', 'lex',
+--- 437,443 ----
+          ar = FindTool(ars, env) or ars[0]
+  
+      other_tools = FindAllTools(['BitKeeper', 'CVS',
+!                                 'dmd', 'doxygen',
+                                  'dvipdf', 'dvips', 'gs',
+                                  'jar', 'javac', 'javah',
+                                  'latex', 'lex',
+diff -Nacr scons-src-0.97/src/engine/SCons/Tool/doxygen.py scons-src-0.97-doxygen/src/engine/SCons/Tool/doxygen.py
+*** scons-src-0.97/src/engine/SCons/Tool/doxygen.py	1969-12-31 16:00:00.000000000 -0800
+--- scons-src-0.97-doxygen/src/engine/SCons/Tool/doxygen.py	2007-05-30 18:50:22.000000000 -0700
+***************
+*** 0 ****
+--- 1,570 ----
++ """
++ SCons.Tool.doxygen
++ 
++ Tool-specific initialization for doxygen.
++ 
++ There normally shouldn't be any need to import this module directly.
++ It will usually be imported through the generic SCons.Tool.Tool()
++ selection method.
++ """
++ 
++ import errno
++ import os
++ import re
++ import shlex
++ import sys
++ import tempfile
++ 
++ import SCons
++ import SCons.Action
++ import SCons.Builder
++ import SCons.PathList
++ import SCons.Scanner
++ import SCons.Tool
++ 
++ 
++ def _create_doxygen_value(arg):
++     """
++     Convert a string or a list to a string suitable for using as an r-value in
++     a doxygen configuration file.  Strings are simply wrapped in double quotes,
++     and lists are converted to a space-separated string containing all of the
++     elements in the list wrapped in double quotes.
++ 
++     For example:
++       _create_doxygen_value('foo') --> '"foo"'
++       _create_doxygen_value(['foo', 'bar', 'a b']) --> '"foo" "bar" "a b"'
++     """
++     if isinstance(arg, str):
++         arg = [arg]
++     return ' '.join(['"%s"' % (a,) for a in arg])
++ 
++ 
++ #
++ # A list of environment variables that affect the Doxyfile generation
++ # These should be used as the Action's varlist, so scons will regenerate the
++ # Doxyfile whenever any of these variables change.
++ #
++ _create_doxyfile_vars = \
++ [
++     'create_subdirs',
++     'project_name',
++     'project_version',
++     'project_root',
++     'strip_dirs',
++     'tagfiles',
++     'use_dot',
++     'CPPPATH',
++     'CPPDEFINES',
++ ]
++ 
++ def _create_doxyfile(source, target, env):
++     """
++     A special builder for building a doxygen configuration file from a
++     template.
++ 
++     The following strings in the template file will be replaced:
++         - %NAME%
++           Will be replaced with the "project_name" variable from the build
++           environment.
++         - %VERSION%
++           Will be replaced with the "project_version" variable from the build
++           environment.
++         - %INCLUDE_PATHS%
++           Will be replaced with the list of include paths specified in the
++           "CPPPATH" variable in the build environment.
++         - %DEFINES%
++           Will be replaced with the list of #defines specified in the
++           "CPPDEFINES" variable in the build environment.
++         - %STRIP_DIRS%
++           Will be replaced with a list of directories to strip from the file
++           names.  In particular, this contains:
++             - The directory specified in the "project_root" variable (see
++               below).
++             - The workspace directory
++           This will also contain any directories that correspond to
++           "project_root" in BuildDir directories.
++         - %HAVE_DOT%
++           Will be replaced with "YES" if generation of dot graphs are enabled
++           and the program "dot" can be found in the build environment's PATH,
++           and "NO" otherwise.
++ 
++     The Builder will return an error if template configuration file defines
++     any of the following Doxygen variables.  These variables will be
++     automatically supplied by the Doxygen builder, so they should not appear
++     in the template file:
++       - INPUT
++       - OUTPUT_DIRECTORY
++ 
++     The following build environment variables affect this builder:
++         - project_name
++           This variable will be used to replace the %NAME% string in the
++           template file.  If it is not defined, or is None, the builder will
++           fail if the template contains a %NAME% variable.
++         - tagfiles
++           This variable will be used to generate the replacement for the
++           %TAGFILES% string in the template file.  If it is not defined, the
++           %TAGFILES% variable will be replaced with an empty string.
++         - project_version
++           This variable will be used to replace the %VERSION% string in the
++           template file.  If it is not defined, this builder will fail if the
++           template contains a %VERSION% variable.
++         - project_root
++           This variable indicates the "root" directory of the source code.
++           If omitted, project_root is assumed to be the directory that
++           contains the SConcript file which invoked the builder.
++ 
++           This is used to generate the %STRIP_DIRS% variable so that path
++           names in the documentation will be relative to project_root.
++     """
++     # The configuration template file should be first,
++     # followed by 1 or more source files
++     if len(source) < 2:
++         sys.stderr.write('missing doxygen configuration sources, must ' \
++                             'specify a template file and source code files\n')
++         return 1
++     # Make sure there is only 1 target file
++     if len(target) != 1:
++         target_paths = ' '.join([node.get_path() for node in target])
++         sys.stderr.write('multiple Doxyfile targets specified: %s\n' % \
++                             target_paths)
++         return 1
++ 
++     tmpl_path = source[0].get_path()
++     source_nodes = source[1:]
++     target_path = target[0].get_path()
++ 
++     #
++     # Compute the values for the macros we will expand in the template file
++     # 
++ 
++     # Determine the list of include paths
++     # Calling the RDirs() function expands the list of path names to a list of
++     # Nodes representing the entries in both the source tree and in any
++     # BuildDirs.
++     try:
++         cpppath_paths = SCons.PathList.PathList(env['CPPPATH'])
++         cpppath_paths = cpppath_paths.subst_path(env, source=None, target=None)
++         cpppath_nodes = target[0].RDirs(cpppath_paths)
++     except KeyError:
++         # env['CPPPATH'] is not defined
++         cpppath_nodes = []
++     cpppath_path_list = []
++     for node in cpppath_nodes:
++         path = node.get_path()
++         if not os.path.isdir(path):
++             # Ignore nodes that don't actually exist on disk
++             continue
++         cpppath_path_list.append(path)
++     cpppath_paths = _create_doxygen_value(cpppath_path_list)
++ 
++     # Determine the list of #defines
++     try:
++         defines_list = env.subst_path(env['CPPDEFINES'])
++     except KeyError:
++         defines_list = []
++     defines = _create_doxygen_value(defines_list)
++ 
++     # Compute the list of nodes corresponding to "project_root"
++     if env.get('project_root'):
++         doxygen_root = env.subst_path(env['project_root'])
++     else:
++         doxygen_root = env.subst_path('.')
++     # Call Dir() to create directory nodes for all of the path in the
++     # doxygen_root list.  Otherwise scons may not know about these directories
++     # already, in which case they won't be returned by RDirs()
++     for dir in doxygen_root:
++         env.Dir(dir)
++     doxygen_root_path_list = SCons.PathList.PathList(doxygen_root)
++     doxygen_root_path_list = \
++             doxygen_root_path_list.subst_path(env, source=None, target=None)
++     doxygen_root_nodes = target[0].RDirs(doxygen_root_path_list)
++     doxygen_root_paths = [node.get_path() for node in doxygen_root_nodes]
++ 
++     # Compute a list of directories to strip from the start of filenames.
++     # Include the project_root nodes.
++     strip_dir_paths = doxygen_root_paths
++     if env.get('strip_dirs', []):
++         strip_dir_paths += env['strip_dirs']
++     strip_dirs = _create_doxygen_value(strip_dir_paths)
++ 
++     # Get the list of include files to also treat as input.
++     # At this point, scons has already run the scanner to find the included
++     # files, so they are all listed as implicit dependencies of the target.
++     include_file_nodes = []
++     for node in target[0].implicit:
++         # Skip files that were also explicitly listed as source files
++         if node in source_nodes:
++             continue
++         # Only treat include files underneath the project_root directory as
++         # input files.  (Include files outside of project_root will be parsed
++         # by doxygen's preprocessor, but it won't generate documentation for
++         # them.)
++         for root in doxygen_root_nodes:
++             if node.is_under(root):
++                 include_file_nodes.append(node)
++                 break
++ 
++     # Compute the full list of input files
++     input_nodes = source_nodes + include_file_nodes
++     input_path_list = [node.get_path() for node in input_nodes]
++     input_paths = _create_doxygen_value(input_path_list)
++ 
++     # Determine if we should enable generation of collaboration diagrams and
++     # class heirarchy diagrams with dot.  Default to no for most builds.
++     have_dot = 'NO'
++     dot_path = ''
++     if env.get('use_dot'):
++         dot_program = env.WhereIs('dot')
++         if dot_program is None:
++             raise Exception('use_dot specified to Doxyfile builder, but dot ' \
++                             'program is unavailable')
++         dot_path = os.path.dirname(dot_program)
++         have_dot = 'YES'
++ 
++     tagfiles_list = []
++     for x in env.get('tagfiles', []):
++         if isinstance(x, list) or isinstance(x, tuple):
++             x = '='.join(x)
++         tagfiles_list.append(x)
++     tagfiles_str = _create_doxygen_value(tagfiles_list)
++ 
++     if env.get('create_subdirs', False):
++         create_subdirs = 'YES'
++     else:
++         create_subdirs = 'NO'
++ 
++     # Patterns to replace in the template file
++     replacement_patterns = \
++             {
++                 re.compile('%INCLUDE_PATHS%') : cpppath_paths,
++                 re.compile('%DEFINES%') : defines,
++                 re.compile('%STRIP_DIRS%') : strip_dirs,
++                 re.compile('%HAVE_DOT%') : have_dot,
++                 re.compile('%DOT_PATH%') : dot_path,
++                 re.compile('%TAGFILES%') : tagfiles_str,
++                 re.compile('%CREATE_SUBDIRS%') : create_subdirs,
++             }
++     # Patterns that should never appear in the template file
++     illegal_patterns = \
++             {
++                 re.compile(r'^\s*INPUT\s*=') : 'INPUT',
++                 re.compile(r'^\s*OUTPUT_DIRECTORY\s*=') : 'OUTPUT_DIRECTORY'
++             }
++ 
++     # Add '%NAME%' to replacement_patterns if env['project_name'] is
++     # defined, or to illegal_patterns otherwise
++     name_re = re.compile(r'%NAME%')
++     if env.get('project_name'):
++         replacement_patterns[name_re] = \
++                 _create_doxygen_value(env['project_name'])
++     else:
++         # env['project_name'] was not defined
++         illegal_patterns[name_re] = \
++                 '%NAME% when "project_name" is undefined'
++ 
++     # Add '%VERSION%' to replacement_patterns if env['project_version'] is
++     # defined, or to illegal_patterns otherwise
++     version_re = re.compile(r'%VERSION%')
++     if env.get('project_version'):
++         replacement_patterns[version_re] = \
++                 _create_doxygen_value(str(env['project_version']))
++     else:
++         # No version was defined
++         illegal_patterns[version_re] = \
++                 '%VERSION% when "project_version" is undefined'
++ 
++     # Create the configuration file
++     # Open the source template file and the target file
++     tmpl_file = open(tmpl_path, 'r')
++     conf_file = open(target_path, 'w')
++ 
++     # Process the file line by line
++     line_num = 0
++     for line in tmpl_file.readlines():
++         line_num += 1
++         # Replace patterns as specified by replacement_patterns
++         for (pattern, replacement) in replacement_patterns.items():
++             line = pattern.sub(replacement, line)
++         # Report an error if any of the patterns in illegal_patterns are
++         # seen
++         for (pattern, description) in illegal_patterns.items():
++             if pattern.search(line):
++                 sys.stderr.write('%s: line %d: template doxygen ' \
++                                     'configuration must not include %s\n' % \
++                                     (tmpl_path, line_num, description))
++                 return 1
++         # Write out the updated line
++         conf_file.write(line)
++ 
++     # Add the list of input files
++     conf_file.write('\n')
++     conf_file.write('INPUT = %s\n' % (input_paths,))
++ 
++     tmpl_file.close()
++     conf_file.close()
++     return 0
++ 
++ 
++ def _get_create_doxyfile_string(target, source, env):
++     doxyfile = target[0].get_path()
++     return 'Doxyfile(%s)' % (doxyfile,)
++ 
++ 
++ def _scan_doxyfile(node, env, path):
++     """
++     Scan a doxygen configuration file for implicit dependencies.  This searches
++     for the final INPUT and TAGFILES definitions, and returns the files listed
++     in those definitions.
++     """
++     input_re = re.compile(r'^\s*INPUT\s*=\s*(.*)')
++     tagfiles_re = re.compile(r'^\s*TAGFILES\s*=\s*(.*)')
++     input_str = None
++     tagfiles_str = None
++ 
++     doxyfile_path = node.get_path()
++     try:
++         doxyfile = open(doxyfile_path, 'r')
++     except (IOError, OSError), error:
++         if error.errno == errno.ENOENT:
++             # For some reason scons tries scanning generated files before they
++             # have even been generated.  This seems rather broken to me.
++             # Return an empty list in this case.
++             return []
++         raise
++ 
++     while True:
++         line = doxyfile.readline()
++         if not line:
++             break
++ 
++         if line.endswith('\n'):
++             line = line[:-1]
++ 
++         # Combine continuation lines
++         while line.endswith('\\'):
++             next_line = doxyfile.readline()
++             if not next_line:
++                 raise Exception('Doxyfile "%s" ends in trailing backslash' % \
++                                 (doxyfile_path,))
++             if next_line.endswith('\n'):
++                 line += next_line[:-1]
++             else:
++                 line += next_line
++ 
++         # Check for the INPUT line
++         match = input_re.match(line)
++         if match:
++             input_str = match.group(1)
++             input_str = input_str.strip()
++             continue
++ 
++         # Check for the TAGFILES line
++         match = tagfiles_re.match(line)
++         if match:
++             tagfiles_str = match.group(1)
++             tagfiles_str.strip()
++             if len(tagfiles_str) == 0:
++                 tagfiles_str = None
++             continue
++ 
++     doxyfile.close()
++ 
++     files = []
++     if input_str is None:
++         raise Exception('No INPUT declaration found in Doxyfile "%s"' % \
++                         (doxyfile_path,))
++     else:
++         for f in shlex.split(input_str):
++             if os.path.isabs(f):
++                 files.append(f)
++             else:
++                 files.append(os.path.join('#', f))
++ 
++     if tagfiles_str is not None:
++         for item in shlex.split(tagfiles_str):
++             # Each item in the tagfile list may be of the form
++             # tagfile=loc.  We only care about the tagfile part.
++             tagfile = item.split('=', 1)[0]
++             if os.path.isabs(tagfile):
++                 files.append(tagfile)
++             else:
++                 files.append(os.path.join('#', tagfile))
++ 
++     return files
++ 
++ 
++ #
++ # A list of environment variables that affect the running of doxygen.
++ # These should be used as the Action's varlist, so scons will re-run doxygen
++ # whenever any of these variables change.
++ #
++ _run_doxygen_vars = ['allow_warnings']
++ 
++ def _run_doxygen(source, target, env):
++     """
++     A special builder for building doxygen-based documentation from a
++     configuration file and a list of source files.
++     """
++     # Make sure there is only 1 source file
++     if len(source) != 1:
++         src_paths = ' '.join([node.get_path() for node in source])
++         sys.stderr.write('multiple doxygen configuration files specified: ' \
++                             '%s\n' % (src_paths,))
++         return 1
++     # Make sure there is only 1 target.
++     if len(target) != 1:
++         target_paths = ' '.join([node.get_path() for node in target])
++         sys.stderr.write('multiple doxygen targets specified: %s\n' % \
++                             target_paths)
++         return 1
++ 
++     config_path = source[0].get_path()
++     target_path = target[0].get_path()
++ 
++     try:
++         # Unfortunately, doxygen cannot take the output directory as a command
++         # line argument.
++         # To workaround this, we create a new temporary configuration file
++         # and use that instead.
++         try:
++             (conf_fd, tmp_conf_file_name) = tempfile.mkstemp()
++             # For some reason doxygen always treats the include path name as a
++             # relative path name, even if it starts with a leading slash.
++             # Therefore put the root directory in the include path.
++             if len(config_path) > 0 and config_path[0] == os.path.sep:
++                 os.write(conf_fd, '@INCLUDE_PATH = "%s"\n' % (os.path.sep,))
++             os.write(conf_fd, '@INCLUDE = "%s"\n\n' % (config_path,))
++ 
++             # XXX: For now, the target must be the tag file inside the target
++             # directory.  See the comment below about the possible creation of
++             # a TargetDir node type.
++             output_dir = os.path.dirname(target_path)
++             os.write(conf_fd, 'OUTPUT_DIRECTORY = "%s"\n' % (output_dir,))
++             os.write(conf_fd, 'GENERATE_TAGFILE = "%s"\n' % (target_path,))
++ 
++             # Write the warning log file
++             warn_log = os.path.join(output_dir, 'warnings.log')
++             os.write(conf_fd, 'WARN_LOGFILE = "%s"\n' % (warn_log,))
++         except (OSError, IOError), error:
++             sys.stderr.write('%s: error creating helper configuration file ' \
++                                 '"%s": %s\n' % \
++                                 (target_path, config_path, error))
++             return 1
++ 
++         # run doxygen
++         try:
++             doxygen_args = ['doxygen', tmp_conf_file_name]
++             retcode = os.spawnvp(os.P_WAIT, doxygen_args[0], doxygen_args)
++         except OSError, error:
++             sys.stderr.write('%s: failed to execute doxygen: %s\n' % \
++                                 (target_path, error))
++             return 0xff
++ 
++         # Print all of the warnings to stdout
++         if os.path.isfile(warn_log):
++             warn_log_file = open(warn_log, 'r')
++             had_warnings = False
++             line = warn_log_file.readline()
++             while line:
++                 had_warnings = True
++                 sys.stdout.write(line)
++                 line = warn_log_file.readline()
++ 
++         # check doxygen's return code
++         if retcode > 0:
++             sys.stderr.write('%s: doxygen returned status %d\n' % \
++                                 (target_path, retcode))
++             return retcode
++         elif retcode < 0:
++             sys.stderr.write('%s: doxygen was terminated by signal ' \
++                                 '%d\n' % (target_path, -retcode))
++             return 0xff
++ 
++         # fail if there were warnings and env['allow_warnings'] is not True
++         warnings_ok = False
++         try:
++             warnings_ok = env['allow_warnings']
++         except KeyError:
++             pass
++         if had_warnings and not warnings_ok:
++             sys.stderr.write('%s: doxygen reported warnings\n' % \
++                                 (target_path,))
++             return 1
++     finally:
++         # remove the temporary configuration file
++         os.unlink(tmp_conf_file_name)
++         pass
++ 
++     return 0
++ 
++ 
++ def _get_run_doxygen_string(target, source, env):
++     tagfile = target[0].get_path()
++     dox_dir = os.path.dirname(tagfile)
++     return 'Doxygen(%s)' % (dox_dir,)
++ 
++ 
++ DoxyfileAction = SCons.Action.Action(
++         _create_doxyfile,
++         strfunction = _get_create_doxyfile_string,
++         varlist = _create_doxyfile_vars)
++ 
++ # A builder to create a doxygen configuration file from a template
++ # and a list of source files.
++ DoxyfileBuilder = SCons.Builder.Builder( \
++         action = DoxyfileAction,
++         src_builder = ['CFile', 'CXXFile'],
++         source_scanner = SCons.Tool.SourceFileScanner)
++ 
++ DoxygenAction = SCons.Action.Action( \
++         _run_doxygen,
++         strfunction = _get_run_doxygen_string,
++         varlist = _run_doxygen_vars)
++ 
++ DoxyfileScanner = SCons.Scanner.Scanner(function = _scan_doxyfile,
++                                             name = 'Doxyfile_Scanner')
++ 
++ # A builder to create a doxygen documentation from a configuration file
++ #
++ # XXX: It would be nice if the directory generated by doxygen could be
++ # specified as the target.  However, scons doesn't really support
++ # directories as targets.  In scons 0.96.1 there was a bug preventing
++ # builders from specifying "target_factory = Dir".  However, even in later
++ # releases where that is fixed, I don't believe that a Dir node can't really be
++ # used as a real target.
++ #
++ # It would be nice to define some sort of TargetDir node in the future.
++ # This type of node should
++ # - leave self.cwd set to the directory containing its SConcript, rather
++ #   than setting self.cwd to self
++ # - implement the RDirs() method
++ # - allow the use of signatures to determine if it is current
++ # - implement a prepare() method that does the equivalent of "rm -rf" if the
++ #   directory is not marked as precious
++ # - mark all other nodes created underneath it as side effects of it
++ # - other changes?
++ #
++ # For now, we require that the target be a file just inside the desired
++ # directory.  By convention, most of my code using this builder uses the
++ # tag file generated by the doxygen run.
++ DoxygenBuilder = SCons.Builder.Builder(action = DoxygenAction,
++                                         src_builder = ['Doxyfile'],
++                                         source_scanner = DoxyfileScanner,
++                                         single_source = 1)
++ 
++ 
++ def generate(env):
++     """
++     This function will be invoked automatically by SCons to populate the
++     environment with our builders.
++     """
++     env['BUILDERS']['Doxyfile'] = DoxyfileBuilder
++     env['BUILDERS']['Doxygen'] = DoxygenBuilder
++ 
++ 
++ def exists(env):
++     """
++     This function will be called automatically by SCons to determine whether or
++     not this tool is available.
++     """
++     return env.Detect('doxygen')
+diff -Nacr scons-src-0.97/src/engine/SCons/Tool/doxygen.xml scons-src-0.97-doxygen/src/engine/SCons/Tool/doxygen.xml
+*** scons-src-0.97/src/engine/SCons/Tool/doxygen.xml	1969-12-31 16:00:00.000000000 -0800
+--- scons-src-0.97-doxygen/src/engine/SCons/Tool/doxygen.xml	2007-05-30 21:43:30.000000000 -0700
+***************
+*** 0 ****
+--- 1,99 ----
++ <!--
++ This file is processed by the bin/SConsDoc.py module.
++ See its __doc__ string for a discussion of the format.
++ -->
++ <tool name="doxygen">
++ <summary>
++ Sets construction variables for the &doxygen; documentation generator.
++ </summary>
++ <sets>
++ </sets>
++ <uses>
++ </uses>
++ </tool>
++ 
++ <builder name="Doxygen">
++ <summary>
++ Builds a tree of documentation from a doxygen configuration file.
++  
++ SCons will scan the configuration file and automatically create implicit
++ dependencies for all source files used to build the documentation.
++ 
++ <example>
++ env.Doxygen(target = 'doc/tags', source = 'Doxyfile')
++ </example>
++ </summary>
++ </builder>
++ 
++ <builder name="Doxyfile">
++ <summary>
++ Builds a Doxygen configuration file from a template.
++ 
++ The first source file must be the template configuration file.  All
++ remaining sources are C, C++, or Java source files to be listed in the
++ INPUT variable in the Doxygen configuration file.
++ 
++ The builder will copy the template file to the target location, replacing
++ the following macros as it does so:
++ 
++ <variablelist>
++ <term><literal>%NAME%</literal></term>
++ Will be replaced with the <literal>project_name</literal> variable from the
++ build environment.
++ <term><literal>%VERSION%</literal></term>
++ Will be replaced with the <literal>project_version</literal> variable from
++ the build environment.
++ <term><literal>%INCLUDE_PATHS%</literal></term>
++ Will be replaced with the list of include paths specified in the
++ <literal>CPPPATH</literal> variable from the build environment.
++ <term><literal>%DEFINES%</literal></term>
++ Will be replaced with the list of preprocessor defines specified in the
++ <literal>CPPDEFINES</literal> variable from the build environment.
++ <term><literal>%STRIP_DIRS%</literal></term>
++ Will be replaced with a list of directories to strip from the file names.
++ In particular, this contains:
++ <itemizedlist>
++ <listitem>
++ Directories specified in the <literal>strip_dirs</literal> build
++ environment variable, if any.
++ </listitem>
++ <listitem>
++ The directory specified in the <literal>project_root</literal> build
++ environment variable, or the directory containing the SConscript file if
++ <literal>project_root</literal> is unset.
++ </listitem>
++ </itemizedlist>
++ <term><literal>%HAVE_DOT%</literal></term>
++ Will be replaced with "YES" if the <command>dot</command> program is
++ available and the build environment variable <literal>use_dot</literal> is
++ true.
++ <term><literal>%DOT_PATH%</literal></term>
++ Will be replaced with the path of the <command>dot</command> program, if it
++ is available and the build environment variable <literal>use_dot</literal>
++ is true.
++ <term><literal>%TAGFILES%</literal></term>
++ Will be replaced with the list of tagfiles, as specified in the
++ <literal>tagfiles</literal> build environment variable.  This variable
++ should be an array of tuples.  The first item in each tuple is the path of
++ a tagfile, relative to the root of the build.  The second item in each
++ tuple is the relative location of the documentation for that tagfile.  (See
++ the doxygen manual for more information on tagfiles.)
++ </variablelist>
++ 
++ The <literal>INPUT</literal> variable will be automatically inserted in the
++ output file.  The template file must not contain a line that assigns a
++ value to this variable.
++ 
++ The <literal>OUTPUT_DIRECTORY</literal> variable will be automatically
++ inserted by the Doxygen builder just before Doxygen is run.  It should not
++ appear in the template file, and it will not be inserted in the output
++ configuration file.
++ 
++ <example>
++ env.Doxyfile(target = 'Doxyfile',
++              source = ['Doxyfile.tmpl', 'foo.h', 'bar.h'],
++              project_name = 'Test Project')
++              project_version = '1.0')
++ </example>
++ </summary>
++ </builder>
+diff -Nacr scons-src-0.97/test/Doxygen/doxygen.py scons-src-0.97-doxygen/test/Doxygen/doxygen.py
+*** scons-src-0.97/test/Doxygen/doxygen.py	1969-12-31 16:00:00.000000000 -0800
+--- scons-src-0.97-doxygen/test/Doxygen/doxygen.py	2007-05-30 16:00:20.000000000 -0700
+***************
+*** 0 ****
+--- 1,102 ----
++ #!/usr/bin/env python
++ 
++ """
++ Test building some simple doxygen documentation.
++ """
++ 
++ import os
++ import TestSCons
++ 
++ test = TestSCons.TestSCons()
++ 
++ if not test.where_is('doxygen'):
++     self.skip_test("Could not find 'doxygen'; skipping test.\n")
++ 
++ test.subdir('src', ['src', 'include'])
++ 
++ test.write(['src', 'Doxyfile.tmpl'], r"""
++ PROJECT_NAME           = %NAME%
++ PROJECT_NUMBER         = %VERSION%
++ CREATE_SUBDIRS         = %CREATE_SUBDIRS%
++ STRIP_FROM_PATH        = %STRIP_DIRS%
++ """)
++ 
++ test.write(['src', 'include', 'Foo.hh.in'], r"""
++ #ifndef INCLUDED_Foo
++ #define INCLUDED_Foo
++ 
++ /**
++  * @brief A Foo class.
++  */
++ class Foo
++ {
++     public:
++         /**
++          * @brief Does stuff.
++          */
++         void foobar();
++ };
++ 
++ #endif // INCLUDED_Foo
++ """)
++ 
++ test.write(['src', 'Test.hh'], r"""
++ #ifndef INCLUDED_Test
++ #define INCLUDED_Test
++ 
++ #include "Foo.hh"
++ 
++ /**
++  * @brief A simple test class.
++  */
++ class Test
++ {
++     public:
++         /**
++          * @brief Constructor
++          */
++         Test();
++ 
++         /**
++          * @brief Does something.
++          *
++          * @param[in] x A parameter.
++          * @param[in] y Another parameter.
++          *
++          * @return Returns a value.
++          */
++         int     doSomething(int x, int y);
++ };
++ 
++ #endif // INCLUDED_Test
++ """)
++ 
++ test.write(['src', 'SConscript'], r"""
++ Import('env')
++ 
++ env.Command('include/Foo.hh', 'include/Foo.hh.in', 'cat < $SOURCE > $TARGET')
++ 
++ env.Append(CPPPATH = ['include'])
++ headers = ['Test.hh']
++ doxyfile = env.Doxyfile('Doxyfile', ['Doxyfile.tmpl'] + headers,
++                         project_name = 'Doxygen Test',
++                         project_version = '1.0')
++ env.Doxygen('dox/tags', doxyfile)
++ """)
++ 
++ test.write('SConstruct', r"""
++ env = Environment()
++ 
++ Export('env')
++ 
++ BuildDir('build', 'src', duplicate = 0)
++ SConscript('build/SConscript')
++ """)
++ 
++ test.run(arguments = 'build/dox/tags')
++ 
++ test.must_contain(['build', 'dox', 'tags'], '<name>Test</name>')
++ test.must_contain(['build', 'dox', 'tags'], '<name>doSomething</name>')
++ test.must_contain(['build', 'dox', 'tags'], '<name>foobar</name>')
++ 
++ test.pass_test()
+diff -Nacr scons-src-0.97/test/Doxygen/tags.py scons-src-0.97-doxygen/test/Doxygen/tags.py
+*** scons-src-0.97/test/Doxygen/tags.py	1969-12-31 16:00:00.000000000 -0800
+--- scons-src-0.97-doxygen/test/Doxygen/tags.py	2007-05-31 13:27:50.000000000 -0700
+***************
+*** 0 ****
+--- 1,101 ----
++ #!/usr/bin/env python
++ 
++ """
++ Test sharing doxygen tags between libraries.
++ """
++ 
++ import os
++ import TestSCons
++ 
++ test = TestSCons.TestSCons()
++ 
++ if not test.where_is('doxygen'):
++     self.skip_test("Could not find 'doxygen'; skipping test.\n")
++ 
++ test.subdir('src', ['src', 'foo'], ['src', 'bar'], ['src', 'cmn'])
++ 
++ test.write('SConstruct', r"""
++ env = Environment()
++ 
++ Export('env')
++ 
++ BuildDir('build', 'src')
++ SConscript('build/foo/SConscript')
++ SConscript('build/bar/SConscript')
++ """)
++ 
++ test.write(['src', 'cmn', 'Doxyfile.tmpl'], r"""
++ PROJECT_NAME           = %NAME%
++ PROJECT_NUMBER         = %VERSION%
++ CREATE_SUBDIRS         = %CREATE_SUBDIRS%
++ STRIP_FROM_PATH        = %STRIP_DIRS%
++ TAGFILES               = %TAGFILES%
++ EXTRACT_ALL            = YES
++ """)
++ 
++ test.write(['src', 'foo', 'SConscript'], r"""
++ Import('env')
++ 
++ headers = ['Test.hh']
++ doxyfile = env.Doxyfile('Doxyfile', ['#src/cmn/Doxyfile.tmpl'] + headers,
++                         project_name = 'libfoo',
++                         project_version = '1.0')
++ env.Doxygen('dox/tags', doxyfile)
++ """)
++ 
++ test.write(['src', 'foo', 'Test.hh'], r"""
++ #ifndef INCLUDED_foo__Test
++ #define INCLUDED_foo__Test
++ 
++ 
++ namespace foo
++ {
++ 
++ /**
++  * @brief A test class.
++  */
++ class Test
++ {
++     public:
++         void doSomething();
++ };
++ 
++ }
++ 
++ #endif // INCLUDED_foo__Test
++ """)
++ 
++ test.write(['src', 'bar', 'SConscript'], r"""
++ Import('env')
++ 
++ headers = ['bar.hh']
++ tagfiles = [('build/foo/dox/tags', '../../../foo/dox/html')]
++ doxyfile = env.Doxyfile('Doxyfile', ['#src/cmn/Doxyfile.tmpl'] + headers,
++                         project_name = 'libbar',
++                         project_version = '1.0',
++                         tagfiles = tagfiles)
++ env.Doxygen('dox/tags', doxyfile)
++ """)
++ 
++ test.write(['src', 'bar', 'bar.hh'], r"""
++ #ifndef INCLUDED_bar
++ #define INCLUDED_bar
++ 
++ namespace foo { class Test };
++ 
++ foo::Test *bar_new_test();
++ 
++ #endif /* INCLUDED_bar */
++ """)
++ 
++ test.run('build')
++ 
++ test.must_contain(['build', 'foo', 'dox', 'tags'], '<name>foo::Test</name>')
++ test.must_contain(['build', 'bar', 'dox', 'tags'], '<name>bar_new_test</name>')
++ 
++ # XXX: We should also add a test to make sure that the bar documentation really
++ # does contain a reference to foo's documentation of foo::Test.  We should
++ # probably do this by manually parsing both of the tags files, and examining
++ # the files mentioned in the tags files.
++ 
++ test.pass_test()
