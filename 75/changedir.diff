@@ -1,0 +1,110 @@
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 1631)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -71,7 +71,7 @@
+     global PDFTeXLaTeXAction
+     if PDFTeXLaTeXAction is None:
+         PDFTeXLaTeXAction = SCons.Action.Action(PDFTeXLaTeXFunction,
+-                                                strfunction=None)
++                                                     strfunction=None)
+ 
+     import pdf
+     pdf.generate(env)
+@@ -82,17 +82,13 @@
+ 
+     env['PDFTEX']      = 'pdftex'
+     env['PDFTEXFLAGS'] = SCons.Util.CLVar('')
+-    env['PDFTEXCOM']   = '$PDFTEX $PDFTEXFLAGS $SOURCE'
++    env['PDFTEXCOM']   = 'cd ${SOURCE.dir} && $PDFTEX $PDFTEXFLAGS ${SOURCE.file}'
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['PDFLATEX']      = 'pdflatex'
+     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
+-    env['PDFLATEXCOM']   = '$PDFLATEX $PDFLATEXFLAGS $SOURCE'
++    env['PDFLATEXCOM']   = 'cd ${SOURCE.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES']  = 3
+ 
+-    env['BIBTEX']      = 'bibtex'
+-    env['BIBTEXFLAGS'] = SCons.Util.CLVar('')
+-    env['BIBTEXCOM']   = '$BIBTEX $BIBTEXFLAGS ${SOURCE.base}'
+-
+ def exists(env):
+     return env.Detect('pdftex')
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 1631)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -67,7 +67,7 @@
+ 
+     env['PDFLATEX']      = 'pdflatex'
+     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
+-    env['PDFLATEXCOM']   = '$PDFLATEX $PDFLATEXFLAGS $SOURCE'
++    env['PDFLATEXCOM']   = 'cd ${SOURCE.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES']  = 3
+ 
+ def exists(env):
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 1631)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -63,7 +63,8 @@
+     """A builder for LaTeX files that checks the output in the aux file
+     and decides how many times to use LaTeXAction, and BibTeXAction."""
+ 
+-    basename, ext = SCons.Util.splitext(str(target[0]))
++    basename = SCons.Util.splitext(str(source[0]))[0]
++    basedir = os.path.split(str(source[0]))[0]
+ 
+     # Run LaTeX once to generate a new aux file.
+     XXXLaTeXAction(target, source, env)
+@@ -82,8 +83,8 @@
+ 
+     # Now decide if bibtex will need to be run.
+     for auxfilename in auxfiles:
+-        if os.path.exists(auxfilename):
+-            content = open(auxfilename, "rb").read()
++        if os.path.exists(os.path.join(basedir, auxfilename)):
++            content = open(os.path.join(basedir, auxfilename), "rb").read()
+             if string.find(content, "bibdata") != -1:
+                 bibfile = env.fs.File(basename)
+                 BibTeXAction(None, bibfile, env)
+@@ -194,21 +195,21 @@
+ 
+     env['TEX']      = 'tex'
+     env['TEXFLAGS'] = SCons.Util.CLVar('')
+-    env['TEXCOM']   = '$TEX $TEXFLAGS $SOURCE'
++    env['TEXCOM']   = 'cd ${SOURCE.dir} && $TEX $TEXFLAGS $SOURCE'
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['LATEX']        = 'latex'
+     env['LATEXFLAGS']   = SCons.Util.CLVar('')
+-    env['LATEXCOM']     = '$LATEX $LATEXFLAGS $SOURCE'
++    env['LATEXCOM']     = 'cd ${SOURCE.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
+     env['BIBTEX']      = 'bibtex'
+     env['BIBTEXFLAGS'] = SCons.Util.CLVar('')
+-    env['BIBTEXCOM']   = '$BIBTEX $BIBTEXFLAGS ${SOURCE.base}'
++    env['BIBTEXCOM']   = 'cd ${SOURCE.dir} && $BIBTEX $BIBTEXFLAGS ${SOURCE.filebase}'
+ 
+     env['MAKEINDEX']      = 'makeindex'
+     env['MAKEINDEXFLAGS'] = SCons.Util.CLVar('')
+-    env['MAKEINDEXCOM']   = '$MAKEINDEX $MAKEINDEXFLAGS $SOURCES'
++    env['MAKEINDEXCOM']   = 'cd ${SOURCE.dir} && $MAKEINDEX $MAKEINDEXFLAGS ${SOURCE.file}'
+ 
+ def exists(env):
+     return env.Detect('tex')
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 1631)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -64,7 +64,7 @@
+ 
+     env['LATEX']        = 'latex'
+     env['LATEXFLAGS']   = SCons.Util.CLVar('')
+-    env['LATEXCOM']     = '$LATEX $LATEXFLAGS $SOURCE'
++    env['LATEXCOM']     = 'cd ${SOURCE.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
+ def exists(env):
