@@ -1,0 +1,30 @@
+diff -ru scons-2.0.1.base.2/scons-local-2.0.1/SCons/Node/FS.py scons-2.0.1.base/scons-local-2.0.1/SCons/Node/FS.py
+--- scons-2.0.1.base.2/scons-local-2.0.1/SCons/Node/FS.py	2010-09-28 20:15:28.423765000 +0100
++++ scons-2.0.1.base/scons-local-2.0.1/SCons/Node/FS.py	2010-09-28 20:14:57.987434000 +0100
+@@ -1160,6 +1160,8 @@
+ 
+         if do_splitdrive:
+             drive, p = os.path.splitdrive(p)
++            if not drive:
++                drive, p = os.path.splitunc(p)
+         else:
+             drive = ''
+         if drive and not p:
+@@ -1301,6 +1303,8 @@
+         root = top.root
+         if do_splitdrive:
+             drive, s = os.path.splitdrive(s)
++            if not drive:
++                drive, s = os.path.splitunc(s)
+             if drive:
+                 root = self.fs.get_root(drive)
+         if not os.path.isabs(s):
+@@ -2112,6 +2116,8 @@
+         root = top.root
+         if do_splitdrive:
+             drive, s = os.path.splitdrive(s)
++            if not drive:
++                drive, s = os.path.splitunc(s)
+             if drive:
+                 root = self.fs.get_root(drive)
+         if not os.path.isabs(s):
