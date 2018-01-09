@@ -1,0 +1,15 @@
+import os
+opts = Options('lprof.conf') 
+env = Environment(
+    ENV = {
+      'PATH' : os.environ[ 'PATH' ],
+      'HOME' : os.environ[ 'HOME' ], # required for distcc
+      'LDFLAGS' : ''
+    }, options = opts)
+
+config=env.Configure()
+env=config.Finish()
+env.Tool('qt', ['$TOOL_PATH'])
+
+src = env.Moc('profilechecker.h')
+lprof = env.Program(target='lprof',source=src)
