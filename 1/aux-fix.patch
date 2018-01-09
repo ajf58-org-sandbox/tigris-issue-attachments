@@ -1,0 +1,16 @@
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 1478)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -150,7 +150,10 @@
+     logfilename = base + '.log'
+     if os.path.exists(logfilename):
+         content = open(logfilename, "rb").read()
+-        target.extend(openout_aux_re.findall(content))
++        aux_files = openout_aux_re.findall(content)
++        for f in aux_files:
++            if f != base + '.aux':
++                target.append(f)
+ 
+     return (target, source)
+ 
