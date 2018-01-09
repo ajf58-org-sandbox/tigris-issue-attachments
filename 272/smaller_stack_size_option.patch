@@ -1,0 +1,932 @@
+diff -r 70a2207175bf doc/man/scons.1
+--- a/doc/man/scons.1	Mon Dec 17 09:25:07 2007 -0500
++++ b/doc/man/scons.1	Tue Dec 18 15:02:08 2007 -0500
+@@ -1044,6 +1044,26 @@ will get added to the default toolpath.
+ will get added to the default toolpath.
+ 
+ .TP
++.RI --stack-size= KILOBYTES
++Set the size stack used to run threads to
++.IR KILOBYTES . 
++This value determines the stack size of the threads used to run jobs.
++Those are the threads that execute the actions of the builders for the
++nodes that are out-of-date. Note that this option has an no effect
++unless the
++.B num_jobs
++option, which corresponds to -j and --jobs, is larger than one.  Using
++a stack size that is too small will cause stack overflow errors. This
++usually shows up as segmentation faults that cause scons to abort
++before building anything. Using a stack size that is too large will
++cause scons too use more memory than required and slow down the entire
++build process.
++
++The default value is to use a stack size of 256 kilobytes. It should
++be appropriate for most users. One should not increase its value
++unless he encounters stack overflow errors.
++
++.TP
+ -t, --touch
+ Ignored for compatibility with GNU
+ .BR make .  
+@@ -1243,6 +1263,12 @@ or
+ or
+ .BR SOURCES .
+ These warnings are disabled by default.
++
++.TP
++--warn=stack-size, --warn=no-stack-size
++Enables or disables warnings about requests to set the stack size
++that could not be honored.
++These warnings are enabled by default.
+ 
+ .\" .TP
+ .\" .RI --write-filenames= file
+@@ -4949,9 +4975,11 @@ which corresponds to --max-drift;
+ .B no_exec
+ which corresponds to -n, --no-exec, --just-print, --dry-run and --recon;
+ .B num_jobs
+-which corresponds to -j and --jobs.
++which corresponds to -j and --jobs;
+ .B random
+-which corresponds to --random.
++which corresponds to --random; and
++.B stack_size
++which corresponds to --stack-size.
+ See the documentation for the
+ corresponding command line object for information about each specific
+ option.
+diff -r 70a2207175bf src/engine/SCons/Job.py
+--- a/src/engine/SCons/Job.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/src/engine/SCons/Job.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -33,6 +33,18 @@ __revision__ = "__FILE__ __REVISION__ __
+ 
+ import SCons.compat
+ 
++
++# The default stack size (in kilobytes) of the threads used to execute
++# jobs in parallel.
++#
++# We use a stack size of 256 kilobytes. The default on some platforms
++# is too large and prevents us from creating enough threads to fully
++# parallelized the build. For example, the default stack size on linux
++# is 8 MBytes.
++
++default_stack_size = 256
++
++
+ class Jobs:
+     """An instance of this class initializes N jobs, and provides
+     methods for starting, stopping, and waiting on all N jobs.
+@@ -55,7 +67,12 @@ class Jobs:
+         self.job = None
+         if num > 1:
+             try:
+-                self.job = Parallel(taskmaster, num)
++                stack_size = SCons.Job.stack_size
++            except AttributeError:
++                stack_size = default_stack_size
++                
++            try:
++                self.job = Parallel(taskmaster, num, stack_size)
+                 self.num_jobs = num
+             except NameError:
+                 pass
+@@ -175,16 +192,37 @@ else:
+     class ThreadPool:
+         """This class is responsible for spawning and managing worker threads."""
+ 
+-        def __init__(self, num):
+-            """Create the request and reply queues, and 'num' worker threads."""
++        def __init__(self, num, stack_size):
++            """Create the request and reply queues, and 'num' worker threads.
++            
++            One must specify the stack size of the worker threads. The
++            stack size is specified in kilobytes.
++            """
+             self.requestQueue = Queue.Queue(0)
+             self.resultsQueue = Queue.Queue(0)
++
++            try:
++                prev_size = threading.stack_size(stack_size*1024) 
++            except AttributeError, e:
++                # Only print a warning if the stack size has been
++                # explicitely set.
++                if hasattr(SCons.Job, 'stack_size'):
++                    msg = "Setting stack size is unsupported by this version of Python:\n    " + \
++                        e.args[0]
++                    SCons.Warnings.warn(SCons.Warnings.StackSizeWarning, msg)
++            except ValueError, e:
++                msg = "Setting stack size failed:\n    " + \
++                    e.message
++                SCons.Warnings.warn(SCons.Warnings.StackSizeWarning, msg)
+ 
+             # Create worker threads
+             self.workers = []
+             for _ in range(num):
+                 worker = Worker(self.requestQueue, self.resultsQueue)
+                 self.workers.append(worker)
++
++            if 'prev_size' in locals():
++                threading.stack_size(prev_size)
+ 
+         def put(self, obj):
+             """Put task into request queue."""
+@@ -233,7 +271,7 @@ else:
+         This class is thread safe.
+         """
+ 
+-        def __init__(self, taskmaster, num):
++        def __init__(self, taskmaster, num, stack_size):
+             """Create a new parallel job given a taskmaster.
+ 
+             The taskmaster's next_task() method should return the next
+@@ -249,7 +287,7 @@ else:
+             multiple tasks simultaneously. """
+ 
+             self.taskmaster = taskmaster
+-            self.tp = ThreadPool(num)
++            self.tp = ThreadPool(num, stack_size)
+ 
+             self.maxjobs = num
+ 
+diff -r 70a2207175bf src/engine/SCons/JobTests.py
+--- a/src/engine/SCons/JobTests.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/src/engine/SCons/JobTests.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -293,7 +293,7 @@ class NoParallelTestCase(unittest.TestCa
+ class NoParallelTestCase(unittest.TestCase):
+     def runTest(self):
+         "test handling lack of parallel support"
+-        def NoParallel(tm, num):
++        def NoParallel(tm, num, stack_size):
+             raise NameError
+         save_Parallel = SCons.Job.Parallel
+         SCons.Job.Parallel = NoParallel
+diff -r 70a2207175bf src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/src/engine/SCons/Script/Main.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -759,7 +759,8 @@ def _main(parser):
+                          SCons.Warnings.NoMetaclassSupportWarning,
+                          SCons.Warnings.NoObjectCountWarning,
+                          SCons.Warnings.NoParallelSupportWarning,
+-                         SCons.Warnings.MisleadingKeywordsWarning, ]
++                         SCons.Warnings.MisleadingKeywordsWarning,
++                         SCons.Warnings.StackSizeWarning, ]
+     for warning in default_warnings:
+         SCons.Warnings.enableWarningClass(warning)
+     SCons.Warnings._warningOut = _scons_internal_warning
+@@ -965,6 +966,8 @@ def _main(parser):
+     SCons.Node.implicit_cache = options.implicit_cache
+     SCons.Node.FS.set_duplicate(options.duplicate)
+     fs.set_max_drift(options.max_drift)
++    if not options.stack_size is None:
++        SCons.Job.stack_size = options.stack_size
+ 
+     lookup_top = None
+     if targets or SCons.Script.BUILD_TARGETS != SCons.Script._build_plus_default:
+diff -r 70a2207175bf src/engine/SCons/Script/SConsOptions.py
+--- a/src/engine/SCons/Script/SConsOptions.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/src/engine/SCons/Script/SConsOptions.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -122,6 +122,7 @@ class SConsValues(optparse.Values):
+         'no_exec',
+         'num_jobs',
+         'random',
++        'stack_size',
+     ]
+ 
+     def set_option(self, name, value):
+@@ -163,6 +164,11 @@ class SConsValues(optparse.Values):
+                 # Set this right away so it can affect the rest of the
+                 # file/Node lookups while processing the SConscript files.
+                 SCons.Node.FS.set_diskcheck(value)
++        elif name == 'stack_size':
++            try:
++                value = int(value)
++            except ValueError:
++                raise SCons.Errors.UserError, "An integer is required: %s"%repr(value)
+ 
+         self.__SConscript_settings__[name] = value
+ 
+@@ -730,6 +736,13 @@ def Parser(version):
+                   help="Use DIR instead of the usual site_scons dir.",
+                   metavar="DIR")
+ 
++    op.add_option('--stack-size',
++                  nargs=1, type="int",
++                  dest='stack_size',
++                  action="store",
++                  help="Set the stack size of the threads used to run jobs to N kilobytes.",
++                  metavar="N")
++
+     op.add_option('--taskmastertrace',
+                   nargs=1,
+                   dest="taskmastertrace_file", default=None,
+diff -r 70a2207175bf src/engine/SCons/Warnings.py
+--- a/src/engine/SCons/Warnings.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/src/engine/SCons/Warnings.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -71,6 +71,9 @@ class NoParallelSupportWarning(Warning):
+     pass
+ 
+ class ReservedVariableWarning(Warning):
++    pass
++
++class StackSizeWarning(Warning):
+     pass
+ 
+ _warningAsException = 0
+diff -r 70a2207175bf src/script/scons-time.py
+--- a/src/script/scons-time.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/src/script/scons-time.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -38,6 +38,7 @@ import getopt
+ import getopt
+ import glob
+ import os
++import os.path
+ import re
+ import shutil
+ import string
+@@ -61,7 +62,7 @@ except NameError:
+ 
+ def make_temp_file(**kw):
+     try:
+-        result = tempfile.mktemp(**kw)
++        result = os.path.realpath(tempfile.mktemp(**kw))
+     except TypeError:
+         try:
+             save_template = tempfile.template
+diff -r 70a2207175bf test/option--stack-size.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/option--stack-size.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -0,0 +1,625 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import os.path
++import os
++import string
++import sys
++import TestSCons
++
++_python_ = TestSCons._python_
++
++test = TestSCons.TestSCons()
++
++isStackSizeAvailable = False
++try:
++    import threading
++    isStackSizeAvailable = hasattr(threading,'stack_size')
++except ImportError:
++    pass
++
++test.subdir('work1', 'work2')
++
++test.write('build.py', r"""
++import sys
++contents = open(sys.argv[2], 'rb').read()
++file = open(sys.argv[1], 'wb')
++file.write(contents)
++file.close()
++""")
++
++
++test.write(['work1', 'SConstruct'], """
++B = Builder(action = r'%(_python_)s ../build.py $TARGETS $SOURCES')
++env = Environment(BUILDERS = { 'B' : B })
++env.B(target = 'f1.out', source = 'f1.in')
++env.B(target = 'f2.out', source = 'f2.in')
++""" % locals())
++
++test.write(['work1', 'f1.in'], "f1.in\n")
++test.write(['work1', 'f2.in'], "f2.in\n")
++
++
++test.write(['work2', 'SConstruct'], """
++SetOption('stack_size', 128)
++B = Builder(action = r'%(_python_)s ../build.py $TARGETS $SOURCES')
++env = Environment(BUILDERS = { 'B' : B })
++env.B(target = 'f1.out', source = 'f1.in')
++env.B(target = 'f2.out', source = 'f2.in')
++""" % locals())
++
++test.write(['work2', 'f1.in'], "f1.in\n")
++test.write(['work2', 'f2.in'], "f2.in\n")
++
++
++#
++# Test without any options
++#
++test.run(chdir='work1', 
++         arguments = '.',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++test.must_exist(['work1', 'f1.out'])
++test.must_exist(['work1', 'f2.out'])
++
++test.run(chdir='work1', 
++         arguments = '-c .',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++test.must_not_exist(['work1', 'f1.out'])
++test.must_not_exist(['work1', 'f2.out'])
++
++#
++# Test with -j2
++#
++test.run(chdir='work1', 
++         arguments = '-j2 .',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++test.must_exist(['work1', 'f1.out'])
++test.must_exist(['work1', 'f2.out'])
++
++test.run(chdir='work1', 
++         arguments = '-j2 -c .',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++test.must_not_exist(['work1', 'f1.out'])
++test.must_not_exist(['work1', 'f2.out'])
++
++
++#
++# Test with --stack-size
++#
++test.run(chdir='work1', 
++         arguments = '--stack-size=128 .',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++test.must_exist(['work1', 'f1.out'])
++test.must_exist(['work1', 'f2.out'])
++
++test.run(chdir='work1', 
++         arguments = '--stack-size=128 -c .',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++test.must_not_exist(['work1', 'f1.out'])
++test.must_not_exist(['work1', 'f2.out'])
++
++#
++# Test with SetOption('stack_size', 128)
++#
++test.run(chdir='work2', 
++         arguments = '.',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++test.must_exist(['work2', 'f1.out'])
++test.must_exist(['work2', 'f2.out'])
++
++test.run(chdir='work2', 
++         arguments = '--stack-size=128 -c .',
++         stderr='',
++         stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++test.must_not_exist(['work2', 'f1.out'])
++test.must_not_exist(['work2', 'f2.out'])
++
++
++if isStackSizeAvailable:
++    #
++    # Test with -j2 --stack-size=128
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128 .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128 -c .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2 --stack-size=16
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size failed:
++    size not valid: 16384 bytes
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 -c .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size failed:
++    size not valid: 16384 bytes
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2 SetOption('stack_size', 128)
++    #
++    test.run(chdir='work2', 
++             arguments = '-j2 .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work2', 'f1.out'])
++    test.must_exist(['work2', 'f2.out'])
++
++    test.run(chdir='work2', 
++             arguments = '-j2  -c .',
++             match=TestSCons.match_re,
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work2', 'f1.out'])
++    test.must_not_exist(['work2', 'f2.out'])
++
++    #
++    # Test with -j2 --stack-size=128 --warn=no-stack-size
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128 --warn=no-stack-size .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128  --warn=no-stack-size -c .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2 --stack-size=16 --warn=no-stack-size
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 --warn=no-stack-size .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 --warn=no-stack-size -c .',
++             match=TestSCons.match_re,
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2  --warn=no-stack-size SetOption('stack_size', 128) 
++    #
++    test.run(chdir='work2', 
++             arguments = '-j2  --warn=no-stack-size .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work2', 'f1.out'])
++    test.must_exist(['work2', 'f2.out'])
++
++    test.run(chdir='work2', 
++             arguments = '-j2   --warn=no-stack-size -c .',
++             match=TestSCons.match_re,
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work2', 'f1.out'])
++    test.must_not_exist(['work2', 'f2.out'])
++
++else:
++
++    #
++    # Test with -j2 --stack-size=128
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128 .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size is unsupported by this version of Python:
++    'module' object has no attribute 'stack_size'
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128 -c .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size is unsupported by this version of Python:
++    'module' object has no attribute 'stack_size'
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2 --stack-size=16
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size is unsupported by this version of Python:
++    'module' object has no attribute 'stack_size'
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 -c .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size is unsupported by this version of Python:
++    'module' object has no attribute 'stack_size'
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2 SetOption('stack_size', 128)
++    #
++    test.run(chdir='work2', 
++             arguments = '-j2 .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size is unsupported by this version of Python:
++    'module' object has no attribute 'stack_size'
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work2', 'f1.out'])
++    test.must_exist(['work2', 'f2.out'])
++
++    test.run(chdir='work2', 
++             arguments = '-j2  -c .',
++             match=TestSCons.match_re,
++             stderr="""
++scons: warning: Setting stack size is unsupported by this version of Python:
++    'module' object has no attribute 'stack_size'
++File .*
++""",
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work2', 'f1.out'])
++    test.must_not_exist(['work2', 'f2.out'])
++
++    #
++    # Test with -j2 --stack-size=128 --warn=no-stack-size
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128 --warn=no-stack-size .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=128  --warn=no-stack-size -c .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2 --stack-size=16 --warn=no-stack-size
++    #
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 --warn=no-stack-size .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work1', 'f1.out'])
++    test.must_exist(['work1', 'f2.out'])
++
++    test.run(chdir='work1', 
++             arguments = '-j2 --stack-size=16 --warn=no-stack-size -c .',
++             match=TestSCons.match_re,
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work1', 'f1.out'])
++    test.must_not_exist(['work1', 'f2.out'])
++
++    #
++    # Test with -j2  --warn=no-stack-size SetOption('stack_size', 128) 
++    #
++    test.run(chdir='work2', 
++             arguments = '-j2  --warn=no-stack-size .',
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++%(_python_)s ../build.py f1.out f1.in
++%(_python_)s ../build.py f2.out f2.in
++scons: done building targets.
++""" % locals())
++    test.must_exist(['work2', 'f1.out'])
++    test.must_exist(['work2', 'f2.out'])
++
++    test.run(chdir='work2', 
++             arguments = '-j2   --warn=no-stack-size -c .',
++             match=TestSCons.match_re,
++             stderr='',
++             stdout="""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Cleaning targets ...
++Removed f1.out
++Removed f2.out
++scons: done cleaning targets.
++""" % locals())
++    test.must_not_exist(['work2', 'f1.out'])
++    test.must_not_exist(['work2', 'f2.out'])
++
++test.pass_test()
++
+diff -r 70a2207175bf test/scons-time/run/aegis.py
+--- a/test/scons-time/run/aegis.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/test/scons-time/run/aegis.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -66,7 +66,7 @@ def tempdir_re(*args):
+     import tempfile
+ 
+     sep = re.escape(os.sep)
+-    args = (tempfile.gettempdir(), 'scons-time-aegis-',) + args
++    args = (os.path.realpath(tempfile.gettempdir()), 'scons-time-aegis-',) + args
+     x = apply(os.path.join, args)
+     x = re.escape(x)
+     x = string.replace(x, 'aegis\\-', 'aegis\\-[^%s]*' % sep)
+diff -r 70a2207175bf test/scons-time/run/option/quiet.py
+--- a/test/scons-time/run/option/quiet.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/test/scons-time/run/option/quiet.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -45,7 +45,7 @@ def tempdir_re(*args):
+     import tempfile
+ 
+     sep = re.escape(os.sep)
+-    args = (tempfile.gettempdir(), 'scons-time-',) + args
++    args = (os.path.realpath(tempfile.gettempdir()), 'scons-time-',) + args
+     x = apply(os.path.join, args)
+     x = re.escape(x)
+     x = string.replace(x, 'time\\-', 'time\\-[^%s]*' % sep)
+diff -r 70a2207175bf test/scons-time/run/option/verbose.py
+--- a/test/scons-time/run/option/verbose.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/test/scons-time/run/option/verbose.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -46,7 +46,7 @@ def tempdir_re(*args):
+     import tempfile
+ 
+     sep = re.escape(os.sep)
+-    args = (tempfile.gettempdir(), 'scons-time-',) + args
++    args = (os.path.realpath(tempfile.gettempdir()), 'scons-time-',) + args
+     x = apply(os.path.join, args)
+     x = re.escape(x)
+     x = string.replace(x, 'time\\-', 'time\\-[^%s]*' % sep)
+diff -r 70a2207175bf test/scons-time/run/subversion.py
+--- a/test/scons-time/run/subversion.py	Mon Dec 17 09:25:07 2007 -0500
++++ b/test/scons-time/run/subversion.py	Tue Dec 18 15:02:08 2007 -0500
+@@ -67,7 +67,7 @@ def tempdir_re(*args):
+     import tempfile
+ 
+     sep = re.escape(os.sep)
+-    args = (tempfile.gettempdir(), 'scons-time-svn-',) + args
++    args = (os.path.realpath(tempfile.gettempdir()), 'scons-time-svn-',) + args
+     x = apply(os.path.join, args)
+     x = re.escape(x)
+     x = string.replace(x, 'svn\\-', 'svn\\-[^%s]*' % sep)
