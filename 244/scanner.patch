@@ -1,0 +1,28 @@
+Index: src/engine/SCons/Scanner/__init__.py
+===================================================================
+--- src/engine/SCons/Scanner/__init__.py	(revision 2492)
++++ src/engine/SCons/Scanner/__init__.py	(working copy)
+@@ -352,7 +352,9 @@
+         if node.includes != None:
+             includes = node.includes
+         else:
+-            includes = self.cre.findall(node.get_contents())
++            includes = [ i
++                         for i in SCons.Util.flatten (self.cre.findall(node.get_contents()))
++                         if i != '' ]
+             node.includes = includes
+ 
+         # This is a hand-coded DSU (decorate-sort-undecorate, or
+Index: src/engine/SCons/Scanner/D.py
+===================================================================
+--- src/engine/SCons/Scanner/D.py	(revision 2492)
++++ src/engine/SCons/Scanner/D.py	(working copy)
+@@ -41,7 +41,7 @@
+     ds = D(name = "DScanner",
+            suffixes = '$DSUFFIXES',
+            path_variable = 'DPATH',
+-           regex = 'import\s+([^\;]*)\;')
++           regex = 'import\s+([a-zA-Z0-9_.]+)\s*(?:,\s*([a-zA-Z0-9_.]+)\s*)*\;')
+     return ds
+ 
+ class D(SCons.Scanner.Classic):
