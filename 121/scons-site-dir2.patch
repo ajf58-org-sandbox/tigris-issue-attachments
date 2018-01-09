@@ -1,0 +1,336 @@
+Index: test/scons-site-file.py
+===================================================================
+--- test/scons-site-file.py	(revision 0)
++++ test/scons-site-file.py	(revision 0)
+@@ -0,0 +1,145 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import TestSCons
++import string
++import sys
++
++########################################################################
++# Test the site_init dir and site_init/init.py file.
++# Make sure the site_scons/init.py gets loaded,
++# and make sure a tool can be loaded from the tools subdir.
++
++test = TestSCons.TestSCons()
++
++test.subdir('site_scons', ['site_scons', 'site_tools'])
++
++test.write(['site_scons', 'init.py'], """
++from SCons.Script import *
++print "Hi there, I am in site_scons/init.py!"
++""")
++
++test.write(['site_scons', 'site_tools', 'mytool.py'], """
++import SCons.Tool
++def generate(env):
++    env['MYTOOL']='mytool'
++def exists(env):
++    return 1
++""")
++
++
++test.write('SConstruct', """
++e=Environment(tools=['default', 'mytool'])
++print e.subst('My site tool is $MYTOOL')
++""")
++
++test.run(arguments = '-Q .',
++         stdout = """Hi there, I am in site_scons/init.py!
++My site tool is mytool
++scons: `.' is up to date.\n""")
++
++
++
++########################################################################
++# Test that tool in site_tools overrides base tool.
++# Use 'm4' as test tool since it's likely to be found,
++# and not commonly overridden by platform-specific stuff the way cc is.
++test.write(['site_scons', 'site_tools', 'm4.py'], """
++import SCons.Tool
++def generate(env):
++    env['M4']='my_m4'
++    env['M4_MINE']=1
++def exists(env):
++    return 1
++""")
++
++test.write('SConstruct', """
++e=Environment()
++print e.subst('M4 is $M4, M4_MINE is $M4_MINE')
++""")
++test.run(arguments = '-Q .',
++         stdout = """Hi there, I am in site_scons/init.py!
++M4 is my_m4, M4_MINE is 1
++scons: `.' is up to date.\n""")
++
++
++########################################################################
++# Test --no-site-dir:
++# the site_scons/init.py script should NOT be loaded.
++#
++
++test.write('SConstruct', """
++e=Environment()
++""")
++test.run(arguments = '-Q --no-site-dir .',
++         stdout = "scons: `.' is up to date.\n")
++
++# With --no-site-dir, shouldn't override default m4 tool
++test.write('SConstruct', """
++e=Environment()
++print e.subst('no site: M4 is $M4, M4_MINE is $M4_MINE')
++""")
++test.run(arguments = '-Q --no-site-dir .',
++stdout = """no site: M4 is m4, M4_MINE is
++scons: `.' is up to date.\n""")
++
++
++########################################################################
++# Test --site-dir=otherdir:
++# the site_scons/init.py script should be loaded from the other dir,
++# and the usual site_scons/init.py should NOT be loaded.
++#
++
++test.subdir('alt_site', ['alt_site', 'site_tools'])
++test.write(['alt_site', 'init.py'], """
++from SCons.Script import *
++print "Hi there, I am in alt_site/init.py!"
++""")
++test.write('SConstruct', """
++e=Environment()
++""")
++test.run(arguments = '-Q --site-dir=alt_site .',
++         stdout = """Hi there, I am in alt_site/init.py!
++scons: `.' is up to date.\n""")
++
++########################################################################
++# Test --site-dir=nonexistent:
++# should give error and nonzero status.
++
++test.run(arguments = '-Q --site-dir=whatever .',
++         stderr = r".*site dir .*whatever not found.*",
++         status = 2, 
++         match = TestSCons.match_re_dotall)
++
++
++# XXX: test use from subdir
++
++
++
++# Done!
++test.pass_test()
++
++# end of file
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 1785)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -589,6 +589,47 @@
+             path = path + '/' + d
+     return path
+ 
++def _load_site_scons_dir(topdir, site_dir_name=None):
++    """Load the site_scons dir under topdir.
++    Adds site_scons to sys.path, imports site_scons/init.py,
++    and adds site_scons/site_tools to default toolpath."""
++    if site_dir_name:
++        err_if_not_found = True       # user specified: err if missing
++    else:
++        site_dir_name = "site_scons"
++        err_if_not_found = False
++        
++    site_dir = os.path.join(topdir.path, site_dir_name)
++    if not os.path.exists(site_dir):
++        if err_if_not_found:
++            raise SCons.Errors.UserError, "site dir %s not found."%site_dir
++        return
++
++    site_init_filename = "init.py"
++    site_init_modname = "init"
++    site_tools_dirname = "site_tools"
++    sys.path = [site_dir] + sys.path
++    site_init_file = os.path.join(site_dir, site_init_filename)
++    site_tools_dir = os.path.join(site_dir, site_tools_dirname)
++    if os.path.exists(site_init_file):
++        import imp
++        try:
++            fp, pathname, description = imp.find_module(site_init_modname,
++                                                        [site_dir])
++            try:
++                imp.load_module(site_init_modname, fp, pathname, description)
++            finally:
++                if fp:
++                    fp.close()
++        except ImportError, e:
++            sys.stderr.write("Can't import site init file '%s': %s\n"%(site_init_file, e))
++            raise
++        except Exception, e:
++            sys.stderr.write("Site init file '%s' raised exception: %s\n"%(site_init_file, e))
++            raise
++    if os.path.exists(site_tools_dir):
++        SCons.Tool.DefaultToolpath.append(site_tools_dir)
++
+ def version_string(label, module):
+     fmt = "\t%s: v%s.%s, %s, by %s on %s\n"
+     return fmt % (label,
+@@ -773,6 +814,10 @@
+                         '--recon', action="store_true", dest='noexec',
+                         default=0, help="Don't build; just print commands.")
+ 
++        self.add_option('--no-site-dir', action="store_true",
++                        dest='no_site_dir', default=0,
++                        help="Don't search or use the usual site_scons dir.")
++
+         self.add_option('--profile', action="store",
+                         dest="profile_file", metavar="FILE",
+                         help="Profile SCons and put results in FILE.")
+@@ -790,6 +835,10 @@
+         self.add_option('-s', '--silent', '--quiet', action="store_true",
+                         default=0, help="Don't print commands.")
+ 
++        self.add_option('--site-dir', action="store",
++                        dest='site_dir', metavar="DIR",
++                        help="Use DIR instead of the usual site_scons dir.")
++
+         self.add_option('--taskmastertrace', action="store",
+                         dest="taskmastertrace_file", metavar="FILE",
+                         help="Trace Node evaluation to FILE.")
+@@ -1076,6 +1125,11 @@
+     if options.cache_show:
+         fs.cache_show = 1
+ 
++    if options.site_dir:
++        _load_site_scons_dir(d, options.site_dir)
++    elif not options.no_site_dir:
++        _load_site_scons_dir(d)
++        
+     if options.include_dir:
+         sys.path = options.include_dir + sys.path
+ 
+Index: src/engine/SCons/Tool/__init__.py
+===================================================================
+--- src/engine/SCons/Tool/__init__.py	(revision 1785)
++++ src/engine/SCons/Tool/__init__.py	(working copy)
+@@ -48,6 +48,8 @@
+ import SCons.Scanner.LaTeX
+ import SCons.Scanner.Prog
+ 
++DefaultToolpath=[]
++
+ CScanner = SCons.Scanner.C.CScanner()
+ DScanner = SCons.Scanner.D.DScanner()
+ LaTeXScanner = SCons.Scanner.LaTeX.LaTeXScanner()
+@@ -78,7 +80,7 @@
+ class Tool:
+     def __init__(self, name, toolpath=[], **kw):
+         self.name = name
+-        self.toolpath = toolpath
++        self.toolpath = toolpath + DefaultToolpath
+         # remember these so we can merge them into the call
+         self.init_kw = kw
+ 
+@@ -89,6 +91,7 @@
+     def _tool_module(self):
+         oldpythonpath = sys.path
+         sys.path = self.toolpath + sys.path
++        # print "Tool._tool_module: finding tool %s in toolpath %s"%(self.name, self.toolpath)
+ 
+         try:
+             try:
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 1785)
++++ doc/man/scons.1	(working copy)
+@@ -92,7 +92,27 @@
+ programs, object files, libraries), so that for most software
+ projects, only the target and input files need be specified.
+ 
++Before reading the
++.I SConstruct
++file,
+ .B scons
++adds looks for a dir named
++.I site_scons
++in the dir containing the
++.I SConstruct
++file; it adds that
++.I site_scons
++to sys.path, reads the file
++.IR site_scons/init.py ,
++and adds the directory
++.I site_scons/site_tools
++to the default toolpath, if those exist.  See the
++.I --no-site-dir
++and
++.I --site-dir
++options for more details.
++
++.B scons
+ reads and executes the SConscript files as Python scripts,
+ so you may use normal Python scripting capabilities
+ (such as flow control, data manipulation, and imported Python libraries)
+@@ -748,6 +768,18 @@
+ options
+ are used, the directories are searched in the order specified.
+ 
++.TP 
++.RI --no-site-dir
++Prevents the automatic addition of the standard
++.I site_scons
++dir to
++.IR sys.path .
++Also prevents loading the
++.I site_scons/init.py
++module if it exists, and prevents adding
++.I site_scons/site_tools
++to the toolpath.
++
+ .TP
+ --implicit-cache
+ Cache implicit dependencies. This can cause 
+@@ -939,6 +971,18 @@
+ Ignored for compatibility with GNU 
+ .BR make .
+ 
++.TP 
++.RI --site-dir= dir
++Uses the named dir as the site dir rather than the default
++.I site_scons
++dir.  This dir will get prepended to
++.IR sys.path ,
++the module
++.IR dir /init.py
++will get loaded if it exists, and
++.IR dir /site_tools
++will get added to the default toolpath.
++
+ .TP
+ -t, --touch
+ Ignored for compatibility with GNU
