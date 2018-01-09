@@ -1,0 +1,6 @@
+# Test case for SCons issue #1608
+# Create a file "foo.in" in the current directory before running scons.
+env = Environment()
+env.Command('foo.out', ['foo.in'], 'cat $SOURCE > $TARGET && sleep 3')
+env.Command('foobar', ['foo.out'], 'cat $SOURCES > $TARGET')
+env.Depends('foobar', 'foo.out')
