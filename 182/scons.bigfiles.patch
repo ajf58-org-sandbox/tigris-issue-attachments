@@ -1,0 +1,80 @@
+Index: src/engine/SCons/Sig/MD5.py
+===================================================================
+--- src/engine/SCons/Sig/MD5.py	(revision 1889)
++++ src/engine/SCons/Sig/MD5.py	(working copy)
+@@ -93,7 +93,11 @@
+         gc = obj.get_contents
+     except AttributeError:
+         raise AttributeError, "unable to fetch contents of '%s'" % str(obj)
+-    return new_md5(gc()).hexdigest()
++    hash = new_md5('')
++    c = gc()
++    for piece in c:
++        hash.update(str(piece))
++    return hash.hexdigest()
+ 
+ def to_string(signature):
+     """Convert a signature to a string"""
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 1889)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -53,6 +53,20 @@
+ import SCons.Util
+ import SCons.Warnings
+ 
++class StringGen:
++    "A wrapper to make a generator that can be congolmerated into a string."
++    def __init__(self,gen):
++        self.gen = gen
++    def __getattr__(self,name):
++        attr = getattr(self.gen,name)
++        setattr(self,name,attr)
++        return attr
++    def __str__(self):
++        ret = ''
++        for piece in self.gen:
++            ret += str(piece)
++        return ret
++
+ # The max_drift value:  by default, use a cached signature value for
+ # any file that's been untouched for more than two days.
+ default_max_drift = 2*24*60*60
+@@ -1559,8 +1573,8 @@
+ 
+     def get_contents(self):
+         """Return aggregate contents of all our children."""
+-        contents = map(lambda n: n.get_contents(), self.children())
+-        return  string.join(contents, '')
++        contents = (n.get_contents() for n in self.children())
++        return  StringGen(contents)
+ 
+     def prepare(self):
+         pass
+@@ -1927,16 +1941,16 @@
+         return self.get_suffix()
+ 
+     def get_contents(self):
+-        if not self.rexists():
+-            return ''
+-        fname = self.rfile().abspath
+-        try:
+-            r = open(fname, "rb").read()
+-        except EnvironmentError, e:
+-            if not e.filename:
+-                e.filename = fname
+-            raise
+-        return r
++        def genContents():
++            if not self.rexists(): return
++            fname = self.rfile().abspath
++            r = open(fname, "rb")
++            while 1:
++                buf = r.read(4096)
++                if not buf: break
++                yield buf
++            r.close()
++        return StringGen(genContents())
+ 
+     def get_timestamp(self):
+         if self.rexists():
