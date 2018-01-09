@@ -1,0 +1,338 @@
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 2498)
++++ doc/man/scons.1	(working copy)
+@@ -1271,7 +1271,7 @@
+ Search the specified repository for any input and target
+ files not found in the local directory hierarchy.  Multiple
+ .B -Y
+-options may specified, in which case the
++options may be specified, in which case the
+ repositories are searched in the order specified.
+ 
+ .SH CONFIGURATION FILE REFERENCE
+@@ -1340,7 +1340,7 @@
+ 
+ Additionally, a specific set of tools
+ with which to initialize the environment
+-may specified as an optional keyword argument:
++may be specified as an optional keyword argument:
+ 
+ .ES
+ env = Environment(tools = ['msvc', 'lex'])
+@@ -5476,7 +5476,7 @@
+ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ '\" BEGIN GENERATED CONSTRUCTION VARIABLE DESCRIPTIONS
+ '\"
+-'\" The descriptions below of the various SCons contruction variables
++'\" The descriptions below of the various SCons construction variables
+ '\" are generated from the .xml files that live next to the various
+ '\" Python modules in the build enginer library.  If you're reading
+ '\" this [gnt]roff file with an eye towards patching this man page,
+@@ -5491,7 +5491,7 @@
+ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ '\" END GENERATED CONSTRUCTION VARIABLE DESCRIPTIONS
+ '\"
+-'\" The descriptions above of the various SCons contruction variables
++'\" The descriptions above of the various SCons construction variables
+ '\" are generated from the .xml files that live next to the various
+ '\" Python modules in the build enginer library.  If you're reading
+ '\" this [gnt]roff file with an eye towards patching this man page,
+@@ -8436,7 +8436,7 @@
+ (for example, 'liba.a' on POSIX systems,
+ 'a.lib' on Windows).
+ 
+-.SS Customizing contruction variables from the command line.
++.SS Customizing construction variables from the command line.
+ 
+ The following would allow the C compiler to be specified on the command
+ line or in the file custom.py. 
+Index: doc/user/repositories.xml
+===================================================================
+--- doc/user/repositories.xml	(revision 2498)
++++ doc/user/repositories.xml	(working copy)
+@@ -457,8 +457,8 @@
+     Usually, this would be done by a build integrator
+     who would run &SCons; in the repository
+     to create all of its derived files and &sconsign; files,
+-    or who would &SCons; in a separate build directory
+-    and copying the resulting tree to the desired repository:
++    or who would run &SCons; in a separate build directory
++    and copy the resulting tree to the desired repository:
+ 
+     </para>
+ 
+@@ -511,7 +511,7 @@
+     <para>
+ 
+     Notice that &SCons; realizes that it does not need to
+-    rebuild local copies file1.o and file2.o files,
++    rebuild local copies <filename>file1.o</filename> and <filename>file2.o</filename> files,
+     but instead uses the already-compiled files
+     from the repository.
+ 
+Index: doc/user/install.xml
+===================================================================
+--- doc/user/install.xml	(revision 2498)
++++ doc/user/install.xml	(working copy)
+@@ -201,7 +201,7 @@
+     you can either call the &InstallAs; function
+     multiple times, or as a shorthand,
+     you can supply same-length lists
+-    for the both the target and source arguments:
++    for both the target and source arguments:
+ 
+     </para>
+ 
+Index: doc/user/sconf.xml
+===================================================================
+--- doc/user/sconf.xml	(revision 2498)
++++ doc/user/sconf.xml	(working copy)
+@@ -124,7 +124,7 @@
+ 
+     Note that you can choose to terminate
+     the build if a given header file doesn't exist,
+-    or you can modify the contstruction environment
++    or you can modify the construction environment
+     based on the existence of a header file.
+ 
+     </para>
+Index: doc/user/simple.xml
+===================================================================
+--- doc/user/simple.xml	(revision 2498)
++++ doc/user/simple.xml	(working copy)
+@@ -542,7 +542,7 @@
+ 
+    Because we want this User's Guide to focus
+    on what &SCons; is actually doing,
+-   we're going use the &Q; option
++   we're going to use the &Q; option
+    to remove these messages from the
+    output of all the remaining examples in this Guide.
+ 
+Index: doc/user/depends.xml
+===================================================================
+--- doc/user/depends.xml	(revision 2498)
++++ doc/user/depends.xml	(working copy)
+@@ -31,7 +31,7 @@
+   when source files change--or, put another way,
+   &SCons; should <emphasis>not</emphasis>
+   waste time rebuilding things that have already been built.
+-  You can see this at work simply be re-invoking &SCons;
++  You can see this at work simply by re-invoking &SCons;
+   after building our simple &hello; example:
+ 
+   </para>
+@@ -359,7 +359,7 @@
+     <para>
+ 
+     Now suppose that our "Hello, World!" program
+-    actually has a <literal>#include</literal> line
++    actually has an <literal>#include</literal> line
+     to include the &hello_h; file in the compilation:
+ 
+     </para>
+@@ -458,7 +458,7 @@
+     the &cv-CPPPATH; variable
+     may be a list of directories,
+     or a string separated by
+-    the system-specific path separate character
++    the system-specific path separation character
+     (':' on POSIX/Linux, ';' on Windows).
+     Either way, &SCons; creates the
+     right command-line options
+@@ -749,7 +749,7 @@
+ 
+     Now, the above example is a little contrived,
+     because it's hard to imagine a real-world situation
+-    where you wouldn't to rebuild &hello;
++    where you wouldn't want to rebuild &hello;
+     if the &hello_h; file changed.
+     A more realistic example
+     might be if the &hello;
+Index: doc/user/environments.xml
+===================================================================
+--- doc/user/environments.xml	(revision 2498)
++++ doc/user/environments.xml	(working copy)
+@@ -391,7 +391,7 @@
+    enabled on the command line,
+    or different executable programs need to be linked
+    with different libraries.
+-   &SCons; accomodates these different build
++   &SCons; accommodates these different build
+    requirements by allowing you to create and
+    configure multiple &consenvs;
+    that control how the software is built.
+@@ -416,7 +416,7 @@
+ 
+  <para>
+ 
+-   By default, &SCons; intializes every
++   By default, &SCons; initializes every
+    new construction environment
+    with a set of &consvars;
+    based on the tools that it finds on your system,
+@@ -842,7 +842,7 @@
+    (Note that because we're not expanding this
+    in the context of building something
+    there are no target or source files
+-   for &cv-link-TARGET; and &cv-link-SOURCES; to expand.
++   for &cv-link-TARGET; and &cv-link-SOURCES; to expand.)
+ 
+    </para>
+ 
+Index: doc/user/help.xml
+===================================================================
+--- doc/user/help.xml	(revision 2498)
++++ doc/user/help.xml	(working copy)
+@@ -108,7 +108,7 @@
+ 
+    <para>
+ 
+-   Will display the completely help text on Windows:
++   Will display the complete help text on Windows:
+ 
+    </para>
+ 
+Index: doc/user/ENV.xml
+===================================================================
+--- doc/user/ENV.xml	(revision 2498)
++++ doc/user/ENV.xml	(working copy)
+@@ -196,7 +196,7 @@
+     The drawback is that the build can behave
+     differently if it's run by people with
+     different &PATH; values in their environment--for example,
+-    both the <literal>/bin</literal> and
++    if both the <literal>/bin</literal> and
+     <literal>/usr/local/bin</literal> directories
+     have different &cc; commands,
+     then which one will be used to compile programs
+Index: doc/user/libraries.xml
+===================================================================
+--- doc/user/libraries.xml	(revision 2498)
++++ doc/user/libraries.xml	(working copy)
+@@ -235,6 +235,10 @@
+     the library will be found in the 
+     &cv-link-LIBPATH; construction variable:
+ 
++    <!-- In the preceding paragraph, the "$" notation for
++         LIBS, LIBPATH etc. is used for the first time.
++         Maybe some words of explanation would be nice. -->
++
+     </para>
+ 
+     <programlisting>
+@@ -409,6 +413,8 @@
+       cl /nologo /c prog.c /Foprog.obj
+       link /nologo /OUT:prog.exe /LIBPATH:\usr\lib /LIBPATH:\usr\local\lib m.lib prog.obj
+     </screen>
++    <!-- The link command is too wide in the PDF version. 
++         There are some other examples of this throughout the document. -->
+ 
+     <para>
+ 
+Index: doc/user/factories.xml
+===================================================================
+--- doc/user/factories.xml	(revision 2498)
++++ doc/user/factories.xml	(working copy)
+@@ -224,7 +224,7 @@
+     The &Move; factory
+     allows you to rename a file or directory.
+     For example, if we don't want to copy the temporary file,
+-    we could:
++    we could use:
+ 
+     </para>
+ 
+@@ -296,7 +296,7 @@
+     a file in a temporary directory
+     in which the processing tool
+     will create other files that we don't care about, 
+-    you could:
++    you could use:
+ 
+     </para>
+ 
+Index: doc/user/file-removal.xml
+===================================================================
+--- doc/user/file-removal.xml	(revision 2498)
++++ doc/user/file-removal.xml	(working copy)
+@@ -94,7 +94,7 @@
+ 
+     By default, &SCons; removes all built targets when invoked
+     with the <literal>-c</literal> option to clean a source tree
+-    of built tragets.
++    of built targets.
+     Sometimes, however, this is not what you want.
+     For example, you may want to remove only intermediate generated files
+     (such as object files),
+Index: doc/user/troubleshoot.xml
+===================================================================
+--- doc/user/troubleshoot.xml	(revision 2498)
++++ doc/user/troubleshoot.xml	(working copy)
+@@ -232,7 +232,7 @@
+     Although this is usually helpful and what you want,
+     it might be frustrating if &SCons;
+     doesn't set certain variables that you
+-    expect to be sit.
++    expect to be set.
+     In situations like this,
+     it's sometimes helpful to use the
+     construction environment &Dump; method
+Index: doc/user/builders-writing.xml
+===================================================================
+--- doc/user/builders-writing.xml	(revision 2498)
++++ doc/user/builders-writing.xml	(working copy)
+@@ -239,7 +239,7 @@
+ 
+     <para>
+ 
+-    To be able use both our own defined &Builder; objects
++    To be able to use both our own defined &Builder; objects
+     and the default &Builder; objects in the same &consenv;,
+     you can either add to the &cv-BUILDERS; variable
+     using the &Append; function:
+Index: doc/user/command-line.xml
+===================================================================
+--- doc/user/command-line.xml	(revision 2498)
++++ doc/user/command-line.xml	(working copy)
+@@ -53,7 +53,7 @@
+     <para>
+ 
+     If, for example,
+-    and you're using a POSIX shell that's
++    you're using a POSIX shell that's
+     compatible with the Bourne shell,
+     and you always want &SCons; to use the
+     <literal>-Q</literal> option,
+@@ -89,7 +89,7 @@
+ 
+     <para>
+ 
+-    Windows users may typically want to set this
++    Windows users may typically want to set the
+     &SCONSFLAGS; in the appropriate tab of the
+     <literal>System Properties</literal> window.
+ 
+@@ -1256,7 +1256,7 @@
+       to control an expected path name.
+       If, for example, you need to
+       define a variable in the preprocessor
+-      that control the location of a
++      that controls the location of a
+       configuration file:
+ 
+       </para>
+Index: doc/user/hierarchy.xml
+===================================================================
+--- doc/user/hierarchy.xml	(revision 2498)
++++ doc/user/hierarchy.xml	(working copy)
+@@ -482,7 +482,7 @@
+       so that it may be used by other &SConscript; files.
+       First, you can call the &Export;
+       function with a list of variables,
+-      or a string white-space separated variable names.
++      or a string of white-space separated variable names.
+       Each call to &Export; adds one
+       or more variables to a global list
+       of variables that are available for import
