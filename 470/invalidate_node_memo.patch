@@ -1,0 +1,190 @@
+Index: test/ExecuteInvalidateCache.py
+===================================================================
+--- test/ExecuteInvalidateCache.py	(revision 0)
++++ test/ExecuteInvalidateCache.py	(revision 0)
+@@ -0,0 +1,74 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test the Execute() functions clears the memoized values of affected target Nodes
++when used with Delete(). Derived from Tigris issue 1307.
++"""
++
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++test.write('SConstruct', """\
++Execute(Delete('abc'))
++n1 = File('abc')
++print "abc exists?", n1.exists()
++Execute('echo "12345" > abc')
++n1.clear_memoized_values()
++print "abc exists?", n1.exists()
++Execute(Delete('abc'))
++print "abc exists?", n1.exists()
++
++env = Environment()
++env.Execute(Delete('def'))
++n2 = env.File('def')
++print "def exists?", n2.exists()
++env.Execute('echo "12345" > def')
++n2.clear_memoized_values()
++print "def exists?", n2.exists()
++env.Execute(Delete(n2))
++print "def exists?", n2.exists()
++""")
++
++expect = test.wrap_stdout(read_str="""\
++Delete("abc")
++abc exists? False
++echo "12345" > abc
++abc exists? True
++Delete("abc")
++abc exists? False
++Delete("def")
++def exists? False
++echo "12345" > def
++def exists? True
++Delete("def")
++def exists? False
++""", build_str = "scons: `.' is up to date.\n")
++
++test.run(arguments = '.', stdout = expect)
++
++test.pass_test()
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 3271)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -2978,3 +2978,52 @@
+         return result
+ 
+ find_file = FileFinder().find_file
++
++
++def invalidate_node_memos(targets):
++    """
++    Invalidate the memoized values of potentially existing Nodes, corresponding
++    to files being affected by a direct execution of an action (e.g.
++    Delete/Copy/Chmod). Existing Node caches become inconsistent if the action
++    is run through Execute().  The argument `targets` can be a single Node
++    object or filename, or a sequence of Nodes/filenames.
++    """
++
++    # First check if the cache really needs to be flushed. Only actions run in
++    # the SConscript with Execute() seem to be affected. XXX The way to check if
++    # Execute() is in the stacktrace is a very dirty hack and should be replaced
++    # by a more sensible solution. XXX
++    must_invalidate = 0
++    from traceback import extract_stack
++    tb = extract_stack()
++    for f in tb:
++        if f[2] == 'Execute' and f[0].endswith('Environment.py'):
++            must_invalidate = 1
++    if not must_invalidate:
++        return
++
++    if not SCons.Util.is_List(targets):
++        targets = [targets]
++
++    # Use the default fs for creating a Dir node and a fresh finder. Using the
++    # default FileFinder poisons its cache with entries that might become
++    # invalid. Furthermore, the Dir node cache must be cleared so that entries
++    # that might become invalid won't sneak in.
++    fs = get_default_fs()
++    dir = fs.Dir('.')
++    find = FileFinder().find_file
++    for entry in targets:
++        #print "DEBUG: Invalidate memo of '%s'" % str(entry)
++        # If the target is a Node object, clear the cache. If it is a filename,
++        # look up potentially existing Node objects and clear their caches.
++        try:
++            entry.clear_memoized_values()
++        except AttributeError:
++            # Not a Node object, try to look up Node by filename.
++            # XXX This creates Node objects even for those filenames which do
++            # not correspond to an existing Node object.
++            node = find( str(entry), (dir,) )
++            if node:
++                node.clear_memoized_values()                        
++    dir.clear_memoized_values()
++
+Index: src/engine/SCons/Defaults.py
+===================================================================
+--- src/engine/SCons/Defaults.py	(revision 3271)
++++ src/engine/SCons/Defaults.py	(working copy)
+@@ -169,6 +169,7 @@
+         return '"' + str(dest) + '"'
+ 
+ def chmod_func(dest, mode):
++    SCons.Node.FS.invalidate_node_memos(dest)
+     if not SCons.Util.is_List(dest):
+         dest = [dest]
+     for element in dest:
+@@ -180,6 +181,7 @@
+ Chmod = ActionFactory(chmod_func, chmod_strfunc)
+ 
+ def copy_func(dest, src):
++    SCons.Node.FS.invalidate_node_memos(dest)
+     if SCons.Util.is_List(src) and os.path.isdir(dest):
+         for file in src:
+             shutil.copy2(file, dest)
+@@ -194,6 +196,7 @@
+                      convert=str)
+ 
+ def delete_func(dest, must_exist=0):
++    SCons.Node.FS.invalidate_node_memos(dest)
+     if not SCons.Util.is_List(dest):
+         dest = [dest]
+     for entry in dest:
+@@ -213,6 +216,7 @@
+ Delete = ActionFactory(delete_func, delete_strfunc)
+ 
+ def mkdir_func(dest):
++    SCons.Node.FS.invalidate_node_memos(dest)
+     if not SCons.Util.is_List(dest):
+         dest = [dest]
+     for entry in dest:
+@@ -221,11 +225,16 @@
+ Mkdir = ActionFactory(mkdir_func,
+                       lambda dir: 'Mkdir(%s)' % get_paths_str(dir))
+ 
+-Move = ActionFactory(lambda dest, src: os.rename(src, dest),
++def move_func(dest, src):
++    SCons.Node.FS.invalidate_node_memos(dest)
++    os.rename(src, dest)
++
++Move = ActionFactory(move_func,
+                      lambda dest, src: 'Move("%s", "%s")' % (dest, src),
+                      convert=str)
+ 
+ def touch_func(dest):
++    SCons.Node.FS.invalidate_node_memos(dest)
+     if not SCons.Util.is_List(dest):
+         dest = [dest]
+     for file in dest:
