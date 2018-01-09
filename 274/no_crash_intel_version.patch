@@ -1,0 +1,21 @@
+diff -r 639237ad5aa6 -r 038cbbf54cde src/engine/SCons/Tool/intelc.py
+--- a/src/engine/SCons/Tool/intelc.py	Wed Dec 19 07:58:46 2007 -0500
++++ b/src/engine/SCons/Tool/intelc.py	Wed Dec 19 09:08:36 2007 -0500
+@@ -219,11 +219,15 @@ def get_all_compiler_versions():
+     elif is_linux:
+         for d in glob.glob('/opt/intel_cc_*'):
+             # Typical dir here is /opt/intel_cc_80.
+-            versions.append(re.search(r'cc_(.*)$', d).group(1))
++            m = re.search(r'cc_(.*)$', d)
++            if m:
++                versions.append(m.group(1))
+         for d in glob.glob('/opt/intel/cc*/*'):
+             # Typical dir here is /opt/intel/cc/9.0 for IA32,
+             # /opt/intel/cce/9.0 for EMT64 (AMD64)
+-            versions.append(re.search(r'([0-9.]+)$', d).group(1))
++            m = re.search(r'([0-9.]+)$', d)
++            if m:
++                versions.append(m.group(1))
+     versions = uniquify(versions)       # remove dups
+     versions.sort(vercmp)
+     return versions
