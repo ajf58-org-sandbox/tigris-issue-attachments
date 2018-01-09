@@ -1,0 +1,27 @@
+diff -u Scanner/LaTeX.py .../scons-0.96.93/build/lib/SCons/Scanner/LaTeX.py
+--- Scanner/LaTeX.py	Wed Nov 15 12:27:21 2006
++++ .../scons-0.96.93/build/lib/SCons/Scanner/LaTeX.py	Mon Nov  6 06:32:49 2006
+@@ -37,7 +37,7 @@
+     ds = LaTeX(name = "LaTeXScanner",
+                suffixes =  '$LATEXSUFFIXES',
+                path_variable = 'TEXINPUTS',
+-               regex = '\\\\(include|includegraphics(?:\[[^\]]+\])?|input|bibliography){([^}]*)}',
++               regex = '\\\\(include|includegraphics(?:\[[^\]]+\])?|input){([^}]*)}',
+                recursive = 0)
+     return ds
+ 
+@@ -54,12 +54,8 @@
+     """
+     def latex_name(self, include):
+         filename = include[1]
+-        if (include[0][:15] == 'include') | (include[0][:15] == 'input'):
+-            if filename[-4:] != '.tex':
+-                filename = filename + '.tex'
+-        if (include[0][:15] == 'bibliography'):
+-            if filename[-4:] != '.bib':
+-                filename = filename + '.bib'
++        if include[0][:15] != 'includegraphics':
++            filename = filename + '.tex'
+         return filename
+     def sort_key(self, include):
+         return SCons.Node.FS._my_normcase(self.latex_name(include))
