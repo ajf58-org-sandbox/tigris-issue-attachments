@@ -1,0 +1,75 @@
+? bin/SConsDoc.pyc
+? etc/TestCmd.pyc
+? etc/TestCommon.pyc
+? etc/TestSCons.pyc
+? etc/unittest.pyc
+? src/build
+? src/engine/SCons/Tool/python.py
+? src/script/build
+Index: src/engine/SCons/SConf.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/SConf.py,v
+retrieving revision 1.31
+diff -u -p -d -r1.31 SConf.py
+--- src/engine/SCons/SConf.py	22 Jan 2006 03:15:50 -0000	1.31
++++ src/engine/SCons/SConf.py	12 Feb 2006 18:58:52 -0000
+@@ -35,6 +35,7 @@ import StringIO
+ import sys
+ import traceback
+ import types
++from subprocess import Popen, PIPE
+ 
+ import SCons.Action
+ import SCons.Builder
+@@ -361,7 +362,8 @@ class SConf:
+                  'CheckCHeader'       : CheckCHeader,
+                  'CheckCXXHeader'     : CheckCXXHeader,
+                  'CheckLib'           : CheckLib,
+-                 'CheckLibWithHeader' : CheckLibWithHeader
++                 'CheckLibWithHeader' : CheckLibWithHeader,
++                 'PkgCheckModules'    : PkgCheckModules,
+                }
+         self.AddTests(default_tests)
+         self.AddTests(custom_tests)
+@@ -872,3 +874,41 @@ def CheckLibWithHeader(context, libs, he
+             call = call, language = language, autoadd = autoadd)
+     context.did_show_result = 1
+     return not res
++
++def PkgCheckModules(context, spec, prefix=None):
++    """Check for libs and cflags using pkg-config.  The first
++    argument, spec, is the pkg-config version constraints string, like
++    'gtk+-2.0 >= 2.6'.  If the second argument (prefix) is a string
++    FOO then FOO_CFLAGS and FOO_LIBS are defined in the environment,
++    otherwise the main CFLAGS and LIBS are augmented with the
++    information from pkg-config."""
++    
++    if prefix is None:
++        context.Message("for pkg-config deps (%s)..." % (spec,))
++    else:
++        context.Message("for %s pkg-config deps (%s)..." % (prefix, spec))
++    try:
++        pkgconfig = context.env['PKG_CONFIG']
++    except KeyError:
++        try:
++            pkgconfig = os.environ['PKG_CONFIG']
++        except KeyError:
++            pkgconfig = SCons.Util.WhereIs("pkg-config")
++    if not pkgconfig:
++        context.Result(False)
++        print "pkg-config not found in path"
++        return False
++    result = not Popen([pkgconfig, spec]).wait()
++    context.Result(result)
++    if result:
++        proc = Popen([pkgconfig, "--cflags", spec], stdout=PIPE)
++        cflags = proc.communicate()[0].rstrip()
++        proc = Popen([pkgconfig, "--libs", spec], stdout=PIPE)
++        libs = proc.communicate()[0].rstrip()
++        if prefix is None:
++            context.env.AppendUnique(**{'CFLAGS': cflags,
++                                        'LIBS': libs})
++        else:
++            context.env.AppendUnique(**{('%s_CFLAGS' % prefix): cflags,
++                                        ('%s_LIBS' % prefix): libs})
++    return result
