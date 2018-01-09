@@ -1,0 +1,42 @@
+Index: test/SConsignMakePath.py
+===================================================================
+--- test/SConsignMakePath.py	(revision 0)
++++ test/SConsignMakePath.py	(revision 0)
+@@ -0,0 +1,21 @@
++#!/usr/bin/env python
++import TestSCons
++import os.path
++
++_python_ = TestSCons._python_
++
++test = TestSCons.TestSCons()
++test.subdir('src')
++test.write(['src', 'foo.txt'], "Foo" )
++
++test.write(['src', 'SConstruct'],"""
++env = Environment()
++env.SConsignFile( "subdir/sconsign" )
++env.Install( 'bar', 'foo.txt' )
++""")
++
++expect = test.wrap_stdout("""\
++Install file: "foo.txt" as "bar/foo.txt"
++""")
++
++test.run(chdir = 'src', stdout=expect)
+Index: src/engine/SCons/SConsign.py
+===================================================================
+--- src/engine/SCons/SConsign.py	(revision 3285)
++++ src/engine/SCons/SConsign.py	(working copy)
+@@ -190,6 +190,11 @@
+         Base.__init__(self)
+ 
+         self.dir = dir
++        global DB_Name
++        base_dir = os.path.dirname(DB_Name)
++        if base_dir :
++            if not os.path.exists( base_dir ) :
++                os.makedirs( base_dir )
+ 
+         db, mode = Get_DataBase(dir)
+ 
