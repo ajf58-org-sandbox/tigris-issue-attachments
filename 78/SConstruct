@@ -1,0 +1,11 @@
+# Perform the imports
+import os, sys, tarfile, string
+from SCons.Script import *
+
+# Import our local environment
+env = Environment(ENV = {'PATH' : os.environ['PATH']})
+
+Export("env")
+
+SConscript('SConscript', build_dir="_build", duplicate=0)
+
