@@ -1,0 +1,290 @@
+Index: src/engine/SCons/Scanner/LaTeX.py
+===================================================================
+--- src/engine/SCons/Scanner/LaTeX.py	(revision 1717)
++++ src/engine/SCons/Scanner/LaTeX.py	(working copy)
+@@ -31,13 +31,15 @@
+ 
+ 
+ import SCons.Scanner
++import string
++import os.path
+ 
+ def LaTeXScanner(fs = SCons.Node.FS.default_fs):
+     """Return a prototype Scanner instance for scanning LaTeX source files"""
+     ds = LaTeX(name = "LaTeXScanner",
+                suffixes =  '$LATEXSUFFIXES',
+                path_variable = 'TEXINPUTS',
+-               regex = '\\\\(include|includegraphics(?:\[[^\]]+\])?|input){([^}]*)}',
++               regex = '\\\\(include|includegraphics(?:\[[^\]]+\])?|input|bibliography){([^}]*)}',
+                recursive = 0)
+     return ds
+ 
+@@ -46,17 +48,31 @@
+ 
+     Unlike most scanners, which use regular expressions that just
+     return the included file name, this returns a tuple consisting
+-    of the keyword for the inclusion ("include", "includegraphics" or
+-    "input"), and then the file name itself.  Base on a quick look at
+-    LaTeX documentation, it seems that we need a should append .tex
+-    suffix for "include" and "input" keywords, but leave the file name
+-    untouched for "includegraphics."
++    of the keyword for the inclusion ("include", "includegraphics",
++    "input", or "bibliography"), and then the file name itself.  
++    Based on a quick look at LaTeX documentation, it seems that we 
++    need a should append .tex suffix for the "include" keywords, 
++    append .tex if there is no extension for the "input" keyword, 
++    but leave the file name untouched for "includegraphics." For
++    the "bibliography" keyword we need to add .bib if there is
++    no extension. (This need to be revisited since if there
++    is no extension for an :includegraphics" keyword latex will 
++    append .ps or .eps to find the file; while pdftex will use 
++    other extensions.)
+     """
+     def latex_name(self, include):
+-        filename = include[1]
+-        if include[0][:15] != 'includegraphics':
++	filename = include[1]
++        if include[0] == 'input':
++            base, ext = os.path.splitext( filename )
++            if ext == "":
++                filename = filename + '.tex'
++        if (include[0] == 'include'):
+             filename = filename + '.tex'
+-        return filename
++	if include[0] == 'bibliography':
++	    base, ext = os.path.splitext( filename )
++	    if ext == "":
++	        filename = filename + '.bib'
++	return filename
+     def sort_key(self, include):
+         return SCons.Node.FS._my_normcase(self.latex_name(include))
+     def find_include(self, include, source_dir, path):
+@@ -64,3 +80,44 @@
+         i = SCons.Node.FS.find_file(self.latex_name(include),
+                                     (source_dir,) + path)
+         return i, include
++
++    def scan(self, node, path=()):
++#
++#  Modify the default scan function to allow for the regular
++#  expression to return a comma separated list of file names
++#  as can be the case with the bibliography keyword.
++#
++        # cache the includes list in node so we only scan it once:
++        if node.includes != None:
++            includes = node.includes
++        else:
++            includes = self.cre.findall(node.get_contents())
++            node.includes = includes
++
++        # This is a hand-coded DSU (decorate-sort-undecorate, or
++        # Schwartzian transform) pattern.  The sort key is the raw name
++        # of the file as specifed on the #include line (including the
++        # " or <, since that may affect what file is found), which lets
++        # us keep the sort order constant regardless of whether the file
++        # is actually found in a Repository or locally.
++        nodes = []
++        source_dir = node.get_dir()
++        for include in includes:
++#
++#  handle case where we get multiple filenames in include[1]
++#
++            inc_list = string.split(include[1],',')
++	    for j in range(len(inc_list)):
++	        include_local = [include[0],inc_list[j]]
++	        n, i = self.find_include(include_local, source_dir, path)
++
++	    if n is None:
++		SCons.Warnings.warn(SCons.Warnings.DependencyWarning,
++				    "No dependency generated for file: %s (included from: %s) -- file not found" % (i, node))
++	    else:
++		sortkey = self.sort_key(include)
++		nodes.append((sortkey, n))
++
++        nodes.sort()
++        nodes = map(lambda pair: pair[1], nodes)
++        return nodes
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 1717)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -70,8 +70,7 @@
+ 
+     global PDFTeXLaTeXAction
+     if PDFTeXLaTeXAction is None:
+-        PDFTeXLaTeXAction = SCons.Action.Action(PDFTeXLaTeXFunction,
+-                                                strfunction=None)
++        PDFTeXLaTeXAction = SCons.Action.Action(PDFTeXLaTeXFunction, strfunction=None)
+ 
+     import pdf
+     pdf.generate(env)
+@@ -82,17 +81,13 @@
+ 
+     env['PDFTEX']      = 'pdftex'
+     env['PDFTEXFLAGS'] = SCons.Util.CLVar('')
+-    env['PDFTEXCOM']   = '$PDFTEX $PDFTEXFLAGS $SOURCE'
++    env['PDFTEXCOM']   = 'cd ${TARGET.dir} && $PDFTEX $PDFTEXFLAGS ${SOURCE.file}'
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['PDFLATEX']      = 'pdflatex'
+     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
+-    env['PDFLATEXCOM']   = '$PDFLATEX $PDFLATEXFLAGS $SOURCE'
++    env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES']  = 3
+ 
+-    env['BIBTEX']      = 'bibtex'
+-    env['BIBTEXFLAGS'] = SCons.Util.CLVar('')
+-    env['BIBTEXCOM']   = '$BIBTEX $BIBTEXFLAGS ${SOURCE.base}'
+-
+ def exists(env):
+     return env.Detect('pdftex')
+Index: src/engine/SCons/Tool/dvipdf.py
+===================================================================
+--- src/engine/SCons/Tool/dvipdf.py	(revision 1717)
++++ src/engine/SCons/Tool/dvipdf.py	(working copy)
+@@ -66,7 +66,7 @@
+ 
+     env['DVIPDF']      = 'dvipdf'
+     env['DVIPDFFLAGS'] = SCons.Util.CLVar('')
+-    env['DVIPDFCOM']   = '$DVIPDF $DVIPDFFLAGS $SOURCE $TARGET'
++    env['DVIPDFCOM']   = 'cd ${TARGET.dir} && $DVIPDF $DVIPDFFLAGS ${SOURCE.file} ${TARGET.file}'
+ 
+     # Deprecated synonym.
+     env['PDFCOM']      = ['$DVIPDFCOM']
+Index: src/engine/SCons/Tool/dvips.py
+===================================================================
+--- src/engine/SCons/Tool/dvips.py	(revision 1717)
++++ src/engine/SCons/Tool/dvips.py	(working copy)
+@@ -58,7 +58,9 @@
+     
+     env['DVIPS']      = 'dvips'
+     env['DVIPSFLAGS'] = SCons.Util.CLVar('')
+-    env['PSCOM']      = '$DVIPS $DVIPSFLAGS -o $TARGET $SOURCE'
++    # I'm not quite sure I got the directories and filenames right for build_dir
++    # We need to be in the correct directory for the sake of latex \includegraphics eps included files.
++    env['PSCOM']      = 'cd ${TARGET.dir} && $DVIPS $DVIPSFLAGS -o ${TARGET.file} ${SOURCE.file}'
+     env['PSPREFIX'] = ''
+     env['PSSUFFIX'] = '.ps'
+ 
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 1717)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -67,7 +67,7 @@
+ 
+     env['PDFLATEX']      = 'pdflatex'
+     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
+-    env['PDFLATEXCOM']   = '$PDFLATEX $PDFLATEXFLAGS $SOURCE'
++    env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES']  = 3
+ 
+ def exists(env):
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 1717)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -42,8 +42,10 @@
+ import SCons.Node.FS
+ import SCons.Util
+ 
++
+ warning_rerun_re = re.compile("^LaTeX Warning:.*Rerun", re.MULTILINE)
+ undefined_references_re = re.compile("^LaTeX Warning:.*undefined references", re.MULTILINE)
++undefined_references_re = re.compile('(^LaTeX Warning:.*undefined references)|(^Package \w+ Warning:.*undefined citations)', re.MULTILINE)
+ openout_aux_re = re.compile(r"\\openout.*`(.*\.aux)'")
+ 
+ # An Action sufficient to build any generic tex file.
+@@ -63,7 +65,8 @@
+     """A builder for LaTeX files that checks the output in the aux file
+     and decides how many times to use LaTeXAction, and BibTeXAction."""
+ 
+-    basename, ext = SCons.Util.splitext(str(target[0]))
++    basename = SCons.Util.splitext(str(source[0]))[0]
++    basedir = os.path.split(str(source[0]))[0]
+ 
+     # Run LaTeX once to generate a new aux file.
+     XXXLaTeXAction(target, source, env)
+@@ -82,11 +85,11 @@
+ 
+     # Now decide if bibtex will need to be run.
+     for auxfilename in auxfiles:
+-        if os.path.exists(auxfilename):
+-            content = open(auxfilename, "rb").read()
++        if os.path.exists(os.path.join(basedir, auxfilename)):
++            content = open(os.path.join(basedir, auxfilename), "rb").read()
+             if string.find(content, "bibdata") != -1:
+                 bibfile = env.fs.File(basename)
+-                BibTeXAction(None, bibfile, env)
++                BibTeXAction(bibfile, bibfile, env)
+                 break
+ 
+     # Now decide if makeindex will need to be run.
+@@ -94,9 +97,15 @@
+     if os.path.exists(idxfilename):
+         idxfile = env.fs.File(basename)
+         # TODO: if ( idxfile has changed) ...
+-        MakeIndexAction(None, idxfile, env)
++        MakeIndexAction(idxfile, idxfile, env)
+         XXXLaTeXAction(target, source, env)
+ 
++    # Now decide if latex will need to be run again due to table of contents.
++    tocfilename = basename + '.toc'
++    if os.path.exists(tocfilename):
++        # TODO: if ( tocfilename has changed) ...
++        XXXLaTeXAction(target, source, env)
++
+     # Now decide if latex needs to be run yet again.
+     logfilename = basename + '.log'
+     for trial in range(int(env.subst('$LATEXRETRIES'))):
+@@ -135,9 +144,12 @@
+ def tex_emitter(target, source, env):
+     base = SCons.Util.splitext(str(source[0]))[0]
+     target.append(base + '.aux')
++    env.Precious(base + '.aux')
+     target.append(base + '.log')
+     for f in source:
+         content = f.get_contents()
++        if string.find(content, r'\tableofcontents') != -1:
++            target.append(base + '.toc')
+         if string.find(content, r'\makeindex') != -1:
+             target.append(base + '.ilg')
+             target.append(base + '.ind')
+@@ -194,21 +206,21 @@
+ 
+     env['TEX']      = 'tex'
+     env['TEXFLAGS'] = SCons.Util.CLVar('')
+-    env['TEXCOM']   = '$TEX $TEXFLAGS $SOURCE'
++    env['TEXCOM']   = 'cd ${TARGET.dir} && $TEX $TEXFLAGS $SOURCE'
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['LATEX']        = 'latex'
+     env['LATEXFLAGS']   = SCons.Util.CLVar('')
+-    env['LATEXCOM']     = '$LATEX $LATEXFLAGS $SOURCE'
++    env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
+     env['BIBTEX']      = 'bibtex'
+     env['BIBTEXFLAGS'] = SCons.Util.CLVar('')
+-    env['BIBTEXCOM']   = '$BIBTEX $BIBTEXFLAGS ${SOURCE.base}'
++    env['BIBTEXCOM']   = 'cd ${TARGET.dir} && $BIBTEX $BIBTEXFLAGS ${SOURCE.filebase}'
+ 
+     env['MAKEINDEX']      = 'makeindex'
+     env['MAKEINDEXFLAGS'] = SCons.Util.CLVar('')
+-    env['MAKEINDEXCOM']   = '$MAKEINDEX $MAKEINDEXFLAGS $SOURCES'
++    env['MAKEINDEXCOM']   = 'cd ${TARGET.dir} && $MAKEINDEX $MAKEINDEXFLAGS ${SOURCE.file}'
+ 
+ def exists(env):
+     return env.Detect('tex')
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 1717)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -64,7 +64,7 @@
+ 
+     env['LATEX']        = 'latex'
+     env['LATEXFLAGS']   = SCons.Util.CLVar('')
+-    env['LATEXCOM']     = '$LATEX $LATEXFLAGS $SOURCE'
++    env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
+ def exists(env):
