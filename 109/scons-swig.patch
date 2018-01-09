@@ -1,0 +1,12 @@
+--- swig.py.orig	2006-12-20 15:49:14.000000000 -0800
++++ swig.py	2006-12-20 15:50:59.000000000 -0800
+@@ -84,7 +84,8 @@
+     for src in source:
+         src = str(src)
+         mname = None
+-        if "-python" in SCons.Util.CLVar(env.subst("$SWIGFLAGS")):
++        flags = SCons.Util.CLVar(env.subst("$SWIGFLAGS"))
++        if "-python" in flags and "-noproxy" not in flags:
+             f = open(src)
+             try:
+                 for l in f.readlines():
