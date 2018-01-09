@@ -1,0 +1,14 @@
+The following change to javac.py will fix this problem.
+
+--  env[JAVACCOM']         = '$JAVAC $JAVACFLAGS -d ${TARGET.attributes.java_classdir} -sourcepath ${SOURCE.dir.rdir()} $SOURCES'
+++ if platform.system() == 'Windows':
+++    env['_JAVACCOM']         = '$JAVAC $JAVACFLAGS -d ${TARGET.attributes.java_classdir} -sourcepath ${SOURCE.dir.rdir()} $SOURCES'
+++    env['JAVACCOM']="${TEMPFILE('$_JAVACCOM')}"
+
+
+If you guys would like a test case for decent sized Java you can use the Sphinx4 open source Java speech recognizer.  You can check it
+out anonymously using subversion from here:
+
+https://svn.sourceforge.net/svnroot/cmusphinx/trunk/
+
+I've started converting Sphinx4 from Ant to SCons.  There is a scons subdirectory.   To build sphinx4 just type 'scons sphinx4'.   I've added the above fix to the sphinx4.py file, but I believe it really belongs in javac.py.  If you remove those lines from sphinx4.py the build will fail for Windows with an error that is hard to decipher, but basically it's because the command line is too long.
