@@ -1,0 +1,129 @@
+# build the plugin binaries
+import os
+
+import test
+
+
+#basepath = str(Dir('#').abspath)
+
+#sys.path.append(os.path.join(basepath,'var','scons'))
+
+
+
+
+##from version_tag import *
+#from prodversion import *
+##import compileroptions
+
+################################################
+##                ENVIRONMENT                  #
+################################################
+
+## get additional build parameters from configuration file
+#opts = SConscript('#/var/scons/EnvOptions')
+
+### create the main environment
+#env = Environment( options = opts)
+#env.Append(BASEPATH=basepath)
+
+
+
+### configure the building environment
+#SConscript('#/var/scons/EnvConfig', exports='env')
+
+## update the help screen
+#Help(opts.GenerateHelpText(env))
+
+## save an option file with the differences from the default values
+#fname = datetime.datetime.now().strftime(basepath+"/user_configuration_%Y.%m.%d_%H.%M")
+#opts.Save(fname,env)
+#if (os.path.getsize(fname) == 0):
+    #os.remove(fname)
+
+#clProdVersion.Init(Dir('#').abspath,env['internal_version'],env['adams_version'])
+#clProdVersion.PrintBanner()
+
+###############################################
+#                   BUILD                     #
+###############################################
+
+# build 3rd party
+#mybuilddir=os.path.join(env['intermediate_area'],
+                        #sys.platform,
+                        #env['adams_version'],
+                        #'3rd_party')
+#env.Append(BUILDDIR_3RDPARTY = mybuilddir)
+#SConscript( '3rd_party/SConscript',
+            #build_dir = mybuilddir, 
+            #duplicate=False, 
+            #exports='env')
+
+## build adams related stuff    
+#mybuilddir=os.path.join(env['intermediate_area'],
+                        #sys.platform,
+                        #env['adams_version'],
+                        #'adams')
+#env.Append(BUILDDIR_ADAMS = mybuilddir)
+#SConscript( 'adams/SConscript',
+            #build_dir = mybuilddir, 
+            #duplicate=False, 
+            #exports='env')
+            
+## get build mode from environment
+#flags = compileroptions.CompilationFlags()
+#if ( (env['build_mode']=='debug') | (env['build_mode']=='both') ):
+    #print "Build in DEBUG mode"
+    #env['curr_build_mode'] = 'debug'
+    #mybuilddir = os.path.join(env['intermediate_area'],
+                              #sys.platform,
+                              #'debug')
+    #env_debug = env.Clone( BUILDDIR_SRC = mybuilddir )
+    #env_debug.AppendUnique( CCFLAGS = flags.getCppDebugFlags())
+    #env_debug.AppendUnique( CPPDEFINES = flags.getCppDebugDefines())
+    #SConscript( 'src/SConscript',
+                #build_dir = mybuilddir,
+                #duplicate=False,
+                #exports={'env':env_debug} )
+#if ( (env['build_mode']=='release') | (env['build_mode']=='both') ):
+    #print "Build in RELEASE mode"
+    #env['curr_build_mode'] = 'release'
+    #mybuilddir = os.path.join(env['intermediate_area'],
+                              #sys.platform,
+                              #'release')
+    #env_release = env.Clone( BUILDDIR_SRC = mybuilddir )
+    #env_release.AppendUnique( CCFLAGS = flags.getCppReleaseFlags())
+    #env_release.AppendUnique( CPPDEFINES = flags.getCppReleaseDefines())
+    #SConscript( 'src/SConscript',
+                #build_dir = mybuilddir,
+                #duplicate=False,
+                #exports={'env':env_release} )
+
+
+## build installers
+#mybuilddir=os.path.join(env['intermediate_area'],
+                        #env['adams_version'],
+                        #'installers')
+#env.Append(BUILDDIR_INSTALLERS = mybuilddir)
+#SConscript( 'installers/SConscript',
+            #build_dir = mybuilddir, 
+            #duplicate=False, 
+            #exports='env' )
+
+
+
+# build up the help listing all the defined aliases - make sure 
+# this is the last section in order to include all the aliases 
+#Help('\nVI-grade SCons based build system\n\n')
+#Help('\nList of Alias available')
+#if ARGUMENTS.get('DetailedHelp', 'no')=='yes':
+    #boolval=True
+#else:
+    #boolval=False    
+
+#aliaslist=env.GetAliasList(env,boolval)    
+#if boolval==False:
+    #aliaslist.sort()
+#for ln in aliaslist:
+  #Help('\n'+ln)
+  
+#Help('\n\nAdd the option DetailedHelp=yes for a full dependency analysis')
