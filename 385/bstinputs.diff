@@ -1,0 +1,12 @@
+diff -Naur SCons.orig/Tool/tex.py SCons.patched.2/Tool/tex.py
+--- SCons.orig/Tool/tex.py	2008-04-23 21:21:07.000000000 +0930
++++ SCons.patched.2/Tool/tex.py	2008-04-30 00:01:13.000000000 +0930
+@@ -231,7 +231,7 @@
+     
+     env['ENV']['TEXINPUTS'] = texinputs_save
+     env['ENV']['BIBINPUTS'] = bibinputs_save
+-    env['ENV']['BSTINPUTS'] = bibinputs_save
++    env['ENV']['BSTINPUTS'] = bstinputs_save
+ 
+     # The TEXPICTS enviroment variable is needed by a dvi -> pdf step
+     # later on Mac OSX so leave it,
