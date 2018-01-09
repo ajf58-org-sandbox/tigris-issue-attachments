@@ -1,0 +1,13 @@
+--- c:\Documents and Settings\jbl\My Documents\scons-original\engine\SCons\Util.py	Thu Sep 08 15:15:22 2005
++++ c:\Python24\Lib\SCons\Util.py	Thu Oct 20 17:38:09 2005
+@@ -1318,6 +1318,10 @@
+         if not is_List(reject):
+             reject = [reject]
+         for dir in path:
++            if dir[0] == '"':
++                dir = dir[1:]
++            if dir[len(dir) - 1] == '"':
++                dir = dir[:len(dir) - 1]
+             f = os.path.join(dir, file)
+             for ext in pathext:
+                 fext = f + ext
