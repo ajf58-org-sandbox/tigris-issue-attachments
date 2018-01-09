@@ -1,0 +1,134 @@
+*** scons/src/engine/SCons/Tool/intelc.py	2007-10-18 14:25:33.000000000 -0400
+--- scons_new/src/engine/SCons/Tool/intelc.py	2007-10-25 08:05:52.000000000 -0400
+***************
+*** 42,47 ****
+--- 42,50 ----
+                              os.environ['PROCESSOR_ARCHITEW6432'] == 'AMD64'))
+  is_linux = sys.platform == 'linux2'
+  
++ CSuffixes = ['.c', '.C']
++ CXXSuffixes = ['.cc', '.cpp', '.cxx', '.c++', '.C++']
++ 
+  if is_windows:
+      import SCons.Tool.msvc
+  elif is_linux:
+***************
+*** 245,250 ****
+--- 248,324 ----
+      return top
+  
+  
++ def shared_pch_emitter(target, source, env):
++     """Adds the object file target."""
++ 
++     pch = None
++     obj = None
++     
++     for t in target:
++         if SCons.Util.splitext(str(t))[1] == '.pch':
++             pch = t
++         if SCons.Util.splitext(str(t))[1] == env['SHOBJSUFFIX']:
++             obj = t
++ 
++     if not obj:
++         obj = SCons.Util.splitext(str(pch))[0]+env['SHOBJSUFFIX']
++ 
++     target = [pch, obj] # pch must be first, and obj second for the
++                         # PCHCOM to work
++ 
++     return (target, source)
++ 
++ 
++ def static_pch_emitter(target, source, env):
++     """Adds the object file target."""
++ 
++     pch = None
++     obj = None
++     
++     for t in target:
++         if SCons.Util.splitext(str(t))[1] == '.pch':
++             pch = t
++         if SCons.Util.splitext(str(t))[1] == env['OBJSUFFIX']:
++             obj = t
++ 
++     if not obj:
++         obj = SCons.Util.splitext(str(pch))[0]+env['OBJSUFFIX']
++ 
++     target = [pch, obj] # pch must be first, and obj second for the
++                         # PCHCOM to work
++ 
++     return (target, source)
++ 
++ 
++ def object_emitter(target, source, env, parent_emitter):
++     """Sets up the PCH dependencies for an object file."""
++ 
++     parent_emitter(target, source, env)
++ 
++     if env.has_key('PCH') and env['PCH']:
++         env.Depends(target, env['PCH'])
++             
++     return (target, source)
++ 
++ def static_object_emitter(target, source, env):
++     return object_emitter(target, source, env,
++                           SCons.Defaults.StaticObjectEmitter)
++ 
++ def shared_object_emitter(target, source, env):
++     return object_emitter(target, source, env,
++                           SCons.Defaults.SharedObjectEmitter)
++ 
++ pch_action = SCons.Action.Action('$PCHCOM', '$PCHCOMSTR')
++ shared_pch_builder = SCons.Builder.Builder(
++     action=pch_action, suffix='.pch',
++     emitter=shared_pch_emitter,
++     single_source = 1,
++     source_scanner=SCons.Tool.SourceFileScanner)
++ static_pch_builder = SCons.Builder.Builder(
++     action=pch_action, suffix='.pch', 
++     emitter=static_pch_emitter, single_source = 1,
++     source_scanner=SCons.Tool.SourceFileScanner)
++ 
+  def generate(env, version=None, abi=None, topdir=None, verbose=0):
+      """Add Builders and construction variables for Intel C/C++ compiler
+      to an Environment.
+***************
+*** 265,270 ****
+--- 339,353 ----
+      elif is_linux:
+          SCons.Tool.gcc.generate(env)
+  
++     static_obj, shared_obj = SCons.Tool.createObjBuilders(env)
++     for suffix in CSuffixes:
++         static_obj.add_emitter(suffix, static_object_emitter)
++         shared_obj.add_emitter(suffix, shared_object_emitter)
++ 
++     for suffix in CXXSuffixes:
++         static_obj.add_emitter(suffix, static_object_emitter)
++         shared_obj.add_emitter(suffix, shared_object_emitter)
++ 
+      # if version is unspecified, use latest
+      vlist = get_all_compiler_versions()
+      if not version:
+***************
+*** 408,413 ****
+--- 491,509 ----
+                                          % (envlicdir, reglicdir, defaultlicdir))
+          env['ENV']['INTEL_LICENSE_FILE'] = licdir
+  
++     if is_windows:
++         env['CCPCHFLAGS'] = SCons.Util.CLVar(['${(PCH and "/Yu%s /Fp%s"%(PCHSTOP or "",File(PCH))) or ""}'])
++         env['PCHCOM'] = '$CXX $CXXFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo${TARGETS[1]} /Yc$PCHSTOP /Fp${TARGETS[0]}'
++     else:
++         env['CCPCHFLAGS'] = SCons.Util.CLVar(['${(PCH and "-pch-use %s" % (File(PCH))) or ""}'])
++         env['PCHCOM'] = '$CXX -o ${TARGETS[1]} -c $CXXFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS $SOURCES -pch-create ${TARGETS[0]}'
++     
++     env.Append(_CCCOMCOM = ' $CCPCHFLAGS')
++ 
++     env.Append(BUILDERS = { 'PCH' : static_pch_emitter,
++                             'SharedPCH' : shared_pch_builder, 
++                             'StaticPCH' : static_pch_builder})
++ 
+  def exists(env):
+      if not (is_linux or is_windows):
+          # can't handle this platform
