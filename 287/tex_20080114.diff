@@ -1,0 +1,43 @@
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 2611)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -41,6 +41,7 @@
+ import SCons.Node
+ import SCons.Node.FS
+ import SCons.Util
++import SCons.Errors
+ 
+ warning_rerun_re = re.compile('(^LaTeX Warning:.*Rerun)|(^Package \w+ Warning:.*Rerun)', re.MULTILINE)
+ 
+@@ -57,6 +58,8 @@
+ tableofcontents_re = re.compile(r"^[^%]*\\tableofcontents", re.MULTILINE)
+ bibliography_re = re.compile(r"^[^%]*\\bibliography", re.MULTILINE)
+ 
++error_re = re.compile('LaTeX Error:', re.MULTILINE)
++
+ # An Action sufficient to build any generic tex file.
+ TeXAction = None
+ 
+@@ -184,6 +187,12 @@
+     # The TEXPICTS enviroment variable is needed by a dvi -> pdf step
+     # later on Mac OSX so leave it,
+     # env['ENV']['TEXPICTS']  = texpicts_save
++    #
++    # see if there were any errors
++    #
++    content = open(logfilename, "rb").read()
++    if error_re.search(content):
++        raise SCons.Errors.BuildError
+ 
+     return 0
+ 
+@@ -290,7 +299,7 @@
+ 
+     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+     env['LATEX']        = 'latex'
+-    env['LATEXFLAGS']   = SCons.Util.CLVar('')
++    env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode')
+     env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
