@@ -1,0 +1,179 @@
+diff -r 4db25f9e24a1 src/engine/SCons/Tool/mslink.py
+--- a/src/engine/SCons/Tool/mslink.py	Wed Dec 05 20:44:58 2007 -0500
++++ b/src/engine/SCons/Tool/mslink.py	Thu Dec 06 11:06:37 2007 -0500
+@@ -76,6 +76,9 @@ def windowsLibEmitter(target, source, en
+ def windowsLibEmitter(target, source, env):
+     SCons.Tool.msvc.validate_vars(env)
+ 
++    extratargets = []
++    extrasources = []
++
+     dll = env.FindIxes(target, "SHLIBPREFIX", "SHLIBSUFFIX")
+     no_import_lib = env.get('no_import_lib', 0)
+ 
+@@ -87,37 +90,43 @@ def windowsLibEmitter(target, source, en
+        not env.FindIxes(source, "WINDOWSDEFPREFIX", "WINDOWSDEFSUFFIX"):
+ 
+         # append a def file to the list of sources
+-        source.append(env.ReplaceIxes(dll,
+-                                      "SHLIBPREFIX", "SHLIBSUFFIX",
+-                                      "WINDOWSDEFPREFIX", "WINDOWSDEFSUFFIX"))
++        extrasources.append(
++            env.ReplaceIxes(dll,
++                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            "WINDOWSDEFPREFIX", "WINDOWSDEFSUFFIX"))
+ 
+     version_num, suite = SCons.Tool.msvs.msvs_parse_version(env.get('MSVS_VERSION', '6.0'))
+     if version_num >= 8.0 and env.get('WINDOWS_INSERT_MANIFEST', 0):
+         # MSVC 8 automatically generates .manifest files that must be installed
+-        target.append(env.ReplaceIxes(dll,
+-                                      "SHLIBPREFIX", "SHLIBSUFFIX",
+-                                      "WINDOWSSHLIBMANIFESTPREFIX", "WINDOWSSHLIBMANIFESTSUFFIX"))
++        extratargets.append(
++            env.ReplaceIxes(dll,
++                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            "WINDOWSSHLIBMANIFESTPREFIX", "WINDOWSSHLIBMANIFESTSUFFIX"))
+ 
+     if env.has_key('PDB') and env['PDB']:
+         pdb = env.arg2nodes('$PDB', target=target, source=source)[0]
+-        target.append(pdb)
++        extratargets.append(pdb)
+         target[0].attributes.pdb = pdb
+ 
+     if not no_import_lib and \
+        not env.FindIxes(target, "LIBPREFIX", "LIBSUFFIX"):
+         # Append an import library to the list of targets.
+-        target.append(env.ReplaceIxes(dll,
+-                                      "SHLIBPREFIX", "SHLIBSUFFIX",
+-                                      "LIBPREFIX", "LIBSUFFIX"))
++        extratargets.append(
++            env.ReplaceIxes(dll,
++                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            "LIBPREFIX", "LIBSUFFIX"))
+         # and .exp file is created if there are exports from a DLL
+-        target.append(env.ReplaceIxes(dll,
+-                                      "SHLIBPREFIX", "SHLIBSUFFIX",
+-                                      "WINDOWSEXPPREFIX", "WINDOWSEXPSUFFIX"))
++        extratargets.append(
++            env.ReplaceIxes(dll,
++                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            "WINDOWSEXPPREFIX", "WINDOWSEXPSUFFIX"))
+ 
+-    return (target, source)
++    return (target+extratargets, source+extrasources)
+ 
+ def prog_emitter(target, source, env):
+     SCons.Tool.msvc.validate_vars(env)
++
++    extratargets = []
+ 
+     exe = env.FindIxes(target, "PROGPREFIX", "PROGSUFFIX")
+     if not exe:
+@@ -126,16 +135,17 @@ def prog_emitter(target, source, env):
+     version_num, suite = SCons.Tool.msvs.msvs_parse_version(env.get('MSVS_VERSION', '6.0'))
+     if version_num >= 8.0 and env.get('WINDOWS_INSERT_MANIFEST', 0):
+         # MSVC 8 automatically generates .manifest files that have to be installed
+-        target.append(env.ReplaceIxes(exe,
+-                                      "PROGPREFIX", "PROGSUFFIX",
+-                                      "WINDOWSPROGMANIFESTPREFIX", "WINDOWSPROGMANIFESTSUFFIX"))
++        extratargets.append(
++            env.ReplaceIxes(exe,
++                            "PROGPREFIX", "PROGSUFFIX",
++                            "WINDOWSPROGMANIFESTPREFIX", "WINDOWSPROGMANIFESTSUFFIX"))
+ 
+     if env.has_key('PDB') and env['PDB']:
+         pdb = env.arg2nodes('$PDB', target=target, source=source)[0]
+-        target.append(pdb)
++        extratargets.append(pdb)
+         target[0].attributes.pdb = pdb
+ 
+-    return (target,source)
++    return (target+extratargets,source)
+ 
+ def RegServerFunc(target, source, env):
+     if env.has_key('register') and env['register']:
+diff -r 4db25f9e24a1 test/MSVC/pdb-manifest.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/MSVC/pdb-manifest.py	Thu Dec 06 11:06:37 2007 -0500
+@@ -0,0 +1,81 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Verify that .pdb files work correctly in conjonction with manifest files.
++"""
++
++import sys
++
++import TestSCons
++
++_exe = TestSCons._exe
++_dll = TestSCons._dll
++_lib = TestSCons._lib
++
++test = TestSCons.TestSCons()
++
++if sys.platform != 'win32':
++    msg = "Skipping Visual C/C++ test on non-Windows platform '%s'\n" % sys.platform
++    test.skip_test(msg)
++
++test.write('SConstruct', """\
++env = Environment()
++
++env['WINDOWS_INSERT_DEF'] = True
++env['WINDOWS_INSERT_MANIFEST'] = True
++env['PDB'] = '${TARGET.base}.pdb'
++env.Program('test', 'test.cpp')
++env.SharedLibrary('sharedlib', 'test.cpp')
++env.StaticLibrary('staticlib', 'test.cpp')
++""")
++
++test.write('test.cpp', """\
++#include <stdio.h>
++#include <stdlib.h>
++int
++main(int argc, char *argv)
++{
++    printf("test.cpp\\n");
++    exit (0);
++}
++""")
++
++test.write('sharedlib.def', """\
++""")
++
++test.run(arguments = '.')
++
++test.must_exist('test%s' % _exe)
++test.must_exist('test.pdb')
++
++test.must_exist('sharedlib%s' % _dll)
++test.must_exist('sharedlib.pdb')
++
++test.must_exist('staticlib%s' % _lib)
++test.must_not_exist('staticlib.pdb')
++
++test.pass_test()
