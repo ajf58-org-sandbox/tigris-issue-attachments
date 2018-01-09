@@ -1,0 +1,38 @@
+Index: src/setup.py
+===================================================================
+--- src/setup.py	(revision 2611)
++++ src/setup.py	(working copy)
+@@ -361,10 +361,10 @@
+     'script/scons.bat',
+ ]
+ 
+-#if is_win32:
+-#    scripts = scripts + [
+-#        'script/scons-post-install.py'
+-#    ]
++if is_win32:
++    scripts = scripts + [
++        'script/scons-post-install.py'
++    ]
+ 
+ arguments = {
+     'name'             : "scons",
+Index: src/setup.cfg
+===================================================================
+--- src/setup.cfg	(revision 2611)
++++ src/setup.cfg	(working copy)
+@@ -3,4 +3,4 @@
+ 
+ [bdist_wininst]
+ title = SCons - a software construction tool
+-#install-script = scons-post-install.py
++install-script = scons-post-install.py
+Index: src/script/MANIFEST.in
+===================================================================
+--- src/script/MANIFEST.in	(revision 2611)
++++ src/script/MANIFEST.in	(working copy)
+@@ -1,3 +1,4 @@
+ scons
+ sconsign
+ scons-time
++scons-post-install.py
