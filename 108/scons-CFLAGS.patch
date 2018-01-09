@@ -1,0 +1,477 @@
+Index: test/CC/SHCFLAGS.py
+===================================================================
+--- test/CC/SHCFLAGS.py	(revision 0)
++++ test/CC/SHCFLAGS.py	(revision 0)
+@@ -0,0 +1,131 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import sys
++import TestSCons
++import os
++import string
++    
++test = TestSCons.TestSCons()
++
++e = test.Environment()
++fooflags = e['SHCFLAGS'] + ' -DFOO'
++barflags = e['SHCFLAGS'] + ' -DBAR'
++
++if os.name == 'posix':
++    os.environ['LD_LIBRARY_PATH'] = '.'
++if string.find(sys.platform, 'irix') > -1:
++    os.environ['LD_LIBRARYN32_PATH'] = '.'
++
++test.write('SConstruct', """
++foo = Environment(SHCFLAGS = '%s', WINDOWS_INSERT_DEF=1)
++bar = Environment(SHCFLAGS = '%s', WINDOWS_INSERT_DEF=1)
++
++foo_obj = foo.SharedObject(target = 'foo', source = 'prog.c')
++foo.SharedLibrary(target = 'foo', source = foo_obj)
++
++bar_obj = bar.SharedObject(target = 'bar', source = 'prog.c')
++bar.SharedLibrary(target = 'bar', source = bar_obj)
++
++fooMain = foo.Clone(LIBS='foo', LIBPATH='.')
++foomain_obj = fooMain.Object(target='foomain', source='main.c')
++fooMain.Program(target='fooprog', source=foomain_obj)
++
++barMain = bar.Clone(LIBS='bar', LIBPATH='.')
++barmain_obj = barMain.Object(target='barmain', source='main.c')
++barMain.Program(target='barprog', source=barmain_obj)
++""" % (fooflags, barflags))
++
++test.write('foo.def', r"""
++LIBRARY        "foo"
++DESCRIPTION    "Foo Shared Library"
++
++EXPORTS
++   doIt
++""")
++
++test.write('bar.def', r"""
++LIBRARY        "bar"
++DESCRIPTION    "Bar Shared Library"
++
++EXPORTS
++   doIt
++""")
++
++test.write('prog.c', r"""
++#include <stdio.h>
++
++void
++doIt()
++{
++#ifdef FOO
++        printf("prog.c:  FOO\n");
++#endif
++#ifdef BAR
++        printf("prog.c:  BAR\n");
++#endif
++}
++""")
++
++test.write('main.c', r"""
++
++void doIt();
++
++int
++main(int argc, char* argv[])
++{
++    doIt();
++    return 0;
++}
++""")
++
++test.run(arguments = '.')
++
++test.run(program = test.workpath('fooprog'), stdout = "prog.c:  FOO\n")
++test.run(program = test.workpath('barprog'), stdout = "prog.c:  BAR\n")
++
++test.write('SConstruct', """
++bar = Environment(SHCFLAGS = '%s', WINDOWS_INSERT_DEF=1)
++
++foo_obj = bar.SharedObject(target = 'foo', source = 'prog.c')
++bar.SharedLibrary(target = 'foo', source = foo_obj)
++
++bar_obj = bar.SharedObject(target = 'bar', source = 'prog.c')
++bar.SharedLibrary(target = 'bar', source = bar_obj)
++
++barMain = bar.Clone(LIBS='bar', LIBPATH='.')
++foomain_obj = barMain.Object(target='foomain', source='main.c')
++barmain_obj = barMain.Object(target='barmain', source='main.c')
++barMain.Program(target='barprog', source=foomain_obj)
++barMain.Program(target='fooprog', source=barmain_obj)
++""" % (barflags))
++
++test.run(arguments = '.')
++
++test.run(program = test.workpath('fooprog'), stdout = "prog.c:  BAR\n")
++test.run(program = test.workpath('barprog'), stdout = "prog.c:  BAR\n")
++
++test.pass_test()
+Index: test/CC/CFLAGS.py
+===================================================================
+--- test/CC/CFLAGS.py	(revision 0)
++++ test/CC/CFLAGS.py	(revision 0)
+@@ -0,0 +1,113 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import sys, string
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++# Make sure CFLAGS is not passed to CXX by just expanding CXXCOM
++test.write('SConstruct', """
++env = Environment(CFLAGS='-xyz', CCFLAGS='-abc')
++print env.subst('$CXXCOM')
++print env.subst('$CXXCOMSTR')
++print env.subst('$SHCXXCOM')
++print env.subst('$SHCXXCOMSTR')
++""")
++test.run(arguments = '.')
++test.fail_test(string.find(test.stdout(), "-xyz") != -1)
++test.fail_test(string.find(test.stdout(), "-abc") == -1)
++
++
++# Test passing CFLAGS to C compiler by actually compiling programs
++if sys.platform == 'win32':
++    _obj = '.obj'
++    fooflags = '/nologo -DFOO'
++    barflags = '/nologo -DBAR'
++else:
++    _obj = '.o'
++    fooflags = '-DFOO'
++    barflags = '-DBAR'
++
++
++test.write('SConstruct', """
++foo = Environment(CFLAGS = '%s')
++bar = Environment(CFLAGS = '%s')
++foo.Object(target = 'foo%s', source = 'prog.c')
++bar.Object(target = 'bar%s', source = 'prog.c')
++foo.Program(target = 'foo', source = 'foo%s')
++bar.Program(target = 'bar', source = 'bar%s')
++foo.Program(target = 'prog', source = 'prog.c',
++            CFLAGS = '$CFLAGS -DBAR $BAZ', BAZ = '-DBAZ')
++""" % (fooflags, barflags, _obj, _obj, _obj, _obj))
++
++test.write('prog.c', r"""
++#include <stdio.h>
++#include <stdlib.h>
++
++int
++main(int argc, char *argv[])
++{
++        argv[argc++] = "--";
++#ifdef FOO
++        printf("prog.c:  FOO\n");
++#endif
++#ifdef BAR
++        printf("prog.c:  BAR\n");
++#endif
++#ifdef BAZ
++        printf("prog.c:  BAZ\n");
++#endif
++        exit (0);
++}
++""")
++
++
++
++test.run(arguments = '.')
++
++test.run(program = test.workpath('foo'), stdout = "prog.c:  FOO\n")
++test.run(program = test.workpath('bar'), stdout = "prog.c:  BAR\n")
++test.run(program = test.workpath('prog'), stdout = """\
++prog.c:  FOO
++prog.c:  BAR
++prog.c:  BAZ
++""")
++
++test.write('SConstruct', """
++bar = Environment(CFLAGS = '%s')
++bar.Object(target = 'foo%s', source = 'prog.c')
++bar.Object(target = 'bar%s', source = 'prog.c')
++bar.Program(target = 'foo', source = 'foo%s')
++bar.Program(target = 'bar', source = 'bar%s')
++""" % (barflags, _obj, _obj, _obj, _obj))
++
++test.run(arguments = '.')
++
++test.run(program = test.workpath('foo'), stdout = "prog.c:  BAR\n")
++test.run(program = test.workpath('bar'), stdout = "prog.c:  BAR\n")
++
++test.pass_test()
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+--- src/engine/SCons/EnvironmentTests.py	(revision 1745)
++++ src/engine/SCons/EnvironmentTests.py	(working copy)
+@@ -658,6 +658,7 @@
+ 
+         empty = {
+             'ASFLAGS'       : [],
++            'CFLAGS'        : [],
+             'CCFLAGS'       : [],
+             'CPPDEFINES'    : [],
+             'CPPFLAGS'      : [],
+@@ -686,6 +687,7 @@
+             "-Wl,-R,rpath2 " + \
+             "-Wl,-Rrpath3 " + \
+             "-Wp,-cpp " + \
++            "-std=c99 " + \
+             "-framework Carbon " + \
+             "-frameworkdir=fwd1 " + \
+             "-Ffwd2 " + \
+@@ -698,6 +700,7 @@
+         d = env.ParseFlags(s)
+ 
+         assert d['ASFLAGS'] == ['-as'], d['ASFLAGS']
++        assert d['CFLAGS']  == ['-std=c99']
+         assert d['CCFLAGS'] == ['-X', '-Wa,-as',
+                                   '-pthread', '-mno-cygwin',
+                                   ('-arch', 'i386'), ('-isysroot', '/tmp'),
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 1745)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -512,6 +512,7 @@
+         """
+         dict = {
+             'ASFLAGS'       : [],
++            'CFLAGS'        : [],
+             'CCFLAGS'       : [],
+             'CPPDEFINES'    : [],
+             'CPPFLAGS'      : [],
+@@ -640,6 +641,8 @@
+                 elif arg == '-pthread':
+                     dict['CCFLAGS'].append(arg)
+                     dict['LINKFLAGS'].append(arg)
++                elif arg[:5] == '-std=':
++                    dict['CFLAGS'].append(arg) # C only
+                 elif arg[0] == '+':
+                     dict['CCFLAGS'].append(arg)
+                     dict['LINKFLAGS'].append(arg)
+Index: src/engine/SCons/Tool/mwcc.py
+===================================================================
+--- src/engine/SCons/Tool/mwcc.py	(revision 1745)
++++ src/engine/SCons/Tool/mwcc.py	(working copy)
+@@ -171,14 +171,15 @@
+     env['CCCOMFLAGS'] = '$CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -nolink -o $TARGET $SOURCES'
+ 
+     env['CC']         = 'mwcc'
+-    env['CCCOM']      = '$CC $CCFLAGS $CCCOMFLAGS'
++    env['CCCOM']      = '$CC $CFLAGS $CCFLAGS $CCCOMFLAGS'
+ 
+     env['CXX']        = 'mwcc'
+     env['CXXCOM']     = '$CXX $CXXFLAGS $CCCOMFLAGS'
+ 
+     env['SHCC']       = '$CC'
+     env['SHCCFLAGS']  = '$CCFLAGS'
+-    env['SHCCCOM']    = '$SHCC $SHCCFLAGS $CCCOMFLAGS'
++    env['SHCFLAGS']   = '$CFLAGS'
++    env['SHCCCOM']    = '$SHCC $SHCFLAGS $SHCCFLAGS $CCCOMFLAGS'
+ 
+     env['SHCXX']       = '$CXX'
+     env['SHCXXFLAGS']  = '$CXXFLAGS'
+Index: src/engine/SCons/Tool/icc.py
+===================================================================
+--- src/engine/SCons/Tool/icc.py	(revision 1745)
++++ src/engine/SCons/Tool/icc.py	(working copy)
+@@ -40,7 +40,7 @@
+     cc.generate(env)
+ 
+     env['CC']         = 'icc'
+-    env['CCCOM']      = '$CC $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo$TARGET'
++    env['CCCOM']      = '$CC $CFLAGS $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo$TARGET'
+     env['CXXCOM']     = '$CXX $CXXFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo$TARGET'
+     env['CPPDEFPREFIX']  = '/D'
+     env['CPPDEFSUFFIX']  = ''
+Index: src/engine/SCons/Tool/msvc.py
+===================================================================
+--- src/engine/SCons/Tool/msvc.py	(revision 1745)
++++ src/engine/SCons/Tool/msvc.py	(working copy)
+@@ -687,10 +687,12 @@
+     env['CCCOMFLAGS'] = '$CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo$TARGET $CCPCHFLAGS $CCPDBFLAGS'
+     env['CC']         = 'cl'
+     env['CCFLAGS']    = SCons.Util.CLVar('/nologo')
+-    env['CCCOM']      = '$CC $CCFLAGS $CCCOMFLAGS'
++    env['CFLAGS']     = SCons.Util.CLVar('')
++    env['CCCOM']      = '$CC $CFLAGS $CCFLAGS $CCCOMFLAGS'
+     env['SHCC']       = '$CC'
+     env['SHCCFLAGS']  = SCons.Util.CLVar('$CCFLAGS')
+-    env['SHCCCOM']    = '$SHCC $SHCCFLAGS $CCCOMFLAGS'
++    env['SHCFLAGS']   = SCons.Util.CLVar('$CFLAGS')
++    env['SHCCCOM']    = '$SHCC $SHCFLAGS $SHCCFLAGS $CCCOMFLAGS'
+     env['CXX']        = '$CC'
+     env['CXXFLAGS']   = SCons.Util.CLVar('$CCFLAGS $( /TP $)')
+     env['CXXCOM']     = '$CXX $CXXFLAGS $CCCOMFLAGS'
+Index: src/engine/SCons/Tool/bcc32.py
+===================================================================
+--- src/engine/SCons/Tool/bcc32.py	(revision 1745)
++++ src/engine/SCons/Tool/bcc32.py	(working copy)
+@@ -63,10 +63,12 @@
+ 
+     env['CC']        = 'bcc32'
+     env['CCFLAGS']   = SCons.Util.CLVar('')
+-    env['CCCOM']     = '$CC -q $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o$TARGET $SOURCES'
++    env['CFLAGS']   = SCons.Util.CLVar('')
++    env['CCCOM']     = '$CC -q $CFLAGS $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o$TARGET $SOURCES'
+     env['SHCC']      = '$CC'
+     env['SHCCFLAGS'] = SCons.Util.CLVar('$CCFLAGS')
+-    env['SHCCCOM']   = '$SHCC -WD $SHCCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o$TARGET $SOURCES'
++    env['SHCFLAGS'] = SCons.Util.CLVar('$CFLAGS')
++    env['SHCCCOM']   = '$SHCC -WD $SHCFLAGS $SHCCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o$TARGET $SOURCES'
+     env['CPPDEFPREFIX']  = '-D'
+     env['CPPDEFSUFFIX']  = ''
+     env['INCPREFIX']  = '-I'
+Index: src/engine/SCons/Tool/cc.xml
+===================================================================
+--- src/engine/SCons/Tool/cc.xml	(revision 1745)
++++ src/engine/SCons/Tool/cc.xml	(working copy)
+@@ -18,9 +18,10 @@
+ 
+ <cvar name="CCCOM">
+ <summary>
+-The command line used to compile a C source file to a (static) object file.
+-Any options specified in the &cv-CCFLAGS; and &cv-CPPFLAGS; construction variables
+-are included on this command line.
++The command line used to compile a C source file to a (static) object
++file.  Any options specified in the &cv-CFLAGS;, &cv-CCFLAGS; and
++&cv-CPPFLAGS; construction variables are included on this command
++line.
+ </summary>
+ </cvar>
+ 
+@@ -38,10 +39,16 @@
+ 
+ <cvar name="CCFLAGS">
+ <summary>
+-General options that are passed to the C compiler.
++General options that are passed to the C and C++ compilers.
+ </summary>
+ </cvar>
+ 
++<cvar name="CFLAGS">
++<summary>
++General options that are passed to the C compiler (C only; not C++).
++</summary>
++</cvar>
++
+ <cvar name="CPPFLAGS">
+ <summary>
+ User-specified C preprocessor options.
+@@ -92,7 +99,7 @@
+ <summary>
+ The command line used to compile a C source file
+ to a shared-library object file.
+-Any options specified in the &cv-SHCCFLAGS; and &cv-CPPFLAGS; construction variables
++Any options specified in the &cv-SHCFLAGS;, &cv-SHCCFLAGS; and &cv-CPPFLAGS; construction variables
+ are included on this command line.
+ </summary>
+ </cvar>
+@@ -111,7 +118,14 @@
+ 
+ <cvar name="SHCCFLAGS">
+ <summary>
+-Options that are passed to the C compiler
++Options that are passed to the C and C++ compilers
+ to generate shared-library objects.
+ </summary>
+ </cvar>
++
++<cvar name="SHCFLAGS">
++<summary>
++Options that are passed to the C compiler (only; not C++)
++to generate shared-library objects.
++</summary>
++</cvar>
+Index: src/engine/SCons/Tool/cc.py
+===================================================================
+--- src/engine/SCons/Tool/cc.py	(revision 1745)
++++ src/engine/SCons/Tool/cc.py	(working copy)
+@@ -63,10 +63,12 @@
+ 
+     env['CC']        = 'cc'
+     env['CCFLAGS']   = SCons.Util.CLVar('')
+-    env['CCCOM']     = '$CC -o $TARGET -c $CCFLAGS $_CCCOMCOM $SOURCES'
++    env['CFLAGS']    = SCons.Util.CLVar('')
++    env['CCCOM']     = '$CC -o $TARGET -c $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES'
+     env['SHCC']      = '$CC'
+     env['SHCCFLAGS'] = SCons.Util.CLVar('$CCFLAGS')
+-    env['SHCCCOM']   = '$SHCC -o $TARGET -c $SHCCFLAGS $_CCCOMCOM $SOURCES'
++    env['SHCFLAGS'] = SCons.Util.CLVar('$CFLAGS')
++    env['SHCCCOM']   = '$SHCC -o $TARGET -c $SHCFLAGS $SHCCFLAGS $_CCCOMCOM $SOURCES'
+ 
+     env['CPPDEFPREFIX']  = '-D'
+     env['CPPDEFSUFFIX']  = ''
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 1745)
++++ doc/man/scons.1	(working copy)
+@@ -639,7 +639,7 @@
+ .ES
+ $ scons --debug=presub
+ Building myprog.o with action(s):
+-  $SHCC $SHCCFLAGS $CPPFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES
++  $SHCC $SHCFLAGS $SHCCFLAGS $CPPFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES
+ ...
+ .EE
+ 
+@@ -3149,6 +3149,7 @@
+ -mno-cygwin         CCFLAGS, LINKFLAGS
+ -mwindows           LINKFLAGS
+ -pthread            CCFLAGS, LINKFLAGS
++-std=               CFLAGS
+ -Wa,                ASFLAGS, CCFLAGS
+ -Wl,-rpath=         RPATH
+ -Wl,-R,             RPATH
