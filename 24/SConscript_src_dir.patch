@@ -1,0 +1,65 @@
+Index: src/engine/SCons/Script/SConscript.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Script/SConscript.py,v
+retrieving revision 1.105
+diff -u -r1.105 SConscript.py
+--- src/engine/SCons/Script/SConscript.py	16 Feb 2005 22:39:07 -0000	1.105
++++ src/engine/SCons/Script/SConscript.py	15 Mar 2005 21:28:32 -0000
+@@ -188,7 +188,11 @@
+                     # where the SConstruct and SConscript files might be
+                     # in different Repositories.  For now, cross that
+                     # bridge when someone comes to it.
+-                    ldir = fs.Dir(f.dir.get_path(sd))
++                    try:
++                        src_dir = kw['src_dir']
++                    except KeyError:
++                        src_dir = f.dir.get_path(sd)
++                    ldir = fs.Dir(src_dir)
+                     try:
+                         fs.chdir(ldir, change_os_dir=sconscript_chdir)
+                     except OSError:
+@@ -199,6 +203,7 @@
+                         # interpret the stuff within the SConscript file
+                         # relative to where we are logically.
+                         fs.chdir(ldir, change_os_dir=0)
++                        # TODO Not sure how to handle src_dir here
+                         os.chdir(f.rfile().dir.get_abspath())
+ 
+                     # Append the SConscript directory to the beginning
+@@ -359,6 +364,7 @@
+             src_dir = kw.get('src_dir')
+             if not src_dir:
+                 src_dir, fname = os.path.split(str(files[0]))
++                files = [os.path.join(str(build_dir), fname)]
+             else:
+                 if not isinstance(src_dir, SCons.Node.Node):
+                     src_dir = self.fs.Dir(src_dir)
+@@ -368,11 +374,13 @@
+                 if fn.is_under(src_dir):
+                     # Get path relative to the source directory.
+                     fname = fn.get_path(src_dir)
++                    files = [os.path.join(str(build_dir), fname)]
+                 else:
+-                    # Fast way to only get the terminal path component of a Node.
+-                    fname = fn.get_path(fn.dir)
++                    files = [fn.abspath]
++                    # Fast way to only get the terminal path component of a Node.                    
++                    #fname = fn.get_path(fn.dir)
++                kw['src_dir'] = build_dir
+             self.fs.BuildDir(build_dir, src_dir, duplicate)
+-            files = [os.path.join(str(build_dir), fname)]
+ 
+         return (files, exports)
+ 
+@@ -469,8 +477,9 @@
+             subst_kw[key] = val
+ 
+         files, exports = self._get_SConscript_filenames(ls, subst_kw)
+-
+-        return apply(_SConscript, [self.fs,] + files, {'exports' : exports})
++        script_kw = dict(subst_kw)
++        script_kw['exports'] = exports
++        return apply(_SConscript, [self.fs,] + files, script_kw)
+ 
+     def SConscriptChdir(self, flag):
+         global sconscript_chdir
