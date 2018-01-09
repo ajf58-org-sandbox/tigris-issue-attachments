@@ -1,0 +1,878 @@
+
+file SConstruct,line 265:
+	Configure( confdir = .sconf_temp )
+
+Checking for qt at /usr/share/qt3 (with lib) 
+scons: `.sconf_temp/conftest_0.cpp' is up to date.
+-I/usr/share/qt3/include -c -o .sconf_temp/conftest_0.o .sconf_temp/conftest_0.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_0.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/share/qt3 (with lib) 
+scons: `.sconf_temp/conftest_1.cpp' is up to date.
+-I/usr/share/qt3/include -c -o .sconf_temp/conftest_1.o .sconf_temp/conftest_1.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_1.o] Error 2
+Result: failed
+
+Checking for qt at /usr/share/qt (with lib) 
+.sconf_temp/conftest_2.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/share/qt/include -c -o .sconf_temp/conftest_2.o .sconf_temp/conftest_2.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_2.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/share/qt (with lib) 
+.sconf_temp/conftest_3.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/share/qt/include -c -o .sconf_temp/conftest_3.o .sconf_temp/conftest_3.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_3.o] Error 2
+Result: failed
+
+Checking for qt at /usr (with lib) 
+.sconf_temp/conftest_4.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/include -c -o .sconf_temp/conftest_4.o .sconf_temp/conftest_4.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_4.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr (with lib) 
+.sconf_temp/conftest_5.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/include -c -o .sconf_temp/conftest_5.o .sconf_temp/conftest_5.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_5.o] Error 2
+Result: failed
+
+Checking for qt at /usr/local (with lib) 
+.sconf_temp/conftest_6.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/local/include -c -o .sconf_temp/conftest_6.o .sconf_temp/conftest_6.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_6.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/local (with lib) 
+.sconf_temp/conftest_7.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/local/include -c -o .sconf_temp/conftest_7.o .sconf_temp/conftest_7.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_7.o] Error 2
+Result: failed
+
+Checking for qt at /usr/lib/qt3 (with lib) 
+.sconf_temp/conftest_8.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt3/include -c -o .sconf_temp/conftest_8.o .sconf_temp/conftest_8.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_8.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/lib/qt3 (with lib) 
+.sconf_temp/conftest_9.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt3/include -c -o .sconf_temp/conftest_9.o .sconf_temp/conftest_9.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_9.o] Error 2
+Result: failed
+
+Checking for qt at /usr/lib/qt (with lib) 
+.sconf_temp/conftest_10.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt/include -c -o .sconf_temp/conftest_10.o .sconf_temp/conftest_10.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_10.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/lib/qt (with lib) 
+.sconf_temp/conftest_11.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt/include -c -o .sconf_temp/conftest_11.o .sconf_temp/conftest_11.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_11.o] Error 2
+Result: failed
+
+Checking for qt at /usr/share/qt3 (with lib64) 
+.sconf_temp/conftest_12.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/share/qt3/include -c -o .sconf_temp/conftest_12.o .sconf_temp/conftest_12.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_12.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/share/qt3 (with lib64) 
+.sconf_temp/conftest_13.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/share/qt3/include -c -o .sconf_temp/conftest_13.o .sconf_temp/conftest_13.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_13.o] Error 2
+Result: failed
+
+Checking for qt at /usr/share/qt (with lib64) 
+.sconf_temp/conftest_14.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/share/qt/include -c -o .sconf_temp/conftest_14.o .sconf_temp/conftest_14.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_14.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/share/qt (with lib64) 
+.sconf_temp/conftest_15.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/share/qt/include -c -o .sconf_temp/conftest_15.o .sconf_temp/conftest_15.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_15.o] Error 2
+Result: failed
+
+Checking for qt at /usr (with lib64) 
+.sconf_temp/conftest_16.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/include -c -o .sconf_temp/conftest_16.o .sconf_temp/conftest_16.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_16.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr (with lib64) 
+.sconf_temp/conftest_17.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/include -c -o .sconf_temp/conftest_17.o .sconf_temp/conftest_17.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_17.o] Error 2
+Result: failed
+
+Checking for qt at /usr/local (with lib64) 
+.sconf_temp/conftest_18.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/local/include -c -o .sconf_temp/conftest_18.o .sconf_temp/conftest_18.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_18.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/local (with lib64) 
+.sconf_temp/conftest_19.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/local/include -c -o .sconf_temp/conftest_19.o .sconf_temp/conftest_19.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_19.o] Error 2
+Result: failed
+
+Checking for qt at /usr/lib/qt3 (with lib64) 
+.sconf_temp/conftest_20.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt3/include -c -o .sconf_temp/conftest_20.o .sconf_temp/conftest_20.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_20.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/lib/qt3 (with lib64) 
+.sconf_temp/conftest_21.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt3/include -c -o .sconf_temp/conftest_21.o .sconf_temp/conftest_21.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_21.o] Error 2
+Result: failed
+
+Checking for qt at /usr/lib/qt (with lib64) 
+.sconf_temp/conftest_22.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt/include -c -o .sconf_temp/conftest_22.o .sconf_temp/conftest_22.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_22.o] Error 2
+Result: failed
+
+Checking for qt-mt at /usr/lib/qt (with lib64) 
+.sconf_temp/conftest_23.cpp <- 
+  |
+  |                                    #include <qapplication.h>
+  |                                    int main(int argc, char **argv) { 
+  |                                    QApplication qapp(argc, argv);
+  |                                    return 0;
+  |                                    }
+  |                                    
+-I/usr/lib/qt/include -c -o .sconf_temp/conftest_23.o .sconf_temp/conftest_23.cpp
+sh: -/: invalid option
+Usage:	sh [GNU long option] [option] ...
+	sh [GNU long option] [option] script-file ...
+GNU long options:
+	--debug
+	--debugger
+	--dump-po-strings
+	--dump-strings
+	--help
+	--init-file
+	--login
+	--noediting
+	--noprofile
+	--norc
+	--posix
+	--protected
+	--rcfile
+	--restricted
+	--verbose
+	--version
+	--wordexp
+Shell options:
+	-irsD or -c command or -O shopt_option		(invocation only)
+	-abefhkmnptuvxBCHP or -o option
+scons: *** [.sconf_temp/conftest_23.o] Error 2
+Result: failed
+
