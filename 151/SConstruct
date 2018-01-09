@@ -1,0 +1,7 @@
+env=Environment()
+Export('env')
+
+env['BUILDERS']['Cat']=Builder(action="cat $SOURCE > $TARGET", multi=1)
+
+SConscript('src/SConscript',build_dir='build')
+
