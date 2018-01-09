@@ -1,0 +1,45 @@
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+--- src/engine/SCons/EnvironmentTests.py	(revision 1650)
++++ src/engine/SCons/EnvironmentTests.py	(working copy)
+@@ -1441,6 +1441,24 @@
+         assert env['CCC1'] == 'c1', env['CCC1']
+         assert env['CCC2'] == ['c2'], env['CCC2']
+ 
++        env['CLVar'] = CLVar([])
++        env.AppendUnique(CLVar = 'bar')
++        result = env['CLVar']
++        assert isinstance(result, CLVar), repr(result)
++        assert result == ['bar'], result
++
++        env['CLVar'] = CLVar(['abc'])
++        env.AppendUnique(CLVar = 'bar')
++        result = env['CLVar']
++        assert isinstance(result, CLVar), repr(result)
++        assert result == ['abc', 'bar'], result
++
++        env['CLVar'] = CLVar(['bar'])
++        env.AppendUnique(CLVar = 'bar')
++        result = env['CLVar']
++        assert isinstance(result, CLVar), repr(result)
++        assert result == ['bar'], result
++
+     def test_Copy(self):
+         """Test construction environment copying
+ 
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 1650)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -977,8 +977,10 @@
+         """
+         kw = copy_non_reserved_keywords(kw)
+         for key, val in kw.items():
+-            if not self._dict.has_key(key) or not self._dict[key]:
++            if not self._dict.has_key(key):
+                 self._dict[key] = val
++            elif self._dict[key] == '':
++                self._dict[key] = val
+             elif SCons.Util.is_Dict(self._dict[key]) and \
+                  SCons.Util.is_Dict(val):
+                 self._dict[key].update(val)
