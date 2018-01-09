@@ -1,0 +1,22 @@
+import os.path
+
+open('test.java','w').write("""
+class test
+{
+    test()
+    {
+    super();
+    new inner();
+    }
+    
+    private static class inner
+    {
+    private inner() {}
+    }
+    }
+""")
+
+
+env=Environment()
+env.Tool('javac')
+env.Java(target='classes',source='test.java')
