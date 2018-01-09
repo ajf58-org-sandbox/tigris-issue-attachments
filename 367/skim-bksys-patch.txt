@@ -1,0 +1,33 @@
+diff -u -r skim-1.4.5.orig/bksys/generic.py skim-1.4.5/bksys/generic.py
+--- skim-1.4.5.orig/bksys/generic.py	2006-06-03 19:03:36.000000000 -0700
++++ skim-1.4.5/bksys/generic.py	2008-04-11 04:27:17.000000000 -0700
+@@ -407,7 +407,28 @@
+ 
+ 	env['ARGS']=makeHashTable(sys.argv)
+ 
+-	SConsEnvironment.Chmod = SCons.Action.ActionFactory(os.chmod, lambda dest, mode: 'Chmod("%s", 0%o)' % (dest, mode))
++	if not hasattr(SConsEnvironment, 'Chmod'):
++
++	    def get_paths_str(dest):
++	        # If dest is a list, manually call str() on each element
++	        if SCons.Util.is_List(dest):
++	            elem_strs = []
++	            for element in dest:
++	                elem_strs.append('"' + str(element) + '"')
++	            return '[' + string.join(elem_strs, ', ') + ']'
++	        else:
++	            return '"' + str(dest) + '"'
++
++	    def chmod_func(dest, mode):
++	        if not SCons.Util.is_List(dest):
++	            dest = [dest]
++	        for element in dest:
++	            os.chmod(str(element), mode)
++
++	    def chmod_strfunc(dest, mode):
++	        return 'Chmod(%s, 0%o)' % (get_paths_str(dest), mode)
++
++	    SConsEnvironment.Chmod = SCons.Action.ActionFactory(chmod_func, chmod_strfunc)
+ 
+ 	## Special trick for installing rpms ...
+ 	env['DESTDIR']=''
