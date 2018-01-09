@@ -1,0 +1,33 @@
+diff -ur scons-src-0.96.91/src/engine/SCons/Node/FS.py scons-src-0.96.91-modified/src/engine/SCons/Node/FS.py
+--- scons-src-0.96.91/src/engine/SCons/Node/FS.py	2005-09-08 15:21:46.000000000 +0200
++++ scons-src-0.96.91-modified/src/engine/SCons/Node/FS.py	2005-12-06 17:49:22.000000000 +0100
+@@ -151,6 +151,10 @@
+     if not Link_Funcs:
+         # Set a default order of link functions.
+         set_duplicate('hard-soft-copy')
++    # if the source is a symlink, what we have to duplicate is
++    # not the link, but the symlinked file
++    while source[0].fs.islink(src):
++        src = source[0].fs._readlink(src)
+     # Now link the files with the previously specified order.
+     for func in Link_Funcs:
+         try:
+@@ -805,6 +809,18 @@
+         def islink(self, path):
+             return 0                    # no symlinks
+ 
++    if hasattr(os, 'readlink'):
++        def _readlink(self, file):
++            lnk = os.readlink(file)
++            if os.path.isabs(lnk):
++    	        return lnk
++            else:
++    	        return os.path.join(os.path.dirname(file), lnk)
++    else:
++        def _readlink(self, file):
++            return ''
++
++
+ if SCons.Memoize.use_old_memoization():
+     _FSBase = LocalFS
+     class LocalFS(SCons.Memoize.Memoizer, _FSBase):
