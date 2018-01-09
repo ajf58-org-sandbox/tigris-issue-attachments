@@ -1,0 +1,16 @@
+--- msvc.py.orig	2007-08-10 15:58:34.981777200 -0700
++++ msvc.py	2007-08-10 16:11:06.371500000 -0700
+@@ -311,7 +311,12 @@
+         if paths.has_key(key):
+             return paths[key]
+         else:
+-            return '---Unknown Location %s---' % match.group()
++            # Now look in the global environment variables
++            envresult = os.getenv(key)
++            if not envresult is None:
++                return envresult + '\\'
++            else:
++                return '---Unknown Location %s---' % match.group()
+ 
+     rv = []
+     for entry in p.split(os.pathsep):
