@@ -1,0 +1,54 @@
+Index: scons.1
+===================================================================
+--- scons.1	(revision 1772)
++++ scons.1	(working copy)
+@@ -6603,6 +6603,49 @@
+ echo Last build occurred  . > $TARGET
+ .EE
+ 
++.SS Python Code Substitution
++
++Any python code within
++.B "${/$}"
++pairs gets evaluated by python 'eval', with the python globals set to
++the current environment's set of construction variables.  So in the
++following case:
++.ES
++env['COND'] = 0
++env.Command('foo.out', 'foo.in',
++   '''echo ${COND==1 and 'FOO' or 'BAR'} > $TARGET''')
++.EE
++the command executed will be either
++.ES
++echo FOO > foo.out
++.EE
++or
++.ES
++echo BAR > foo.out
++.EE
++according to the current value of env['COND'] when the command is
++executed.  The evaluation occurs when the target is being
++built, not when the SConscript is being read.  So if env['COND'] is changed
++later in the SConscript, the final value will be used.
++
++Here's a more interesting example.  Note that all of COND, FOO, and
++BAR are environment variables, and their values are substituted into
++the final command.  FOO is a list, so its elements are interpolated
++separated by spaces.
++
++.ES
++env=Environment()
++env['COND'] = 0
++env['FOO'] = ['foo1', 'foo2']
++env['BAR'] = 'barbar'
++env.Command('foo.out', 'foo.in',
++    'echo ${COND==1 and FOO or BAR} > $TARGET')
++
++# Will execute this:
++#  echo foo1 foo2 > foo.out
++.EE
++
++
+ SCons uses the following rules when converting construction variables into
+ command lines:
+ 
