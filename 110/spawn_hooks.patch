@@ -1,0 +1,71 @@
+# This is a BitKeeper generated diff -Nru style patch.
+#
+# ChangeSet
+#   2006/12/14 16:17:11+02:00 aviadr@phoenix.lan 
+#   added spawning hooks
+# 
+# build/SCons/Platform/posix.py
+#   2006/12/14 16:17:11+02:00 aviadr@phoenix.lan +9 -0
+#   added spawning hooks
+# 
+# build/SCons/Action.py
+#   2006/12/14 16:17:11+02:00 aviadr@phoenix.lan +15 -6
+#   added spawning hooks
+# 
+diff -Nru a/build/SCons/Action.py b/build/SCons/Action.py
+--- a/build/SCons/Action.py	2006-12-14 16:20:04 +02:00
++++ b/build/SCons/Action.py	2006-12-14 16:20:04 +02:00
+@@ -440,11 +440,6 @@
+         except KeyError:
+             raise SCons.Errors.UserError('Missing SHELL construction variable.')
+ 
+-        try:
+-            spawn = env['SPAWN']
+-        except KeyError:
+-            raise SCons.Errors.UserError('Missing SPAWN construction variable.')
+-
+         escape = env.get('ESCAPE', lambda x: x)
+ 
+         try:
+@@ -478,10 +473,24 @@
+         for cmd_line in filter(len, cmd_list):
+             # Escape the command line for the interpreter we are using.
+             cmd_line = escape_list(cmd_line, escape)
+-            result = spawn(shell, escape, cmd_line[0], cmd_line, ENV)
++            
++            # AVIAD: use self.__spawn__ to spawn the process
++            # this can help users to extend CommandAction by subclassing 
++            result = self.__spawn__(shell, escape, cmd_line[0], cmd_line, env, ENV)
+             if not ignore and result:
+                 return result
+         return 0
++				
++    def __spawn__(self, shell, escape, cmd, args, scons_env, user_env):
++        """Spawns the cmd, using the spawn function defined in the environment.
++        This function can be overriden by subclasses of CommandAction.
++        useful for piping commands, issuing commands via SSH, etc."""
++        try:
++            spawn = scons_env['SPAWN']
++        except KeyError:
++            raise SCons.Errors.UserError('Missing SPAWN construction variable.')
++
++        return spawn (shell, escape, cmd, args, user_env)		    
+ 
+     def get_contents(self, target, source, env):
+         """Return the signature contents of this action's command line.
+diff -Nru a/build/SCons/Platform/posix.py b/build/SCons/Platform/posix.py
+--- a/build/SCons/Platform/posix.py	2006-12-14 16:20:04 +02:00
++++ b/build/SCons/Platform/posix.py	2006-12-14 16:20:04 +02:00
+@@ -249,3 +249,12 @@
+ 
+     # This platform supports RPATH specifications.
+     env['__RPATH'] = '$_RPATH'
++		
++    # keep the function that can create the full commandline
++    # for spawning in the environment too. this is useful
++    # for extending scons with different ways of spawning,
++    # perhaps spawning with pipes, or via SSH.
++    #
++    # the function in 'SPAWN_CMDLINE' variable takes the same variables
++    # as the function in the 'SPAWN' variable.
++    env['SPAWN_CMDLINE']  = _get_env_command
