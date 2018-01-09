@@ -1,0 +1,28 @@
+diff -r 2791fed90f49 src/engine/SCons/Job.py
+--- a/src/engine/SCons/Job.py	Wed Dec 12 08:54:06 2007 -0500
++++ b/src/engine/SCons/Job.py	Wed Dec 12 10:39:26 2007 -0500
+@@ -180,11 +180,24 @@ else:
+             self.requestQueue = Queue.Queue(0)
+             self.resultsQueue = Queue.Queue(0)
+ 
++            # Use 256 KBytes stack size when creating threads. The
++            # default on some platforms is to large and prevents us
++            # from creating enough threads for fully parallelizing the
++            # build. For example, the default stack size on linux is 8
++            # MBytes.
++            try:
++                prev_size = threading.stack_size( 2**18 ) 
++            except AttributeError:
++                pass
++
+             # Create worker threads
+             self.workers = []
+             for _ in range(num):
+                 worker = Worker(self.requestQueue, self.resultsQueue)
+                 self.workers.append(worker)
++
++            if 'prev_size' in locals():
++                threading.stack_size(prev_size)
+ 
+         def put(self, obj):
+             """Put task into request queue."""
