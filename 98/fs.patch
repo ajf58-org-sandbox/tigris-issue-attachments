@@ -1,0 +1,13 @@
+diff -rN -u old-scons-0.96.93/engine/SCons/Node/FS.py new-scons-0.96.93/engine/SCons/Node/FS.py
+--- old-scons-0.96.93/engine/SCons/Node/FS.py	2006-11-06 15:32:48.000000000 +0100
++++ new-scons-0.96.93/engine/SCons/Node/FS.py	2006-11-29 13:35:34.000000000 +0100
+@@ -749,6 +749,8 @@
+         Since this should return the real contents from the file
+         system, we check to see into what sort of subclass we should
+         morph this Entry."""
++        if not self.exists():
++            raise AttributeError,"Can't find '%s'"%self.abspath
+         if self.isfile():
+             self.__class__ = File
+             self._morph()
+
