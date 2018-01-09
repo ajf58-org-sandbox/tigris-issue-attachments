@@ -1,0 +1,87 @@
+Hello,
+
+So, I have thoses files :
+nicovigi@grovsl53:~/scons/fortran-modules [ 234 ] > find .
+.
+./subdir
+./subdir/src
+./subdir/src/modfile.f90
+./subdir/build
+./subdir/SConscript
+./SConstruct
+nicovigi@grovsl53:~/scons/fortran-modules [ 235 ] > cat SConstruct 
+env = Environment()
+env.Replace(FORTRAN = '/logiciels/intel/iff/compiler80/bin/ifort')
+env.Replace(FORTRANMODDIRPREFIX = '-module ')
+Export('env')
+objs = SConscript('subdir/SConscript')
+for obj in objs:
+        print 'obj: ' + str(obj)
+env.Library('bidule', objs)
+
+nicovigi@grovsl53:~/scons/fortran-modules [ 236 ] > cat subdir/SConscript 
+Import('env')
+
+env.Replace(FORTRANMODDIR = 'build')
+sources = ['src/modfile.f90']
+objs = env.Object(sources)
+
+Return('objs')
+nicovigi@grovsl53:~/scons/fortran-modules [ 237 ] > cat subdir/src/modfile.f90 
+module somemodule
+ 
+integer :: nothing
+
+end module
+nicovigi@grovsl53:~/scons/fortran-modules [ 238 ] > 
+
+
+And when I run SCons, this is what happens :
+
+nicovigi@grovsl53:~/scons/fortran-modules [ 238 ] > scons 
+scons: Reading SConscript files ...
+obj: subdir/src/modfile.o
+obj: subdir/build/somemodule.mod
+scons: done reading SConscript files.
+scons: Building targets ...
+/logiciels/intel/iff/compiler80/bin/ifort -o subdir/src/modfile.o -c -module build subdir/src/modfile.f90
+fortcom: Error: subdir/src/modfile.f90, line 1: Error in creating the Library module file.   [SOMEMODULE]
+module somemodule
+.......^
+compilation aborted for subdir/src/modfile.f90 (code 1)
+scons: *** [subdir/src/modfile.o] Error 1
+scons: building terminated because of errors.
+nicovigi@grovsl53:~/scons/fortran-modules [ 239 ] > 
+
+
+So as you can see, the FORTRANMODDIR is used, and subdir/build/somemodule.mod
+is a target for the source file subdir/src/modfile.c. However it seems
+to me that there is a problem on the command line used to compile the
+file. The argument given to the compiler is '-module build', while I
+think it should be '-module subdir/build'. Am I correct, or did I
+misunderstood how FORTRANMODDIR and FORTRANMODDIRPREFIX are supposed to
+work ?
+
+So I looked at the file SCons/Tool/fortran.py and saw this line :
+env['_FORTRANMODFLAG'] = '$( ${_concat(FORTRANMODDIRPREFIX, FORTRANMODDIR, FORTRANMODDIRSUFFIX, __env__)} $)'
+
+And I changed it to this :
+env['_FORTRANMODFLAG'] = '$( ${_concat(FORTRANMODDIRPREFIX, FORTRANMODDIR, FORTRANMODDIRSUFFIX, __env__, RDirs)} $)
+
+After this small modification (adding a RDirs at the end), I get what
+I think is the correct behavior :
+
+nicovigi@grovsl53:~/scons/fortran-modules [ 239 ] > scons 
+scons: Reading SConscript files ...
+obj: subdir/src/modfile.o
+obj: subdir/build/somemodule.mod
+scons: done reading SConscript files.
+scons: Building targets ...
+/logiciels/intel/iff/compiler80/bin/ifort -o subdir/src/modfile.o -c -module subdir/build subdir/src/modfile.f90
+ar r libbidule.a subdir/src/modfile.o subdir/build/somemodule.mod
+ranlib libbidule.a
+scons: done building targets.
+nicovigi@grovsl53:~/scons/fortran-modules [ 240 ] > 
+
+See the '-module subdir/build' now.
+
