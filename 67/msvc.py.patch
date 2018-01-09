@@ -1,0 +1,19 @@
+*** msvc_new.py	Tue Aug 29 14:07:20 2006
+--- msvc.py	Tue Apr 11 00:33:32 2006
+***************
+*** 519,525 ****
+          if SCons.Util.can_read_reg and paths.has_key('FRAMEWORKSDKDIR'):
+              include_paths.append( os.path.join( paths['FRAMEWORKSDKDIR'], 'include' ) )
+              lib_paths.append( os.path.join( paths['FRAMEWORKSDKDIR'], 'lib' ) )
+!             exe_paths.append( os.path.join( paths['FRAMEWORKSDKDIR'], 'bin' ) )
+  
+          if SCons.Util.can_read_reg and paths.has_key('FRAMEWORKDIR') and paths.has_key('FRAMEWORKVERSION'):
+              exe_paths.append( os.path.join( paths['FRAMEWORKDIR'], paths['FRAMEWORKVERSION'] ) )
+--- 519,525 ----
+          if SCons.Util.can_read_reg and paths.has_key('FRAMEWORKSDKDIR'):
+              include_paths.append( os.path.join( paths['FRAMEWORKSDKDIR'], 'include' ) )
+              lib_paths.append( os.path.join( paths['FRAMEWORKSDKDIR'], 'lib' ) )
+!             exe_paths.append( paths['FRAMEWORKSDKDIR'], 'bin' )
+  
+          if SCons.Util.can_read_reg and paths.has_key('FRAMEWORKDIR') and paths.has_key('FRAMEWORKVERSION'):
+              exe_paths.append( os.path.join( paths['FRAMEWORKDIR'], paths['FRAMEWORKVERSION'] ) )
