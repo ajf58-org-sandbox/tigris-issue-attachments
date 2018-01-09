@@ -1,0 +1,515 @@
+diff -r b75cc8136f74 -r c2dd8ab1fe97 results.qmr
+Binary file results.qmr has changed
+diff -r b75cc8136f74 -r c2dd8ab1fe97 src/engine/SCons/Job.py
+--- a/src/engine/SCons/Job.py	Mon Feb 11 10:41:50 2008 -0500
++++ b/src/engine/SCons/Job.py	Mon Feb 11 19:59:59 2008 -0500
+@@ -33,6 +33,9 @@ __revision__ = "__FILE__ __REVISION__ __
+ 
+ import SCons.compat
+ 
++import os
++import signal
++
+ 
+ # The default stack size (in kilobytes) of the threads used to execute
+ # jobs in parallel.
+@@ -44,6 +47,7 @@ import SCons.compat
+ 
+ default_stack_size = 256
+ 
++interrupt_msg = 'Build interrupted.'
+ 
+ class Jobs:
+     """An instance of this class initializes N jobs, and provides
+@@ -80,21 +84,73 @@ class Jobs:
+             self.job = Serial(taskmaster)
+             self.num_jobs = 1
+ 
+-    def run(self):
+-        """run the job"""
++        self.job.interrupted = False
++
++    def run(self, postfunc=lambda: None):
++        """Run the jobs.
++
++        postfunc() will be invoked after the jobs has run. It will be
++        invoked even if the jobs are interrupted by a keyboard
++        interrupt (well, in fact by a signal such as either SIGINT,
++        SIGTERM or SIGHUP). The execution of postfunc() is protected
++        against keyboard interrupts and is guaranteed to run to
++        completion."""
++        self._setup_sig_handler()
+         try:
+             self.job.start()
+-        except KeyboardInterrupt:
+-            # mask any further keyboard interrupts so that scons
+-            # can shutdown cleanly:
+-            # (this only masks the keyboard interrupt for Python,
+-            #  child processes can still get the keyboard interrupt)
+-            import signal
+-            signal.signal(signal.SIGINT, signal.SIG_IGN)
+-            raise
++        finally:
++            postfunc()
++            self._reset_sig_handler()
+ 
+-    def cleanup(self):
+-        self.job.cleanup()
++    def were_interrupted(self):
++        """Returns whether the jobs were interrupted by a signal."""
++        return self.job.interrupted
++
++    def _setup_sig_handler(self):
++        """Setup an interrupt handler so that SCons can shutdown cleanly in
++        various conditions:
++
++          a) SIGINT: Keyboard interrupt
++          b) SIGTERM: kill or system shutdown
++          c) SIGHUP: Controlling shell exiting
++        
++        We handle all of these cases by stopping the taskmaster. It
++        turns out that it very difficult to stop the build process
++        by throwing asynchronously an exception such as
++        KeyboardInterrupt. For example, the python Condition
++        variables (threading.Condition) and Queue's do not seem to
++        asynchronous-exception-safe. It would require adding a whole
++        bunch of try/finally block and except KeyboardInterrupt all
++        over the place.
++        
++        Note also that we have to be careful to handle the case when
++        SCons forks before executing another process. In that case, we
++        want the child to exit immediately. 
++        """
++        def handler(signum, stack, parentpid=os.getpid()):
++            if os.getpid() == parentpid:
++                self.job.taskmaster.stop()
++                self.job.interrupted = True
++            else:
++                os._exit(2)
++
++        self.old_sigint  = signal.signal(signal.SIGINT, handler)
++        self.old_sigterm = signal.signal(signal.SIGTERM, handler)
++        try:
++            self.old_sighup = signal.signal(signal.SIGHUP, handler)
++        except AttributeError:
++            pass
++
++    def _reset_sig_handler(self):
++        """Restore the signal handlers to their previous state (before the
++         call to _setup_sig_handler()."""
++
++        signal.signal(signal.SIGINT, self.old_sigint)
++        signal.signal(signal.SIGTERM, self.old_sigterm)
++        try:
++            signal.signal(signal.SIGHUP, self.old_sighup)
++        except AttributeError:
++            pass
+ 
+ class Serial:
+     """This class is used to execute tasks in series, and is more efficient
+@@ -130,10 +186,16 @@ class Serial:
+             try:
+                 task.prepare()
+                 task.execute()
+-            except KeyboardInterrupt:
+-                raise
+             except:
+-                task.exception_set()
++                if self.interrupted:
++                    try:
++                        raise SCons.Errors.BuildError(
++                            task.targets[0], errstr=interrupt_msg)
++                    except:
++                        task.exception_set()
++                else:
++                    task.exception_set()
++
+                 # Let the failed() callback function arrange for the
+                 # build to stop if that's appropriate.
+                 task.failed()
+@@ -142,8 +204,6 @@ class Serial:
+ 
+             task.postprocess()
+ 
+-    def cleanup(self):
+-        pass
+ 
+ # Trap import failure so that everything in the Job module but the
+ # Parallel class (and its dependent classes) will work if the interpreter
+@@ -178,9 +238,6 @@ else:
+ 
+                 try:
+                     task.execute()
+-                except KeyboardInterrupt:
+-                    # be explicit here for test/interrupts.py
+-                    ok = False
+                 except:
+                     task.exception_set()
+                     ok = False
+@@ -226,16 +283,16 @@ else:
+             if 'prev_size' in locals().keys():
+                 threading.stack_size(prev_size)
+ 
+-        def put(self, obj):
++        def put(self, task):
+             """Put task into request queue."""
+-            self.requestQueue.put(obj)
++            self.requestQueue.put(task)
+ 
+-        def get(self, block = True):
++        def get(self):
+             """Remove and return a result tuple from the results queue."""
+-            return self.resultsQueue.get(block)
++            return self.resultsQueue.get()
+ 
+-        def preparation_failed(self, obj):
+-            self.resultsQueue.put((obj, False))
++        def preparation_failed(self, task):
++            self.resultsQueue.put((task, False))
+ 
+         def cleanup(self):
+             """
+@@ -308,23 +365,17 @@ else:
+                     task = self.taskmaster.next_task()
+                     if task is None:
+                         break
+-
+-                    # prepare task for execution
++                    jobs = jobs + 1
++                    
+                     try:
++                        # prepare task for execution
+                         task.prepare()
+-                    except KeyboardInterrupt:
+-                        raise
+                     except:
+-                        # Let the failed() callback function arrange
+-                        # for the build to stop if that's appropriate.
+                         task.exception_set()
+                         self.tp.preparation_failed(task)
+-                        jobs = jobs + 1
+-                        continue
+-
+-                    # dispatch task
+-                    self.tp.put(task)
+-                    jobs = jobs + 1
++                    else:
++                        # dispatch task
++                        self.tp.put(task)
+ 
+                 if not task and not jobs: break
+ 
+@@ -332,11 +383,20 @@ else:
+                 # back and put the next batch of tasks on the queue.
+                 while 1:
+                     task, ok = self.tp.get()
++                    jobs = jobs - 1
+ 
+-                    jobs = jobs - 1
+                     if ok:
+                         task.executed()
+                     else:
++                        if self.interrupted:
++                            try:
++                                raise SCons.Errors.BuildError(
++                                    task.targets[0], errstr=interrupt_msg)
++                            except:
++                                task.exception_set()
++
++                        # Let the failed() callback function arrange
++                        # for the build to stop if that's appropriate.
+                         task.failed()
+ 
+                     task.postprocess()
+@@ -344,5 +404,4 @@ else:
+                     if self.tp.resultsQueue.empty():
+                         break
+ 
+-        def cleanup(self):
+             self.tp.cleanup()
+diff -r b75cc8136f74 -r c2dd8ab1fe97 src/engine/SCons/Platform/posix.py
+--- a/src/engine/SCons/Platform/posix.py	Mon Feb 11 10:41:50 2008 -0500
++++ b/src/engine/SCons/Platform/posix.py	Mon Feb 11 19:59:59 2008 -0500
+@@ -32,6 +32,7 @@ selection method.
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
++import errno
+ import os
+ import os.path
+ import popen2
+@@ -109,21 +110,25 @@ def process_cmd_output(cmd_stdout, cmd_s
+ def process_cmd_output(cmd_stdout, cmd_stderr, stdout, stderr):
+     stdout_eof = stderr_eof = 0
+     while not (stdout_eof and stderr_eof):
+-        (i,o,e) = select.select([cmd_stdout, cmd_stderr], [], [])
+-        if cmd_stdout in i:
+-            str = cmd_stdout.read()
+-            if len(str) == 0:
+-                stdout_eof = 1
+-            elif stdout != None:
+-                stdout.write(str)
+-        if cmd_stderr in i:
+-            str = cmd_stderr.read()
+-            if len(str) == 0:
+-                #sys.__stderr__.write( "stderr_eof=1\n" )
+-                stderr_eof = 1
+-            else:
+-                #sys.__stderr__.write( "str(stderr) = %s\n" % str )
+-                stderr.write(str)
++        try:
++            (i,o,e) = select.select([cmd_stdout, cmd_stderr], [], [])
++            if cmd_stdout in i:
++                str = cmd_stdout.read()
++                if len(str) == 0:
++                    stdout_eof = 1
++                elif stdout != None:
++                    stdout.write(str)
++            if cmd_stderr in i:
++                str = cmd_stderr.read()
++                if len(str) == 0:
++                    #sys.__stderr__.write( "stderr_eof=1\n" )
++                    stderr_eof = 1
++                else:
++                    #sys.__stderr__.write( "str(stderr) = %s\n" % str )
++                    stderr.write(str)
++        except select.error, (_errno, _strerror):
++            if _errno != errno.EINTR:
++                raise            
+ 
+ def exec_popen3(l, env, stdout, stderr):
+     proc = popen2.Popen3(string.join(l), 1)
+diff -r b75cc8136f74 -r c2dd8ab1fe97 src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Mon Feb 11 10:41:50 2008 -0500
++++ b/src/engine/SCons/Script/Main.py	Mon Feb 11 19:59:59 2008 -0500
+@@ -207,10 +207,15 @@ class BuildTask(SCons.Taskmaster.Task):
+         t = self.targets[0]
+         if self.top and not t.has_builder() and not t.side_effect:
+             if not t.exists():
+-                sys.stderr.write("scons: *** Do not know how to make target `%s'." % t)
++                errstr="Do not know how to make target `%s'." % t
++                sys.stderr.write("scons: *** " + errstr)
+                 if not self.options.keep_going:
+                     sys.stderr.write("  Stop.")
+                 sys.stderr.write("\n")
++                try:
++                    raise SCons.Errors.BuildError(t, errstr)
++                except:
++                    self.exception_set()
+                 self.do_failed()
+             else:
+                 print "scons: Nothing to be done for `%s'." % t
+@@ -1148,26 +1153,24 @@ def _build_targets(fs, options, targets,
+ 
+     memory_stats.append('before building targets:')
+     count_stats.append(('pre-', 'build'))
++    
++    def jobs_postfunc():
++        if jobs.were_interrupted():
++            progress_display("scons: Build interrupted.")
++            global exit_status
++            exit_status = 2
+ 
+-    try:
+-        progress_display("scons: " + opening_message)
+-        try:
+-            jobs.run()
+-        except KeyboardInterrupt:
+-            # If we are in interactive mode, a KeyboardInterrupt
+-            # interrupts only this current run.  Return 'nodes' normally
+-            # so that the outer loop can clean up the nodes and continue.
+-            if options.interactive:
+-                print "Build interrupted."
+-                # Continue and return normally
+-    finally:
+-        jobs.cleanup()
+         if exit_status:
+             progress_display("scons: " + failure_message)
+         else:
+             progress_display("scons: " + closing_message)
+         if not options.no_exec:
++            if jobs.were_interrupted():
++                progress_display("scons: writing sconsing file.")
+             SCons.SConsign.write()
++
++    progress_display("scons: " + opening_message)
++    jobs.run(postfunc = jobs_postfunc)
+ 
+     memory_stats.append('after building targets:')
+     count_stats.append(('post-', 'build'))
+@@ -1240,7 +1243,7 @@ def main():
+         if s:
+             exit_status = s
+     except KeyboardInterrupt:
+-        print "Build interrupted."
++        print("scons: Build interrupted.")
+         sys.exit(2)
+     except SyntaxError, e:
+         _scons_syntax_error(e)
+diff -r b75cc8136f74 -r c2dd8ab1fe97 src/engine/SCons/Taskmaster.py
+--- a/src/engine/SCons/Taskmaster.py	Mon Feb 11 10:41:50 2008 -0500
++++ b/src/engine/SCons/Taskmaster.py	Mon Feb 11 19:59:59 2008 -0500
+@@ -192,8 +192,6 @@ class Task:
+                     break
+             if not everything_was_cached:
+                 self.targets[0].build()
+-        except KeyboardInterrupt:
+-            raise
+         except SystemExit:
+             exc_value = sys.exc_info()[1]
+             raise SCons.Errors.ExplicitExit(self.targets[0], exc_value.code)
+@@ -542,9 +540,6 @@ class Taskmaster:
+                 self.ready_exc = (SCons.Errors.ExplicitExit, e)
+                 if T: T.write(' SystemExit\n')
+                 return node
+-            except KeyboardInterrupt:
+-                if T: T.write(' KeyboardInterrupt\n')
+-                raise
+             except:
+                 # We had a problem just trying to figure out the
+                 # children (like a child couldn't be linked in to a
+@@ -671,8 +666,6 @@ class Taskmaster:
+         task = self.tasker(self, tlist, node in self.original_top, node)
+         try:
+             task.make_ready()
+-        except KeyboardInterrupt:
+-            raise
+         except:
+             # We had a problem just trying to get this task ready (like
+             # a child couldn't be linked in to a BuildDir when deciding
+diff -r b75cc8136f74 -r c2dd8ab1fe97 src/engine/SCons/Util.py
+--- a/src/engine/SCons/Util.py	Mon Feb 11 10:41:50 2008 -0500
++++ b/src/engine/SCons/Util.py	Mon Feb 11 19:59:59 2008 -0500
+@@ -220,7 +220,17 @@ class DisplayEngine:
+ 
+     def print_it(self, text, append_newline=1):
+         if append_newline: text = text + '\n'
+-        sys.stdout.write(text)
++        try:
++            sys.stdout.write(text)
++        except IOError:
++            # Stdout might be connected to a pipe that has been closed
++            # by now. The most likely reason for the pipe being closed
++            # is that the user has press ctrl-c. It this is the case,
++            # then SCons is currently shutdown. We therefore ignore
++            # IOError's here so that SCons can continue and shutdown
++            # properly so that the .sconsing is correctly written
++            # before SCons exits.
++            pass
+ 
+     def dont_print(self, text, append_newline=1):
+         pass
+@@ -1184,8 +1194,18 @@ class Unbuffered:
+     def __init__(self, file):
+         self.file = file
+     def write(self, arg):
+-        self.file.write(arg)
+-        self.file.flush()
++        try:
++            self.file.write(arg)
++            self.file.flush()
++        except IOError:
++            # Stdout might be connected to a pipe that has been closed
++            # by now. The most likely reason for the pipe being closed
++            # is that the user has press ctrl-c. It this is the case,
++            # then SCons is currently shutdown. We therefore ignore
++            # IOError's here so that SCons can continue and shutdown
++            # properly so that the .sconsing is correctly written
++            # before SCons exits.
++            pass
+     def __getattr__(self, attr):
+         return getattr(self.file, attr)
+ 
+diff -r b75cc8136f74 -r c2dd8ab1fe97 test/CtrlC.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/CtrlC.py	Mon Feb 11 19:59:59 2008 -0500
+@@ -0,0 +1,89 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import TestSCons
++import os
++
++test = TestSCons.TestSCons()
++
++if 'killpg' not in dir(os) or 'setpgrp' not in dir(os):
++    test.skip_test("This OS does not support killing process group.")
++
++test.write('toto.c', r"""
++void foo()
++{}
++""")
++
++test.write('SConstruct', r"""
++import os
++import signal
++
++# Make sure that SCons is a process group leader.
++os.setpgrp()
++
++all = []
++
++def explode(env, target, source):
++    os.killpg(0, signal.SIGINT)
++
++for i in xrange(40):
++    all += Object('toto%5d' % i, 'toto.c')
++
++all+= Command( 'broken', 'toto.c', explode)
++
++Default( Alias('all', all)) 
++"""
++)
++
++interruptedStr = """\
++.*\
++scons: Build interrupted\\.
++.*\
++scons: building terminated because of errors\\.
++.*\
++scons: writing sconsing file\\.
++.*\
++"""
++
++def runtest(arguments):
++    test.run(arguments='-c')
++    test.run(arguments=arguments, status=2, 
++             stdout=interruptedStr, stderr=r'.*', match=TestSCons.match_re_dotall)
++
++for i in range(2):
++    runtest('-j1')
++    runtest('-j4')
++    runtest('-j8')
++    runtest('-j16')
++    runtest('-j32')
++    runtest('-j64')
++
++    runtest('-j1 --random')
++    runtest('-j4 --random')
++    runtest('-j8 --random')
++    runtest('-j16 --random')
++    runtest('-j32 --random')
++    runtest('-j64 --random')
