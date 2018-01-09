@@ -1,0 +1,147 @@
+Index: src/engine/SCons/Conftest.py
+===================================================================
+--- src/engine/SCons/Conftest.py	(revision 2552)
++++ src/engine/SCons/Conftest.py	(working copy)
+@@ -415,6 +415,56 @@
+         else:
+             return 0
+ 
++def CheckDeclaration(context, symbol, includes = None, language = None):
++    """Checks whether symbol is declared.
++
++    Use the same test as autoconf, that is test whether the symbol is defined
++    as a macro or can be used as an r-value.
++
++    Arguments:
++        symbol : str
++            the symbol to check
++        includes : str
++            Optional "header" can be defined to include a header file.
++        language : str
++            only C and C++ supported.
++
++    Returns:
++        status : int
++            0 if the check failed, or the found size of the type if the
++            check succeeded."""
++    
++    # Include "confdefs.h" first, so that the header can use HAVE_HEADER_H.
++    if context.headerfilename:
++        includetext = '#include "%s"' % context.headerfilename
++    else:
++        includetext = ''
++
++    if not includes:
++        includes = ""
++
++    lang, suffix, msg = _lang2suffix(language)
++    if msg:
++        context.Display("Cannot check for declaration %s: %s\n" % (type_name, msg))
++        return msg
++
++    src = includetext + includes 
++    context.Display('Checking whether %s is declared... ' % symbol)
++
++    src = src + r"""
++int main()
++{
++#ifndef %s
++    (void) %s;
++#endif
++    ;
++    return 0;
++}
++""" % (symbol, symbol)
++
++    st = context.CompileProg(src, suffix)
++    _YesNoResult(context, st, "HAVE_DECL_" + symbol, src)
++
+ def CheckLib(context, libs, func_name = None, header = None,
+                  extra_libs = None, call = None, language = None, autoadd = 1):
+     """
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 2552)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -531,6 +531,25 @@
+         finally:
+             sconf.Finish()
+ 
++    def test_CheckDeclaration(self):
++        """Test SConf.CheckDeclaration()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            # In ANSI C, malloc should be available in stdlib
++            r = sconf.CheckDeclaration('malloc', includes = "#include <stdlib.h>")
++            assert r == 1, "malloc not declared ??"
++            # For C++, __cplusplus should be declared 
++            r = sconf.CheckDeclaration('__cplusplus', language = 'C++')
++            assert r == 1, "__cplusplus not declared in C++ ??"
++            r = sconf.CheckDeclaration('__cplusplus', language = 'C')
++            assert r == 0, "__cplusplus declared  in C ??"
++        finally:
++            sconf.Finish()
++
+     def test_(self):
+         """Test SConf.CheckType()
+         """
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 2552)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -404,6 +404,7 @@
+                  'CheckFunc'          : CheckFunc,
+                  'CheckType'          : CheckType,
+                  'CheckTypeSize'      : CheckTypeSize,
++                 'CheckDeclaration'   : CheckDeclaration,
+                  'CheckHeader'        : CheckHeader,
+                  'CheckCHeader'       : CheckCHeader,
+                  'CheckCXXHeader'     : CheckCXXHeader,
+@@ -855,6 +856,13 @@
+     context.did_show_result = 1
+     return res
+ 
++def CheckDeclaration(context, declaration, includes = "", language = None):
++    res = SCons.Conftest.CheckDeclaration(context, declaration,
++                                          includes = includes, 
++                                          language = language)
++    context.did_show_result = 1
++    return res
++
+ def createIncludesFromHeaders(headers, leaveLast, include_quotes = '""'):
+     # used by CheckHeader and CheckLibWithHeader to produce C - #include
+     # statements from the specified header (list)
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 2552)
++++ doc/man/scons.1	(working copy)
+@@ -6276,6 +6276,25 @@
+ .B "CheckTypeSize('short', expect = 2)"
+ will return success only if short is two bytes.
+ 
++.TP
++.RI Configure.CheckDeclaration( self ", " symbol ", [" includes ", " language ])
++Checks whether symbol is declared .
++.I symbol
++specifies the symbol to check for.
++.I includes
++is a string containing one or more
++.B #include
++lines that will be inserted into the program
++that will be run to test for the existence of the type.
++The optional
++.I language
++argument should be
++.B C
++or
++.B C++
++and selects the compiler to be used for the check;
++the default is "C".
++
+ .ES
+ .EE
+ 
