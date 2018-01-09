@@ -1,0 +1,6 @@
+import os
+env = Environment()
+
+env.DVI(target='output.dvi', source='test.tex')
+env.DVI('result.dvi', 'test.tex')
+env.PDF(target='out.pdf', source='test.tex')
