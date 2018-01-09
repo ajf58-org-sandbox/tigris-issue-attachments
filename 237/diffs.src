@@ -1,0 +1,347 @@
+Index: src/engine/SCons/Tool/sunc++.py
+===================================================================
+--- src/engine/SCons/Tool/sunc++.py	(revision 2487)
++++ src/engine/SCons/Tool/sunc++.py	(working copy)
+@@ -1,6 +1,7 @@
+ """SCons.Tool.sunc++
+ 
+-Tool-specific initialization for C++ on SunOS / Solaris.
++Tool-specific initialization for Sun Studio C++ compiler on Solaris 
++and Linux.
+ 
+ There normally shouldn't be any need to import this module directly.
+ It will usually be imported through the generic SCons.Tool.Tool()
+@@ -35,50 +36,73 @@
+ 
+ import SCons.Util
+ 
+-import os.path
++import os.path, re, sys
+ 
++import sunlink, sunar
+ cplusplus = __import__('c++', globals(), locals(), [])
+ 
+-# use the package installer tool lslpp to figure out where cppc and what
+-# version of it is installed
+-def get_cppc(env):
+-    cppcPath = env.get('CXX', None)
+-    cppcVersion = None
++def get_sun_cpp_version(cppcPath):
++    if cppcPath:
++        # Validate that it's really Sun C++ compiler
++        line = os.popen(cppcPath + ' -V 2>&1').readline()
++        match = re.search('Sun.+C\+\+', line)
++        if match:
++            # Find out compiler's version
++            match = re.search(r'[0-9]+(\.[0-9]+)', line)
++            if match:
++                return match.group(0)
++    return None
+ 
+-    pkginfo = env.subst('$PKGINFO')
+-    pkgchk = env.subst('$PKGCHK')
+ 
+-    for package in ['SPROcpl']:
+-        cmd = "%s -l %s 2>/dev/null | grep '^ *VERSION:'" % (pkginfo, package)
+-        line = os.popen(cmd).readline()
+-        if line:
+-            cppcVersion = line.split()[-1]
+-            cmd = "%s -l %s 2>/dev/null | grep '^Pathname:.*/bin/CC$' | grep -v '/SC[0-9]*\.[0-9]*/'" % (pkgchk, package)
+-            line = os.popen(cmd).readline()
+-            cppcPath = os.path.dirname(line.split()[-1])
+-            break
+-    return (cppcPath, 'CC', 'CC', cppcVersion)
++def get_sun_cpp_comp(env):
++    if sys.platform == "linux2":
++        cppcName = 'sunCC'
++        basedirs = ['/opt/sunstudio12', '/opt/sun/sunstudio12', '/opt/sun/sunstudiomars']
++    elif sys.platform == "sunos5":
++        cppcName = 'CC'
++        basedirs = ['/opt/SUNWspro', '/opt/12/SUNWspro']
++    else:
++        return (None, None)
+ 
++    # Look for compiler in the PATH
++    cppcPath = env.Detect([cppcName])
++    cppcVersion = get_sun_cpp_version(cppcPath)
++    if not cppcVersion:
++        # Look for compiler under the basedir if did not found
++        for basedir in basedirs:
++            cppcPath = os.path.join(basedir, 'bin', cppcName)
++            cppcVersion = get_sun_cpp_version(cppcPath)
++            if cppcVersion:
++                break
++        
++    return (cppcPath, cppcVersion)
++
+ def generate(env):
+-    """Add Builders and construction variables for SunPRO C++."""
+-    path, cxx, shcxx, version = get_cppc(env)
+-    if path:
+-        cxx = os.path.join(path, cxx)
+-        shcxx = os.path.join(path, shcxx)
++    """
++    Add Builders and construction variables for Sun Studio C compiler.
++    
++    Compiler search algorithm:
++        - look in $PATH in order to allow user to easily specify which compiler
++            to use; this will require PATH env var to be propagated to 
++            SCons script with ENV = {'PATH': os.environ['PATH']} magic;
++        - look in several default installation directories for this OS.
++   """
++    cxx, version = get_sun_cpp_comp(env)
+ 
+     cplusplus.generate(env)
+ 
+     env['CXX'] = cxx
+-    env['SHCXX'] = shcxx
++    env['SHCXX'] = cxx
+     env['CXXVERSION'] = version
+     env['SHCXXFLAGS']   = SCons.Util.CLVar('$CXXFLAGS -KPIC')
+     env['SHOBJPREFIX']  = 'so_'
+     env['SHOBJSUFFIX']  = '.o'
+-    
++
++    # Since we're using Sun C++ compiler to compile, we have to use the same compiler
++    # to link since Sun C++ ABI is not compatible with GNU
++    sunlink.generate(env)
++    sunar.generate(env)
++
+ def exists(env):
+-    path, cxx, shcxx, version = get_cppc(env)
+-    if path and cxx:
+-        cppc = os.path.join(path, cxx)
+-        if os.path.exists(cppc):
+-            return cppc
+-    return None
++    cxx, version = get_sun_cpp_comp(env)
++    return cxx is not None
+Index: src/engine/SCons/Tool/__init__.py
+===================================================================
+--- src/engine/SCons/Tool/__init__.py	(revision 2487)
++++ src/engine/SCons/Tool/__init__.py	(working copy)
+@@ -515,7 +515,7 @@
+         fortran_compilers = ['f95', 'f90', 'f77', 'g77', 'fortran']
+         ars = ['sgiar']
+     elif str(platform) == 'sunos':
+-        "prefer Forte tools on SunOS"
++        "prefer Sun Studio on SunOS"
+         linkers = ['sunlink', 'gnulink']
+         c_compilers = ['suncc', 'gcc', 'cc']
+         cxx_compilers = ['sunc++', 'g++', 'c++']
+Index: src/engine/SCons/Tool/sunar.py
+===================================================================
+--- src/engine/SCons/Tool/sunar.py	(revision 2487)
++++ src/engine/SCons/Tool/sunar.py	(working copy)
+@@ -1,6 +1,6 @@
+ """engine.SCons.Tool.sunar
+ 
+-Tool-specific initialization for Solaris (Forte) ar (library archive). If CC
++Tool-specific initialization for Solaris ar (library archive). If CC
+ exists, static libraries should be built with it, so that template
+ instantians can be resolved.
+ 
+@@ -37,19 +37,24 @@
+ import SCons.Defaults
+ import SCons.Tool
+ import SCons.Util
++import sys
+ 
++suncpp = __import__('sunc++', globals(), locals(), [])
++
+ def generate(env):
+     """Add Builders and construction variables for ar to an Environment."""
+     SCons.Tool.createStaticLibBuilder(env)
+     
+-    if env.Detect('CC'):
+-        env['AR']          = 'CC'
++    cxx, version = suncpp.get_sun_cpp_comp(env)
++    if cxx:
++        env['AR']          = cxx
+         env['ARFLAGS']     = SCons.Util.CLVar('-xar')
+         env['ARCOM']       = '$AR $ARFLAGS -o $TARGET $SOURCES'
+     else:
+         env['AR']          = 'ar'
+         env['ARFLAGS']     = SCons.Util.CLVar('r')
+         env['ARCOM']       = '$AR $ARFLAGS $TARGET $SOURCES'
++        
+ 
+     env['SHLINK']      = '$LINK'
+     env['SHLINKFLAGS'] = SCons.Util.CLVar('$LINKFLAGS -G')
+@@ -58,4 +63,4 @@
+     env['LIBSUFFIX']   = '.a'
+ 
+ def exists(env):
+-    return env.Detect('CC') or env.Detect('ar')
++    return suncpp.exists(env) or env.Detect('ar')
+Index: src/engine/SCons/Tool/suncc.py
+===================================================================
+--- src/engine/SCons/Tool/suncc.py	(revision 2487)
++++ src/engine/SCons/Tool/suncc.py	(working copy)
+@@ -1,6 +1,6 @@
+ """SCons.Tool.suncc
+ 
+-Tool-specific initialization for Sun Solaris (Forte) CC and cc.
++Tool-specific initialization for Sun Studio C compiler.
+ 
+ There normally shouldn't be any need to import this module directly.
+ It will usually be imported through the generic SCons.Tool.Tool()
+@@ -36,17 +36,69 @@
+ 
+ import cc
+ 
++import os, sys, re
++
++def get_sun_compiler_version(cccPath):
++    if cccPath:
++        # Validate that it's really Sun C compiler
++        line = os.popen(cccPath + ' -V 2>&1').readline()
++        match = re.search('Sun.+C ', line)
++        if match:
++            # Find out compiler's version
++            match = re.search(r'[0-9]+(\.[0-9]+)', line)
++            if match:
++                return match.group(0)
++    return None
++
++
++def get_sun_c_comp(env):
++    if sys.platform == "linux2":
++        cccName = 'suncc'
++        basedirs = ['/opt/sunstudio12', '/opt/sun/sunstudio12', '/opt/sun/sunstudiomars']
++    elif sys.platform == "sunos5":
++        cccName = 'cc'
++        basedirs = ['/opt/SUNWspro', '/opt/12/SUNWspro']
++    else:
++        return (None, None)
++
++    # Search $PATH first in order to allow easy overrides
++    cccPath = env.Detect([cccName])
++    cccVersion = get_sun_compiler_version(cccPath)
++    if not cccVersion:
++        # Look for compiler under the basedir if did not found
++        for basedir in basedirs:
++            cccPath = os.path.join(basedir, 'bin', cccName)
++            cccVersion = get_sun_compiler_version(cccPath)
++            if cccVersion:
++                break
++    
++    # It is also possible to ask package management system about compiler installation
++    # directory (at least, on Solaris), but this method doesn't allow to choose between 
++    # different versions of Sun Studio, which might co-exist on one machine. So we don't
++    # do that because it would pick up arbitrary version.
++    return (cccPath, cccVersion)
++
+ def generate(env):
+     """
+-    Add Builders and construction variables for Forte C and C++ compilers
+-    to an Environment.
+-    """
++    Add Builders and construction variables for Sun Studio C compiler.
++    
++    Compiler search algorithm:
++        - look in $PATH in order to allow user to easily specify which compiler
++            to use; this will require PATH env var to be propagated to 
++            SCons script with ENV = {'PATH': os.environ['PATH']} magic;
++        - look in several default installation directories for this OS.
++   """
++    ccc, version = get_sun_c_comp(env)
++
+     cc.generate(env)
+ 
+-    env['CXX']          = 'CC'
+-    env['SHCCFLAGS']    = SCons.Util.CLVar('$CCFLAGS -KPIC')
++    env['CC'] = ccc
++    env['SHCC'] = ccc
++    env['CCVERSION'] = version
++    env['SHCFLAGS']   = SCons.Util.CLVar('$CCFLAGS -KPIC')
+     env['SHOBJPREFIX']  = 'so_'
+     env['SHOBJSUFFIX']  = '.o'
+ 
+ def exists(env):
+-    return env.Detect('CC')
++    ccc, version = get_sun_c_comp(env)
++    return ccc is not None
+Index: src/engine/SCons/Tool/sunc++.xml
+===================================================================
+--- src/engine/SCons/Tool/sunc++.xml	(revision 2487)
++++ src/engine/SCons/Tool/sunc++.xml	(working copy)
+@@ -6,7 +6,7 @@
+ -->
+ <tool name="sunc++">
+ <summary>
+-Sets construction variables for the Sun C++ compiler.
++Sets construction variables for the Sun Studio C++ compiler.
+ </summary>
+ <sets>
+ CXX
+Index: src/engine/SCons/Tool/suncc.xml
+===================================================================
+--- src/engine/SCons/Tool/suncc.xml	(revision 2487)
++++ src/engine/SCons/Tool/suncc.xml	(working copy)
+@@ -6,10 +6,12 @@
+ -->
+ <tool name="suncc">
+ <summary>
+-Sets construction variables for the Sun C compiler.
++Sets construction variables for the Sun Studio C compiler.
+ </summary>
+ <sets>
+-CXX
++CC
++SHCC
++CCVERSION
+ SHCCFLAGS
+ SHOBJPREFIX
+ SHOBJSUFFIX
+Index: src/engine/SCons/Tool/sunlink.py
+===================================================================
+--- src/engine/SCons/Tool/sunlink.py	(revision 2487)
++++ src/engine/SCons/Tool/sunlink.py	(working copy)
+@@ -1,6 +1,6 @@
+ """SCons.Tool.sunlink
+ 
+-Tool-specific initialization for the Sun Solaris (Forte) linker.
++Tool-specific initialization for the Sun Studio linker.
+ 
+ There normally shouldn't be any need to import this module directly.
+ It will usually be imported through the generic SCons.Tool.Tool()
+@@ -38,26 +38,11 @@
+ import SCons.Util
+ 
+ import link
++import suncc
++suncpp = __import__('sunc++', globals(), locals(), [])
+ 
+-ccLinker = None
+-
+-# search for the acc compiler and linker front end
+-
+-try:
+-    dirs = os.listdir('/opt')
+-except (IOError, OSError):
+-    # Not being able to read the directory because it doesn't exist
+-    # (IOError) or isn't readable (OSError) is okay.
+-    dirs = []
+-
+-for d in dirs:
+-    linker = '/opt/' + d + '/bin/CC'
+-    if os.path.exists(linker):
+-        ccLinker = linker
+-        break
+-
+ def generate(env):
+-    """Add Builders and construction variables for Forte to an Environment."""
++    """Add Builders and construction variables for Sun Studio to an Environment."""
+     link.generate(env)
+     
+     env['SHLINKFLAGS'] = SCons.Util.CLVar('$LINKFLAGS -G')
+@@ -68,4 +53,7 @@
+     env['_RPATH'] = '${_concat(RPATHPREFIX, RPATH, RPATHSUFFIX, __env__)}'
+ 
+ def exists(env):
+-    return ccLinker
++    # Check if Sun Studio C or C++ compilers present. The order of checks
++    # doesn't seem to be important as link.py sets $LINK to $CC or $CXX
++    # depending on what we're building
++    return suncpp.exists(env) or suncc.exists(env)
