@@ -1,0 +1,39 @@
+Index: src/engine/SCons/Platform/win32.py
+===================================================================
+RCS file: /cvs/scons/src/engine/SCons/Platform/win32.py,v
+retrieving revision 1.30
+diff -u -r1.30 win32.py
+--- src/engine/SCons/Platform/win32.py	24 Oct 2004 14:29:53 -0000	1.30
++++ src/engine/SCons/Platform/win32.py	8 Apr 2005 20:32:08 -0000
+@@ -110,10 +110,14 @@
+             # purity get in the way of just being helpful, so we'll
+             # reach into SCons.Action directly.
+             if SCons.Action.print_actions:
+-                print("Using tempfile "+native_tmp+" for command line:\n"+
+-                      str(cmd[0]) + " " + string.join(args," "))
++                banner = self.strfunction(cmd, native_tmp, args)
++                if banner: print banner
+             return [ cmd[0], '@' + native_tmp + '\n' + rm, native_tmp ]
+ 
++    def strfunction(self, cmd, native_tmp, args):
++        return ("Using tempfile "+native_tmp+" for command line:\n"+
++            str(cmd[0]) + " " + string.join(args," "))
++
+ # The upshot of all this is that, if you are using Python 1.5.2,
+ # you had better have cmd or command.com in your PATH when you run
+ # scons.
+@@ -193,7 +197,13 @@
+ 
+ # Windows does not allow special characters in file names anyway, so
+ # no need for a complex escape function, we will just quote the arg.
+-escape = lambda x: '"' + x + '"'
++def escape(x):
++    # There is a special case with 'cmd /c' when if argument ends with
++    # a backslash it needs to be escaped so that not to interfere with
++    # closing double quote that we add here.
++    if x[-1] == '\\':
++        x += '\\'
++    return '"' + x + '"'
+ 
+ # Get the windows system directory name
+ def get_system_root():
