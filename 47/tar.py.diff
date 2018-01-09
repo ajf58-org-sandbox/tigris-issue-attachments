@@ -1,0 +1,55 @@
+--- /usr/lib/scons/SCons/Tool/tar.py.~1~	2005-09-26 21:33:24.000000000 +0200
++++ /usr/lib/scons/SCons/Tool/tar.py	2005-10-23 18:12:11.440306712 +0200
+@@ -39,24 +39,36 @@
+ 
+ tars = ['tar', 'gtar']
+ 
+-TarBuilder = SCons.Builder.Builder(action = '$TARCOM',
+-                                   source_factory = SCons.Node.FS.default_fs.Entry,
+-				   suffix = '$TARSUFFIX',
+-                                   multi = 1)
++def generator(source, target, env, for_signature):
++	if len(source) == 0:
++		return
++
++	base_cmd = [env['TAR'], env['TARFLAGS'], "-f", target]
++
++	ret = [base_cmd + ['-c'] + [source[0]]]
++
++	for s in source[1:]:
++		ret.append([base_cmd + ["-r"] + [s]])
++	return ret
++	
++TarBuilder = SCons.Builder.Builder(generator = generator,
++								   suffix = '$TARSUFFIX',
++								   source_factory = SCons.Node.FS.default_fs.Entry,
++								   multi = 1)
+ 
+ 
+ def generate(env):
+-    """Add Builders and construction variables for tar to an Environment."""
+-    try:
+-        bld = env['BUILDERS']['Tar']
+-    except KeyError:
+-        bld = TarBuilder
+-        env['BUILDERS']['Tar'] = bld
+-
+-    env['TAR']        = env.Detect(tars) or 'gtar'
+-    env['TARFLAGS']   = SCons.Util.CLVar('-c')
+-    env['TARCOM']     = '$TAR $TARFLAGS -f $TARGET $SOURCES'
+-    env['TARSUFFIX']  = '.tar'
++	"""Add Builders and construction variables for tar to an Environment."""
++	try:
++		bld = env['BUILDERS']['Tar']
++	except KeyError:
++		bld = TarBuilder
++		env['BUILDERS']['Tar'] = bld
++
++	env['TAR']		  = env.Detect(tars) or 'gtar'
++	env['TARFLAGS']	  = ""
++	env['TARCOM']	  = '$TAR $TARFLAGS -f $TARGET $SOURCES'
++	env['TARSUFFIX']  = '.tar'
+ 
+ def exists(env):
+-    return env.Detect(tars)
++	return env.Detect(tars)
