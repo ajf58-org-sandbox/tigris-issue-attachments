@@ -1,0 +1,11 @@
+Import('env')
+
+if ARGUMENTS['case']=='1':
+    tmp1=env.Cat('#build/lib/tmp1.txt','file1.txt')
+    tgt1=env.Cat('#build/lib/tgt1.txt','#build/lib/tmp1.txt')
+
+if ARGUMENTS['case']=='2':
+    tmp1=env.Cat('tmp1.txt','file1.txt')
+    tgt1=env.Cat('#build/lib/tgt1.txt','tmp1.txt')
+
+env.Alias('go','#build/lib')
