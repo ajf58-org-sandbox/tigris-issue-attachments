@@ -1,0 +1,136 @@
+diff --exclude='*.pyc' --exclude='*.pyo' -Naur SCons.patched/Scanner/LaTeX.py SCons/Scanner/LaTeX.py
+--- SCons.patched/Scanner/LaTeX.py	2008-05-01 00:00:50.000000000 +0930
++++ SCons/Scanner/LaTeX.py	2008-04-30 23:59:46.000000000 +0930
+@@ -49,14 +49,18 @@
+ 
+     Unlike most scanners, which use regular expressions that just
+     return the included file name, this returns a tuple consisting
+-    of the keyword for the inclusion ("include", "includegraphics",
++    of the keyword for the inclusion (such as "include", "includegraphics",
+     "input", or "bibliography"), and then the file name itself.  
+-    Based on a quick look at LaTeX documentation, it seems that we 
+-    should append .tex suffix for the "include" keywords, append .tex if
+-    there is no extension for the "input" keyword, and need to add .bib
+-    for the "bibliography" keyword that does not accept extensions by itself.
++    Based on a quick look at LaTeX documentation, it seems that we:
++      - should append .tex suffix for the "include" keyword,
++      - append .tex if there is no extension for the "input" keyword,
++      - add .bib for the "bibliography" keyword,
++      - add .bst for the "bibliographystyle" keyword,
++      - add .sty for the "usepackage" and "documentstyle" keywords,
++      - and add .cls for the "documentclass" keyword.
++    All the keywords above but "input" do not accept extensions by themselves.
+ 
+-    Finally, if there is no extension for an "includegraphics" keyword
++    Finally, if there is no extension for the "includegraphics" keyword,
+     latex will append .ps or .eps to find the file, while pdftex may use .pdf,
+     .jpg, .tif, .mps, or .png.
+     
+@@ -72,26 +76,42 @@
+ 
+     Another difference is that the search path is determined by the type
+     of the file being searched:
+-    env['TEXINPUTS'] for "input" and "include" keywords
+-    env['TEXPICTS'] for "includegraphics" keyword
+-    env['BIBINPUTS'] for "bibliography" keyword
+-    env['BSTINPUTS'] for "bibliographystyle" keyword
+-
+-    FIXME: also look for the class or style in document[class|style]{}
+-    FIXME: also look for the argument of bibliographystyle{}
++      - env['TEXINPUTS'] for "input", "include", and "document(style|class)"
++        keywords,
++      - env['TEXPICTS'] for "includegraphics" keyword,
++      - env['BIBINPUTS'] for "bibliography" keyword,
++      - env['BSTINPUTS'] for "bibliographystyle" keyword.
+     """
+-    keyword_paths = {'include': 'TEXINPUTS',
+-                     'input': 'TEXINPUTS',
+-                     'includegraphics': 'TEXPICTS',
+-                     'bibliography': 'BIBINPUTS',
+-                     'bibliographystyle': 'BSTINPUTS',
+-                     'usepackage': 'TEXINPUTS'}
++    keyword_paths = {'include':  'TEXINPUTS',
++                     'input':  'TEXINPUTS',
++                     'includegraphics':  'TEXPICTS',
++                     'bibliography':  'BIBINPUTS',
++                     'bibliographystyle':  'BSTINPUTS',
++                     'usepackage':  'TEXINPUTS',
++                     'documentstyle':  'TEXINPUTS',
++                     'documentclass':  'TEXINPUTS'}
+     env_variables = SCons.Util.unique(keyword_paths.values())
+ 
+     def __init__(self, name, suffixes, graphics_extensions, *args, **kw):
+ 
+-        regex = '\\\\(include|includegraphics(?:\[[^\]]+\])?|input|bibliography|usepackage){([^}]*)}'
+-        self.cre = re.compile(regex, re.M)
++        regex = '''
++            \\\\            ## backslash
++                            ## document class, style, or various included files
++            (               ## start group
++              documentclass(?:\[[^\]]+\])?|      ## LaTeX3/2e
++              documentstyle(?:\[[^\]]+\])?|      ## LaTeX 2.09
++              include|
++              includegraphics(?:\[[^\]]+\])?|    ## can have options in []
++              input|
++              bibliography|
++              bibliographystyle|
++              usepackage(?:\[[^\]]+\])?          ## also can have options
++            )               ## group of included files ends
++            {([^}]*)}       ## finally, the name(s) in {}
++            '''
++        self.include_re = re.compile(regex, re.M | re.VERBOSE)
++        comments = '''%[^\r\n]+$'''         # end-of-line comments
++        self.comment_re = re.compile(comments, re.M | re.VERBOSE)
+         self.graphics_extensions = graphics_extensions
+ 
+         def _scan(node, env, path=(), self=self):
+@@ -151,16 +171,18 @@
+             base, ext = os.path.splitext( filename )
+             if ext == "":
+                 return [filename + '.tex']
+-        if (include[0] == 'include'):
++        if include[0] == 'include':
+             return [filename + '.tex']
+         if include[0] == 'bibliography':
+-            base, ext = os.path.splitext( filename )
+-            if ext == "":
+-                return [filename + '.bib']
++            return [filename + '.bib']
++        if include[0] == 'bibliographystyle':
++            return [filename + '.bst']
++        if include[0] == 'documentstyle':
++            return [filename + '.sty']
++        if include[0] == 'documentclass':
++            return [filename + '.cls']
+         if include[0] == 'usepackage':
+-            base, ext = os.path.splitext( filename )
+-            if ext == "":
+-                return [filename + '.sty']
++            return [filename + '.sty']
+         if include[0] == 'includegraphics':
+             base, ext = os.path.splitext( filename )
+             if ext == "":
+@@ -193,7 +215,8 @@
+         if node.includes != None:
+             includes = node.includes
+         else:
+-            includes = self.cre.findall(node.get_contents())
++            contents = self.comment_re.sub('', node.get_contents())
++            includes = self.include_re.findall(contents)
+             # 1. Split comma-separated lines, e.g.
+             #      ('bibliography', 'phys,comp')
+             #    should become two entries
+@@ -228,9 +251,10 @@
+             #
+             n, i = self.find_include(include, source_dir, path_dict)
+             if n is None:
+-                # Do not bother with 'usepackage' warnings, as they most
+-                # likely refer to system-level files
+-                if include[0] != 'usepackage':
++                # Do not bother with 'usepackage', 'document[class|style]',
++                # and 'bibliographystyle' warnings, as they most likely refer
++                # to system-level files
++                if include[0] not in ['usepackage', 'documentclass', 'documentstyle', 'bibliographystyle']:
+                     SCons.Warnings.warn(SCons.Warnings.DependencyWarning,
+                                         "No dependency generated for file: %s (included from: %s) -- file not found" % (i, node))
+             else:
