@@ -1,0 +1,186 @@
+Index: src/engine/SCons/Scanner/LaTeX.py
+===================================================================
+--- src/engine/SCons/Scanner/LaTeX.py	(revision 2365)
++++ src/engine/SCons/Scanner/LaTeX.py	(working copy)
+@@ -56,7 +56,7 @@
+     but leave the file name untouched for "includegraphics." For
+     the "bibliography" keyword we need to add .bib if there is
+     no extension. (This need to be revisited since if there
+-    is no extension for an :includegraphics" keyword latex will 
++    is no extension for an "includegraphics" keyword latex will 
+     append .ps or .eps to find the file; while pdftex will use 
+     other extensions.)
+     """
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 2365)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -75,26 +75,63 @@
+ 
+     basename = SCons.Util.splitext(str(source[0]))[0]
+     basedir = os.path.split(str(source[0]))[0]
++    basefile = os.path.split(str(basename))[1]
++    abspath = os.path.abspath(basedir)
++    targetbase = SCons.Util.splitext(str(target[0]))[0]
++    targetdir = os.path.split(str(target[0]))[0]
+ 
+-    # Notice that all the filenames are not prefixed with the basedir.
++#
++# Not sure if these environment changes should go here or make the user do them
++# I undo all but TEXPICTS but there is still the side effect of creating the 
++# empty (':') entries in the enviroment.
++#
++    try:
++        texinputs_save = env['ENV']['TEXINPUTS']
++    except KeyError:
++        texinputs_save = ':'
++        env['ENV']['TEXINPUTS']=''
++    env['ENV']['TEXINPUTS']=abspath + os.path.pathsep + env['ENV']['TEXINPUTS']
++
++    try:
++        bibinputs_save = env['ENV']['BIBINPUTS']
++    except KeyError:
++        bibinputs_save = ':'
++        env['ENV']['BIBINPUTS']=''
++    env['ENV']['BIBINPUTS']=abspath + os.path.pathsep + env['ENV']['BIBINPUTS']
++
++    try:
++        bstinputs_save = env['ENV']['BSTINPUTS']
++    except KeyError:
++        bstinputs_save = ':'
++        env['ENV']['BSTINPUTS']=''
++    env['ENV']['BSTINPUTS']=abspath + os.path.pathsep + env['ENV']['BSTINPUTS']
++
++    try:
++        texpicts_save = env['ENV']['TEXPICTS']
++    except KeyError:
++        texpicts_save = ':'
++        env['ENV']['TEXPICTS']=''
++    env['ENV']['TEXPICTS']=abspath + os.path.pathsep + env['ENV']['TEXPICTS']
++
++    # Create these file names with the target directory since they will be made there
+     # That's because the *COM variables have the cd command in the prolog.
+ 
+-    bblfilename = basename + '.bbl'
++    bblfilename = os.path.join(targetdir,basefile + '.bbl')
+     bblContents = ""
+     if os.path.exists(bblfilename):
+         bblContents = open(bblfilename, "rb").read()
+ 
+-    idxfilename = basename + '.idx'
++    idxfilename = os.path.join(targetdir,basefile + '.idx')
+     idxContents = ""
+     if os.path.exists(idxfilename):
+         idxContents = open(idxfilename, "rb").read()
+ 
+-    tocfilename = basename + '.toc'
++    tocfilename = os.path.join(targetdir,basefile + '.toc')
+     tocContents = ""
+     if os.path.exists(tocfilename):
+         tocContents = open(tocfilename, "rb").read()
+ 
+-    # Run LaTeX once to generate a new aux file.
++    # Run LaTeX once to generate a new aux file and log file.
+     XXXLaTeXAction(target, source, env)
+ 
+     # Decide if various things need to be run, or run again.  We check
+@@ -103,7 +140,7 @@
+     # with stubs that don't necessarily generate all of the same files.
+ 
+     # Read the log file to find all .aux files
+-    logfilename = basename + '.log'
++    logfilename = os.path.join(targetbase + '.log')
+     auxfiles = []
+     if os.path.exists(logfilename):
+         content = open(logfilename, "rb").read()
+@@ -111,10 +148,10 @@
+ 
+     # Now decide if bibtex will need to be run.
+     for auxfilename in auxfiles:
+-        if os.path.exists(os.path.join(basedir, auxfilename)):
+-            content = open(os.path.join(basedir, auxfilename), "rb").read()
++        if os.path.exists(os.path.join(targetdir, auxfilename)):
++            content = open(os.path.join(targetdir, auxfilename), "rb").read()
+             if string.find(content, "bibdata") != -1:
+-                bibfile = env.fs.File(basename)
++                bibfile = env.fs.File(targetbase)
+                 BibTeXAction(bibfile, bibfile, env)
+                 break
+ 
+@@ -130,7 +167,7 @@
+     # Now decide if latex will need to be run again due to index.
+     if os.path.exists(idxfilename) and idxContents != open(idxfilename, "rb").read():
+         # We must run makeindex
+-        idxfile = env.fs.File(basename)
++        idxfile = env.fs.File(targetbase)
+         MakeIndexAction(idxfile, idxfile, env)
+         must_rerun_latex = 1
+ 
+@@ -138,7 +175,7 @@
+         XXXLaTeXAction(target, source, env)
+ 
+     # Now decide if latex needs to be run yet again to resolve warnings.
+-    logfilename = basename + '.log'
++    logfilename = targetbase + '.log'
+     for _ in range(int(env.subst('$LATEXRETRIES'))):
+         if not os.path.exists(logfilename):
+             break
+@@ -148,6 +185,14 @@
+            not undefined_references_re.search(content):
+             break
+         XXXLaTeXAction(target, source, env)
++    env['ENV']['TEXINPUTS'] = texinputs_save
++    env['ENV']['BIBINPUTS'] = bibinputs_save
++    env['ENV']['BSTINPUTS'] = bibinputs_save
++#
++#   the TEXPICTS enviroment variable is needed by a dvi -> pdf step later on Mac OSX
++#   so leave it, 
++#
++#    env['ENV']['TEXPICTS']  = texpicts_save
+     return 0
+ 
+ def LaTeXAuxAction(target = None, source= None, env=None):
+@@ -175,27 +220,29 @@
+ 
+ def tex_emitter(target, source, env):
+     base = SCons.Util.splitext(str(source[0]))[0]
+-    target.append(base + '.aux')
+-    env.Precious(base + '.aux')
+-    target.append(base + '.log')
++    targetbase = SCons.Util.splitext(str(target[0]))[0]
++
++    target.append(targetbase + '.aux')
++    env.Precious(targetbase + '.aux')
++    target.append(targetbase + '.log')
+     for f in source:
+         content = f.get_contents()
+         if tableofcontents_re.search(content):
+-            target.append(base + '.toc')
+-            env.Precious(base + '.toc')
++            target.append(targetbase + '.toc')
++            env.Precious(targetbase + '.toc')
+         if makeindex_re.search(content):
+-            target.append(base + '.ilg')
+-            target.append(base + '.ind')
+-            target.append(base + '.idx')
+-            env.Precious(base + '.idx')
++            target.append(targetbase + '.ilg')
++            target.append(targetbase + '.ind')
++            target.append(targetbase + '.idx')
++            env.Precious(targetbase + '.idx')
+         if bibliography_re.search(content):
+-            target.append(base + '.bbl')
+-            env.Precious(base + '.bbl')
+-            target.append(base + '.blg')
++            target.append(targetbase + '.bbl')
++            env.Precious(targetbase + '.bbl')
++            target.append(targetbase + '.blg')
+ 
+     # read log file to get all .aux files
+-    logfilename = base + '.log'
+-    dir, base_nodir = os.path.split(base)
++    logfilename = targetbase + '.log'
++    dir, base_nodir = os.path.split(targetbase)
+     if os.path.exists(logfilename):
+         content = open(logfilename, "rb").read()
+         aux_files = openout_aux_re.findall(content)
