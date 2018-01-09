@@ -1,0 +1,983 @@
+diff -Nacr scons-src-0.96.96-orig/QMTest/TestCmd.py scons-src-0.96.96-persistent/QMTest/TestCmd.py
+*** scons-src-0.96.96-orig/QMTest/TestCmd.py	2007-04-12 12:25:28.000000000 -0700
+--- scons-src-0.96.96-persistent/QMTest/TestCmd.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 193,198 ****
+--- 193,206 ----
+  import types
+  import UserList
+  
++ try:
++     import pexpect
++ except ImportError:
++     # pexpect isn't available.
++     # This is fine, however TestCmd.start() won't work.
++     # Tests that need it should call no_result() when pexpect is not available
++     pass
++ 
+  __all__ = [
+      'diff_re',
+      'fail_test',
+***************
+*** 681,686 ****
+--- 689,735 ----
+              raise ValueError, "mode must begin with 'r'"
+          return open(file, mode).read()
+  
++     def start(self, program = None,
++                   interpreter = None,
++                   arguments = None,
++                   chdir = None):
++         """Starts the program in a pexpect session."""
++         if chdir:
++             oldcwd = os.getcwd()
++             if not os.path.isabs(chdir):
++                 chdir = os.path.join(self.workpath(chdir))
++             if self.verbose:
++                 sys.stderr.write("chdir(" + chdir + ")\n")
++             os.chdir(chdir)
++         if program:
++             if type(program) == type('') and not os.path.isabs(program):
++                 program = os.path.join(self._cwd, program)
++         else:
++             program = self.program
++             if not interpreter:
++                 interpreter = self.interpreter
++         if not type(program) in [type([]), type(())]:
++             program = [program]
++         cmd = list(program)
++         if interpreter:
++             if not type(interpreter) in [type([]), type(())]:
++                 interpreter = [interpreter]
++             cmd = list(interpreter) + cmd
++         if arguments:
++             if type(arguments) == type(''):
++                 arguments = string.split(arguments)
++             cmd.extend(arguments)
++         cmd_string = string.join(map(self.escape, cmd), ' ')
++         if self.verbose:
++             sys.stderr.write(cmd_string + "\n")
++ 
++         pexpect_session = pexpect.spawn(cmd_string)
++ 
++         if chdir:
++             os.chdir(oldcwd)
++ 
++         return pexpect_session
++ 
+      def run(self, program = None,
+                    interpreter = None,
+                    arguments = None,
+diff -Nacr scons-src-0.96.96-orig/QMTest/TestCommon.py scons-src-0.96.96-persistent/QMTest/TestCommon.py
+*** scons-src-0.96.96-orig/QMTest/TestCommon.py	2007-04-12 12:25:28.000000000 -0700
+--- scons-src-0.96.96-persistent/QMTest/TestCommon.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 427,429 ****
+--- 427,447 ----
+              print self.stdout()
+              self.diff(stderr, self.stderr(), 'STDERR ')
+              raise TestFailed
++ 
++     def start(self, options = None, arguments = None, **kw):
++         """Start the program in a pexpect session.
++ 
++         The arguments are the same as the base TestCmd.start() method,
++         with the addition of:
++ 
++                 options Extra options that get appended to the beginning
++                         of the arguments.
++         """
++         if options:
++             if arguments is None:
++                 arguments = options
++             else:
++                 arguments = options + " " + arguments
++         kw['arguments'] = arguments
++ 
++         return apply(TestCmd.start, [self], kw)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Job.py scons-src-0.96.96-persistent/src/engine/SCons/Job.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Job.py	2007-04-12 12:25:39.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Job.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 76,81 ****
+--- 76,84 ----
+              signal.signal(signal.SIGINT, signal.SIG_IGN)
+              raise
+  
++     def cleanup(self):
++         self.job.cleanup()
++ 
+  class Serial:
+      """This class is used to execute tasks in series, and is more efficient
+      than Parallel, but is only appropriate for non-parallel builds. Only
+***************
+*** 122,127 ****
+--- 125,133 ----
+  
+              task.postprocess()
+  
++     def cleanup(self):
++         pass
++ 
+  
+  # Trap import failure so that everything in the Job module but the
+  # Parallel class (and its dependent classes) will work if the interpreter
+***************
+*** 148,153 ****
+--- 154,165 ----
+              while 1:
+                  task = self.requestQueue.get()
+  
++                 if task is None:
++                     # The "None" value is used as a sentinal by
++                     # ThreadPool.cleanup().  This indicates that there are no
++                     # more tasks, so we should quit.
++                     return
++ 
+                  try:
+                      task.execute()
+                  except KeyboardInterrupt:
+***************
+*** 170,177 ****
+              self.resultsQueue = Queue.Queue(0)
+  
+              # Create worker threads
+              for _ in range(num):
+!                 Worker(self.requestQueue, self.resultsQueue)
+  
+          def put(self, obj):
+              """Put task into request queue."""
+--- 182,191 ----
+              self.resultsQueue = Queue.Queue(0)
+  
+              # Create worker threads
++             self.workers = []
+              for _ in range(num):
+!                 worker = Worker(self.requestQueue, self.resultsQueue)
+!                 self.workers.append(worker)
+  
+          def put(self, obj):
+              """Put task into request queue."""
+***************
+*** 182,188 ****
+              return self.resultsQueue.get(block)
+  
+          def preparation_failed(self, obj):
+!             self.resultsQueue.put((obj, 0))
+  
+      class Parallel:
+          """This class is used to execute tasks in parallel, and is somewhat 
+--- 196,220 ----
+              return self.resultsQueue.get(block)
+  
+          def preparation_failed(self, obj):
+!             self.resultsQueue.put((obj, False))
+! 
+!         def cleanup(self):
+!             # Put a sentinal on the requestQueue for each worker
+!             # Each worker thread will exit when it sees "None" on the queue
+!             for _ in self.workers:
+!                 self.requestQueue.put(None)
+! 
+!             # Wait for all of the workers to exit
+!             #
+!             # If we don't do this, Python 2.4 seems to often raise an exception
+!             # during shutdown.  I believe it is caused by the main thread
+!             # shutting down while the children workers are still trying to pull
+!             # the sentinels off of the requestQueue.  (The exception happens in
+!             # requestQueue.get().  It is an assertion failure that
+!             # requestQueue.not_full is notified while not aquired.)
+!             for worker in self.workers:
+!                 worker.join()
+!             self.workers = []
+  
+      class Parallel:
+          """This class is used to execute tasks in parallel, and is somewhat 
+***************
+*** 261,263 ****
+--- 293,298 ----
+  
+                      if self.tp.resultsQueue.empty():
+                          break
++ 
++         def cleanup(self):
++             self.tp.cleanup()
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/aix.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/aix.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/aix.py	2007-04-12 12:25:45.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/aix.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 63,65 ****
+--- 63,67 ----
+      #Based on AIX 5.2: ARG_MAX=24576 - 3000 for environment expansion
+      env['MAXLINELENGTH']  = 21576
+  
++ def getkey(echo):
++     return posix.getkey(echo)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/cygwin.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/cygwin.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/cygwin.py	2007-04-12 12:25:26.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/cygwin.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 47,49 ****
+--- 47,52 ----
+      env['TEMPFILE']    = TempFileMunge
+      env['TEMPFILEPREFIX'] = '@'
+      env['MAXLINELENGTH']  = 2048
++ 
++ def getkey(echo):
++     return posix.getkey(echo)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/darwin.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/darwin.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/darwin.py	2007-04-12 12:25:34.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/darwin.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 38,40 ****
+--- 38,43 ----
+      posix.generate(env)
+      env['SHLIBSUFFIX'] = '.dylib'
+      env['ENV']['PATH'] = env['ENV']['PATH'] + ':/sw/bin'
++ 
++ def getkey(echo):
++     return posix.getkey(echo)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/hpux.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/hpux.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/hpux.py	2007-04-12 12:25:24.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/hpux.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 38,40 ****
+--- 38,43 ----
+      posix.generate(env)
+      #Based on HP-UX11i: ARG_MAX=2048000 - 3000 for environment expansion
+      env['MAXLINELENGTH']  = 2045000
++ 
++ def getkey(echo):
++     return posix.getkey(echo)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/irix.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/irix.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/irix.py	2007-04-12 12:25:33.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/irix.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 36,38 ****
+--- 36,41 ----
+  
+  def generate(env):
+      posix.generate(env)
++ 
++ def getkey(echo):
++     return posix.getkey(echo)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/os2.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/os2.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/os2.py	2007-04-12 12:25:35.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/os2.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 47,49 ****
+--- 47,55 ----
+      env['SHLIBSUFFIX']    = '.dll'
+      env['LIBPREFIXES']    = '$LIBPREFIX'
+      env['LIBSUFFIXES']    = [ '$LIBSUFFIX', '$SHLIBSUFFIX' ]
++ 
++ def getkey(echo):
++     # FIXME: I don't have access to an OS/2 system, so this is just a quick
++     # hack.  On posix terminals, this method requires the user to press enter
++     # before reading any input.
++     return sys.stdin.read(1)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/posix.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/posix.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/posix.py	2007-04-12 12:25:37.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/posix.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 38,43 ****
+--- 38,44 ----
+  import string
+  import sys
+  import select
++ import termios
+  
+  import SCons.Util
+  from SCons.Platform import TempFileMunge
+***************
+*** 249,251 ****
+--- 250,294 ----
+  
+      # This platform supports RPATH specifications.
+      env['__RPATH'] = '$_RPATH'
++ 
++ def getkey(echo):
++     """Get a single keypress from the user."""
++     # Set some constants.  In older versions of python, these are defined in
++     # the TERMIOS module.  In newer versions, these are in the termios module,
++     # and TERMIOS is deprecated, and causes a warning if we even try to import
++     # it.  Thus, we try termios first, and fallback to TERMIOS if that fails.
++     try:
++         TERMIOS_ICANON = termios.ICANON
++         TERMIOS_ECHO = termios.ECHO
++         TERMIOS_TCSANOW = termios.TCSANOW
++         TERMIOS_TCSAFLUSH = termios.TCSAFLUSH
++         TERMIOS_VMIN = termios.VMIN
++         TERMIOS_VTIME = termios.VTIME
++     except AttributeError:
++         import TERMIOS
++         TERMIOS_ICANON = TERMIOS.ICANON
++         TERMIOS_ECHO = TERMIOS.ECHO
++         TERMIOS_TCSANOW = TERMIOS.TCSANOW
++         TERMIOS_TCSAFLUSH = TERMIOS.TCSAFLUSH
++         TERMIOS_VMIN = TERMIOS.VMIN
++         TERMIOS_VTIME = TERMIOS.VTIME
++ 
++     # Set stdin to raw mode
++     stdin_fd = sys.stdin.fileno()
++     old_termattrs = termios.tcgetattr(stdin_fd)
++     new_termattrs = termios.tcgetattr(stdin_fd)
++     new_termattrs[3] = new_termattrs[3] & ~TERMIOS_ICANON
++     if echo:
++         new_termattrs[3] = new_termattrs[3] | TERMIOS_ECHO
++     else:
++         new_termattrs[3] = new_termattrs[3] & ~TERMIOS_ECHO
++     new_termattrs[6][TERMIOS_VMIN] = 1
++     new_termattrs[6][TERMIOS_VTIME] = 0
++     termios.tcsetattr(stdin_fd, TERMIOS_TCSANOW, new_termattrs)
++ 
++     # Read a character
++     c = os.read(stdin_fd, 1)
++ 
++     # Return the terminal to its original state
++     termios.tcsetattr(stdin_fd, TERMIOS_TCSAFLUSH, old_termattrs)
++     return c
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/sunos.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/sunos.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/sunos.py	2007-04-12 12:25:38.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/sunos.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 42,44 ****
+--- 42,47 ----
+      env['PKGINFO'] = 'pkginfo'
+      env['PKGCHK'] = '/usr/sbin/pkgchk'
+      env['ENV']['PATH'] = env['ENV']['PATH'] + ':/usr/ccs/bin'
++ 
++ def getkey(echo):
++     return posix.getkey(echo)
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Platform/win32.py scons-src-0.96.96-persistent/src/engine/SCons/Platform/win32.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Platform/win32.py	2007-04-12 12:25:39.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Platform/win32.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 32,37 ****
+--- 32,46 ----
+  
+  __revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Platform/win32.py 0.96.96.D001 2007/04/12 14:12:18 knight"
+  
++ try:
++     import msvcrt
++ except ImportError:
++     # XXX: win32.py is imported by Tool/msvs.py even on non-win32 systems.
++     # Trying to import msvcrt on non-win32 systems fails, so we just ignore the
++     # error.  The code should only ever try to use msvcrt functions on
++     # actual win32 systems.
++     pass
++ 
+  import os
+  import os.path
+  import string
+***************
+*** 282,284 ****
+--- 291,300 ----
+      env['TEMPFILEPREFIX'] = '@'
+      env['MAXLINELENGTH']  = 2048
+      env['ESCAPE']         = escape
++ 
++ def getkey(echo):
++     """Get a single keypress from the user."""
++     if echo:
++         return msvcrt.getche()
++     else:
++         return msvcrt.getch()
+diff -Nacr scons-src-0.96.96-orig/src/engine/SCons/Script/Main.py scons-src-0.96.96-persistent/src/engine/SCons/Script/Main.py
+*** scons-src-0.96.96-orig/src/engine/SCons/Script/Main.py	2007-04-12 12:25:29.000000000 -0700
+--- scons-src-0.96.96-persistent/src/engine/SCons/Script/Main.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 63,68 ****
+--- 63,69 ----
+  import SCons.Node
+  import SCons.Node.FS
+  from SCons.Optik import OptionParser, SUPPRESS_HELP, OptionValueError
++ import SCons.Platform
+  import SCons.SConf
+  import SCons.Script
+  import SCons.Sig
+***************
+*** 838,843 ****
+--- 839,847 ----
+                          dest='no_site_dir', default=0,
+                          help="Don't search or use the usual site_scons dir.")
+  
++         self.add_option('-P', '--persistent', action="store_true",
++                         default=0, help="Run in persistent mode.")
++ 
+          self.add_option('--profile', action="store",
+                          dest="profile_file", metavar="FILE",
+                          help="Profile SCons and put results in FILE.")
+***************
+*** 1117,1122 ****
+--- 1121,1131 ----
+          if sfile:
+              scripts.append(sfile)
+  
++     if options.persistent:
++         if not sys.stdin.isatty():
++             raise SCons.Errors.UserError, \
++                     "Persistent mode requested, but stdin is not a TTY"
++ 
+      if not scripts:
+          if options.help_msg:
+              # There's no SConstruct, but they specified -h.
+***************
+*** 1243,1248 ****
+--- 1252,1375 ----
+      SCons.Node.FS.set_duplicate(ssoptions.get('duplicate'))
+      fs.set_max_drift(ssoptions.get('max_drift'))
+  
++     platform = SCons.Platform.platform_module()
++     while 1:
++         if options.persistent:
++             progress_display("SCons interactive menu.  Press a key:")
++             progress_display("    b    Build")
++             progress_display("    t    Change targets")
++             progress_display("    T    Change targets, then build")
++             progress_display("    q    Quit")
++             keypress = platform.getkey(echo=0)
++             if keypress == 'q' or keypress == 'Q':
++                 break
++             elif keypress == 't' or keypress == 'T':
++                 progress_display("Old targets are: " + str(targets))
++                 progress_display("Enter the new targets, one per line.  " \
++                                     "End with an empty line.")
++                 new_targets = []
++                 while 1:
++                     # XXX: Pathname completion would be very nice to have
++                     target = sys.stdin.readline()
++                     linelen = len(target)
++                     # Strip a trailing newline, if present
++                     if linelen > 0 and target[linelen - 1] == '\n':
++                         linelen = linelen - 1
++                         target = target[:linelen]
++                     if linelen == 0:
++                         break
++                     new_targets.append(target)
++                 if not new_targets:
++                     progress_display("No targets specified.")
++                     progress_display("Targets unchanged: " + str(targets))
++                 else:
++                     targets = new_targets
++                     SCons.Script.COMMAND_LINE_TARGETS = new_targets[:]
++                     SCons.Script.BUILD_TARGETS = new_targets[:]
++ 
++                     progress_display("Targets changed to: " +
++                                         str(SCons.Script.BUILD_TARGETS))
++                     if keypress == 't':
++                         progress_display("Press 'b' to build new targets")
++                 if keypress == 't':
++                     continue
++             elif not keypress == 'b' or keypress == 'B':
++                 progress_display("Invalid option: '%s'" % (keypress,))
++                 continue
++ 
++             # Reset the exit status to 0
++             exit_status = 0
++ 
++         # Build the targets
++         nodes = _build_targets(fs, targets, target_top)
++ 
++         if options.persistent:
++             # Clean up so that we can perform the next build correctly
++             #
++             # We do this by walking over all the children of the targets, and
++             # clearing their state.
++             #
++             # We currently have to re-scan each node to find their children,
++             # because built nodes have already been partially cleared and don't
++             # remember their children.  (In scons 0.96.1 and earlier, this
++             # wasn't the case, and we didn't have to re-scan the nodes.)
++             #
++             # Because we have to re-scan each node, we can't clear the nodes as
++             # we walk over them, because we may end up rescanning a cleared
++             # node as we scan a later node.  Therefore, only store the list of
++             # nodes that need to be cleared as we walk the tree, and clear them
++             # in a separate pass.
++             #
++             # XXX: Someone more familiar with the inner workings of scons may
++             # be able to point out a more efficient way to do this.
++             progress_display("Clearing cached node information...")
++ 
++             global seen_nodes
++             seen_nodes = {}
++ 
++             def get_unseen_children(node, parent):
++                 def is_unseen(node):
++                     global seen_nodes
++                     return not seen_nodes.has_key(node)
++                 return filter(is_unseen, node.children(scan=1))
++ 
++             def add_to_seen_nodes(node, parent):
++                 global seen_nodes
++                 seen_nodes[node] = 1
++ 
++                 # If this file is in a BuildDir and has a
++                 # corresponding source file in the source tree, remember the
++                 # node in the source tree, too.  This is needed in
++                 # particular to clear cached implicit dependencies on the
++                 # source file, since the scanner will scan it if the
++                 # BuildDir was created with duplicate=0.
++                 rfile = node.rfile()
++                 if rfile != node:
++                     seen_nodes[rfile] = 1
++ 
++             for node in nodes:
++                 walker = SCons.Node.Walker(node,
++                                             kids_func=get_unseen_children,
++                                             eval_func=add_to_seen_nodes)
++                 n = walker.next()
++                 while n:
++                     n = walker.next()
++ 
++             for node in seen_nodes:
++                 # Call node.clear() to clear most of the state
++                 node.clear()
++                 # node.clear() doesn't reset node.state, so call
++                 # node.set_state() to reset it manually
++                 node.set_state(SCons.Node.no_state)
++ 
++             SCons.SConsign.Reset()
++             progress_display("done clearing nodes.")
++         else:
++             break
++ 
++ def _build_targets(fs, targets, target_top):
++     global ssoptions
++ 
+      lookup_top = None
+      if targets or SCons.Script.BUILD_TARGETS != SCons.Script._build_plus_default:
+          # They specified targets on the command line or modified
+***************
+*** 1374,1381 ****
+      count_stats.append(('pre-', 'build'))
+  
+      try:
+!         jobs.run()
+      finally:
+          if exit_status:
+              progress_display("scons: " + failure_message)
+          else:
+--- 1501,1519 ----
+      count_stats.append(('pre-', 'build'))
+  
+      try:
+!         try:
+!             jobs.run()
+!         except KeyboardInterrupt:
+!             # If we are in persistent mode, a KeyboardInterrupt interrupts
+!             # only this current run.  Return 'nodes' normally so that the
+!             # outer loop can clean up the nodes and continue.
+!             if options.persistent:
+!                 print "Build interrupted."
+!                 # Continue and return normally
+!             else:
+!                 raise
+      finally:
++         jobs.cleanup()
+          if exit_status:
+              progress_display("scons: " + failure_message)
+          else:
+***************
+*** 1386,1391 ****
+--- 1524,1531 ----
+      memory_stats.append('after building targets:')
+      count_stats.append(('post-', 'build'))
+  
++     return nodes
++ 
+  def _exec_main():
+      sconsflags = os.environ.get('SCONSFLAGS', '')
+      all_args = string.split(sconsflags) + sys.argv[1:]
+diff -Nacr scons-src-0.96.96-orig/test/Persistent/implicit-deps.py scons-src-0.96.96-persistent/test/Persistent/implicit-deps.py
+*** scons-src-0.96.96-orig/test/Persistent/implicit-deps.py	1969-12-31 16:00:00.000000000 -0800
+--- scons-src-0.96.96-persistent/test/Persistent/implicit-deps.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 0 ****
+--- 1,154 ----
++ #!/usr/bin/env python
++ #
++ # Copyright (c) 2007 The SCons Foundation
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ """
++ This is a regression test for a bug in earlier versions of the -P command line
++ option.
++ 
++ It tests to make sure that cached state is cleared between files for nodes in
++ both the build tree and the source tree when BuildDirs are used.  This is
++ needed especially with BuildDirs created with duplicate=0, since the scanners
++ scan the files in the source tree.  Any cached implicit deps must be cleared on
++ the source files.
++ """
++ 
++ import TestSCons
++ import os
++ import sys
++ 
++ test = TestSCons.TestSCons()
++ 
++ try:
++     import pexpect
++ except ImportError:
++     # pexpect is not available
++     test.skip_test('pexpect module is not available; skipping test\n')
++ 
++ # Create src and src/inc subdirectories
++ test.subdir('src', ['src', 'inc'])
++ 
++ # Create the top-level SConstruct file
++ test.write('SConstruct', """
++ BUILD_ENV = Environment()
++ Export('BUILD_ENV')
++ 
++ hdr_dir = '#build/include'
++ BUILD_ENV['HDR_DIR'] = hdr_dir
++ BUILD_ENV.Append(CPPPATH = hdr_dir)
++ 
++ BUILD_ENV.BuildDir('build', 'src', duplicate = 0)
++ SConscript('build/SConscript')
++ """)
++ 
++ # Create the top-level SConstruct file
++ test.write('SConstruct', """
++ BUILD_ENV = Environment()
++ Export('BUILD_ENV')
++ 
++ hdr_dir = '#build/include'
++ BUILD_ENV['HDR_DIR'] = hdr_dir
++ BUILD_ENV.Append(CPPPATH = hdr_dir)
++ 
++ BUILD_ENV.BuildDir('build', 'src', duplicate = 0)
++ SConscript('build/SConscript')
++ """)
++ 
++ # Create the src/SConscript file
++ test.write(['src', 'SConscript'], """
++ Import('BUILD_ENV')
++ BUILD_ENV.Install(BUILD_ENV['HDR_DIR'], ['inc/foo.h'])
++ BUILD_ENV.Program('foo', ['foo.c'])
++ """)
++ 
++ # Create src/foo.c
++ test.write(['src', 'foo.c'], """
++ #include <stdio.h>
++ 
++ #define FOO_PRINT_STRING "Hello from foo.c"
++ 
++ int main()
++ {
++     printf(FOO_PRINT_STRING "\\n");
++     return 0;
++ }
++ """)
++ 
++ # Create src/inc/foo.h
++ test.write(['src', 'inc', 'foo.h'], """
++ #ifndef INCLUDED_foo_h
++ #define INCLUDED_foo_h
++ 
++ #define FOO_PRINT_STRING "Hello from foo.h"
++ 
++ #endif /* INCLUDED_foo_h */
++ """)
++ 
++ # Start scons, to build only "build/foo"
++ foo_exe = os.path.join('build', 'foo' + TestSCons._exe)
++ abs_foo_exe = os.path.join(os.getcwd(), foo_exe)
++ scons = test.start(options = '-P', arguments = foo_exe)
++ 
++ # Uncomment this line to print the scons input and output to stdout
++ # scons.logfile = sys.stdout
++ 
++ # Build build/foo
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run foo, and make sure it prints correctly
++ test.run(program = abs_foo_exe, stdout = 'Hello from foo.c\n')
++ 
++ # Update foo.c to include foo.h
++ test.write(['src', 'foo.c'], """
++ #include "foo.h"
++ #include <stdio.h>
++ 
++ int main()
++ {
++     printf(FOO_PRINT_STRING "\\n");
++     return 0;
++ }
++ """)
++ 
++ # Build build/foo
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run foo, and make sure it prints correctly
++ test.run(program = abs_foo_exe, stdout = 'Hello from foo.h\n')
++ 
++ # Quit scons
++ scons.expect('Press a key:')
++ scons.send('q')
++ scons.expect(pexpect.EOF)
++ 
++ test.pass_test()
+diff -Nacr scons-src-0.96.96-orig/test/option--P.py scons-src-0.96.96-persistent/test/option--P.py
+*** scons-src-0.96.96-orig/test/option--P.py	1969-12-31 16:00:00.000000000 -0800
+--- scons-src-0.96.96-persistent/test/option--P.py	2007-05-04 17:54:38.000000000 -0700
+***************
+*** 0 ****
+--- 1,225 ----
++ #!/usr/bin/env python
++ #
++ # Copyright (c) 2007 The SCons Foundation
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ """
++ This tests the -P command line option (persistent-mode scons).
++ """
++ 
++ import TestSCons
++ import os
++ import sys
++ 
++ test = TestSCons.TestSCons()
++ 
++ try:
++     import pexpect
++ except ImportError:
++     # pexpect is not available
++     test.skip_test('pexpect module is not available; skipping test\n')
++ 
++ test.write('foo.hin', """
++ #ifndef INCLUDED_foo_h
++ #define INCLUDED_foo_h
++ 
++ #define FOO_PRINT_STRING "Hello from foo.h"
++ 
++ #endif /* INCLUDED_foo_h */
++ """)
++ 
++ test.write('foo.c', """
++ #include <stdio.h>
++ 
++ int main()
++ {
++     printf("Hello World!\\n");
++     return 0;
++ }
++ """)
++ 
++ test.write('bar.c', """
++ #include <stdio.h>
++ 
++ int main()
++ {
++     printf("This is bar.\\n");
++     return 0;
++ }
++ """)
++ 
++ test.write('SConstruct', """
++ env = Environment()
++ env.Command('foo.h', ['foo.hin'], 'cat $SOURCE > $TARGET')
++ env.Program('foo', ['foo.c'])
++ env.Program('bar', ['bar.c'])
++ """)
++ 
++ foo_exe = 'foo' + TestSCons._exe
++ bar_exe = 'bar' + TestSCons._exe
++ 
++ abs_foo_exe = os.path.join(os.getcwd(), foo_exe)
++ abs_bar_exe = os.path.join(os.getcwd(), bar_exe)
++ 
++ # Start scons, to build "foo"
++ scons = test.start(options = '-P', arguments = foo_exe)
++ 
++ # Uncomment this line to print the scons input and output to stdout
++ # scons.logfile = sys.stdout
++ 
++ # Build foo
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run foo, and make sure it prints correctly
++ test.run(program = abs_foo_exe, stdout = 'Hello World!\n')
++ 
++ # Update foo.c
++ # We have added a new #include line, to make sure that scons notices
++ # the new implicit dependency and builds foo.h first.
++ test.write('foo.c', """
++ #include "foo.h"
++ 
++ #include <stdio.h>
++ 
++ int main()
++ {
++     printf(FOO_PRINT_STRING "\\n");
++     return 0;
++ }
++ """)
++ 
++ # Re-build foo
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run the new foo, and make sure it prints correctly
++ test.run(program = abs_foo_exe, stdout = 'Hello from foo.h\n')
++ 
++ # Re-build foo, and make sure scons notices nothing needs to be built
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['`foo\' is up to date.',
++                     'scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Update foo.hin
++ test.write('foo.hin', """
++ #ifndef INCLUDED_foo_h
++ #define INCLUDED_foo_h
++ 
++ #define FOO_PRINT_STRING "Hello from new foo.h"
++ 
++ #endif /* INCLUDED_foo.h */
++ """)
++ 
++ # Re-build foo
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run the new foo, and make sure it prints correctly
++ test.run(program = abs_foo_exe, stdout = 'Hello from new foo.h\n')
++ 
++ # Re-build foo, and make sure scons notices nothing needs to be built
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['`foo\' is up to date.',
++                     'scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Change targets to 'bar'
++ scons.expect('Press a key:')
++ scons.send('t')
++ scons.send(bar_exe + '\r')
++ scons.send('\r')
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run bar, and make sure it prints correctly
++ test.run(program = abs_bar_exe, stdout = 'This is bar.\n')
++ 
++ # Update foo.hin
++ test.write('foo.hin', """
++ #ifndef INCLUDED_foo_h
++ #define INCLUDED_foo_h
++ 
++ #define FOO_PRINT_STRING "Hello from another new foo.h"
++ 
++ #endif /* INCLUDED_foo.h */
++ """)
++ 
++ # Re-build the targets, to make sure 'foo' isn't re-built
++ scons.expect('Press a key:')
++ scons.send('b')
++ rc = scons.expect(['`bar\' is up to date.',
++                     '`foo\' is up to date.',
++                     'scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ rc = scons.expect(['scons: done building targets.',
++                     '`foo\' is up to date.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run foo, and make sure it wasn't updated
++ test.run(program = abs_foo_exe, stdout = 'Hello from new foo.h\n')
++ 
++ # Change targets to 'foo' and build
++ scons.expect('Press a key:')
++ scons.send('T')
++ scons.send('foo\r')
++ scons.send('\r')
++ rc = scons.expect(['scons: done building targets.',
++                     'scons: building terminated because of errors.'])
++ test.fail_test(rc != 0)
++ 
++ # Run foo, and make sure it was updated
++ test.run(program = abs_foo_exe, stdout = 'Hello from another new foo.h\n')
++ 
++ # Quit scons
++ scons.expect('Press a key:')
++ scons.send('q')
++ scons.expect(pexpect.EOF)
++ 
++ test.pass_test()
