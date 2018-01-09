@@ -1,0 +1,13 @@
+diff -Nur scons-0.97.0d20071212/engine/SCons/Tool/swig.py scons-0.97.0d20071212-patched/engine/SCons/Tool/swig.py
+--- scons-0.97.0d20071212/engine/SCons/Tool/swig.py	2007-12-12 07:37:47.000000000 -0800
++++ scons-0.97.0d20071212-patched/engine/SCons/Tool/swig.py	2007-12-14 12:12:44.000000000 -0800
+@@ -50,7 +50,8 @@
+     else:
+         return '$SWIGCFILESUFFIX'
+ 
+-_reModule = re.compile(r'%module\s+(.+)')
++# Match '%module test', as well as '%module(directors="1") test'
++_reModule = re.compile(r'%module(?:\s*\(.*\))?\s+(.+)')
+ 
+ def _swigEmitter(target, source, env):
+     swigflags = env.subst("$SWIGFLAGS", target=target, source=source)
