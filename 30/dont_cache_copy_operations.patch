@@ -1,0 +1,114 @@
+Index: src/engine/SCons/Environment.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Environment.py,v
+retrieving revision 1.159
+diff -u -r1.159 Environment.py
+--- src/engine/SCons/Environment.py	2 Apr 2005 19:54:21 -0000	1.159
++++ src/engine/SCons/Environment.py	5 May 2005 20:31:16 -0000
+@@ -1301,6 +1301,14 @@
+             t.add_ignore(dlist)
+         return tlist
+ 
++    def DontCache(self, target, dependency):
++        """Disable caching - meant for nodes that are just as fast to build as copy"""
++        tlist = self.arg2nodes(target, self.fs.Entry)
++        dlist = self.arg2nodes(dependency, self.fs.Entry)
++        for t in tlist:
++            t.use_cache = 0
++        return tlist
++
+     def Install(self, dir, source):
+         """Install specified files in the given directory."""
+         try:
+@@ -1319,6 +1327,7 @@
+             for src in sources:
+                 target = self.fs.File(src.name, dnode)
+                 tgt.extend(InstallBuilder(self, target, src))
++                target.use_cache = 0
+         return tgt
+ 
+     def InstallAs(self, target, source):
+@@ -1328,6 +1337,7 @@
+         result = []
+         for src, tgt in map(lambda x, y: (x, y), sources, targets):
+             result.extend(InstallBuilder(self, tgt, src))
++            tgt.use_cache = 0
+         return result
+ 
+     def Literal(self, string):
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Node/FS.py,v
+retrieving revision 1.213
+diff -u -r1.213 FS.py
+--- src/engine/SCons/Node/FS.py	26 Apr 2005 03:17:57 -0000	1.213
++++ src/engine/SCons/Node/FS.py	5 May 2005 20:31:17 -0000
+@@ -1533,6 +1533,12 @@
+         # created.
+         self.dir._create()
+ 
++    def caching_enabled(self):
++        try:
++            return self.use_cache
++        except AttributeError:            
++            return 1
++        
+     def retrieve_from_cache(self):
+         """Try to retrieve the node's content from a cache
+ 
+@@ -1561,6 +1567,9 @@
+ 
+         Returns true iff the node was successfully retrieved.
+         """
++        if not self.caching_enabled():
++            return None
++        
+         b = self.is_derived()
+         if not b and not self.has_src_builder():
+             return None
+@@ -1579,14 +1588,16 @@
+         # Push this file out to cache before the superclass Node.built()
+         # method has a chance to clear the build signature, which it
+         # will do if this file has a source scanner.
+-        if self.fs.CachePath and self.fs.exists(self.path):
+-            CachePush(self, [], None)
+-        self.fs.clear_cache()
++        if self.caching_enabled():
++            if self.fs.CachePath and self.fs.exists(self.path):
++                CachePush(self, [], None)
++            self.fs.clear_cache()
+         SCons.Node.Node.built(self)
+ 
+     def visited(self):
+-        if self.fs.CachePath and self.fs.cache_force and self.fs.exists(self.path):
+-            CachePush(self, None, None)
++        if self.caching_enabled():
++            if self.fs.CachePath and self.fs.cache_force and self.fs.exists(self.path):
++                CachePush(self, None, None)
+ 
+     def has_src_builder(self):
+         """Return whether this Node has a source builder or not.
+@@ -1788,6 +1799,8 @@
+         return str(self.rfile())
+ 
+     def cachepath(self):
++        if not self.caching_enabled():
++            return None, None
+         if not self.fs.CachePath:
+             return None, None
+         if self.binfo.bsig is None:
+Index: src/engine/SCons/Script/__init__.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Script/__init__.py,v
+retrieving revision 1.154
+diff -u -r1.154 __init__.py
+--- __init__.py	17 Mar 2005 13:07:01 -0000	1.154
++++ __init__.py	5 May 2005 20:36:46 -0000
+@@ -256,6 +256,7 @@
+     #The Command() method is handled separately, below.
+     'Depends',
+     'Dir',
++    'DontCache',
+     'Entry',
+     'Execute',
+     'File',
