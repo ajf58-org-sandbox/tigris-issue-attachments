@@ -1,0 +1,31 @@
+Index: src/engine/SCons/Builder.py
+===================================================================
+--- src/engine/SCons/Builder.py	(revision 1727)
++++ src/engine/SCons/Builder.py	(working copy)
+@@ -604,6 +604,13 @@
+             ekw = self.executor_kw.copy()
+             ekw['chdir'] = chdir
+         if kw:
++            if kw.has_key('srcdir'):
++               import os.path
++               def prependDirIfRelative(f):
++                  if os.path.isabs(f): return f
++                  return os.path.join(kw['srcdir'],f)
++               source=map(prependDirIfRelative,source)
++               del kw['srcdir']
+             if self.overrides:
+                 env_kw = self.overrides.copy()
+                 env_kw.update(kw)
+Index: README
+===================================================================
+--- README	(revision 1727)
++++ README	(working copy)
+@@ -412,7 +412,7 @@
+     --  Change to the top of your checked-out SCons tree and set
+         $SCONS_LIB_DIR to point to its build engine:
+ 
+-            $ setenv SCONS_LIB_DIR=`pwd`/src
++            $ setenv SCONS_LIB_DIR=`pwd`/src/engine
+ 
+     --  Confirm that the bug still exists in this version of SCons
+         by using the -C option to run the broken build:
