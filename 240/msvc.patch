@@ -1,0 +1,21 @@
+*** scons/src/engine/SCons/Tool/msvc.py	2007-10-18 14:25:33.000000000 -0400
+--- scons_new/src/engine/SCons/Tool/msvc.py	2007-10-25 08:06:24.000000000 -0400
+***************
+*** 743,749 ****
+  
+      env['PCHPDBFLAGS'] = SCons.Util.CLVar(['${(PDB and "/Yd") or ""}'])
+      env['PCHCOM'] = '$CXX $CXXFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo${TARGETS[1]} /Yc$PCHSTOP /Fp${TARGETS[0]} $CCPDBFLAGS $PCHPDBFLAGS'
+!     env['BUILDERS']['PCH'] = pch_builder
+  
+      if not env.has_key('ENV'):
+          env['ENV'] = {}
+--- 743,751 ----
+  
+      env['PCHPDBFLAGS'] = SCons.Util.CLVar(['${(PDB and "/Yd") or ""}'])
+      env['PCHCOM'] = '$CXX $CXXFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Fo${TARGETS[1]} /Yc$PCHSTOP /Fp${TARGETS[0]} $CCPDBFLAGS $PCHPDBFLAGS'
+!     env.Append(BUILDERS = {'PCH' : pch_builder,
+!                            'SharedPCH' : pch_builder, 
+!                            'StaticPCH' : pch_builder})
+  
+      if not env.has_key('ENV'):
+          env['ENV'] = {}
