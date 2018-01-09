@@ -1,0 +1,73 @@
+Index: src/engine/MANIFEST.in
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/MANIFEST.in,v
+retrieving revision 1.65
+diff -u -r1.65 MANIFEST.in
+--- src/engine/MANIFEST.in	19 Oct 2006 05:31:10 -0000	1.65
++++ src/engine/MANIFEST.in	7 Nov 2006 20:02:46 -0000
+@@ -62,7 +62,7 @@
+ SCons/Tool/aixlink.py
+ SCons/Tool/applelink.py
+ SCons/Tool/ar.py
+-SCons/Tool/as.py
++SCons/Tool/as_assembler.py
+ SCons/Tool/bcc32.py
+ SCons/Tool/BitKeeper.py
+ SCons/Tool/c++.py
+Index: src/engine/SCons/Tool/386asm.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Tool/386asm.py,v
+retrieving revision 1.6
+diff -u -r1.6 386asm.py
+--- src/engine/SCons/Tool/386asm.py	21 Nov 2004 00:43:43 -0000	1.6
++++ src/engine/SCons/Tool/386asm.py	7 Nov 2006 20:02:47 -0000
+@@ -37,11 +37,11 @@
+ from SCons.Tool.PharLapCommon import addPharLapPaths
+ import SCons.Util
+ 
+-import as
++import as_assembler
+ 
+ def generate(env):
+     """Add Builders and construction variables for ar to an Environment."""
+-    as.generate(env)
++    as_assembler.generate(env)
+ 
+     env['AS']        = '386asm'
+     env['ASFLAGS']   = SCons.Util.CLVar('')
+Index: src/engine/SCons/Tool/as.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Tool/as.py,v
+retrieving revision 1.8
+diff -u -r1.8 as.py
+--- src/engine/SCons/Tool/as.py	1 Nov 2006 05:32:45 -0000	1.8
++++ src/engine/SCons/Tool/as.py	7 Nov 2006 20:02:47 -0000
+@@ -1,4 +1,4 @@
+-"""SCons.Tool.as
++"""SCons.Tool.as_assembler
+ 
+ Tool-specific initialization for as, the generic Posix assembler.
+ 
+Index: src/engine/SCons/Tool/gas.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Tool/gas.py,v
+retrieving revision 1.10
+diff -u -r1.10 gas.py
+--- src/engine/SCons/Tool/gas.py	24 Apr 2003 03:45:32 -0000	1.10
++++ src/engine/SCons/Tool/gas.py	7 Nov 2006 20:02:47 -0000
+@@ -33,13 +33,13 @@
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+-import as
++import as_assembler
+ 
+ assemblers = ['as', 'gas']
+ 
+ def generate(env):
+     """Add Builders and construction variables for as to an Environment."""
+-    as.generate(env)
++    as_assembler.generate(env)
+ 
+     env['AS']        = env.Detect(assemblers) or 'as'
+ 
