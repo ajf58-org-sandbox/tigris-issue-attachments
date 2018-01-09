@@ -1,0 +1,36 @@
+*** /home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/JavaCommon.py	2007-01-31 11:19:00.000000000 -0600
+--- /home/knight/SCons/scons.0.96.C737/src/engine/SCons/Tool/JavaCommon.py	2007-02-17 17:28:20.000000000 -0600
+***************
+*** 51,58 ****
+      #     any alphanumeric token (keyword, class name, specifier);
+      #     the multi-line comment begin and end tokens /* and */;
+      #     array declarations "[]";
+!     #     semi-colons.
+!     _reToken = re.compile(r'(\n|\\\\|//|\\[\'"]|[\'"\{\}\;]|' +
+                            r'[A-Za-z_][\w\.]*|/\*|\*/|\[\])')
+  
+      class OuterState:
+--- 51,59 ----
+      #     any alphanumeric token (keyword, class name, specifier);
+      #     the multi-line comment begin and end tokens /* and */;
+      #     array declarations "[]";
+!     #     semi-colons;
+!     #     periods.
+!     _reToken = re.compile(r'(\n|\\\\|//|\\[\'"]|[\'"\{\}\;\.]|' +
+                            r'[A-Za-z_][\w\.]*|/\*|\*/|\[\])')
+  
+      class OuterState:
+***************
+*** 129,134 ****
+--- 130,140 ----
+                  return self.__getClassState()
+              elif token == 'package':
+                  return self.__getPackageState()
++             elif token == '.':
++                 # Skip the attribute, it might be named "class", in which
++                 # case we don't want to treat the following token as
++                 # an inner class name...
++                 return self.__getSkipState()
+              return self
+  
+          def addAnonClass(self):
