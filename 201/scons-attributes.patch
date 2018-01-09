@@ -1,0 +1,16 @@
+*** ./Node/FS.py	Thu May 17 12:36:32 2007
+--- ./Node/FS.py	Fri Jun 29 10:37:42 2007
+***************
+*** 2302,2311 ****
+--- 2302,2312 ----
+                  except KeyError: node = dir.file_on_disk(self.name)
+                  if node and node.exists() and \
+                     (isinstance(node, File) or isinstance(node, Entry) \
+                      or not node.is_derived()):
+                          result = node
++                         result.attributes = self.attributes
+                          break
+          self._memo['rfile'] = result
+          return result
+  
+      def rstr(self):
