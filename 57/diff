@@ -1,0 +1,32 @@
+--- d:\Python24\scons-0.96.92\SCons\Tool\msvs.py	2006-07-01 18:56:45.875000000 +0200
++++ d:\msvs.py	2006-07-01 18:51:04.140625000 +0200
+@@ -9,7 +9,7 @@
+ """
+ 
+ #
+-# Copyright (c) 2001, 2002, 2003, 2004 The SCons Foundation
++# __COPYRIGHT__
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining
+ # a copy of this software and associated documentation files (the
+@@ -31,7 +31,7 @@
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
+ 
+-__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/msvs.py 0.96.92.D001 2006/04/10 23:13:27 knight"
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import base64
+ import md5
+@@ -738,9 +738,9 @@
+             commonprefix = None
+             if len(sources) > 1:
+                 s = map(os.path.normpath, sources)
+-                cp = os.path.dirname( os.path.commonprefix(s) )    # take the dirname because the prefix may include parts of the filenames (e.g. if you have 'dir\abcd' and 'dir\acde' then the cp will be 'dir\a' )
++                cp = os.path.commonprefix(s)
+                 if cp and s[0][len(cp)] == os.sep:
+-                    sources = map(lambda s, l=len(cp)+1: s[l:], sources)  # +1 because the filename starts after the separator
++                    sources = map(lambda s, l=len(cp): s[l:], sources)
+                     commonprefix = cp
+ 
+             hierarchy = makeHierarchy(sources)
