@@ -1,0 +1,28 @@
+Index: src/engine/SCons/Tool/g77.py
+===================================================================
+--- src/engine/SCons/Tool/g77.py	(revision 2500)
++++ src/engine/SCons/Tool/g77.py	(working copy)
+@@ -33,6 +33,8 @@
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
++import SCons.Util
++
+ import f77
+ 
+ compilers = ['g77', 'f77']
+@@ -41,7 +43,13 @@
+     """Add Builders and construction variables for g77 to an Environment."""
+     f77.generate(env)
+ 
+-    env['_FORTRAND'] = env.Detect(compilers) or 'g77'
++    g77exec = env.Detect(compilers) or 'g77'
++    env['F77'] = g77exec
++    env['SHF77'] = g77exec
++    if env['PLATFORM'] in ['cygwin', 'win32']:
++        env['SHF77FLAGS'] = SCons.Util.CLVar('$F77FLAGS')
++    else:
++        env['SHF77FLAGS'] = SCons.Util.CLVar('$F77FLAGS -fPIC')
+ 
+ def exists(env):
+     return env.Detect(compilers)
