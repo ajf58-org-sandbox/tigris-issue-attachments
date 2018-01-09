@@ -1,0 +1,137 @@
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 3338)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -44,17 +44,18 @@
+ PDFLaTeXAction = None
+ 
+ def PDFLaTeXAuxAction(target = None, source= None, env=None):
+-    SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    result = SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    return result
+ 
+ def PDFTeXLaTeXFunction(target = None, source= None, env=None):
+     """A builder for TeX and LaTeX that scans the source file to
+     decide the "flavor" of the source and then executes the appropriate
+     program."""
+     if SCons.Tool.tex.is_LaTeX(source):
+-        PDFLaTeXAuxAction(target,source,env)
++        result = PDFLaTeXAuxAction(target,source,env)
+     else:
+-        PDFTeXAction(target,source,env)
+-    return 0
++        result = PDFTeXAction(target,source,env)
++    return result
+ 
+ PDFTeXLaTeXAction = None
+ 
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 3338)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -41,7 +41,8 @@
+ PDFLaTeXAction = None
+ 
+ def PDFLaTeXAuxFunction(target = None, source= None, env=None):
+-    SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    result = SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
++    return result
+ 
+ PDFLaTeXAuxAction = None
+ 
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 3338)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -122,7 +122,9 @@
+         tocContents = open(tocfilename, "rb").read()
+ 
+     # Run LaTeX once to generate a new aux file and log file.
+-    XXXLaTeXAction(target, source, env)
++    result = XXXLaTeXAction(target, source, env)
++    if result != 0:
++        return result
+ 
+     # Decide if various things need to be run, or run again.  We check
+     # for the existence of files before opening them--even ones like the
+@@ -143,7 +145,9 @@
+             content = open(target_aux, "rb").read()
+             if string.find(content, "bibdata") != -1:
+                 bibfile = env.fs.File(targetbase)
+-                BibTeXAction(bibfile, bibfile, env)
++                result = BibTeXAction(bibfile, bibfile, env)
++                if result != 0:
++                    return result
+                 break
+ 
+     must_rerun_latex = 0
+@@ -159,11 +163,15 @@
+     if os.path.exists(idxfilename) and idxContents != open(idxfilename, "rb").read():
+         # We must run makeindex
+         idxfile = env.fs.File(targetbase)
+-        MakeIndexAction(idxfile, idxfile, env)
++        result = MakeIndexAction(idxfile, idxfile, env)
++        if result != 0:
++            return result
+         must_rerun_latex = 1
+ 
+     if must_rerun_latex == 1:
+-        XXXLaTeXAction(target, source, env)
++        result = XXXLaTeXAction(target, source, env)
++        if result != 0:
++            return result
+ 
+     # Now decide if latex needs to be run yet again to resolve warnings.
+     logfilename = targetbase + '.log'
+@@ -175,7 +183,9 @@
+            not rerun_citations_re.search(content) and \
+            not undefined_references_re.search(content):
+             break
+-        XXXLaTeXAction(target, source, env)
++        result = XXXLaTeXAction(target, source, env)
++        if result != 0:
++            return result
+ 
+     env['ENV']['TEXINPUTS'] = texinputs_save
+     env['ENV']['BIBINPUTS'] = bibinputs_save
+@@ -185,10 +195,11 @@
+     # later on Mac OSX so leave it,
+     # env['ENV']['TEXPICTS']  = texpicts_save
+ 
+-    return 0
++    return result
+ 
+ def LaTeXAuxAction(target = None, source= None, env=None):
+-    InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    result = InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    return result
+ 
+ LaTeX_re = re.compile("\\\\document(style|class)")
+ 
+@@ -205,9 +216,10 @@
+     decide the "flavor" of the source and then executes the appropriate
+     program."""
+     if is_LaTeX(source):
+-        LaTeXAuxAction(target,source,env)
++        result = LaTeXAuxAction(target,source,env)
+     else:
+-        TeXAction(target,source,env)
++        result = TeXAction(target,source,env)
++    return result
+ 
+ def TeXLaTeXStrFunction(target = None, source= None, env=None):
+     """A strfunction for TeX and LaTeX that scans the source file to
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 3338)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -43,7 +43,8 @@
+ LaTeXAction = None
+ 
+ def LaTeXAuxFunction(target = None, source= None, env=None):
+-    SCons.Tool.tex.InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    result = SCons.Tool.tex.InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    return result
+ 
+ LaTeXAuxAction = SCons.Action.Action(LaTeXAuxFunction,
+                               strfunction=SCons.Tool.tex.TeXLaTeXStrFunction)
