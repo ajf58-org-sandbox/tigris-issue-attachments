@@ -1,0 +1,80 @@
+Index: test/TEX/multi-run.py
+===================================================================
+--- test/TEX/multi-run.py	(revision 1838)
++++ test/TEX/multi-run.py	(working copy)
+@@ -42,7 +42,7 @@
+ if not tex and not latex:
+     test.skip_test("Could not find tex or latex; skipping test(s).\n")
+ 
+-test.subdir('work1', 'work2')
++test.subdir('work1', 'work2', 'work3')
+ 
+ 
+ input_file = r"""
+@@ -55,6 +55,17 @@
+ \end{document}
+ """
+ 
++input_file_changed = r"""
++\documentclass{article}
++
++\begin{document}
++As stated in \cite{X}, this is a bug-a-boo.
++
++\bibliography{fooref}
++\bibliographystyle{plain}
++\end{document}
++"""
++
+ bibfile = r"""
+ @Article{X,
+   author = 	 "Mr. X",
+@@ -86,6 +97,26 @@
+         print foo_log
+         test.fail_test(1)
+ 
++    test.write(['work3', 'SConstruct'], """\
++DVI( "foo.tex" )
++""")
++
++    # run tex
++    test.write(['work3', 'foo.tex'], input_file)
++    test.write(['work3', 'fooref.bib'], bibfile)
++    test.run(chdir = 'work3', arguments = '.')
++
++    # change file and rerun tex
++    test.write(['work3', 'foo.tex'], input_file_changed)
++    test.run(chdir = 'work3', arguments = '.')
++
++    # check that bbl file was found by tex
++    foo_log = test.read(['work3', 'foo.log'])
++    if string.find(foo_log, 'No file foo.bbl.') != -1:
++        print 'TeX did not find foo.bbl.'
++        print foo_log
++        test.fail_test(1)
++
+ if latex:
+ 
+     test.write(['work2', 'SConstruct'], """\
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 1838)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -52,6 +52,9 @@
+ 
+ openout_aux_re = re.compile(r"\\openout.*`(.*\.aux)'")
+ 
++# Checks for presence of required generated files (so far, only bbl).
++warning_nofile_re = re.compile("^No file .*\.bbl.", re.MULTILINE)
++
+ # An Action sufficient to build any generic tex file.
+ TeXAction = None
+ 
+@@ -117,6 +120,7 @@
+             break
+         content = open(logfilename, "rb").read()
+         if not warning_rerun_re.search(content) and \
++           not warning_nofile_re.search(content) and \
+            not rerun_citations_re.search(content) and \
+            not undefined_references_re.search(content):
+             break
