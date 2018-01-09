@@ -1,0 +1,252 @@
+# This is a shell archive.  Save it in a file, remove anything before
+# this line, and then unpack it by entering "sh file".  Note, it may
+# create directories; files and directories will be owned by you and
+# have default permissions.
+#
+# This archive contains:
+#
+#	sunc++.py
+#	suncc.py
+#	sun_pkg.py
+#
+echo x - sunc++.py
+sed 's/^X//' >sunc++.py << 'END-of-sunc++.py'
+X"""SCons.Tool.sunc++
+X
+XTool-specific initialization for C++ on SunOS / Solaris.
+X
+XThere normally shouldn't be any need to import this module directly.
+XIt will usually be imported through the generic SCons.Tool.Tool()
+Xselection method.
+X
+X"""
+X
+X#
+X# __COPYRIGHT__
+X#
+X# Permission is hereby granted, free of charge, to any person obtaining
+X# a copy of this software and associated documentation files (the
+X# "Software"), to deal in the Software without restriction, including
+X# without limitation the rights to use, copy, modify, merge, publish,
+X# distribute, sublicense, and/or sell copies of the Software, and to
+X# permit persons to whom the Software is furnished to do so, subject to
+X# the following conditions:
+X#
+X# The above copyright notice and this permission notice shall be included
+X# in all copies or substantial portions of the Software.
+X#
+X# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+X# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+X# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+X# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+X# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+X# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+X# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+X#
+X
+X__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+X
+Ximport os
+X
+Ximport SCons.Util
+X
+Xcplusplus = __import__('c++', globals(), locals(), [])
+Xfrom sun_pkg import get_pkg_info
+X
+Xpkglist = ['SPROcpl']
+X
+Xdef generate(env):
+X    """
+X    Add construction variables for SunPRO C++ to an Environment.
+X    """
+X    cplusplus.generate(env)
+X
+X    path,static,reloc,version = get_pkg_info(env, 'CXX', 'CC', pkglist)
+X    static = os.path.join(path,static)
+X    reloc = os.path.join(path,reloc)
+X
+X    env['CXX'] = static
+X    env['SHCXX'] = reloc
+X    env['CXXVERSION'] = version
+X    env['SHCXXFLAGS']   = SCons.Util.CLVar('$CXXFLAGS -KPIC')
+X    env['SHOBJPREFIX']  = 'so_'
+X    env['SHOBJSUFFIX']  = '.o'
+X
+Xdef exists(env):
+X    path,static,reloc,version = get_pkg_info(env, 'CC', 'cc', pkglist)
+X    if not path or not static: return False
+X    static = os.path.join(path,static)
+X    if not os.path.exists(static): return False
+X    return True
+END-of-sunc++.py
+echo x - suncc.py
+sed 's/^X//' >suncc.py << 'END-of-suncc.py'
+X"""SCons.Tool.suncc
+X
+XTool-specific initialization for Sun Solaris (Forte) CC and cc.
+X
+XThere normally shouldn't be any need to import this module directly.
+XIt will usually be imported through the generic SCons.Tool.Tool()
+Xselection method.
+X"""
+X
+X#
+X# __COPYRIGHT__
+X#
+X# Permission is hereby granted, free of charge, to any person obtaining
+X# a copy of this software and associated documentation files (the
+X# "Software"), to deal in the Software without restriction, including
+X# without limitation the rights to use, copy, modify, merge, publish,
+X# distribute, sublicense, and/or sell copies of the Software, and to
+X# permit persons to whom the Software is furnished to do so, subject to
+X# the following conditions:
+X#
+X# The above copyright notice and this permission notice shall be included
+X# in all copies or substantial portions of the Software.
+X#
+X# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+X# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+X# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+X# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+X# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+X# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+X# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+X#
+X
+X__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+X
+Ximport os
+X
+Ximport SCons.Util
+X
+Ximport cc
+Xfrom sun_pkg import get_pkg_info
+X
+Xpkglist = ['SPROcc']
+X
+Xdef generate(env):
+X    """
+X    Add construction variables for Forte C and C++ compilers to an Environment.
+X    """
+X    cc.generate(env)
+X
+X    path,static,reloc,version = get_pkg_info(env, 'CC', 'cc', pkglist)
+X    static = os.path.join(path,static)
+X    reloc = os.path.join(path,reloc)
+X
+X    env['CC']           = static
+X    env['SHCC']         = reloc
+X    env['CCVERSION']    = version
+X    env['SHCCFLAGS']    = SCons.Util.CLVar('$CCFLAGS -KPIC')
+X    env['SHOBJPREFIX']  = 'so_'
+X    env['SHOBJSUFFIX']  = '.o'
+X
+Xdef exists(env):
+X    path,static,reloc,version = get_pkg_info(env, 'CC', 'cc', pkglist)
+X    if not path or not static: return False
+X    static = os.path.join(path,static)
+X    if not os.path.exists(static): return False
+X    return True
+END-of-suncc.py
+echo x - sun_pkg.py
+sed 's/^X//' >sun_pkg.py << 'END-of-sun_pkg.py'
+X"""SCons.Tool.sunc++
+X
+XTool-specific initialization on SunOS / Solaris.
+X
+XThere normally shouldn't be any need to import this module directly.
+XIt will usually be imported through the generic SCons.Tool.Tool()
+Xselection method.
+X
+X"""
+X
+X#
+X# __COPYRIGHT__
+X#
+X# Permission is hereby granted, free of charge, to any person obtaining
+X# a copy of this software and associated documentation files (the
+X# "Software"), to deal in the Software without restriction, including
+X# without limitation the rights to use, copy, modify, merge, publish,
+X# distribute, sublicense, and/or sell copies of the Software, and to
+X# permit persons to whom the Software is furnished to do so, subject to
+X# the following conditions:
+X#
+X# The above copyright notice and this permission notice shall be included
+X# in all copies or substantial portions of the Software.
+X#
+X# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+X# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+X# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+X# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+X# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+X# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+X# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+X#
+X
+X__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+X
+Ximport os
+Ximport re
+Ximport string #TODO(1.5): remove
+Ximport subprocess
+X
+Ximport SCons
+X
+Xdef do_cmd(env, cmd):
+X    #where = env.WhereIs(cmd[0])
+X    p = SCons.Action._subproc(env, cmd,
+X                #executable=where,
+X                stdout=subprocess.PIPE,
+X                stderr=subprocess.PIPE,
+X                universal_newlines=True,
+X            )
+X    lines, err = p.communicate()
+X    return lines, p.wait()
+X
+Xdef get_pkg_info(env, key, cmd, pkglist):
+X    pkginfo = env.subst('$PKGINFO')
+X    pkgchk = env.subst('$PKGCHK')
+X
+X    version = None
+X    for package in pkglist:
+X        # "%s -l %s 2>/dev/null" % (pkginfo, package)
+X        lines, stat = do_cmd(env, [pkginfo, '-l', package])
+X        if stat: continue
+X        #TODO(1.5) for line in lines.split('\n'):
+X        for line in string.split(lines, '\n'):
+X            # grep '^ *VERSION:'
+X            line = string.strip(line)
+X            if line[:8] == 'VERSION:': break
+X        else:
+X            continue
+X        version = string.split(line)[-1]
+X
+X        # "%s -l %s 2>/dev/null" % (pkgchk, package)
+X        lines, stat = do_cmd(env, [pkgchk, '-l', package])
+X        if stat: continue
+X        t = '/bin/' + cmd
+X        l = -len(t)
+X        #TODO(1.5) for line in lines.split('\n'):
+X        for line in string.split(lines, '\n'):
+X            # grep '^Pathname:.*/bin/CC$'
+X            if line[:9] != 'Pathname:': continue
+X            if line[l:] != t: continue
+X            # grep -v '/SC[0-9]*\.[0-9]*/'
+X            if re.search(r'/SC[0-9]*\.[0-9]*/', line): continue
+X            return os.path.dirname(string.split(line)[-1]), cmd, cmd, version
+X
+X    cx = env.get(key, cmd)
+X    path = os.path.dirname(cx)
+X    return path, cmd+'static', cmd+'shared', version
+X    return path, cmd, cmd, version
+X
+X## use the package installer tool lslpp to figure out where cppc and what
+X## version of it is installed
+X#def get_cppc(env):
+X#    return get_pkg_info(env, 'CXX', 'CC', ['SPROcpl'])
+X#
+X#def get_cc(env):
+X#    return get_pkg_info(env, 'CC', 'cc', ['SPROcc'])
+END-of-sun_pkg.py
+exit
+
