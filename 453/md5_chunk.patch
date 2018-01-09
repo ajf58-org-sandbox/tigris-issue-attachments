@@ -1,0 +1,315 @@
+Index: test/option/md5-chunksize.py
+===================================================================
+--- test/option/md5-chunksize.py	(revision 0)
++++ test/option/md5-chunksize.py	(revision 0)
+@@ -0,0 +1,122 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import string
++import sys
++
++import TestSCons
++
++_python_ = TestSCons._python_
++
++test = TestSCons.TestSCons()
++
++test.write('build.py', r"""
++import sys
++contents = open(sys.argv[2], 'rb').read()
++file = open(sys.argv[1], 'wb')
++file.write(contents)
++file.close()
++""")
++
++test.write('SConstruct', """
++SetOption('md5_chunksize', 128)
++B = Builder(action = r'%(_python_)s build.py $TARGETS $SOURCES')
++env = Environment(BUILDERS = { 'B' : B })
++f1 = env.B(target = 'f1.out', source = 'f1.in')
++f2 = env.B(target = 'f2.out', source = 'f2.in')
++Requires(f2, f1)
++""" % locals())
++
++test.write('f1.in', str(range(10)))
++test.write('f2.in', str(range(100000)))
++
++expected_stdout = test.wrap_stdout("""\
++%(_python_)s build.py f1.out f1.in
++%(_python_)s build.py f2.out f2.in
++""" % locals())
++
++#
++# Test with SetOption('md5_chunksize')
++#
++test.run(arguments = '.',
++         stdout=expected_stdout,
++         stderr='')
++test.must_exist('f1.out')
++test.must_exist('f2.out')
++
++test.run(arguments = '-c .')
++test.must_not_exist('f1.out')
++test.must_not_exist('f2.out')
++
++#
++# Test with --md5-chunksize
++#
++test.run(arguments = '--md5-chunksize=128 .',
++         stdout=expected_stdout,
++         stderr='')
++test.must_exist('f1.out')
++test.must_exist('f2.out')
++
++test.run(arguments = '--md5-chunksize=128 -c .')
++test.must_not_exist('f1.out')
++test.must_not_exist('f2.out')
++
++test.pass_test()
++
++#
++# Big-file test
++#
++test2 = TestSCons.TestSCons()
++
++if string.find(sys.platform, 'linux') == -1:
++    test2.skip_test("skipping test on non-Linux platform '%s'\n" % sys.platform)
++
++dd = test2.where_is('dd')
++
++if not dd:
++    test2.skip_test('dd not found; skipping test\n')
++
++expected_stdout = test2.wrap_stdout("""\
++dd if=/dev/zero of=test.big seek=100 bs=1M count=0 2>/dev/null
++get_stat(["test.stat"], ["test.big"])
++""")
++
++test2.write('SConstruct', """
++import os
++def get_stat(target, source, env):
++    stat = os.stat(source[0].abspath)
++    dest = open(target[0].abspath,'w')
++    dest.write(str(stat))
++    dest.close()
++env = Environment()
++env.Command('test.big', 'SConstruct', 'dd if=/dev/zero of=test.big seek=100 bs=1M count=0 2>/dev/null')
++env.AlwaysBuild('test.big')
++env.Command('test.stat', 'test.big', Action(get_stat))
++""")
++
++test2.run(arguments='--md5-chunksize=128', stdout=expected_stdout, stderr='')
++test2.pass_test()
++
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 3233)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -2138,6 +2138,8 @@
+     NodeInfo = FileNodeInfo
+     BuildInfo = FileBuildInfo
+ 
++    md5_chunksize = 64
++
+     def diskcheck_match(self):
+         diskcheck_match(self, self.isdir,
+                         "Directory %s found where file expected.")
+@@ -2211,6 +2213,23 @@
+             raise
+         return r
+ 
++    def get_content_hash(self):
++        """
++        Compute and return the MD5 hash for this file.
++        """
++        if not self.rexists():
++            return SCons.Util.MD5signature('')
++        fname = self.rfile().abspath
++        try:
++            cs = SCons.Util.MD5filesignature(fname,
++                chunksize=SCons.Node.FS.File.md5_chunksize*1024)
++        except EnvironmentError, e:
++            if not e.filename:
++                e.filename = fname
++            raise
++        return cs
++        
++
+     memoizer_counters.append(SCons.Memoize.CountValue('get_size'))
+ 
+     def get_size(self):
+@@ -2674,7 +2693,10 @@
+         if csig is None:
+ 
+             try:
+-                contents = self.get_contents()
++                if self.get_size() < SCons.Node.FS.File.md5_chunksize:
++                    contents = self.get_contents()
++                else:
++                    csig = self.get_content_hash()
+             except IOError:
+                 # This can happen if there's actually a directory on-disk,
+                 # which can be the case if they've disabled disk checks,
+@@ -2682,7 +2704,8 @@
+                 # create a same-named directory by mistake.
+                 csig = ''
+             else:
+-                csig = SCons.Util.MD5signature(contents)
++                if not csig:
++                    csig = SCons.Util.MD5signature(contents)
+ 
+         ninfo.csig = csig
+ 
+@@ -2810,8 +2833,8 @@
+ 
+         cachedir, cachefile = self.get_build_env().get_CacheDir().cachepath(self)
+         if not self.exists() and cachefile and os.path.exists(cachefile):
+-            contents = open(cachefile, 'rb').read()
+-            self.cachedir_csig = SCons.Util.MD5signature(contents)
++            self.cachedir_csig = SCons.Util.MD5filesignature(cachefile, \
++                SCons.Node.FS.File.md5_chunksize * 1024)
+         else:
+             self.cachedir_csig = self.get_csig()
+         return self.cachedir_csig
+@@ -2833,6 +2856,7 @@
+         self.cachesig = SCons.Util.MD5collect(sigs)
+         return self.cachesig
+ 
++
+ default_fs = None
+ 
+ def get_default_fs():
+Index: src/engine/SCons/Script/SConsOptions.py
+===================================================================
+--- src/engine/SCons/Script/SConsOptions.py	(revision 3233)
++++ src/engine/SCons/Script/SConsOptions.py	(working copy)
+@@ -128,6 +128,7 @@
+         'help',
+         'implicit_cache',
+         'max_drift',
++        'md5_chunksize',
+         'no_exec',
+         'num_jobs',
+         'random',
+@@ -179,6 +180,11 @@
+                 value = int(value)
+             except ValueError:
+                 raise SCons.Errors.UserError, "An integer is required: %s"%repr(value)
++        elif name == 'md5_chunksize':
++            try:
++                value = int(value)
++            except ValueError:
++                raise SCons.Errors.UserError, "An integer is required: %s"%repr(value)
+         elif name == 'warn':
+             if SCons.Util.is_String(value):
+                 value = [value]
+@@ -728,6 +734,13 @@
+                   help="Set maximum system clock drift to N seconds.",
+                   metavar="N")
+ 
++    op.add_option('--md5-chunksize',
++                  nargs=1, type="int",
++                  dest='md5_chunksize', default=SCons.Node.FS.File.md5_chunksize,
++                  action="store",
++                  help="Set chunk-size for MD5 signature computation to N kilobytes.",
++                  metavar="N")
++
+     op.add_option('-n', '--no-exec', '--just-print', '--dry-run', '--recon',
+                   dest='no_exec', default=False,
+                   action="store_true",
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 3233)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -965,6 +965,8 @@
+     SCons.Node.implicit_cache = options.implicit_cache
+     SCons.Node.FS.set_duplicate(options.duplicate)
+     fs.set_max_drift(options.max_drift)
++    if not options.md5_chunksize is None and options.md5_chunksize > 0:
++        SCons.Node.FS.File.md5_chunksize = options.md5_chunksize
+     if not options.stack_size is None:
+         SCons.Job.stack_size = options.stack_size
+ 
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 3233)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -1442,6 +1442,12 @@
+ def MD5signature(s):
+     return str(s)
+ 
++def MD5filesignature(fname, chunksize=65536):
++    f = open(fname, "rb")
++    result = f.read()
++    f.close()
++    return result
++
+ try:
+     import hashlib
+ except ImportError:
+@@ -1454,6 +1460,17 @@
+             m.update(str(s))
+             return m.hexdigest()
+ 
++        def MD5filesignature(fname, chunksize=65536):
++            m = hashlib.md5()
++            f = open(fname, "rb")
++            while 1:
++                blck = f.read(chunksize)
++                if not blck:
++                    break
++                m.update(str(blck))
++            f.close()
++            return m.hexdigest()
++            
+ def MD5collect(signatures):
+     """
+     Collects a list of signatures into an aggregate signature.
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 3233)
++++ doc/man/scons.1	(working copy)
+@@ -1068,6 +1068,19 @@
+ no matter how old the file is.
+ 
+ .TP
++.RI --md5-chunksize= KILOBYTES
++Set the block size used to compute MD5 signatures to
++.IR KILOBYTES . 
++This value determines the size of the chunks which are read in at once when
++computing MD5 signatures.  Files below that size are fully stored in memory
++before performing the signature computation while bigger files are read in
++block-by-block. A huge block-size leads to high memory consumption while a very
++small block-size slows down the build considerably.
++
++The default value is to use a chunk size of 64 kilobytes, which should
++be appropriate for most uses.
++
++.TP
+ -n, --just-print, --dry-run, --recon
+ No execute.  Print the commands that would be executed to build
+ any out-of-date target files, but do not execute the commands.
