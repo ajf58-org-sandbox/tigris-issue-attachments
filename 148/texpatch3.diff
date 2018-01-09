@@ -1,0 +1,138 @@
+Index: test/TEX/clean.py
+===================================================================
+--- test/TEX/clean.py	(revision 0)
++++ test/TEX/clean.py	(revision 0)
+@@ -0,0 +1,93 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Check that all auxilary files created by LaTeX are properly cleaned by scons -c.
++"""
++
++import string
++
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++latex = test.where_is('latex')
++
++if not latex:
++    test.skip_test("Could not find tex or latex; skipping test(s).\n")
++
++test.subdir('work1')
++
++# package hyperref generates foo.out
++# package comment generates comment.cut
++# todo: add makeindex etc.
++input_file = r"""
++\documentclass{article}
++\usepackage{hyperref}
++\usepackage{comment}
++\specialcomment{foocom}{}{}
++\begin{document}
++\begin{foocom}
++Hi
++\end{foocom}
++As stated in \cite{X}, this is a bug-a-boo.
++\bibliography{fooref}
++\bibliographystyle{plain}
++\end{document}
++"""
++
++bibfile = r"""
++@Article{X,
++  author = 	 "Mr. X",
++  title = 	 "A determination of bug-a-boo-ness",
++  journal =	 "Journal of B.a.B.",
++  year = 	 1920,
++  volume =	 62,
++  pages =	 291
++}
++"""
++
++test.write(['work1', 'SConstruct'], """\
++DVI( "foo.ltx" )
++""")
++
++test.write(['work1', 'foo.ltx'], input_file)
++test.write(['work1', 'fooref.bib'], bibfile)
++test.run(chdir = 'work1')
++test.must_exist(['work1', 'foo.log'])
++test.must_exist(['work1', 'foo.aux'])
++test.must_exist(['work1', 'foo.bbl'])
++test.must_exist(['work1', 'foo.blg'])
++test.must_exist(['work1', 'comment.cut'])
++test.must_exist(['work1', 'foo.out'])
++test.run(chdir = 'work1', arguments = '-c')
++test.must_not_exist(['work1', 'foo.log'])
++test.must_not_exist(['work1', 'foo.aux'])
++test.must_not_exist(['work1', 'foo.bbl'])
++test.must_not_exist(['work1', 'foo.blg'])
++test.must_not_exist(['work1', 'comment.cut'])
++test.must_not_exist(['work1', 'foo.out'])
++test.pass_test()
+
+Property changes on: test/TEX/clean.py
+___________________________________________________________________
+Name: svn:eol-style
+   + native
+
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 1855)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -51,6 +51,7 @@
+ undefined_references_re = re.compile(undefined_references_str, re.MULTILINE)
+ 
+ openout_aux_re = re.compile(r"\\openout.*`(.*\.aux)'")
++openout_re = re.compile(r"\\openout.*`(.*)'")
+ 
+ # An Action sufficient to build any generic tex file.
+ TeXAction = None
+@@ -163,15 +164,16 @@
+             target.append(base + '.bbl')
+             target.append(base + '.blg')
+ 
+-    # read log file to get all .aux files
++    # read log file to get all output files (including .aux files)
+     logfilename = base + '.log'
+     if os.path.exists(logfilename):
+         content = open(logfilename, "rb").read()
+-        aux_files = openout_aux_re.findall(content)
+-        aux_files = filter(lambda f, b=base+'.aux': f != b, aux_files)
++        out_files = openout_re.findall(content)
++        out_files = filter(lambda f, b=base+'.aux': f != b, out_files)
+         dir = os.path.split(base)[0]
+-        aux_files = map(lambda f, d=dir: d+os.sep+f, aux_files)
+-        target.extend(aux_files)
++        if dir != '':
++            out_files = map(lambda f, d=dir: d+os.sep+f, out_files)
++        target.extend(out_files)
+ 
+     return (target, source)
+ 
