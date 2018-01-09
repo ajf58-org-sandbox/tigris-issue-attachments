@@ -1,0 +1,38 @@
+*** /home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Node/FS.py	2007-01-05 12:31:02.000000000 -0600
+--- /home/knight/SCons/scons.0.96.C682/src/engine/SCons/Node/FS.py	2007-01-10 12:29:50.000000000 -0600
+***************
+*** 1450,1464 ****
+          elif not other in self.path_elements:
+  
+              try:
+!                 other_dir = other.dir
+              except AttributeError:
+                  result = str(other)
+              else:
+!                 dir_rel_path = self.rel_path(other_dir)
+!                 if dir_rel_path == '.':
+                      result = other.name
+                  else:
+!                     result = dir_rel_path + os.sep + other.name
+  
+          else:
+  
+--- 1450,1467 ----
+          elif not other in self.path_elements:
+  
+              try:
+!                 other_dir = other.get_dir()
+              except AttributeError:
+                  result = str(other)
+              else:
+!                 if other_dir is None:
+                      result = other.name
+                  else:
+!                     dir_rel_path = self.rel_path(other_dir)
+!                     if dir_rel_path == '.':
+!                         result = other.name
+!                     else:
+!                         result = dir_rel_path + os.sep + other.name
+  
+          else:
+  
