@@ -1,0 +1,152 @@
+diff -ur scons-0.96.95/engine/SCons/Environment.py scons-0.96.95-patched/engine/SCons/Environment.py
+--- scons-0.96.95/engine/SCons/Environment.py	2007-02-12 21:54:58.000000000 -0600
++++ scons-0.96.95-patched/engine/SCons/Environment.py	2007-04-10 19:51:41.000000000 -0500
+@@ -1516,6 +1516,14 @@
+             t.add_dependency(dlist)
+         return tlist
+ 
++    def Includes(self, dependent, dependency):
++        """Explicity specify that 'dependent's include 'dependency'."""
++        tlist = self.arg2nodes(dependent, self.fs.Entry)
++        dlist = self.arg2nodes(dependency, self.fs.Entry)
++        for t in tlist:
++            t.add_include(dlist)
++        return tlist
++
+     def Dir(self, name, *args, **kw):
+         """
+         """
+diff -ur scons-0.96.95/engine/SCons/Node/__init__.py scons-0.96.95-patched/engine/SCons/Node/__init__.py
+--- scons-0.96.95/engine/SCons/Node/__init__.py	2007-02-12 21:54:58.000000000 -0600
++++ scons-0.96.95-patched/engine/SCons/Node/__init__.py	2007-04-11 02:17:08.000000000 -0500
+@@ -193,6 +193,8 @@
+         self.depends_dict = {}
+         self.ignore = []        # dependencies to ignore
+         self.ignore_dict = {}
++        self.explicit_includes = [] # explicit dependencies (from Includes)
++        self.explicit_includes_dict = {}
+         self.implicit = None    # implicit (scanned) dependencies (None means not scanned yet)
+         self.waiting_parents = {}
+         self.waiting_s_e = {}
+@@ -462,27 +464,51 @@
+         This method exists to handle recursive invocation of the scanner
+         on the implicit dependencies returned by the scanner, if the
+         scanner's recursive flag says that we should.
+-        """
+-        if not scanner:
+-            return []
+ 
++        For this node and every explicit include found, we perform
++        a full recursive scan to discover its implicit dependencies.
++        """
+         # Give the scanner a chance to select a more specific scanner
+         # for this Node.
+         #scanner = scanner.select(self)
+ 
+-        nodes = [self]
++        roots = [self]
++        included = {}
++        included[self] = 1
+         seen = {}
+-        seen[self] = 1
++        deps_dict = {}
+         deps = []
+-        while nodes:
+-            n = nodes.pop(0)
+-            d = filter(lambda x, seen=seen: not seen.has_key(x),
+-                       n.get_found_includes(env, scanner, path))
+-            if d:
+-                deps.extend(d)
+-                for n in d:
+-                    seen[n] = 1
+-                nodes.extend(scanner.recurse_nodes(d))
++        def add_dep(dep):
++            if not deps_dict.has_key(dep):
++                deps_dict[dep] = 1
++                deps.append(dep)
++        def unseen(x):
++            return not seen.has_key(x)
++        def unincluded(x):
++            return not included.has_key(x)
++        
++        while roots:
++            root = roots.pop(0)
++            i = filter(unincluded, root.explicit_includes)
++            for ii in i:
++                included[ii] = 1
++                add_dep(ii)
++            roots.extend(i)
++
++            if scanner and unseen(root):
++                seen[root] = 1
++                nodes = [root]
++                while nodes:
++                    n = nodes.pop(0)
++                    d = filter(unseen, n.get_found_includes(env, scanner, path))
++                    if d:
++                        for n in d:
++                            add_dep(n)
++                            seen[n] = 1
++                            if n.explicit_includes and unincluded(n):
++                                included[n] = 1
++                                roots.append(n)
++                        nodes.extend(scanner.recurse_nodes(d))
+ 
+         return deps
+ 
+@@ -821,6 +847,19 @@
+                 s = str(e)
+             raise SCons.Errors.UserError("attempted to add a non-Node dependency to %s:\n\t%s is a %s, not a Node" % (str(self), s, type(e)))
+ 
++    def add_include(self, depend):
++        """Adds explicit dependencies on implicit dependencies."""
++        try:
++            self._add_child(
++                self.explicit_includes, self.explicit_includes_dict, depend)
++        except TypeError, e:
++            e = e.args[0]
++            if SCons.Util.is_List(e):
++                s = map(str, e)
++            else:
++                s = str(e)
++            raise SCons.Errors.UserError("attempted to add a non-Node include dependency to %s:\n\t%s is a %s, not a Node" % (str(self), s, type(e)))
++
+     def add_ignore(self, depend):
+         """Adds dependencies to ignore."""
+         try:
+diff -ur scons-0.96.95/engine/SCons/Script/__init__.py scons-0.96.95-patched/engine/SCons/Script/__init__.py
+--- scons-0.96.95/engine/SCons/Script/__init__.py	2007-02-12 21:55:00.000000000 -0600
++++ scons-0.96.95-patched/engine/SCons/Script/__init__.py	2007-04-10 19:41:38.000000000 -0500
+@@ -287,6 +287,7 @@
+     'Clean',
+     #The Command() method is handled separately, below.
+     'Depends',
++    'Includes',
+     'Dir',
+     'NoClean',
+     'NoCache',
+diff -ur scons-0.96.95/scons.1 scons-0.96.95-patched/scons.1
+--- scons-0.96.95/scons.1	2007-02-12 21:55:03.000000000 -0600
++++ scons-0.96.95-patched/scons.1	2007-04-10 19:38:01.000000000 -0500
+@@ -4036,6 +4036,21 @@
+ 
+ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
++.RI Includes( dependent ", " dependency )
++.TP
++.RI env.Includes( dependent ", " dependency )
++Specifies an implicit dependency;
++This should only be necessary
++for cases where the dependency
++is not caught by a Scanner
++for the file.
++
++.ES
++env.Includes('foo.h', 'included-by-foo.h')
++.EE
++
++'\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
++.TP
+ .RI Install( dir ", " source )
+ .TP
+ .RI env.Install( dir ", " source )
