@@ -1,0 +1,66 @@
+=== modified file 'src/engine/SCons/Tool/FortranCommon.py'
+--- src/engine/SCons/Tool/FortranCommon.py	2008-02-28 07:31:30 +0000
++++ src/engine/SCons/Tool/FortranCommon.py	2008-03-01 06:25:15 +0000
+@@ -31,6 +31,7 @@
+ 
+ import re
+ import string
++import os.path
+ 
+ import SCons.Action
+ import SCons.Defaults
+@@ -38,6 +39,26 @@
+ import SCons.Tool
+ import SCons.Util
+ 
++def isfortran(env, source):
++    """Return 1 if any of code in source has fortran files in it, 0
++    otherwise."""
++    try:
++        fsuffixes = env['FORTRANSUFFIXES']
++    except KeyError:
++        # If no FORTRANSUFFIXES, no fortran tool, so there is no need to look
++        # for fortran sources.
++        return 0
++
++    if not source:
++        # Source might be None for unusual cases like SConf.
++        return 0
++    for s in source:
++        if s.sources:
++            ext = os.path.splitext(str(s.sources[0]))[1]
++            if ext in fsuffixes:
++                return 1
++    return 0
++
+ def _fortranEmitter(target, source, env):
+     node = source[0].rfile()
+     if not node.exists() and not node.is_derived():
+
+=== modified file 'src/engine/SCons/Tool/link.py'
+--- src/engine/SCons/Tool/link.py	2007-12-15 17:57:29 +0000
++++ src/engine/SCons/Tool/link.py	2008-03-01 06:40:48 +0000
+@@ -36,11 +36,21 @@
+ import SCons.Defaults
+ import SCons.Tool
+ import SCons.Util
++import SCons.Errors
++
++from SCons.Tool.FortranCommon import isfortran
+ 
+ cplusplus = __import__('c++', globals(), locals(), [])
+ 
+ def smart_link(source, target, env, for_signature):
+-    if cplusplus.iscplusplus(source):
++    has_cplusplus = cplusplus.iscplusplus(source)
++    has_fortran = isfortran(env, source)
++    if has_cplusplus and has_fortran:
++        raise SCons.Errors.InternalError(
++                "Sorry, scons cannot yet link c++ and fortran code together.")
++    elif has_fortran:
++        return '$_FORTRANG'
++    elif has_cplusplus:
+         return '$CXX'
+     return '$CC'
+ 
+
