@@ -1,0 +1,11 @@
+import os
+import stat
+
+
+file = open("clean_me.txt", 'w')
+file.write("Delete me if you can")
+file.close()
+os.chmod("clean_me.txt", stat.S_IREAD)
+
+
+Clean("clean", "#/clean_me.txt")
