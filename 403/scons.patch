@@ -1,0 +1,19 @@
+--- script/scons.orig	2008-05-15 17:48:42.000000000 +0200
++++ script/scons	2008-05-15 17:48:57.000000000 +0200
+@@ -146,6 +146,16 @@
+             # check /usr/libfoo/scons*.
+             prefs.append(libpath)
+ 
++    try:
++        import pkg_resources
++    except ImportError:
++        pass
++    else:
++        # when running from an egg add the egg's directory 
++        d = pkg_resources.get_distribution('scons')
++
++        prefs.append (d.location)
++
+ # Look first for 'scons-__version__' in all of our preference libs,
+ # then for 'scons'.
+ libs.extend(map(lambda x: os.path.join(x, scons_version), prefs))
