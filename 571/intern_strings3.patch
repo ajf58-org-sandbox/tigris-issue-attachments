@@ -1,0 +1,76 @@
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(Revision 3789)
++++ src/engine/SCons/Node/FS.py	(Arbeitskopie)
+@@ -534,22 +534,24 @@
+         if __debug__: logInstanceCreation(self, 'Node.FS.Base')
+         SCons.Node.Node.__init__(self)
+ 
+-        self.name = name
+-        self.suffix = SCons.Util.splitext(name)[1]
++        # Filenames and paths are probably reused and are intern'ed to
++        # save some memory.
++        self.name = intern(name)
++        self.suffix = intern(SCons.Util.splitext(name)[1])
+         self.fs = fs
+ 
+         assert directory, "A directory must be provided"
+ 
+-        self.abspath = directory.entry_abspath(name)
+-        self.labspath = directory.entry_labspath(name)
++        self.abspath = intern(directory.entry_abspath(name))
++        self.labspath = intern(directory.entry_labspath(name))
+         if directory.path == '.':
+-            self.path = name
++            self.path = intern(name)
+         else:
+-            self.path = directory.entry_path(name)
++            self.path = intern(directory.entry_path(name))
+         if directory.tpath == '.':
+-            self.tpath = name
++            self.tpath = intern(name)
+         else:
+-            self.tpath = directory.entry_tpath(name)
++            self.tpath = intern(directory.entry_tpath(name))
+         self.path_elements = directory.path_elements + [self]
+ 
+         self.dir = directory
+@@ -594,7 +596,7 @@
+         except KeyError:
+             pass
+         result = self._get_str()
+-        self._memo['_save_str'] = result
++        self._memo['_save_str'] = intern(result)
+         return result
+ 
+     def _get_str(self):
+Index: src/engine/SCons/Scanner/__init__.py
+===================================================================
+--- src/engine/SCons/Scanner/__init__.py	(Revision 3789)
++++ src/engine/SCons/Scanner/__init__.py	(Arbeitskopie)
+@@ -356,7 +356,15 @@
+             includes = node.includes
+         else:
+             includes = self.find_include_names (node)
+-            node.includes = includes
++            # Intern the names of the include files. Saves some memory
++            # if the same header is included many times.
++            try:
++                node.includes = map(intern, includes)
++            except TypeError:
++                node.includes = includes
++                
++            #includes = map(lambda (a,n,e): (a,intern(n),e), includes)
++            #node.includes = includes
+ 
+         # This is a hand-coded DSU (decorate-sort-undecorate, or
+         # Schwartzian transform) pattern.  The sort key is the raw name
+@@ -400,7 +408,7 @@
+ 
+         n = SCons.Node.FS.find_file(include[1], paths)
+ 
+-        return n, include[1]
++        return n, intern(include[1])
+ 
+     def sort_key(self, include):
+         return SCons.Node.FS._my_normcase(string.join(include))
