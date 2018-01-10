@@ -1,0 +1,211 @@
+diff -r -u pychecker-0.8.17/pychecker/Config.py pychecker-0.8.17--OK/pychecker/Config.py
+--- pychecker-0.8.17/pychecker/Config.py	2006-02-03 18:29:46.000000000 -0800
++++ pychecker-0.8.17--OK/pychecker/Config.py	2008-04-28 08:33:06.000000000 -0700
+@@ -45,6 +45,7 @@
+ 
+ _OPTIONS = (
+     ('Major Options', [
++ ('',  1, 'OK', 'OK', "warnings from source lines marked #<string> ... are OK"),
+  ('',  0, 'only', 'only', 'only warn about files passed on the command line'),
+  ('e', 1, 'level', None, 'the maximum error level of warnings to be displayed'),
+  ('#', 1, 'limit', 'limit', 'the maximum number of warnings to be displayed'),
+@@ -111,6 +112,7 @@
+  ('6', 0, 'exec', 'usesExec', 'check if the exec statement is used'),
+      ]),
+     ('Suppressions', [
++ ('',  0, 'OKd', 'OKd', "ignore OK'd warnings"),
+  ('q', 0, 'stdlib', 'ignoreStandardLibrary', 'ignore warnings from files under standard library'),
+  ('b', 1, 'blacklist', 'blacklist', 'ignore warnings from the list of modules\n\t\t\t'),
+  ('Z', 1, 'varlist', 'variablesToIgnore', 'ignore global variables not used if name is one of these values\n\t\t\t'),
+@@ -224,6 +226,8 @@
+         self.debug = 0
+         self.quiet = 0
+         self.only = 0
++        self.OK = 'PYCHECKER'
++        self.OKd = True  # print OK'd warnings
+         self.level = 0
+         self.limit = 10
+ 
+diff -r -u pychecker-0.8.17/pychecker/Warning.py pychecker-0.8.17--OK/pychecker/Warning.py
+--- pychecker-0.8.17/pychecker/Warning.py	2006-02-03 18:29:46.000000000 -0800
++++ pychecker-0.8.17--OK/pychecker/Warning.py	2008-04-29 14:14:23.000000000 -0700
+@@ -11,6 +11,8 @@
+ class Warning :
+     "Class which holds error information."
+ 
++    ok = ''  # see checker.Source.isOK()
++
+     def __init__(self, file, line, err) :
+         if hasattr(file, "function") :
+             file = file.function.func_code.co_filename
+@@ -44,7 +46,7 @@
+     def format(self) :
+         if not self.file and not self.line:
+             return str(self.err)
+-        return "%s:%d: %s" % (self.file, self.line, self.err)
++        return "%s:%d: %s%s" % (self.file, self.line, self.err, self.ok)
+ 
+     def output(self, stream) :
+         stream.write(self.format() + "\n")
+diff -r -u pychecker-0.8.17/pychecker/checker.py pychecker-0.8.17--OK/pychecker/checker.py
+--- pychecker-0.8.17/pychecker/checker.py	2006-02-03 18:29:46.000000000 -0800
++++ pychecker-0.8.17--OK/pychecker/checker.py	2008-04-29 14:30:53.000000000 -0700
+@@ -659,13 +659,101 @@
+                 module.attributes = [ '__dict__' ] + dir(m) + extra_attrs
+ 
+ 
+-def _printWarnings(warnings, stream=None):
++class Source(object):  # called from options.ConfigDialog.check()
++    '''Object to handle suppression of OK'd warning
++       messages, marked in corresponding source line.
++    '''
++    _dirs = ()    # source directories
++    _code = []    # source code lines
++    _name = ''    # source file name
++    _dbg  = None  # debug stream
++
++    OK    = ''    # OK marker in source
++    OKd   = True  # print OK'd warnings
++
++    def __init__(self, cfg, files=()):
++        if cfg.debug :
++            self._dbg = sys.stdout
++        if cfg.OK :
++            self.OK  = '#%s ' % cfg.OK
++            self.OKd = cfg.OKd
++             # get all source directories,
++             # maintaining original order
++            ds = []
++            for f in files :
++                d = os.path.dirname(f)
++                if d and d not in ds :
++                    ds.append(d)
++            ds.append('.')
++            for d in sys.path :
++                if os.path.isdir(d) and d not in ds :
++                    ds.append(d)
++            self.dirs = tuple(ds)
++            if self._dbg :
++                self.debugf('dirs to search for source files ...')
++                for d in enumerate(ds) :
++                    print >>self._dbg, '%5d: %r' % d
++                print >>self._dbg
++
++    def debugf(self, fmt, *args):
++        if self._dbg :
++            print >>self._dbg, ('Debug ' + fmt) % args
++
++    def get(self, name):
++        '''Get source code of given file.
++        '''
++        s = []
++        if name.endswith('.py') :
++            self.debugf('looking for file: %s', name)
++            if os.path.isabs(name) :
++                 # assert(os.path.join('', name) == name)
++                ds = ('',)
++            else :
++                ds = self._dirs
++            for d in ds :  # search dirs
++                try :
++                    t = os.path.join(d, name)
++                    f = open(t, 'r')
++                    s = f.readlines()
++                    f.close()
++                    self.debugf('found file: %s (%s lines)', t, len(s))
++                    break
++                except (IOError, OSError) :
++                    pass
++            else :
++                self.debugf('file not found: %s', name)
++        self._name = name
++        self._code = s
++    
++    def isOK(self, warning):
++        '''Check whether warning is OK'd.
++        '''
++        if self._name != warning.file :
++            self.get(warning.file)
++        try :  # get source line
++            s = self._code[int(warning.line) - 1]
++            p = s.find(self.OK)
++            if p > 0 :  # warning OK'd
++                warning.ok = ' - ' + s[p:].rstrip()
++                return True
++        except (ValueError, IndexError) :
++            self.debugf('no line %s in file: %s', warning.line, self._name)
++        return False  # not OK'd, not found, etc.
++
++
++def printWarnings(warnings, source, stream=None):  # called from options.ConfigDialog.check()
+     if stream is None:
+         stream = sys.stdout
+-    
++
+     warnings.sort()
+     lastWarning = None
+     for warning in warnings :
++
++        # check whether warning is OK'd in the source code
++        if source.OK and warning.file and warning.line :
++            if source.isOK(warning) and not source.OKd:
++                continue  # suppress OK'd warning
++            
+         if lastWarning is not None:
+             # ignore duplicate warnings
+             if cmp(lastWarning, warning) == 0:
+@@ -677,6 +765,8 @@
+         lastWarning = warning
+         warning.output(stream)
+ 
++    return lastWarning is not None
++
+ 
+ def processFiles(files, cfg = None, pre_process_cb = None) :
+     # insert this here, so we find files in the local dir before std library
+@@ -764,8 +854,8 @@
+     if not _cfg.quiet :
+         print "\nWarnings...\n"
+     if warnings or importWarnings :
+-        _printWarnings(importWarnings + warnings)
+-        return 1
++        if printWarnings(importWarnings + warnings, Source(_cfg, files)) :
++            return 1
+ 
+     if not _cfg.quiet :
+         print "None"
+@@ -807,7 +897,7 @@
+                 module = PyCheckerModule(pymodule.__name__)
+                 if module.initModule(pymodule):
+                     warnings = warn.find([module], _cfg, _suppressions)
+-                    _printWarnings(_get_unique_warnings(warnings))
++                    printWarnings(_get_unique_warnings(warnings), _src)
+                 else :
+                     print 'Unable to load module', pymodule.__name__
+             except Exception:
+@@ -817,11 +907,12 @@
+         return pymodule
+ 
+     def _init() :
+-        global _cfg, _suppressions, _orig__import__
++        global _cfg, _suppressions, _src, _orig__import__
+ 
+         args = string.split(os.environ.get('PYCHECKER', ''))
+         _cfg, files, _suppressions = Config.setupFromArgs(args)
+         utils.initConfig(_cfg)
++        _src = Source(_cfg, files)
+         fixupBuiltinModules(1)
+ 
+         # keep the orig __import__ around so we can call it
+diff -r -u pychecker-0.8.17/pychecker/options.py pychecker-0.8.17--OK/pychecker/options.py
+--- pychecker-0.8.17/pychecker/options.py	2004-03-23 13:50:07.000000000 -0800
++++ pychecker-0.8.17--OK/pychecker/options.py	2008-04-29 14:11:56.000000000 -0700
+@@ -259,7 +259,7 @@
+         
+         if not self._results:
+             self._results = Results(self._help)
+-        checker._printWarnings(warnings, capture)
++        checker.printWarnings(warnings, checker.Source(self._cfg), capture)
+ 
+         value = strip(capture.getvalue())
+         if not value:
