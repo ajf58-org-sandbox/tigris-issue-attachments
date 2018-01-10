@@ -1,0 +1,18 @@
+###############################################################################
+#Common header
+#
+import os
+import sys
+import datetime
+
+import SCons.Environment
+###############################################################################
+
+env = Environment()
+env = Environment(QTDIR= '/tools/rd/qt/v3.3.8')
+env.Tool('qt')
+env.Uic('migratelicencesform.ui')
+
+Export('env')
+print env.Dump()
+
