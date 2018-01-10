@@ -1,0 +1,98 @@
+diff -r cbe3d4caf651 -r bbf42a246bf5 src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/Script/Main.py	Mon Mar 17 14:58:47 2008 -0400
+@@ -993,11 +993,6 @@ def _build_targets(fs, options, targets,
+     if options.diskcheck:
+         SCons.Node.FS.set_diskcheck(options.diskcheck)
+ 
+-    _set_debug_values(options)
+-    SCons.Node.implicit_cache = options.implicit_cache
+-    SCons.Node.implicit_deps_changed = options.implicit_deps_changed
+-    SCons.Node.implicit_deps_unchanged = options.implicit_deps_unchanged
+-
+     SCons.CacheDir.cache_enabled = not options.cache_disable
+     SCons.CacheDir.cache_debug = options.cache_debug
+     SCons.CacheDir.cache_force = options.cache_force
+diff -r cbe3d4caf651 -r bbf42a246bf5 test/option/debug-stree.py
+--- a/test/option/debug-stree.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/option/debug-stree.py	Mon Mar 17 14:58:47 2008 -0400
+@@ -93,7 +93,7 @@ stree = """
+ """ % locals()
+ 
+ test.run(arguments = "--debug=stree foo.xxx")
+-test.fail_test(string.find(test.stdout(), stree) == -1)
++test.fail_test(string.count(test.stdout(), stree) != 1)
+ 
+ stree2 = """
+  E         = exists
+@@ -124,6 +124,6 @@ test.run(arguments = '-c foo.xxx')
+ test.run(arguments = '-c foo.xxx')
+ 
+ test.run(arguments = "--no-exec --debug=stree foo.xxx")
+-test.fail_test(string.find(test.stdout(), stree2) == -1)
++test.fail_test(string.count(test.stdout(), stree2) != 1)
+ 
+ test.pass_test()
+diff -r cbe3d4caf651 -r bbf42a246bf5 test/option/tree-all.py
+--- a/test/option/tree-all.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/option/tree-all.py	Mon Mar 17 14:58:47 2008 -0400
+@@ -97,8 +97,8 @@ tree1 = """
+ """ % locals()
+ 
+ test.run(arguments = "--tree=all Foo.xxx")
+-if string.find(test.stdout(), tree1) == -1:
+-    sys.stdout.write('Did not find expected tree in the following output:\n')
++if string.count(test.stdout(), tree1) != 1:
++    sys.stdout.write('Did not find expected tree (or found duplicate) in the following output:\n')
+     sys.stdout.write(test.stdout())
+     test.fail_test()
+ 
+@@ -163,14 +163,14 @@ tree3 = """
+ """ % locals()
+ 
+ test.run(arguments = "--tree=all,prune .")
+-if string.find(test.stdout(), tree3) == -1:
+-    sys.stdout.write('Did not find expected tree in the following output:\n')
++if string.count(test.stdout(), tree3) != 1:
++    sys.stdout.write('Did not find expected tree (or found duplicate) in the following output:\n')
+     sys.stdout.write(test.stdout())
+     test.fail_test()
+ 
+ test.run(arguments = "--tree=prune .")
+-if string.find(test.stdout(), tree3) == -1:
+-    sys.stdout.write('Did not find expected tree in the following output:\n')
++if string.count(test.stdout(), tree3) != 1:
++    sys.stdout.write('Did not find expected tree (or found duplicate) in the following output:\n')
+     sys.stdout.write(test.stdout())
+     test.fail_test()
+ 
+@@ -203,14 +203,14 @@ test.run(arguments = '-c Foo.xxx')
+ test.run(arguments = '-c Foo.xxx')
+ 
+ test.run(arguments = "--no-exec --tree=all,status Foo.xxx")
+-if string.find(test.stdout(), tree4) == -1:
+-    sys.stdout.write('Did not find expected tree in the following output:\n')
++if string.count(test.stdout(), tree4) != 1:
++    sys.stdout.write('Did not find expected tree (or found duplicate) in the following output:\n')
+     sys.stdout.write(test.stdout())
+     test.fail_test()
+ 
+ test.run(arguments = "--no-exec --tree=status Foo.xxx")
+-if string.find(test.stdout(), tree4) == -1:
+-    sys.stdout.write('Did not find expected tree in the following output:\n')
++if string.count(test.stdout(), tree4) != 1:
++    sys.stdout.write('Did not find expected tree (or found duplicate) in the following output:\n')
+     sys.stdout.write(test.stdout())
+     test.fail_test()
+ 
+@@ -226,8 +226,8 @@ test.run(arguments = "--tree=all Foo.xxx
+ test.run(arguments = "--tree=all Foo.xxx",
+          status = 2,
+          stderr = None)
+-if string.find(test.stdout(), tree1) == -1:
+-    sys.stdout.write('Did not find expected tree in the following output:\n')
++if string.count(test.stdout(), tree1) != 1:
++    sys.stdout.write('Did not find expected tree (or found duplicate) in the following output:\n')
+     sys.stdout.write(test.stdout())
+     test.fail_test()
+ 
