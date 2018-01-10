@@ -1,0 +1,146 @@
+Index: test/Java/nested-classes.py
+===================================================================
+--- test/Java/nested-classes.py	(revision 0)
++++ test/Java/nested-classes.py	(revision 0)
+@@ -0,0 +1,101 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test Java compilation with inner and anonymous classes (Issue 2087).
++"""
++
++import os
++import os.path
++import string
++import sys
++import TestSCons
++
++_python_ = TestSCons._python_
++
++test = TestSCons.TestSCons()
++
++where_javac, java_version = test.java_where_javac()
++
++test.write('SConstruct', """
++env = Environment()
++env['JAVAVERSION'] = '%(java_version)s'
++classes = env.Java(target = 'build', source = 'source')
++env.Jar(target = 'anon.jar', source = classes)
++""" % locals())
++
++test.subdir('source', 'build')
++
++test.write(['source', 'Test.java'], """\
++public class Test {
++  class Inner { };
++  public void testAnon(Test test) { }
++  public void testAnon(Inner inner) { }
++  public Test ( ) {
++    class Foo {
++      public int reply ( ) {
++        class Bar { };
++        return 1 ; 
++      } 
++    } ;
++    testAnon(new Test() { });
++  }
++  public Test (int a) {
++    class Foo {
++      public int reply ( ) {
++        class Bar { };
++        return 1 ; 
++      } 
++    } ;
++    testAnon(new Test() { });
++  }
++  public Test (int a, int b) {
++    class Foobar {
++      public int reply ( ) { 
++        class Bar { };
++        return 1 ;
++      } 
++    } ;
++    testAnon(new Test() { });
++  }
++  public Test (int a, int b, int c) {
++    testAnon(new Test() { });
++  }
++  void run() {
++    testAnon(new Inner() {
++      public void execute() {
++        testAnon(new Inner( ) {
++          public void execute() {
++            System.out.println("Inside execute()");
++          }
++        });
++      }
++    });
++  }
++}
++""")
++
++test.run(arguments = '.')
+Index: src/engine/SCons/Tool/JavaCommon.py
+===================================================================
+--- src/engine/SCons/Tool/JavaCommon.py	(revision 3324)
++++ src/engine/SCons/Tool/JavaCommon.py	(working copy)
+@@ -75,6 +75,7 @@
+             self.stackBrackets = []
+             self.brackets = 0
+             self.nextAnon = 1
++            self.localClasses = []
+             self.stackAnonClassBrackets = []
+             self.anonStacksStack = [[0]]
+             self.package = None
+@@ -126,6 +127,7 @@
+             if len(self.stackBrackets) and \
+                self.brackets == self.stackBrackets[-1]:
+                 self.listOutputs.append(string.join(self.listClasses, '$'))
++                self.localClasses.pop()
+                 self.listClasses.pop()
+                 self.anonStacksStack.pop()
+                 self.stackBrackets.pop()
+@@ -240,6 +242,19 @@
+             # the next non-whitespace token should be the name of the class
+             if token == '\n':
+                 return self
++            # If that's a inner class which is declared in a method, it requires
++            # an index prepended to the class-name, e.g. 'Foo$1Inner' (Bug 2087)
++            if self.outer_state.localClasses and \
++                self.outer_state.stackBrackets[-1] > \
++                self.outer_state.stackBrackets[-2]+1:
++                locals = self.outer_state.localClasses[-1]
++                try:
++                    idx = locals[token]
++                    locals[token] += 1
++                except KeyError:
++                    locals[token] = 1
++                token = str(locals[token]) + token
++            self.outer_state.localClasses.append({})
+             self.outer_state.listClasses.append(token)
+             self.outer_state.anonStacksStack.append([0])
+             return self.outer_state
