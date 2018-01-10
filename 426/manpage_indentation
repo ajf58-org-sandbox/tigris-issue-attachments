@@ -1,0 +1,52 @@
+Index: scons-0.98.5/scons.1
+===================================================================
+--- scons-0.98.5.orig/scons.1	2008-06-10 07:45:01.000000000 +0000
++++ scons-0.98.5/scons.1	2008-06-10 07:46:27.000000000 +0000
+@@ -21,17 +21,19 @@
+ .\"
+ .\" doc/man/scons.1 3057 2008/06/09 22:21:00 knight
+ .\"
++.TH SCONS 1 "June 2008"
+ .\" ES - Example Start - indents and turns off line fill
++.rm ES
+ .de ES
+ .RS
+ .nf
+ ..
+ .\" EE - Example End - ends indent and turns line fill back on
++.rm EE
+ .de EE
+ .fi
+ .RE
+ ..
+-.TH SCONS 1 "June 2008"
+ .SH NAME
+ scons \- a software construction tool
+ .SH SYNOPSIS
+@@ -671,7 +673,7 @@
+ $ scons --debug=presub
+ Building myprog.o with action(s):
+   $SHCC $SHCFLAGS $SHCCFLAGS $CPPFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES
+-...
++\&...
+ .EE
+ 
+ .TP
+@@ -4437,7 +4439,7 @@
+ .IP
+ will print:
+ .ES
+-'$CC $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES'
++\&'$CC $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES'
+ .EE
+ 
+ .ES
+@@ -14241,7 +14243,7 @@
+ allows SCons to append the appropriate library
+ prefix and suffix for the current platform
+ (for example, 'liba.a' on POSIX systems,
+-'a.lib' on Windows).
++\&'a.lib' on Windows).
+ 
+ .SS Customizing construction variables from the command line.
+ 
