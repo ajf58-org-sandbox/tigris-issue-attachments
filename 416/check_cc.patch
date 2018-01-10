@@ -1,0 +1,291 @@
+Index: src/engine/SCons/Conftest.py
+===================================================================
+--- src/engine/SCons/Conftest.py	(revision 2955)
++++ src/engine/SCons/Conftest.py	(working copy)
+@@ -142,6 +142,100 @@
+     _YesNoResult(context, ret, None, text)
+     return ret
+ 
++def CheckCC(context):
++    """
++    Configure check for a working C compiler.
++
++    This checks whether the C compiler, as defined in the $CC construction
++    variable, can compile a C source file. It uses the current $CCCOM value
++    too, so that it can test against non working flags.
++
++    """
++    context.Display("Checking whether the C compiler works")
++    text = """
++int main()
++{
++    return 0;
++}
++"""
++    ret = _check_empty_program(context, 'CC', text, 'C')
++    _YesNoResult(context, ret, None, text)
++    return ret
++
++def CheckSHCC(context):
++    """
++    Configure check for a working shared C compiler.
++
++    This checks whether the C compiler, as defined in the $SHCC construction
++    variable, can compile a C source file. It uses the current $SHCCCOM value
++    too, so that it can test against non working flags.
++
++    """
++    context.Display("Checking whether the C compiler works")
++    text = """
++int main()
++{
++    return 0;
++}
++"""
++    ret = _check_empty_program(context, 'SHCC', text, 'C', shared = True)
++    _YesNoResult(context, ret, None, text)
++    return ret
++
++def CheckCXX(context):
++    """
++    Configure check for a working CXX compiler.
++
++    This checks whether the CXX compiler, as defined in the $CXX construction
++    variable, can compile a CXX source file. It uses the current $CXXCOM value
++    too, so that it can test against non working flags.
++
++    """
++    context.Display("Checking whether the C++ compiler works")
++    text = """
++int main()
++{
++    return 0;
++}
++"""
++    ret = _check_empty_program(context, 'CXX', text, 'C++')
++    _YesNoResult(context, ret, None, text)
++    return ret
++
++def CheckSHCXX(context):
++    """
++    Configure check for a working shared CXX compiler.
++
++    This checks whether the CXX compiler, as defined in the $SHCXX construction
++    variable, can compile a CXX source file. It uses the current $SHCXXCOM value
++    too, so that it can test against non working flags.
++
++    """
++    context.Display("Checking whether the C++ compiler works")
++    text = """
++int main()
++{
++    return 0;
++}
++"""
++    ret = _check_empty_program(context, 'SHCXX', text, 'C++', shared = True)
++    _YesNoResult(context, ret, None, text)
++    return ret
++
++def _check_empty_program(context, comp, text, language, shared = False):
++    """Return 0 on success, 1 otherwise."""
++    if not context.env.has_key(comp) or not context.env[comp]:
++        # The compiler construction variable is not set or empty
++        return 1
++
++    lang, suffix, msg = _lang2suffix(language)
++    if msg:
++        return 1
++
++    if shared:
++        return context.CompileSharedObject(text, suffix)
++    else:
++        return context.CompileProg(text, suffix)
+ 
+ def CheckFunc(context, function_name, header = None, language = None):
+     """
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 2955)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -308,6 +308,80 @@
+             sconf.Finish()
+ 
+ 
++    def _test_check_compilers(self, comp, func, name):
++        """This is the implementation for CheckCC and CheckCXX tests."""
++        from copy import deepcopy
++
++        # Check that Check* works
++        r = func()
++        assert r, "could not find %s ?" % comp
++        # Check that Check* does fail if comp is not available in env
++        oldcomp = deepcopy(self.scons_env[comp])
++        del self.scons_env[comp] 
++        r = func()
++        assert not r, "%s worked wo comp ?" % name
++        # Check that Check* does fail if comp is set but empty
++        self.scons_env[comp] = ''
++        r = func()
++        assert not r, "%s worked with comp = '' ?" % name
++        # Check that Check* does fail if comp is set to buggy executable
++        self.scons_env[comp] = 'thiscccompilerdoesnotexist'
++        r = func()
++        assert not r, "%s worked with comp = thiscompilerdoesnotexist ?" % name
++        #XXX: Check that Check* does fail if CFLAGS is buggy: how to do it ?
++        self.scons_env[comp] = oldcomp
++        self.scons_env['%sFLAGS' % comp] = 'qwertyuiop'
++        r = func()
++        assert not r, "%s worked with %sFLAGS = qwertyuiop ?" % name
++
++    def test_CheckCC(self):
++        """Test SConf.CheckCC()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            self._test_check_compilers('CC', sconf.CheckCC, 'CheckCC')
++        finally:
++            sconf.Finish()
++
++    def test_CheckSHCC(self):
++        """Test SConf.CheckSHCC()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            self._test_check_compilers('SHCC', sconf.CheckSHCC, 'CheckSHCC')
++        finally:
++            sconf.Finish()
++
++    def test_CheckCXX(self):
++        """Test SConf.CheckCXX()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            self._test_check_compilers('CXX', sconf.CheckCXX, 'CheckCXX')
++        finally:
++            sconf.Finish()
++
++    def test_CheckSHCXX(self):
++        """Test SConf.CheckSHCXX()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            self._test_check_compilers('SHCXX', sconf.CheckSHCXX, 'CheckSHCXX')
++        finally:
++            sconf.Finish()
++
+     def test_CheckHeader(self):
+         """Test SConf.CheckHeader()
+         """
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 2955)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -401,6 +401,10 @@
+ 
+         # add default tests
+         default_tests = {
++                 'CheckCC'            : CheckCC,
++                 'CheckCXX'           : CheckCXX,
++                 'CheckSHCC'          : CheckSHCC,
++                 'CheckSHCXX'         : CheckSHCXX,
+                  'CheckFunc'          : CheckFunc,
+                  'CheckType'          : CheckType,
+                  'CheckTypeSize'      : CheckTypeSize,
+@@ -823,6 +827,11 @@
+         # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
+         return not self.TryBuild(self.env.Object, text, ext)
+ 
++    def CompileSharedObject(self, text, ext):
++        self.sconf.cached = 1
++        # TODO: should use self.vardict for $SHCC, $CPPFLAGS, etc.
++        return not self.TryBuild(self.env.SharedObject, text, ext)
++
+     def RunProg(self, text, ext):
+         self.sconf.cached = 1
+         # TODO: should use self.vardict for $CC, $CPPFLAGS, etc.
+@@ -922,6 +931,22 @@
+     context.did_show_result = 1
+     return not res
+ 
++def CheckCC(context):
++    res = SCons.Conftest.CheckCC(context)
++    return not res
++
++def CheckCXX(context):
++    res = SCons.Conftest.CheckCXX(context)
++    return not res
++
++def CheckSHCC(context):
++    res = SCons.Conftest.CheckSHCC(context)
++    return not res
++
++def CheckSHCXX(context):
++    res = SCons.Conftest.CheckSHCXX(context)
++    return not res
++
+ # Bram: Make this function obsolete?  CheckHeader() is more generic.
+ 
+ def CheckCHeader(context, header, include_quotes = '""'):
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 2955)
++++ doc/man/scons.1	(working copy)
+@@ -6599,6 +6599,46 @@
+ and selects the compiler to be used for the check;
+ the default is "C".
+ 
++.TP
++.RI Configure.CheckCC( self )
++Checks whether the C compiler (as defined by the CC construction variable) works
++by trying to compile a small source file. By default, SCons only detects if
++there is a program with the correct name, not if it is a functioning compiler.
++
++This uses the exact same command than the one used by the object builder for C
++source file, so it can be used to detect if a particular compiler flag works or
++not.
++
++.TP
++.RI Configure.CheckCXX( self )
++Checks whether the C++ compiler (as defined by the CXX construction variable)
++works by trying to compile a small source file. By default, SCons only detects
++if there is a program with the correct name, not if it is a functioning compiler.
++
++This uses the exact same command than the one used by the object builder for
++CXX source files, so it can be used to detect if a particular compiler flag
++works or not.
++
++.TP
++.RI Configure.CheckSHCC( self )
++Checks whether the C compiler (as defined by the SHCC construction variable) works
++by trying to compile a small source file. By default, SCons only detects if
++there is a program with the correct name, not if it is a functioning compiler.
++
++This uses the exact same command than the one used by the object builder for C
++source file, so it can be used to detect if a particular compiler flag works or
++not.
++
++.TP
++.RI Configure.CheckSHCXX( self )
++Checks whether the C++ compiler (as defined by the SHCXX construction variable)
++works by trying to compile a small source file. By default, SCons only detects
++if there is a program with the correct name, not if it is a functioning compiler.
++
++This uses the exact same command than the one used by the object builder for
++CXX source files, so it can be used to detect if a particular compiler flag
++works or not.
++
+ .EE
+ Example of a typical Configure usage:
+ 
