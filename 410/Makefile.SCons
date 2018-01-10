@@ -1,0 +1,15 @@
+# -*- mode: makefile -*-
+
+all: SCons.png Constructs-using-SCons.png SCons-Bricks.png
+
+SCons.png: SCons.svg
+	inkscape -z --export-id layer1 --export-id-only --export-area-canvas \
+	         --export-width=200 --export-png=$@ $<
+
+Constructs-using-SCons.png: SCons.svg
+	inkscape -z --export-area-canvas \
+	         --export-width=200 --export-png=$@ $<
+
+SCons-Bricks.png: SCons.svg
+	inkscape -z --export-id Brick-to-Brick --export-id-only \
+	         --export-width=60 --export-png=$@ $<
