@@ -1,0 +1,5 @@
+env = Environment()
+
+interface = env.Command( "test.i", None, "echo '%module test' > test.i" )
+python_module = env.SharedLibrary( interface, SWIGFLAGS = "-python -c++" )
+java_module = env.SharedLibrary( interface, SWIGFLAGS = "-java -c++" ) 
