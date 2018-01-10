@@ -1,0 +1,2356 @@
+Index: src/engine/SCons/ActionTests.py
+===================================================================
+*** src/engine/SCons/ActionTests.py	(revision 3495)
+--- src/engine/SCons/ActionTests.py	(working copy)
+***************
+*** 188,193 ****
+--- 188,284 ----
+  
+  _python_ = '"' + python + '"'
+  
++ _null = SCons.Action._null
++ 
++ def test_varlist(pos_call, str_call, cmd, cmdstrfunc, **kw):
++     def call_action(a, pos_call=pos_call, str_call=str_call, kw=kw):
++         #FUTURE a = SCons.Action.Action(*a, **kw)
++         a = apply(SCons.Action.Action, a, kw)
++         # returned object must provide these entry points
++         assert hasattr(a, '__call__')
++         assert hasattr(a, 'get_contents')
++         assert hasattr(a, 'genstring')
++         pos_call(a)
++         str_call(a)
++         return a
++ 
++     a = call_action((cmd, cmdstrfunc))
++     assert a.varlist == (), a.varlist
++ 
++     a = call_action((cmd, cmdstrfunc, 'foo'))
++     assert a.varlist == ('foo',), a.varlist
++ 
++     a = call_action((cmd, cmdstrfunc, 'a', 'b', 'c'))
++     assert a.varlist == ('a', 'b', 'c'), a.varlist
++ 
++     kw['varlist'] = 'foo'
++     a = call_action((cmd, cmdstrfunc))
++     assert a.varlist == ('foo',), a.varlist
++ 
++     kw['varlist'] = ['x', 'y', 'z']
++     a = call_action((cmd, cmdstrfunc))
++     assert a.varlist == ('x', 'y', 'z'), a.varlist
++ 
++     a = call_action((cmd, cmdstrfunc, 'foo'))
++     assert a.varlist == ('foo', 'x', 'y', 'z'), a.varlist
++ 
++     a = call_action((cmd, cmdstrfunc, 'a', 'b', 'c'))
++     assert a.varlist == ('a', 'b', 'c', 'x', 'y', 'z'), a.varlist
++ 
++ def test_positional_args(pos_callback, cmd, **kw):
++     """Test that Action() returns the expected type and that positional args work.
++     """
++     #FUTURE act = SCons.Action.Action(cmd, **kw)
++     act = apply(SCons.Action.Action, (cmd,), kw)
++     pos_callback(act)
++     assert act.varlist is (), act.varlist
++ 
++     if not isinstance(act, SCons.Action._ActionAction):
++         # only valid cmdstrfunc is None
++         def none(a): pass
++         #FUTURE test_varlist(pos_callback, none, cmd, None, **kw)
++         apply(test_varlist, (pos_callback, none, cmd, None), kw)
++     else:
++         # _ActionAction should have set these
++         assert hasattr(act, 'strfunction')
++         assert act.cmdstr is _null, act.cmdstr
++         assert act.presub is _null, act.presub
++         assert act.chdir is None, act.chdir
++         assert act.exitstatfunc is SCons.Action.default_exitstatfunc, \
++                                         act.exitstatfunc
++ 
++         def cmdstr(a):
++             assert hasattr(a, 'strfunction')
++             assert a.cmdstr == 'cmdstr', a.cmdstr
++         #FUTURE test_varlist(pos_callback, cmdstr, cmd, 'cmdstr', **kw)
++         apply(test_varlist, (pos_callback, cmdstr, cmd, 'cmdstr'), kw)
++ 
++         def fun(): pass
++         def strfun(a, fun=fun):
++             assert a.strfunction is fun, a.strfunction
++             assert a.cmdstr == _null, a.cmdstr
++         #FUTURE test_varlist(pos_callback, strfun, cmd, fun, **kw)
++         apply(test_varlist, (pos_callback, strfun, cmd, fun), kw)
++ 
++         def none(a):
++             assert hasattr(a, 'strfunction')
++             assert a.cmdstr == None, a.cmdstr
++         #FUTURE test_varlist(pos_callback, none, cmd, None, **kw)
++         apply(test_varlist, (pos_callback, none, cmd, None), kw)
++ 
++         """Test handling of bad cmdstrfunc arguments """
++         try:
++             #FUTURE a = SCons.Action.Action(cmd, [], **kw)
++             a = apply(SCons.Action.Action, (cmd, []), kw)
++         except SCons.Errors.UserError, e:
++             s = str(e)
++             m = 'Invalid command display variable'
++             assert string.find(s, m) != -1, 'Unexpected string:  %s' % s
++         else:
++             raise Exception, "did not catch expected UserError"
++ 
++     return act
++ 
+  class ActionTestCase(unittest.TestCase):
+      """Test the Action() factory function"""
+  
+***************
+*** 196,244 ****
+          """
+          def foo():
+              pass
+!         def bar():
+!             pass
+!         a1 = SCons.Action.Action(foo)
+!         assert isinstance(a1, SCons.Action.FunctionAction), a1
+!         assert a1.execfunction == foo, a1.execfunction
+! 
+!         a11 = SCons.Action.Action(foo, strfunction=bar)
+!         assert isinstance(a11, SCons.Action.FunctionAction), a11
+!         assert a11.execfunction == foo, a11.execfunction
+!         assert a11.strfunction == bar, a11.strfunction
+  
+      def test_CommandAction(self):
+          """Test the Action() factory's creation of CommandAction objects
+          """
+!         a1 = SCons.Action.Action("string")
+!         assert isinstance(a1, SCons.Action.CommandAction), a1
+!         assert a1.cmd_list == "string", a1.cmd_list
+  
+          if hasattr(types, 'UnicodeType'):
+!             exec "a2 = SCons.Action.Action(u'string')"
+!             exec "assert isinstance(a2, SCons.Action.CommandAction), a2"
+! 
+!         a3 = SCons.Action.Action(["a3"])
+!         assert isinstance(a3, SCons.Action.CommandAction), a3
+!         assert a3.cmd_list == "a3", a3.cmd_list
+! 
+!         a4 = SCons.Action.Action([[ "explicit", "command", "line" ]])
+!         assert isinstance(a4, SCons.Action.CommandAction), a4
+!         assert a4.cmd_list == [ "explicit", "command", "line" ], a4.cmd_list
+  
+!         def foo():
+!             pass
+! 
+!         a5 = SCons.Action.Action("string", strfunction=foo)
+!         assert isinstance(a5, SCons.Action.CommandAction), a5
+!         assert a5.cmd_list == "string", a5.cmd_list
+!         assert a5.strfunction == foo, a5.strfunction
+  
+      def test_ListAction(self):
+          """Test the Action() factory's creation of ListAction objects
+          """
+          a1 = SCons.Action.Action(["x", "y", "z", [ "a", "b", "c"]])
+          assert isinstance(a1, SCons.Action.ListAction), a1
+          assert isinstance(a1.list[0], SCons.Action.CommandAction), a1.list[0]
+          assert a1.list[0].cmd_list == "x", a1.list[0].cmd_list
+          assert isinstance(a1.list[1], SCons.Action.CommandAction), a1.list[1]
+--- 287,325 ----
+          """
+          def foo():
+              pass
+! 
+!         def func_action(a, foo=foo):
+!             assert isinstance(a, SCons.Action.FunctionAction), a
+!             assert a.execfunction == foo, a.execfunction
+!         test_positional_args(func_action, foo)
+!         # a singleton list returns the contained action
+!         test_positional_args(func_action, [foo])
+  
+      def test_CommandAction(self):
+          """Test the Action() factory's creation of CommandAction objects
+          """
+!         def cmd_action(a):
+!             assert isinstance(a, SCons.Action.CommandAction), a
+!             assert a.cmd_list == "string", a.cmd_list
+!         test_positional_args(cmd_action, "string")
+!         # a singleton list returns the contained action
+!         test_positional_args(cmd_action, ["string"])
+  
+          if hasattr(types, 'UnicodeType'):
+!             a2 = eval("SCons.Action.Action(u'string')")
+!             assert isinstance(a2, SCons.Action.CommandAction), a2
+  
+!         def line_action(a):
+!             assert isinstance(a, SCons.Action.CommandAction), a
+!             assert a.cmd_list == [ "explicit", "command", "line" ], a.cmd_list
+!         test_positional_args(line_action, [[ "explicit", "command", "line" ]])
+  
+      def test_ListAction(self):
+          """Test the Action() factory's creation of ListAction objects
+          """
+          a1 = SCons.Action.Action(["x", "y", "z", [ "a", "b", "c"]])
+          assert isinstance(a1, SCons.Action.ListAction), a1
++         assert a1.varlist is (), a1.varlist
+          assert isinstance(a1.list[0], SCons.Action.CommandAction), a1.list[0]
+          assert a1.list[0].cmd_list == "x", a1.list[0].cmd_list
+          assert isinstance(a1.list[1], SCons.Action.CommandAction), a1.list[1]
+***************
+*** 250,255 ****
+--- 331,337 ----
+  
+          a2 = SCons.Action.Action("x\ny\nz")
+          assert isinstance(a2, SCons.Action.ListAction), a2
++         assert a2.varlist is (), a2.varlist
+          assert isinstance(a2.list[0], SCons.Action.CommandAction), a2.list[0]
+          assert a2.list[0].cmd_list == "x", a2.list[0].cmd_list
+          assert isinstance(a2.list[1], SCons.Action.CommandAction), a2.list[1]
+***************
+*** 262,267 ****
+--- 344,350 ----
+  
+          a3 = SCons.Action.Action(["x", foo, "z"])
+          assert isinstance(a3, SCons.Action.ListAction), a3
++         assert a3.varlist is (), a3.varlist
+          assert isinstance(a3.list[0], SCons.Action.CommandAction), a3.list[0]
+          assert a3.list[0].cmd_list == "x", a3.list[0].cmd_list
+          assert isinstance(a3.list[1], SCons.Action.FunctionAction), a3.list[1]
+***************
+*** 271,276 ****
+--- 354,360 ----
+  
+          a4 = SCons.Action.Action(["x", "y"], strfunction=foo)
+          assert isinstance(a4, SCons.Action.ListAction), a4
++         assert a4.varlist is (), a4.varlist
+          assert isinstance(a4.list[0], SCons.Action.CommandAction), a4.list[0]
+          assert a4.list[0].cmd_list == "x", a4.list[0].cmd_list
+          assert a4.list[0].strfunction == foo, a4.list[0].strfunction
+***************
+*** 280,285 ****
+--- 364,370 ----
+  
+          a5 = SCons.Action.Action("x\ny", strfunction=foo)
+          assert isinstance(a5, SCons.Action.ListAction), a5
++         assert a5.varlist is (), a5.varlist
+          assert isinstance(a5.list[0], SCons.Action.CommandAction), a5.list[0]
+          assert a5.list[0].cmd_list == "x", a5.list[0].cmd_list
+          assert a5.list[0].strfunction == foo, a5.list[0].strfunction
+***************
+*** 290,318 ****
+      def test_CommandGeneratorAction(self):
+          """Test the Action() factory's creation of CommandGeneratorAction objects
+          """
+!         def foo():
+!             pass
+!         def bar():
+!             pass
+!         a1 = SCons.Action.Action(foo, generator=1)
+!         assert isinstance(a1, SCons.Action.CommandGeneratorAction), a1
+!         assert a1.generator is foo, a1.generator
+! 
+!         a2 = SCons.Action.Action(foo, strfunction=bar, generator=1)
+!         assert isinstance(a2, SCons.Action.CommandGeneratorAction), a2
+!         assert a2.generator is foo, a2.generator
+  
+      def test_LazyCmdGeneratorAction(self):
+          """Test the Action() factory's creation of lazy CommandGeneratorAction objects
+          """
+!         def foo():
+!             pass
+! 
+!         a1 = SCons.Action.Action("$FOO")
+!         assert isinstance(a1, SCons.Action.LazyAction), a1
+! 
+!         a2 = SCons.Action.Action("$FOO", strfunction=foo)
+!         assert isinstance(a2, SCons.Action.LazyAction), a2
+  
+      def test_no_action(self):
+          """Test when the Action() factory can't create an action object
+--- 375,396 ----
+      def test_CommandGeneratorAction(self):
+          """Test the Action() factory's creation of CommandGeneratorAction objects
+          """
+!         def foo(): pass
+! 
+!         def gen_action(a, foo=foo):
+!             assert isinstance(a, SCons.Action.CommandGeneratorAction), a
+!             assert a.generator is foo, a.generator
+!         test_positional_args(gen_action, foo, generator=1)
+  
+      def test_LazyCmdGeneratorAction(self):
+          """Test the Action() factory's creation of lazy CommandGeneratorAction objects
+          """
+!         def lazy_action(a):
+!             assert isinstance(a, SCons.Action.LazyAction), a
+!             assert a.var == "FOO", a.var
+!             assert a.cmd_list == "${FOO}", a.cmd_list
+!         test_positional_args(lazy_action, "$FOO")
+!         test_positional_args(lazy_action, "${FOO}")
+  
+      def test_no_action(self):
+          """Test when the Action() factory can't create an action object
+***************
+*** 332,338 ****
+          """Test the ActionBase.get_executor() method"""
+          a = SCons.Action.Action('foo')
+          x = a.get_executor({}, {}, [], [], {})
+!         assert not x is None, x
+   
+  class _ActionActionTestCase(unittest.TestCase):
+  
+--- 410,416 ----
+          """Test the ActionBase.get_executor() method"""
+          a = SCons.Action.Action('foo')
+          x = a.get_executor({}, {}, [], [], {})
+!         assert x is not None, x
+   
+  class _ActionActionTestCase(unittest.TestCase):
+  
+***************
+*** 346,371 ****
+          def func2():
+              pass
+  
+          a = SCons.Action._ActionAction()
+          assert not hasattr(a, 'strfunction')
+  
+          assert SCons.Action._ActionAction(kwarg = 1)
+-         assert not hasattr(a, 'strfunction')
+          assert not hasattr(a, 'kwarg')
+  
+          a = SCons.Action._ActionAction(strfunction=func1)
+          assert a.strfunction is func1, a.strfunction
+  
+          a = SCons.Action._ActionAction(presub=func1)
+          assert a.presub is func1, a.presub
+  
+          a = SCons.Action._ActionAction(chdir=1)
+          assert a.chdir is 1, a.chdir
+  
+!         a = SCons.Action._ActionAction(func1, func2, 'x')
+!         assert a.strfunction is func1, a.strfunction
+!         assert a.presub is func2, a.presub
+          assert a.chdir is 'x', a.chdir
+  
+      def test___cmp__(self):
+          """Test Action comparison
+--- 424,505 ----
+          def func2():
+              pass
+  
++         def func3():
++             pass
++ 
+          a = SCons.Action._ActionAction()
+          assert not hasattr(a, 'strfunction')
++         assert a.cmdstr is _null, a.cmdstr
++         assert a.varlist == (), a.varlist
++         assert a.presub is _null, a.presub
++         assert a.chdir is None, a.chdir
++         assert a.exitstatfunc is SCons.Action.default_exitstatfunc, a.exitstatfunc
+  
+          assert SCons.Action._ActionAction(kwarg = 1)
+          assert not hasattr(a, 'kwarg')
++         assert not hasattr(a, 'strfunction')
++         assert a.cmdstr is _null, a.cmdstr
++         assert a.varlist == (), a.varlist
++         assert a.presub is _null, a.presub
++         assert a.chdir is None, a.chdir
++         assert a.exitstatfunc is SCons.Action.default_exitstatfunc, a.exitstatfunc
+  
+          a = SCons.Action._ActionAction(strfunction=func1)
+          assert a.strfunction is func1, a.strfunction
+  
++         a = SCons.Action._ActionAction(strfunction=None)
++         assert not hasattr(a, 'strfunction')
++         assert a.cmdstr is None, a.cmdstr
++ 
++         a = SCons.Action._ActionAction(cmdstr='cmdstr')
++         assert not hasattr(a, 'strfunction')
++         assert a.cmdstr is 'cmdstr', a.cmdstr
++ 
++         a = SCons.Action._ActionAction(cmdstr=None)
++         assert not hasattr(a, 'strfunction')
++         assert a.cmdstr is None, a.cmdstr
++ 
++         t = ('a','b','c')
++         a = SCons.Action._ActionAction(varlist=t)
++         assert a.varlist == t, a.varlist
++ 
+          a = SCons.Action._ActionAction(presub=func1)
+          assert a.presub is func1, a.presub
+  
+          a = SCons.Action._ActionAction(chdir=1)
+          assert a.chdir is 1, a.chdir
+  
+!         a = SCons.Action._ActionAction(exitstatfunc=func1)
+!         assert a.exitstatfunc is func1, a.exitstatfunc
+! 
+!         a = SCons.Action._ActionAction(
+!                                  # alphabetical order ...
+!                                  chdir='x',
+!                                  cmdstr='cmdstr',
+!                                  exitstatfunc=func3,
+!                                  presub=func2,
+!                                  strfunction=func1,
+!                                  varlist=t,
+!                           )
+          assert a.chdir is 'x', a.chdir
++         assert a.cmdstr is 'cmdstr', a.cmdstr
++         assert a.exitstatfunc is func3, a.exitstatfunc
++         assert a.presub is func2, a.presub
++         assert a.strfunction is func1, a.strfunction
++         assert a.varlist is t, a.varlist
++ 
++     def test_dup_keywords(self):
++         """Test handling of both cmdstr and strfunction arguments
++         """
++         def func(): pass
++         try:
++             a = SCons.Action.Action('foo', cmdstr='string', strfunction=func)
++         except SCons.Errors.UserError, e:
++             s = str(e)
++             m = 'Cannot have both strfunction and cmdstr args to Action()'
++             assert string.find(s, m) != -1, 'Unexpected string:  %s' % s
++         else:
++             raise Exception, "did not catch expected UserError"
+  
+      def test___cmp__(self):
+          """Test Action comparison
+***************
+*** 695,718 ****
+          """
+          a = SCons.Action.CommandAction(["xyzzy"])
+          assert a.cmd_list == [ "xyzzy" ], a.cmd_list
+!         assert a.cmdstr is None, a.cmdstr
+  
+!         a = SCons.Action.CommandAction(["abra"], "cadabra")
+          assert a.cmd_list == [ "abra" ], a.cmd_list
+          assert a.cmdstr == "cadabra", a.cmdstr
+  
+-     def test_bad_cmdstr(self):
+-         """Test handling of bad CommandAction(cmdstr) arguments
+-         """
+-         try:
+-             a = SCons.Action.CommandAction('foo', [])
+-         except SCons.Errors.UserError, e:
+-             s = str(e)
+-             m = 'Invalid command display variable'
+-             assert string.find(s, m) != -1, 'Unexpected string:  %s' % s
+-         else:
+-             raise Exception, "did not catch expected UserError"
+- 
+      def test___str__(self):
+          """Test fetching the pre-substitution string for command Actions
+          """
+--- 829,840 ----
+          """
+          a = SCons.Action.CommandAction(["xyzzy"])
+          assert a.cmd_list == [ "xyzzy" ], a.cmd_list
+!         assert a.cmdstr is _null, a.cmdstr
+  
+!         a = SCons.Action.CommandAction(["abra"], cmdstr="cadabra")
+          assert a.cmd_list == [ "abra" ], a.cmd_list
+          assert a.cmdstr == "cadabra", a.cmdstr
+  
+      def test___str__(self):
+          """Test fetching the pre-substitution string for command Actions
+          """
+***************
+*** 783,789 ****
+          assert s == 'xyzzy t1 s1', s
+  
+          act = SCons.Action.CommandAction('xyzzy $TARGET $SOURCE',
+!                                          'cmdstr - $SOURCE - $TARGET -')
+          s = act.strfunction([], [], env)
+          assert s == 'cmdstr -  -  -', s
+          s = act.strfunction([t1], [s1], env)
+--- 905,911 ----
+          assert s == 'xyzzy t1 s1', s
+  
+          act = SCons.Action.CommandAction('xyzzy $TARGET $SOURCE',
+!                                          cmdstr='cmdstr - $SOURCE - $TARGET -')
+          s = act.strfunction([], [], env)
+          assert s == 'cmdstr -  -  -', s
+          s = act.strfunction([t1], [s1], env)
+***************
+*** 800,806 ****
+          assert s == 'xyzzy t1 t2 s1 s2', s
+  
+          act = SCons.Action.CommandAction('xyzzy $TARGETS $SOURCES',
+!                                          'cmdstr = $SOURCES = $TARGETS =')
+          s = act.strfunction([], [], env)
+          assert s == 'cmdstr =  =  =', s
+          s = act.strfunction([t1], [s1], env)
+--- 922,928 ----
+          assert s == 'xyzzy t1 t2 s1 s2', s
+  
+          act = SCons.Action.CommandAction('xyzzy $TARGETS $SOURCES',
+!                                          cmdstr='cmdstr = $SOURCES = $TARGETS =')
+          s = act.strfunction([], [], env)
+          assert s == 'cmdstr =  =  =', s
+          s = act.strfunction([t1], [s1], env)
+***************
+*** 819,825 ****
+          assert s == 'xyzzy t1 s1 t1 t2 s1 s2', s
+  
+          act = SCons.Action.CommandAction('xyzzy $TARGETS $SOURCES',
+!                                          'cmdstr\t$TARGETS\n$SOURCES   ')
+                      
+          s = act.strfunction([], [], env)
+          assert s == 'cmdstr\t\n   ', s
+--- 941,947 ----
+          assert s == 'xyzzy t1 s1 t1 t2 s1 s2', s
+  
+          act = SCons.Action.CommandAction('xyzzy $TARGETS $SOURCES',
+!                                          cmdstr='cmdstr\t$TARGETS\n$SOURCES   ')
+                      
+          s = act.strfunction([], [], env)
+          assert s == 'cmdstr\t\n   ', s
+***************
+*** 1255,1266 ****
+  
+  class CommandGeneratorActionTestCase(unittest.TestCase):
+  
+      def test___init__(self):
+          """Test creation of a command generator Action
+          """
+          def f(target, source, env):
+              pass
+!         a = SCons.Action.CommandGeneratorAction(f)
+          assert a.generator == f
+  
+      def test___str__(self):
+--- 1377,1392 ----
+  
+  class CommandGeneratorActionTestCase(unittest.TestCase):
+  
++     def factory(self, act, **kw):
++         """Pass any keywords as a dict"""
++         return SCons.Action.CommandGeneratorAction(act, kw)
++ 
+      def test___init__(self):
+          """Test creation of a command generator Action
+          """
+          def f(target, source, env):
+              pass
+!         a = self.factory(f)
+          assert a.generator == f
+  
+      def test___str__(self):
+***************
+*** 1276,1282 ****
+  
+              env.FindIxes
+              return "FOO"
+!         a = SCons.Action.CommandGeneratorAction(f)
+          s = str(a)
+          assert s == 'FOO', s
+  
+--- 1402,1408 ----
+  
+              env.FindIxes
+              return "FOO"
+!         a = self.factory(f)
+          s = str(a)
+          assert s == 'FOO', s
+  
+***************
+*** 1287,1293 ****
+              dummy = env['dummy']
+              self.dummy = dummy
+              return "$FOO $TARGET $SOURCE $TARGETS $SOURCES"
+!         a = SCons.Action.CommandGeneratorAction(f)
+          self.dummy = 0
+          s = a.genstring([], [], env=Environment(FOO='xyzzy', dummy=1))
+          assert self.dummy == 1, self.dummy
+--- 1413,1419 ----
+              dummy = env['dummy']
+              self.dummy = dummy
+              return "$FOO $TARGET $SOURCE $TARGETS $SOURCES"
+!         a = self.factory(f)
+          self.dummy = 0
+          s = a.genstring([], [], env=Environment(FOO='xyzzy', dummy=1))
+          assert self.dummy == 1, self.dummy
+***************
+*** 1314,1320 ****
+              self.cmd.append(cmd)
+              self.args.append(args)
+  
+!         a = SCons.Action.CommandGeneratorAction(f)
+          self.dummy = 0
+          self.cmd = []
+          self.args = []
+--- 1440,1446 ----
+              self.cmd.append(cmd)
+              self.args.append(args)
+  
+!         a = self.factory(f)
+          self.dummy = 0
+          self.cmd = []
+          self.args = []
+***************
+*** 1325,1331 ****
+          assert self.cmd == ['foo', 'bar'], self.cmd
+          assert self.args == [[ 'foo', 'baz' ], [ 'bar', 'ack' ]], self.args
+  
+!         b = SCons.Action.CommandGeneratorAction(f2)
+          self.dummy = 0
+          b(target=[], source=[], env=Environment(foo =  'bar',
+                                                          dummy =  2 ))
+--- 1451,1457 ----
+          assert self.cmd == ['foo', 'bar'], self.cmd
+          assert self.args == [[ 'foo', 'baz' ], [ 'bar', 'ack' ]], self.args
+  
+!         b = self.factory(f2)
+          self.dummy = 0
+          b(target=[], source=[], env=Environment(foo =  'bar',
+                                                          dummy =  2 ))
+***************
+*** 1342,1348 ****
+                  return self
+          def f3(target, source, env, for_signature):
+              return ''
+!         c = SCons.Action.CommandGeneratorAction(f3)
+          c(target=[], source=DummyFile(self), env=Environment())
+          assert self.rfile_called
+  
+--- 1468,1474 ----
+                  return self
+          def f3(target, source, env, for_signature):
+              return ''
+!         c = self.factory(f3)
+          c(target=[], source=DummyFile(self), env=Environment())
+          assert self.rfile_called
+  
+***************
+*** 1362,1368 ****
+  
+          env = Environment(foo = 'FFF', bar =  'BBB',
+                            ignore = 'foo', test=test)
+!         a = SCons.Action.CommandGeneratorAction(f)
+          c = a.get_contents(target=[], source=[], env=env)
+          assert c == "guux FFF BBB test", c
+  
+--- 1488,1494 ----
+  
+          env = Environment(foo = 'FFF', bar =  'BBB',
+                            ignore = 'foo', test=test)
+!         a = self.factory(f)
+          c = a.get_contents(target=[], source=[], env=env)
+          assert c == "guux FFF BBB test", c
+  
+***************
+*** 1381,1421 ****
+          def func4():
+              pass
+  
+!         a = SCons.Action.FunctionAction(func1)
+          assert a.execfunction == func1, a.execfunction
+          assert isinstance(a.strfunction, types.MethodType), type(a.strfunction)
+  
+!         a = SCons.Action.FunctionAction(func2, strfunction=func3)
+          assert a.execfunction == func2, a.execfunction
+          assert a.strfunction == func3, a.strfunction
+  
+-     def test_cmdstr_bad(self):
+-         """Test handling of bad FunctionAction(cmdstr) arguments
+-         """
+-         def func():
+-             pass
+-         try:
+-             a = SCons.Action.FunctionAction(func, [])
+-         except SCons.Errors.UserError, e:
+-             s = str(e)
+-             m = 'Invalid function display variable'
+-             assert string.find(s, m) != -1, 'Unexpected string:  %s' % s
+-         else:
+-             raise "did not catch expected UserError"
+- 
+      def test___str__(self):
+          """Test the __str__() method for function Actions
+          """
+          def func1():
+              pass
+!         a = SCons.Action.FunctionAction(func1)
+          s = str(a)
+          assert s == "func1(target, source, env)", s
+  
+          class class1:
+              def __call__(self):
+                  pass
+!         a = SCons.Action.FunctionAction(class1())
+          s = str(a)
+          assert s == "class1(target, source, env)", s
+  
+--- 1507,1533 ----
+          def func4():
+              pass
+  
+!         a = SCons.Action.FunctionAction(func1, {})
+          assert a.execfunction == func1, a.execfunction
+          assert isinstance(a.strfunction, types.MethodType), type(a.strfunction)
+  
+!         a = SCons.Action.FunctionAction(func2, { 'strfunction' : func3 })
+          assert a.execfunction == func2, a.execfunction
+          assert a.strfunction == func3, a.strfunction
+  
+      def test___str__(self):
+          """Test the __str__() method for function Actions
+          """
+          def func1():
+              pass
+!         a = SCons.Action.FunctionAction(func1, {})
+          s = str(a)
+          assert s == "func1(target, source, env)", s
+  
+          class class1:
+              def __call__(self):
+                  pass
+!         a = SCons.Action.FunctionAction(class1(), {})
+          s = str(a)
+          assert s == "class1(target, source, env)", s
+  
+***************
+*** 1430,1436 ****
+              s.source=source
+              assert env.subst("$BAR") == 'foo bar', env.subst("$BAR")
+              return 0
+!         a = SCons.Action.FunctionAction(f)
+          a(target=1, source=2, env=Environment(BAR = 'foo bar',
+                                                        s = self))
+          assert self.inc == 1, self.inc
+--- 1542,1548 ----
+              s.source=source
+              assert env.subst("$BAR") == 'foo bar', env.subst("$BAR")
+              return 0
+!         a = SCons.Action.FunctionAction(f, {})
+          a(target=1, source=2, env=Environment(BAR = 'foo bar',
+                                                        s = self))
+          assert self.inc == 1, self.inc
+***************
+*** 1446,1452 ****
+                  open(t, 'w').write("function1\n")
+              return 1
+  
+!         act = SCons.Action.FunctionAction(function1)
+          r = act(target = [outfile, outfile2], source=[], env=Environment())
+          assert r.status == 1, r.status
+  
+--- 1558,1564 ----
+                  open(t, 'w').write("function1\n")
+              return 1
+  
+!         act = SCons.Action.FunctionAction(function1, {})
+          r = act(target = [outfile, outfile2], source=[], env=Environment())
+          assert r.status == 1, r.status
+  
+***************
+*** 1460,1466 ****
+              def __init__(self, target, source, env):
+                  open(env['out'], 'w').write("class1a\n")
+  
+!         act = SCons.Action.FunctionAction(class1a)
+          r = act([], [], Environment(out = outfile))
+          assert isinstance(r.status, class1a), r.status
+          c = test.read(outfile, 'r')
+--- 1572,1578 ----
+              def __init__(self, target, source, env):
+                  open(env['out'], 'w').write("class1a\n")
+  
+!         act = SCons.Action.FunctionAction(class1a, {})
+          r = act([], [], Environment(out = outfile))
+          assert isinstance(r.status, class1a), r.status
+          c = test.read(outfile, 'r')
+***************
+*** 1471,1477 ****
+                  open(env['out'], 'w').write("class1b\n")
+                  return 2
+  
+!         act = SCons.Action.FunctionAction(class1b())
+          r = act([], [], Environment(out = outfile))
+          assert r.status == 2, r.status
+          c = test.read(outfile, 'r')
+--- 1583,1589 ----
+                  open(env['out'], 'w').write("class1b\n")
+                  return 2
+  
+!         act = SCons.Action.FunctionAction(class1b(), {})
+          r = act([], [], Environment(out = outfile))
+          assert r.status == 2, r.status
+          c = test.read(outfile, 'r')
+***************
+*** 1483,1489 ****
+          def string_it(target, source, env, self=self):
+              self.string_it = 1
+              return None
+!         act = SCons.Action.FunctionAction(build_it, strfunction=string_it)
+          r = act([], [], Environment())
+          assert r == 0, r
+          assert self.build_it
+--- 1595,1601 ----
+          def string_it(target, source, env, self=self):
+              self.string_it = 1
+              return None
+!         act = SCons.Action.FunctionAction(build_it, { 'strfunction' : string_it })
+          r = act([], [], Environment())
+          assert r == 0, r
+          assert self.build_it
+***************
+*** 1506,1542 ****
+              "1,1,0,0,(),(),(d\x00\x00S),(),()",
+          ]
+  
+!         a = SCons.Action.FunctionAction(GlobalFunc)
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+  
+!         a = SCons.Action.FunctionAction(LocalFunc)
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+  
+-         a = SCons.Action.FunctionAction(GlobalFunc, varlist=['XYZ'])
+- 
+          matches_foo = map(lambda x: x + "foo", func_matches)
+  
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+!         c = a.get_contents(target=[], source=[], env=Environment(XYZ = 'foo'))
+          assert c in matches_foo, repr(c)
+  
+          # Make sure a bare string varlist works
+!         a = SCons.Action.FunctionAction(GlobalFunc, varlist='XYZ')
+! 
+!         matches_foo = map(lambda x: x + "foo", func_matches)
+! 
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+!         c = a.get_contents(target=[], source=[], env=Environment(XYZ = 'foo'))
+          assert c in matches_foo, repr(c)
+  
+          class Foo:
+              def get_contents(self, target, source, env):
+                  return 'xyzzy'
+!         a = SCons.Action.FunctionAction(Foo())
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c == 'xyzzy', repr(c)
+  
+--- 1618,1654 ----
+              "1,1,0,0,(),(),(d\x00\x00S),(),()",
+          ]
+  
+!         def factory(act, **kw):
+!             return SCons.Action.FunctionAction(act, kw)
+! 
+!         a = factory(GlobalFunc)
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+  
+!         a = factory(LocalFunc)
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+  
+          matches_foo = map(lambda x: x + "foo", func_matches)
+  
++         a = factory(GlobalFunc, varlist=['XYZ'])
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+!         c = a.get_contents(target=[], source=[], env=Environment(XYZ='foo'))
+          assert c in matches_foo, repr(c)
+  
++         ##TODO: is this set of tests still needed?
+          # Make sure a bare string varlist works
+!         a = factory(GlobalFunc, varlist='XYZ')
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in func_matches, repr(c)
+!         c = a.get_contents(target=[], source=[], env=Environment(XYZ='foo'))
+          assert c in matches_foo, repr(c)
+  
+          class Foo:
+              def get_contents(self, target, source, env):
+                  return 'xyzzy'
+!         a = factory(Foo())
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c == 'xyzzy', repr(c)
+  
+***************
+*** 1544,1550 ****
+              def LocalMethod(self):
+                  pass
+          lc = LocalClass()
+!         a = SCons.Action.FunctionAction(lc.LocalMethod)
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in meth_matches, repr(c)
+  
+--- 1656,1662 ----
+              def LocalMethod(self):
+                  pass
+          lc = LocalClass()
+!         a = factory(lc.LocalMethod)
+          c = a.get_contents(target=[], source=[], env=Environment())
+          assert c in meth_matches, repr(c)
+  
+***************
+*** 1554,1568 ****
+          def func():
+              pass
+  
+!         a = SCons.Action.FunctionAction(func)
+          s = a.strfunction(target=[], source=[], env=Environment())
+          assert s == 'func([], [])', s
+  
+!         a = SCons.Action.FunctionAction(func, None)
+          s = a.strfunction(target=[], source=[], env=Environment())
+          assert s is None, s
+  
+!         a = SCons.Action.FunctionAction(func, 'function')
+          s = a.strfunction(target=[], source=[], env=Environment())
+          assert s == 'function', s
+  
+--- 1666,1683 ----
+          def func():
+              pass
+  
+!         def factory(act, **kw):
+!             return SCons.Action.FunctionAction(act, kw)
+! 
+!         a = factory(func)
+          s = a.strfunction(target=[], source=[], env=Environment())
+          assert s == 'func([], [])', s
+  
+!         a = factory(func, strfunction=None)
+          s = a.strfunction(target=[], source=[], env=Environment())
+          assert s is None, s
+  
+!         a = factory(func, cmdstr='function')
+          s = a.strfunction(target=[], source=[], env=Environment())
+          assert s == 'function', s
+  
+***************
+*** 1881,1889 ****
+  
+  if __name__ == "__main__":
+      suite = unittest.TestSuite()
+!     tclasses = [ ActionTestCase,
+!                  ActionBaseTestCase,
+                   _ActionActionTestCase,
+                   CommandActionTestCase,
+                   CommandGeneratorActionTestCase,
+                   FunctionActionTestCase,
+--- 1996,2004 ----
+  
+  if __name__ == "__main__":
+      suite = unittest.TestSuite()
+!     tclasses = [ ActionBaseTestCase,
+                   _ActionActionTestCase,
++                  ActionTestCase,
+                   CommandActionTestCase,
+                   CommandGeneratorActionTestCase,
+                   FunctionActionTestCase,
+Index: src/engine/SCons/Action.py
+===================================================================
+*** src/engine/SCons/Action.py	(revision 3495)
+--- src/engine/SCons/Action.py	(working copy)
+***************
+*** 30,38 ****
+          a pre-substitution command for debugging purposes.
+  
+      get_contents()
+!         Fetches the "contents" of an Action for signature calculation.
+!         This is what gets MD5 checksumm'ed to decide if a target needs
+!         to be rebuilt because its action changed.
+  
+      genstring()
+          Returns a string representation of the Action *without*
+--- 30,38 ----
+          a pre-substitution command for debugging purposes.
+  
+      get_contents()
+!         Fetches the "contents" of an Action for signature calculation
+!         plus the varlist.  This is what gets MD5 checksummed to decide
+!         if a target needs to be rebuilt because its action changed.
+  
+      genstring()
+          Returns a string representation of the Action *without*
+***************
+*** 49,55 ****
+      __str__()
+          Returns a string approximation of the Action; no variable
+          substitution is performed.
+!         
+      execute()
+          The internal method that really, truly, actually handles the
+          execution of a command or Python function.  This is used so
+--- 49,55 ----
+      __str__()
+          Returns a string approximation of the Action; no variable
+          substitution is performed.
+! 
+      execute()
+          The internal method that really, truly, actually handles the
+          execution of a command or Python function.  This is used so
+***************
+*** 57,62 ****
+--- 57,66 ----
+          pre-substitution representations, and *then* execute an action
+          without worrying about the specific Actions involved.
+  
++     get_presig()
++         Fetches the "contents" of a subclass for signature calculation.
++         The varlist is added to this to produce the Action's contents.
++ 
+      strfunction()
+          Returns a substituted string representation of the Action.
+          This is used by the _ActionAction.show() command to display the
+***************
+*** 72,78 ****
+  
+  """
+  
+- #
+  # __COPYRIGHT__
+  #
+  # Permission is hereby granted, free of charge, to any person obtaining
+--- 76,81 ----
+***************
+*** 93,99 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 96,101 ----
+***************
+*** 109,119 ****
+  import SCons.Errors
+  import SCons.Executor
+  import SCons.Util
+  
+! class _Null:
+!     pass
+  
+! _null = _Null
+  
+  print_actions = 1
+  execute_actions = 1
+--- 111,124 ----
+  import SCons.Errors
+  import SCons.Executor
+  import SCons.Util
++ import SCons.Subst
+  
+! # we use these a lot, so try to optimize them
+! is_String = SCons.Util.is_String
+! is_List = SCons.Util.is_List
+  
+! class _null:
+!     pass
+  
+  print_actions = 1
+  execute_actions = 1
+***************
+*** 175,181 ****
+  
+  def _object_contents(obj):
+      """Return the signature contents of any Python object.
+!     
+      We have to handle the case where object contains a code object
+      since it can be pickled directly.
+      """
+--- 180,186 ----
+  
+  def _object_contents(obj):
+      """Return the signature contents of any Python object.
+! 
+      We have to handle the case where object contains a code object
+      since it can be pickled directly.
+      """
+***************
+*** 199,205 ****
+                      return _function_contents(obj)
+  
+                  except AttributeError:
+!                     # Should be a pickable Python object. 
+                      try:
+                          return cPickle.dumps(obj)
+                      except (cPickle.PicklingError, TypeError):
+--- 204,210 ----
+                      return _function_contents(obj)
+  
+                  except AttributeError:
+!                     # Should be a pickable Python object.
+                      try:
+                          return cPickle.dumps(obj)
+                      except (cPickle.PicklingError, TypeError):
+***************
+*** 216,222 ****
+  
+      By providing direct access to the code object of the
+      function, Python makes this extremely easy.  Hooray!
+!     
+      Unfortunately, older versions of Python include line
+      number indications in the compiled byte code.  Boo!
+      So we remove the line number byte codes to prevent
+--- 221,227 ----
+  
+      By providing direct access to the code object of the
+      function, Python makes this extremely easy.  Hooray!
+! 
+      Unfortunately, older versions of Python include line
+      number indications in the compiled byte code.  Boo!
+      So we remove the line number byte codes to prevent
+***************
+*** 237,249 ****
+      # The code contents depends on any constants accessed by the
+      # function. Note that we have to call _object_contents on each
+      # constants because the code object of nested functions can
+!     # show-up among the constants. 
+!     # 
+      # Note that we also always ignore the first entry of co_consts
+      # which contains the function doc string. We assume that the
+      # function does not access its doc string.
+      contents.append(',(' + string.join(map(_object_contents,code.co_consts[1:]),',') + ')')
+!                                  
+      # The code contents depends on the variable names used to
+      # accessed global variable, as changing the variable name changes
+      # the variable actually accessed and therefore changes the
+--- 242,254 ----
+      # The code contents depends on any constants accessed by the
+      # function. Note that we have to call _object_contents on each
+      # constants because the code object of nested functions can
+!     # show-up among the constants.
+!     #
+      # Note that we also always ignore the first entry of co_consts
+      # which contains the function doc string. We assume that the
+      # function does not access its doc string.
+      contents.append(',(' + string.join(map(_object_contents,code.co_consts[1:]),',') + ')')
+! 
+      # The code contents depends on the variable names used to
+      # accessed global variable, as changing the variable name changes
+      # the variable actually accessed and therefore changes the
+***************
+*** 283,289 ****
+      contents.append(',(' + string.join(xxx, ',') + ')')
+  
+      return string.join(contents, '')
+!         
+  
+  def _actionAppend(act1, act2):
+      # This function knows how to slap two actions together.
+--- 288,294 ----
+      contents.append(',(' + string.join(xxx, ',') + ')')
+  
+      return string.join(contents, '')
+! 
+  
+  def _actionAppend(act1, act2):
+      # This function knows how to slap two actions together.
+***************
+*** 304,310 ****
+          else:
+              return ListAction([ a1, a2 ])
+  
+! def _do_create_action(act, *args, **kw):
+      """This is the actual "implementation" for the
+      Action factory method, below.  This handles the
+      fact that passing lists to Action() itself has
+--- 309,342 ----
+          else:
+              return ListAction([ a1, a2 ])
+  
+! def _do_create_keywords(args, kw):
+!     """This converts any arguments after the action argument into
+!     their equivalent keywords and adds them to the kw argument.
+!     """
+!     v = kw.get('varlist', ())
+!     # prevent varlist="FOO" from being interpreted as ['F', 'O', 'O']
+!     if is_String(v): v = (v,)
+!     kw['varlist'] = tuple(v)
+!     if args:
+!         # turn positional args into equivalent keywords
+!         cmdstrfunc = args[0]
+!         if cmdstrfunc is None or is_String(cmdstrfunc):
+!             kw['cmdstr'] = cmdstrfunc
+!         elif callable(cmdstrfunc):
+!             kw['strfunction'] = cmdstrfunc
+!         else:
+!             raise SCons.Errors.UserError(
+!                 'Invalid command display variable type. '
+!                 'You must either pass a string or a callback which '
+!                 'accepts (target, source, env) as parameters.')
+!         if len(args) > 1:
+!             kw['varlist'] = args[1:] + kw['varlist']
+!     if kw.get('strfunction', _null) is not _null \
+!                       and kw.get('cmdstr', _null) is not _null:
+!         raise SCons.Errors.UserError(
+!             'Cannot have both strfunction and cmdstr args to Action()')
+! 
+! def _do_create_action(act, kw):
+      """This is the actual "implementation" for the
+      Action factory method, below.  This handles the
+      fact that passing lists to Action() itself has
+***************
+*** 317,324 ****
+  
+      if isinstance(act, ActionBase):
+          return act
+!     if SCons.Util.is_List(act):
+!         return apply(CommandAction, (act,)+args, kw)
+      if callable(act):
+          try:
+              gen = kw['generator']
+--- 349,359 ----
+  
+      if isinstance(act, ActionBase):
+          return act
+! 
+!     if is_List(act):
+!         #TODO(1.5) return CommandAction(act, **kw)
+!         return apply(CommandAction, (act,), kw)
+! 
+      if callable(act):
+          try:
+              gen = kw['generator']
+***************
+*** 329,336 ****
+              action_type = CommandGeneratorAction
+          else:
+              action_type = FunctionAction
+!         return apply(action_type, (act,)+args, kw)
+!     if SCons.Util.is_String(act):
+          var=SCons.Util.get_environment_var(act)
+          if var:
+              # This looks like a string that is purely an Environment
+--- 364,372 ----
+              action_type = CommandGeneratorAction
+          else:
+              action_type = FunctionAction
+!         return action_type(act, kw)
+! 
+!     if is_String(act):
+          var=SCons.Util.get_environment_var(act)
+          if var:
+              # This looks like a string that is purely an Environment
+***************
+*** 339,368 ****
+              # of that Environment variable, so a user could put something
+              # like a function or a CommandGenerator in that variable
+              # instead of a string.
+!             return apply(LazyAction, (var,)+args, kw)
+          commands = string.split(str(act), '\n')
+          if len(commands) == 1:
+!             return apply(CommandAction, (commands[0],)+args, kw)
+!         else:
+!             listCmdActions = map(lambda x, args=args, kw=kw:
+!                                  apply(CommandAction, (x,)+args, kw),
+!                                  commands)
+!             return ListAction(listCmdActions)
+      return None
+  
+  def Action(act, *args, **kw):
+      """A factory for action objects."""
+!     if SCons.Util.is_List(act):
+!         acts = map(lambda a, args=args, kw=kw:
+!                           apply(_do_create_action, (a,)+args, kw),
+!                    act)
+!         acts = filter(None, acts)
+!         if len(acts) == 1:
+!             return acts[0]
+!         else:
+!             return ListAction(acts)
+!     else:
+!         return apply(_do_create_action, (act,)+args, kw)
+  
+  class ActionBase:
+      """Base class for all types of action objects that can be held by
+--- 375,411 ----
+              # of that Environment variable, so a user could put something
+              # like a function or a CommandGenerator in that variable
+              # instead of a string.
+!             return LazyAction(var, kw)
+          commands = string.split(str(act), '\n')
+          if len(commands) == 1:
+!             #TODO(1.5) return CommandAction(commands[0], **kw)
+!             return apply(CommandAction, (commands[0],), kw)
+!         # The list of string commands may include a LazyAction, so we
+!         # reprocess them via _do_create_list_action.
+!         return _do_create_list_action(commands, kw)
+      return None
+  
++ def _do_create_list_action(act, kw):
++     """A factory for list actions.  Convert the input list into Actions
++     and then wrap them in a ListAction."""
++     acts = []
++     for a in act:
++         aa = _do_create_action(a, kw)
++         if aa is not None: acts.append(aa)
++     if not acts:
++         return None
++     elif len(acts) == 1:
++         return acts[0]
++     else:
++         return ListAction(acts)
++ 
+  def Action(act, *args, **kw):
+      """A factory for action objects."""
+!     # Really simple: the _do_create_* routines do the heavy lifting.
+!     _do_create_keywords(args, kw)
+!     if is_List(act):
+!         return _do_create_list_action(act, kw)
+!     return _do_create_action(act, kw)
+  
+  class ActionBase:
+      """Base class for all types of action objects that can be held by
+***************
+*** 375,380 ****
+--- 418,434 ----
+      def genstring(self, target, source, env):
+          return str(self)
+  
++     def get_contents(self, target, source, env):
++         result = [ self.get_presig(target, source, env) ]
++         # This should never happen, as the Action() factory should wrap
++         # the varlist, but just in case an action is created directly,
++         # we duplicate this check here.
++         vl = self.varlist
++         if is_String(vl): vl = (vl,)
++         for v in vl:
++             result.append(env.subst('${'+v+'}'))
++         return string.join(result, '')
++ 
+      def __add__(self, other):
+          return _actionAppend(self, other)
+  
+***************
+*** 400,408 ****
+  
+  class _ActionAction(ActionBase):
+      """Base class for actions that create output objects."""
+!     def __init__(self, strfunction=_null, presub=_null, chdir=None, exitstatfunc=None, **kw):
+!         if not strfunction is _null:
+!             self.strfunction = strfunction
+          self.presub = presub
+          self.chdir = chdir
+          if not exitstatfunc:
+--- 454,469 ----
+  
+  class _ActionAction(ActionBase):
+      """Base class for actions that create output objects."""
+!     def __init__(self, cmdstr=_null, strfunction=_null, varlist=(),
+!                        presub=_null, chdir=None, exitstatfunc=None,
+!                  **kw):
+!         self.cmdstr = cmdstr
+!         if strfunction is not _null:
+!             if strfunction is None:
+!                 self.cmdstr = None
+!             else:
+!                 self.strfunction = strfunction
+!         self.varlist = varlist
+          self.presub = presub
+          self.chdir = chdir
+          if not exitstatfunc:
+***************
+*** 418,433 ****
+                                 show=_null,
+                                 execute=_null,
+                                 chdir=_null):
+!         if not SCons.Util.is_List(target):
+              target = [target]
+!         if not SCons.Util.is_List(source):
+              source = [source]
+  
+-         if exitstatfunc is _null: exitstatfunc = self.exitstatfunc
+          if presub is _null:
+              presub = self.presub
+!         if presub is _null:
+!             presub = print_actions_presub
+          if show is _null:  show = print_actions
+          if execute is _null:  execute = execute_actions
+          if chdir is _null: chdir = self.chdir
+--- 479,494 ----
+                                 show=_null,
+                                 execute=_null,
+                                 chdir=_null):
+!         if not is_List(target):
+              target = [target]
+!         if not is_List(source):
+              source = [source]
+  
+          if presub is _null:
+              presub = self.presub
+!             if presub is _null:
+!                 presub = print_actions_presub
+!         if exitstatfunc is _null: exitstatfunc = self.exitstatfunc
+          if show is _null:  show = print_actions
+          if execute is _null:  execute = execute_actions
+          if chdir is _null: chdir = self.chdir
+***************
+*** 437,443 ****
+              try:
+                  chdir = str(chdir.abspath)
+              except AttributeError:
+!                 if not SCons.Util.is_String(chdir):
+                      chdir = str(target[0].dir)
+          if presub:
+              t = string.join(map(str, target), ' and ')
+--- 498,504 ----
+              try:
+                  chdir = str(chdir.abspath)
+              except AttributeError:
+!                 if not is_String(chdir):
+                      chdir = str(target[0].dir)
+          if presub:
+              t = string.join(map(str, target), ' and ')
+***************
+*** 492,527 ****
+          cl.append(arg)
+      return string.join(cl)
+  
+! # this function is still in draft mode.  We're going to need something like
+! # it in the long run as more and more places use it, but I'm sure it'll have
+! # to be tweaked to get the full desired functionality.
+  default_ENV = None
+! # one special arg, 'error', to tell what to do with exceptions.
+  def _subproc(env, cmd, error = 'ignore', **kw):
+      """Do setup for a subprocess.Popen() call"""
+  
+!     # If the env has no ENV, get a default
+!     try:
+!         ENV = env['ENV']
+!     except KeyError:
+!         global default_ENV
+!         if default_ENV is None:
+!             # Unbelievably expensive.  What it really should do
+!             # is run the platform setup to get the default ENV.
+!             # Fortunately, it should almost never happen.
+!             default_ENV = SCons.Environment.Environment(tools=[])['ENV']
+!         ENV = default_ENV
+!     
+      # Ensure that the ENV values are all strings:
+      new_env = {}
+-     # It's a string 99.44% of the time, so optimize this
+-     is_String = SCons.Util.is_String
+      for key, value in ENV.items():
+          if is_String(value):
+              # Call str() even though it's a "string" because it might be
+              # a *Unicode* string, which makes subprocess.Popen() gag.
+              new_env[key] = str(value)
+!         elif SCons.Util.is_List(value):
+              # If the value is a list, then we assume it is a
+              # path list, because that's a pretty common list-like
+              # value to stick in an environment variable:
+--- 553,597 ----
+          cl.append(arg)
+      return string.join(cl)
+  
+! # A fiddlin' little function that has an 'import SCons.Environment' which
+! # can't be moved to the top level without creating an import loop.  Since
+! # this import creates a local variable named 'SCons', it blocks access to
+! # the global variable, so we move it here to prevent complaints about local
+! # variables being used uninitialized.
+  default_ENV = None
+! def get_default_ENV(env):
+!     global default_ENV
+!     try:
+!         return env['ENV']
+!     except KeyError:
+!         if not default_ENV:
+!             import SCons.Environment
+!             # This is a hideously expensive way to get a default shell
+!             # environment.  What it really should do is run the platform
+!             # setup to get the default ENV.  Fortunately, it's incredibly
+!             # rare for an Environment not to have a shell environment, so
+!             # we're not going to worry about it overmuch.
+!             default_ENV = SCons.Environment.Environment()['ENV']
+!         return default_ENV
+! 
+! # This function is still in draft mode.  We're going to need something like
+! # it in the long run as more and more places use subprocess, but I'm sure
+! # it'll have to be tweaked to get the full desired functionality.
+! # one special arg (so far?), 'error', to tell what to do with exceptions.
+  def _subproc(env, cmd, error = 'ignore', **kw):
+      """Do setup for a subprocess.Popen() call"""
+  
+!     # If the env has no shell environment, get a default
+!     ENV = get_default_ENV(env)
+! 
+      # Ensure that the ENV values are all strings:
+      new_env = {}
+      for key, value in ENV.items():
+          if is_String(value):
+              # Call str() even though it's a "string" because it might be
+              # a *Unicode* string, which makes subprocess.Popen() gag.
+              new_env[key] = str(value)
+!         elif is_List(value):
+              # If the value is a list, then we assume it is a
+              # path list, because that's a pretty common list-like
+              # value to stick in an environment variable:
+***************
+*** 541,547 ****
+      except EnvironmentError, e:
+          if error == 'raise': raise
+          # return a dummy Popen instance that only returns error
+!         class popen:
+              def __init__(self, e): self.exception = e
+              def communicate(self): return ('','')
+              def wait(self): return -self.exception.errno
+--- 611,617 ----
+      except EnvironmentError, e:
+          if error == 'raise': raise
+          # return a dummy Popen instance that only returns error
+!         class dummyPopen:
+              def __init__(self, e): self.exception = e
+              def communicate(self): return ('','')
+              def wait(self): return -self.exception.errno
+***************
+*** 550,560 ****
+                  def read(self): return ''
+                  def readline(self): return ''
+              stdout = stderr = f()
+!         return popen(e)
+  
+  class CommandAction(_ActionAction):
+      """Class for command-execution actions."""
+!     def __init__(self, cmd, cmdstr=None, *args, **kw):
+          # Cmd can actually be a list or a single item; if it's a
+          # single item it should be the command string to execute; if a
+          # list then it should be the words of the command string to
+--- 620,630 ----
+                  def read(self): return ''
+                  def readline(self): return ''
+              stdout = stderr = f()
+!         return dummyPopen(e)
+  
+  class CommandAction(_ActionAction):
+      """Class for command-execution actions."""
+!     def __init__(self, cmd, **kw):
+          # Cmd can actually be a list or a single item; if it's a
+          # single item it should be the command string to execute; if a
+          # list then it should be the words of the command string to
+***************
+*** 566,590 ****
+          # variables.
+          if __debug__: logInstanceCreation(self, 'Action.CommandAction')
+  
+!         if not cmdstr is None:
+!             if callable(cmdstr):
+!                 args = (cmdstr,)+args
+!             elif not SCons.Util.is_String(cmdstr):
+!                 raise SCons.Errors.UserError(\
+!                     'Invalid command display variable type. ' \
+!                     'You must either pass a string or a callback which ' \
+!                     'accepts (target, source, env) as parameters.')
+! 
+!         apply(_ActionAction.__init__, (self,)+args, kw)
+!         if SCons.Util.is_List(cmd):
+!             if filter(SCons.Util.is_List, cmd):
+                  raise TypeError, "CommandAction should be given only " \
+                        "a single command"
+          self.cmd_list = cmd
+-         self.cmdstr = cmdstr
+  
+      def __str__(self):
+!         if SCons.Util.is_List(self.cmd_list):
+              return string.join(map(str, self.cmd_list), ' ')
+          return str(self.cmd_list)
+  
+--- 636,651 ----
+          # variables.
+          if __debug__: logInstanceCreation(self, 'Action.CommandAction')
+  
+!         #TODO(1.5) _ActionAction.__init__(self, **kw)
+!         apply(_ActionAction.__init__, (self,), kw)
+!         if is_List(cmd):
+!             if filter(is_List, cmd):
+                  raise TypeError, "CommandAction should be given only " \
+                        "a single command"
+          self.cmd_list = cmd
+  
+      def __str__(self):
+!         if is_List(self.cmd_list):
+              return string.join(map(str, self.cmd_list), ' ')
+          return str(self.cmd_list)
+  
+***************
+*** 607,613 ****
+          return result, ignore, silent
+  
+      def strfunction(self, target, source, env):
+!         if not self.cmdstr is None:
+              from SCons.Subst import SUBST_RAW
+              c = env.subst(self.cmdstr, SUBST_RAW, target, source)
+              if c:
+--- 668,676 ----
+          return result, ignore, silent
+  
+      def strfunction(self, target, source, env):
+!         if self.cmdstr is None:
+!             return None
+!         if self.cmdstr is not _null:
+              from SCons.Subst import SUBST_RAW
+              c = env.subst(self.cmdstr, SUBST_RAW, target, source)
+              if c:
+***************
+*** 626,636 ****
+          handle lists of commands, even though that's not how we use it
+          externally.
+          """
+!         from SCons.Subst import escape_list
+!         import SCons.Util
+          flatten_sequence = SCons.Util.flatten_sequence
+-         is_String = SCons.Util.is_String
+-         is_List = SCons.Util.is_List
+  
+          try:
+              shell = env['SHELL']
+--- 689,696 ----
+          handle lists of commands, even though that's not how we use it
+          externally.
+          """
+!         escape_list = SCons.Subst.escape_list
+          flatten_sequence = SCons.Util.flatten_sequence
+  
+          try:
+              shell = env['SHELL']
+***************
+*** 647,660 ****
+  
+          escape = env.get('ESCAPE', lambda x: x)
+  
+!         try:
+!             ENV = env['ENV']
+!         except KeyError:
+!             global default_ENV
+!             if not default_ENV:
+!                 import SCons.Environment
+!                 default_ENV = SCons.Environment.Environment()['ENV']
+!             ENV = default_ENV
+  
+          # Ensure that the ENV values are all strings:
+          for key, value in ENV.items():
+--- 707,713 ----
+  
+          escape = env.get('ESCAPE', lambda x: x)
+  
+!         ENV = get_default_ENV(env)
+  
+          # Ensure that the ENV values are all strings:
+          for key, value in ENV.items():
+***************
+*** 687,693 ****
+                                                 command=cmd_line)
+          return 0
+  
+!     def get_contents(self, target, source, env):
+          """Return the signature contents of this action's command line.
+  
+          This strips $(-$) and everything in between the string,
+--- 740,746 ----
+                                                 command=cmd_line)
+          return 0
+  
+!     def get_presig(self, target, source, env):
+          """Return the signature contents of this action's command line.
+  
+          This strips $(-$) and everything in between the string,
+***************
+*** 695,701 ****
+          """
+          from SCons.Subst import SUBST_SIG
+          cmd = self.cmd_list
+!         if SCons.Util.is_List(cmd):
+              cmd = string.join(map(str, cmd))
+          else:
+              cmd = str(cmd)
+--- 748,754 ----
+          """
+          from SCons.Subst import SUBST_SIG
+          cmd = self.cmd_list
+!         if is_List(cmd):
+              cmd = string.join(map(str, cmd))
+          else:
+              cmd = str(cmd)
+***************
+*** 703,709 ****
+  
+      def get_implicit_deps(self, target, source, env):
+          icd = env.get('IMPLICIT_COMMAND_DEPENDENCIES', True)
+!         if SCons.Util.is_String(icd) and icd[:1] == '$':
+              icd = env.subst(icd)
+          if not icd or icd in ('0', 'None'):
+              return []
+--- 756,762 ----
+  
+      def get_implicit_deps(self, target, source, env):
+          icd = env.get('IMPLICIT_COMMAND_DEPENDENCIES', True)
+!         if is_String(icd) and icd[:1] == '$':
+              icd = env.subst(icd)
+          if not icd or icd in ('0', 'None'):
+              return []
+***************
+*** 719,738 ****
+  
+  class CommandGeneratorAction(ActionBase):
+      """Class for command-generator actions."""
+!     def __init__(self, generator, *args, **kw):
+          if __debug__: logInstanceCreation(self, 'Action.CommandGeneratorAction')
+          self.generator = generator
+-         self.gen_args = args
+          self.gen_kw = kw
+  
+      def _generate(self, target, source, env, for_signature):
+          # ensure that target is a list, to make it easier to write
+          # generator functions:
+!         if not SCons.Util.is_List(target):
+              target = [target]
+  
+          ret = self.generator(target=target, source=source, env=env, for_signature=for_signature)
+!         gen_cmd = apply(Action, (ret,)+self.gen_args, self.gen_kw)
+          if not gen_cmd:
+              raise SCons.Errors.UserError("Object returned from command generator: %s cannot be used to create an Action." % repr(ret))
+          return gen_cmd
+--- 772,792 ----
+  
+  class CommandGeneratorAction(ActionBase):
+      """Class for command-generator actions."""
+!     def __init__(self, generator, kw):
+          if __debug__: logInstanceCreation(self, 'Action.CommandGeneratorAction')
+          self.generator = generator
+          self.gen_kw = kw
++         self.varlist = kw.get('varlist', ())
+  
+      def _generate(self, target, source, env, for_signature):
+          # ensure that target is a list, to make it easier to write
+          # generator functions:
+!         if not is_List(target):
+              target = [target]
+  
+          ret = self.generator(target=target, source=source, env=env, for_signature=for_signature)
+!         #TODO(1.5) gen_cmd = Action(ret, **self.gen_kw)
+!         gen_cmd = apply(Action, (ret,), self.gen_kw)
+          if not gen_cmd:
+              raise SCons.Errors.UserError("Object returned from command generator: %s cannot be used to create an Action." % repr(ret))
+          return gen_cmd
+***************
+*** 756,768 ****
+          return act(target, source, env, exitstatfunc, presub,
+                     show, execute, chdir)
+  
+!     def get_contents(self, target, source, env):
+          """Return the signature contents of this action's command line.
+  
+          This strips $(-$) and everything in between the string,
+          since those parts don't affect signatures.
+          """
+!         return self._generate(target, source, env, 1).get_contents(target, source, env)
+  
+      def get_implicit_deps(self, target, source, env):
+          return self._generate(target, source, env, 1).get_implicit_deps(target, source, env)
+--- 810,822 ----
+          return act(target, source, env, exitstatfunc, presub,
+                     show, execute, chdir)
+  
+!     def get_presig(self, target, source, env):
+          """Return the signature contents of this action's command line.
+  
+          This strips $(-$) and everything in between the string,
+          since those parts don't affect signatures.
+          """
+!         return self._generate(target, source, env, 1).get_presig(target, source, env)
+  
+      def get_implicit_deps(self, target, source, env):
+          return self._generate(target, source, env, 1).get_implicit_deps(target, source, env)
+***************
+*** 788,809 ****
+  
+  class LazyAction(CommandGeneratorAction, CommandAction):
+  
+!     def __init__(self, var, *args, **kw):
+          if __debug__: logInstanceCreation(self, 'Action.LazyAction')
+!         apply(CommandAction.__init__, (self, '$'+var)+args, kw)
+          self.var = SCons.Util.to_String(var)
+-         self.gen_args = args
+          self.gen_kw = kw
+  
+      def get_parent_class(self, env):
+          c = env.get(self.var)
+!         if SCons.Util.is_String(c) and not '\n' in c:
+              return CommandAction
+          return CommandGeneratorAction
+  
+      def _generate_cache(self, env):
+          c = env.get(self.var, '')
+!         gen_cmd = apply(Action, (c,)+self.gen_args, self.gen_kw)
+          if not gen_cmd:
+              raise SCons.Errors.UserError("$%s value %s cannot be used to create an Action." % (self.var, repr(c)))
+          return gen_cmd
+--- 842,864 ----
+  
+  class LazyAction(CommandGeneratorAction, CommandAction):
+  
+!     def __init__(self, var, kw):
+          if __debug__: logInstanceCreation(self, 'Action.LazyAction')
+!         #FUTURE CommandAction.__init__(self, '${'+var+'}', **kw)
+!         apply(CommandAction.__init__, (self, '${'+var+'}'), kw)
+          self.var = SCons.Util.to_String(var)
+          self.gen_kw = kw
+  
+      def get_parent_class(self, env):
+          c = env.get(self.var)
+!         if is_String(c) and not '\n' in c:
+              return CommandAction
+          return CommandGeneratorAction
+  
+      def _generate_cache(self, env):
+          c = env.get(self.var, '')
+!         #TODO(1.5) gen_cmd = Action(c, **self.gen_kw)
+!         gen_cmd = apply(Action, (c,), self.gen_kw)
+          if not gen_cmd:
+              raise SCons.Errors.UserError("$%s value %s cannot be used to create an Action." % (self.var, repr(c)))
+          return gen_cmd
+***************
+*** 814,842 ****
+      def __call__(self, target, source, env, *args, **kw):
+          args = (self, target, source, env) + args
+          c = self.get_parent_class(env)
+          return apply(c.__call__, args, kw)
+  
+!     def get_contents(self, target, source, env):
+          c = self.get_parent_class(env)
+!         return c.get_contents(self, target, source, env)
+  
+  
+  
+  class FunctionAction(_ActionAction):
+      """Class for Python function actions."""
+  
+!     def __init__(self, execfunction, cmdstr=_null, *args, **kw):
+          if __debug__: logInstanceCreation(self, 'Action.FunctionAction')
+  
+-         if not cmdstr is _null:
+-             if callable(cmdstr):
+-                 args = (cmdstr,)+args
+-             elif not (cmdstr is None or SCons.Util.is_String(cmdstr)):
+-                 raise SCons.Errors.UserError(\
+-                     'Invalid function display variable type. ' \
+-                     'You must either pass a string or a callback which ' \
+-                     'accepts (target, source, env) as parameters.')
+- 
+          self.execfunction = execfunction
+          try:
+              self.funccontents = _callable_contents(execfunction)
+--- 869,889 ----
+      def __call__(self, target, source, env, *args, **kw):
+          args = (self, target, source, env) + args
+          c = self.get_parent_class(env)
++         #TODO(1.5) return c.__call__(*args, **kw)
+          return apply(c.__call__, args, kw)
+  
+!     def get_presig(self, target, source, env):
+          c = self.get_parent_class(env)
+!         return c.get_presig(self, target, source, env)
+  
+  
+  
+  class FunctionAction(_ActionAction):
+      """Class for Python function actions."""
+  
+!     def __init__(self, execfunction, kw):
+          if __debug__: logInstanceCreation(self, 'Action.FunctionAction')
+  
+          self.execfunction = execfunction
+          try:
+              self.funccontents = _callable_contents(execfunction)
+***************
+*** 848,859 ****
+                  # This is weird, just do the best we can.
+                  self.funccontents = _object_contents(execfunction)
+  
+!         apply(_ActionAction.__init__, (self,)+args, kw)
+!         self.varlist = kw.get('varlist', [])
+!         if SCons.Util.is_String(self.varlist):
+!             # prevent varlist="FOO" from being interpreted as ['F', 'O', 'O']
+!             self.varlist=[self.varlist]
+!         self.cmdstr = cmdstr
+  
+      def function_name(self):
+          try:
+--- 895,902 ----
+                  # This is weird, just do the best we can.
+                  self.funccontents = _object_contents(execfunction)
+  
+!         #TODO(1.5) _ActionAction.__init__(self, **kw)
+!         apply(_ActionAction.__init__, (self,), kw)
+  
+      def function_name(self):
+          try:
+***************
+*** 867,873 ****
+      def strfunction(self, target, source, env):
+          if self.cmdstr is None:
+              return None
+!         if not self.cmdstr is _null:
+              from SCons.Subst import SUBST_RAW
+              c = env.subst(self.cmdstr, SUBST_RAW, target, source)
+              if c:
+--- 910,916 ----
+      def strfunction(self, target, source, env):
+          if self.cmdstr is None:
+              return None
+!         if self.cmdstr is not _null:
+              from SCons.Subst import SUBST_RAW
+              c = env.subst(self.cmdstr, SUBST_RAW, target, source)
+              if c:
+***************
+*** 929,946 ****
+                                                   command=self.strfunction(target, source, env))
+          return result
+  
+!     def get_contents(self, target, source, env):
+          """Return the signature contents of this callable action."""
+          try:
+!             contents = self.gc(target, source, env)
+          except AttributeError:
+!             contents = self.funccontents
+! 
+!         result = [contents]
+!         for v in self.varlist:
+!             result.append(env.subst('${'+v+'}'))
+! 
+!         return string.join(result, '')
+  
+      def get_implicit_deps(self, target, source, env):
+          return []
+--- 972,983 ----
+                                                   command=self.strfunction(target, source, env))
+          return result
+  
+!     def get_presig(self, target, source, env):
+          """Return the signature contents of this callable action."""
+          try:
+!             return self.gc(target, source, env)
+          except AttributeError:
+!             return self.funccontents
+  
+      def get_implicit_deps(self, target, source, env):
+          return []
+***************
+*** 954,959 ****
+--- 991,999 ----
+                  return x
+              return Action(x)
+          self.list = map(list_of_actions, list)
++         # our children will have had any varlist
++         # applied; we don't need to do it again
++         self.varlist = ()
+  
+      def genstring(self, target, source, env):
+          return string.join(map(lambda a, t=target, s=source, e=env:
+***************
+*** 963,974 ****
+  
+      def __str__(self):
+          return string.join(map(str, self.list), '\n')
+!     
+      def presub_lines(self, env):
+          return SCons.Util.flatten_sequence(
+              map(lambda a, env=env: a.presub_lines(env), self.list))
+  
+!     def get_contents(self, target, source, env):
+          """Return the signature contents of this action list.
+  
+          Simple concatenation of the signatures of the elements.
+--- 1003,1014 ----
+  
+      def __str__(self):
+          return string.join(map(str, self.list), '\n')
+! 
+      def presub_lines(self, env):
+          return SCons.Util.flatten_sequence(
+              map(lambda a, env=env: a.presub_lines(env), self.list))
+  
+!     def get_presig(self, target, source, env):
+          """Return the signature contents of this action list.
+  
+          Simple concatenation of the signatures of the elements.
+***************
+*** 1006,1011 ****
+--- 1046,1052 ----
+          self.parent = parent
+          self.args = args
+          self.kw = kw
++ 
+      def get_contents(self, target, source, env):
+          actfunc = self.parent.actfunc
+          try:
+***************
+*** 1021,1030 ****
+                  contents = str(actfunc)
+          contents = remove_set_lineno_codes(contents)
+          return contents
+      def subst(self, s, target, source, env):
+          # If s is a list, recursively apply subst()
+          # to every element in the list
+!         if SCons.Util.is_List(s):
+              result = []
+              for elem in s:
+                  result.append(self.subst(elem, target, source, env))
+--- 1062,1072 ----
+                  contents = str(actfunc)
+          contents = remove_set_lineno_codes(contents)
+          return contents
++ 
+      def subst(self, s, target, source, env):
+          # If s is a list, recursively apply subst()
+          # to every element in the list
+!         if is_List(s):
+              result = []
+              for elem in s:
+                  result.append(self.subst(elem, target, source, env))
+***************
+*** 1035,1061 ****
+          # was called by using this hard-coded value as a special return.
+          if s == '$__env__':
+              return env
+!         elif SCons.Util.is_String(s):
+              return env.subst(s, 1, target, source)
+          return self.parent.convert(s)
+      def subst_args(self, target, source, env):
+          return map(lambda x, self=self, t=target, s=source, e=env:
+                            self.subst(x, t, s, e),
+                     self.args)
+      def subst_kw(self, target, source, env):
+          kw = {}
+          for key in self.kw.keys():
+              kw[key] = self.subst(self.kw[key], target, source, env)
+          return kw
+      def __call__(self, target, source, env):
+          args = self.subst_args(target, source, env)
+          kw = self.subst_kw(target, source, env)
+          return apply(self.parent.actfunc, args, kw)
+      def strfunction(self, target, source, env):
+          args = self.subst_args(target, source, env)
+          kw = self.subst_kw(target, source, env)
+          return apply(self.parent.strfunc, args, kw)
+      def __str__(self):
+          return apply(self.parent.strfunc, self.args, self.kw)
+  
+  class ActionFactory:
+--- 1077,1111 ----
+          # was called by using this hard-coded value as a special return.
+          if s == '$__env__':
+              return env
+!         elif is_String(s):
+              return env.subst(s, 1, target, source)
+          return self.parent.convert(s)
++ 
+      def subst_args(self, target, source, env):
+          return map(lambda x, self=self, t=target, s=source, e=env:
+                            self.subst(x, t, s, e),
+                     self.args)
++ 
+      def subst_kw(self, target, source, env):
+          kw = {}
+          for key in self.kw.keys():
+              kw[key] = self.subst(self.kw[key], target, source, env)
+          return kw
++ 
+      def __call__(self, target, source, env):
+          args = self.subst_args(target, source, env)
+          kw = self.subst_kw(target, source, env)
++         #TODO(1.5) return self.parent.actfunc(*args, **kw)
+          return apply(self.parent.actfunc, args, kw)
++ 
+      def strfunction(self, target, source, env):
+          args = self.subst_args(target, source, env)
+          kw = self.subst_kw(target, source, env)
++         #TODO(1.5) return self.parent.strfunc(*args, **kw)
+          return apply(self.parent.strfunc, args, kw)
++ 
+      def __str__(self):
++         #TODO(1.5) return self.parent.strfunc(*self.args, **self.kw)
+          return apply(self.parent.strfunc, self.args, self.kw)
+  
+  class ActionFactory:
+***************
+*** 1071,1076 ****
+--- 1121,1127 ----
+          self.actfunc = actfunc
+          self.strfunc = strfunc
+          self.convert = convert
++ 
+      def __call__(self, *args, **kw):
+          ac = ActionCaller(self, args, kw)
+          action = Action(ac, strfunction=ac.strfunction)
+Index: src/engine/SCons/Builder.py
+===================================================================
+*** src/engine/SCons/Builder.py	(revision 3495)
+--- src/engine/SCons/Builder.py	(working copy)
+***************
+*** 232,238 ****
+      if kw.has_key('generator'):
+          if kw.has_key('action'):
+              raise UserError, "You must not specify both an action and a generator."
+!         kw['action'] = SCons.Action.CommandGeneratorAction(kw['generator'])
+          del kw['generator']
+      elif kw.has_key('action'):
+          source_ext_match = kw.get('source_ext_match', 1)
+--- 232,238 ----
+      if kw.has_key('generator'):
+          if kw.has_key('action'):
+              raise UserError, "You must not specify both an action and a generator."
+!         kw['action'] = SCons.Action.CommandGeneratorAction(kw['generator'], {})
+          del kw['generator']
+      elif kw.has_key('action'):
+          source_ext_match = kw.get('source_ext_match', 1)
+***************
+*** 240,246 ****
+              del kw['source_ext_match']
+          if SCons.Util.is_Dict(kw['action']):
+              composite = DictCmdGenerator(kw['action'], source_ext_match)
+!             kw['action'] = SCons.Action.CommandGeneratorAction(composite)
+              kw['src_suffix'] = composite.src_suffixes()
+          else:
+              kw['action'] = SCons.Action.Action(kw['action'])
+--- 240,246 ----
+              del kw['source_ext_match']
+          if SCons.Util.is_Dict(kw['action']):
+              composite = DictCmdGenerator(kw['action'], source_ext_match)
+!             kw['action'] = SCons.Action.CommandGeneratorAction(composite, {})
+              kw['src_suffix'] = composite.src_suffixes()
+          else:
+              kw['action'] = SCons.Action.Action(kw['action'])
+Index: doc/man/scons.1
+===================================================================
+*** doc/man/scons.1	(revision 3495)
+--- doc/man/scons.1	(working copy)
+***************
+*** 2310,2318 ****
+  
+  '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  .TP
+! .RI Action( action ", [" strfunction ", " varlist ])
+  .TP
+! .RI env.Action( action ", [" strfunction ", " varlist ])
+  Creates an Action object for
+  the specified
+  .IR action .
+--- 2310,2318 ----
+  
+  '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  .TP
+! .RI Action( action ", [" cmd/str/fun ", [" var ", ...]] [" option = value ", ...])"
+  .TP
+! .IR env .Action( action ", [" cmd/str/fun ", [" var ", ...]] [" option = value ", ...])"
+  Creates an Action object for
+  the specified
+  .IR action .
+***************
+*** 2322,2334 ****
+  Note that the
+  .BR env.Action ()
+  form of the invocation will expand
+! construction variables in any arguments strings,
+  including the
+  .I action
+! argument,
+! at the time it is called
+  using the construction variables in the
+! .B env
+  construction environment through which
+  .BR env.Action ()
+  was called.
+--- 2322,2333 ----
+  Note that the
+  .BR env.Action ()
+  form of the invocation will expand
+! construction variables in any argument strings,
+  including the
+  .I action
+! argument, at the time it is called
+  using the construction variables in the
+! .I env
+  construction environment through which
+  .BR env.Action ()
+  was called.
+***************
+*** 8409,8426 ****
+  .IP String
+  If the first argument is a string,
+  a command-line Action is returned.
+! Note that the command line string
+  may be preceded by an
+  .B @
+  (at-sign)
+! to suppress printing of the
+! specified command line,
+  or by a
+  .B \-
+  (hyphen)
+! to ignore the exit status from
+! the specified command.
+! Examples:
+  
+  .ES
+  Action('$CC -c -o $TARGET $SOURCES')
+--- 8408,8422 ----
+  .IP String
+  If the first argument is a string,
+  a command-line Action is returned.
+! Note that the command-line string
+  may be preceded by an
+  .B @
+  (at-sign)
+! to suppress printing of the specified command line,
+  or by a
+  .B \-
+  (hyphen)
+! to ignore the exit status from the specified command:
+  
+  .ES
+  Action('$CC -c -o $TARGET $SOURCES')
+***************
+*** 8428,8437 ****
+  # Doesn't print the line being executed.
+  Action('@build $TARGET $SOURCES')
+  
+! # Ignores
+  Action('-build $TARGET $SOURCES')
+  .EE
+- 
+  .\" XXX From Gary Ruben, 23 April 2002:
+  .\" What would be useful is a discussion of how you execute command
+  .\" shell commands ie. what is the process used to spawn the shell, pass
+--- 8424,8432 ----
+  # Doesn't print the line being executed.
+  Action('@build $TARGET $SOURCES')
+  
+! # Ignores return value
+  Action('-build $TARGET $SOURCES')
+  .EE
+  .\" XXX From Gary Ruben, 23 April 2002:
+  .\" What would be useful is a discussion of how you execute command
+  .\" shell commands ie. what is the process used to spawn the shell, pass
+***************
+*** 8441,8447 ****
+  .\" a build system. I'm sure you can do a better job of organising the
+  .\" documentation than they have :-)
+  
+- 
+  .IP List
+  If the first argument is a list,
+  then a list of Action objects is returned.
+--- 8436,8441 ----
+***************
+*** 8464,8470 ****
+  .IP Function
+  If the first argument is a Python function,
+  a function Action is returned.
+! The Python function takes three keyword arguments,
+  .B target
+  (a Node object representing the target file),
+  .B source
+--- 8458,8464 ----
+  .IP Function
+  If the first argument is a Python function,
+  a function Action is returned.
+! The Python function must take three keyword arguments,
+  .B target
+  (a Node object representing the target file),
+  .B source
+***************
+*** 8509,8527 ****
+  None is returned.
+  .PP
+  
+! The second, optional argument
+! is used to define the output which is printed
+! when the Action is actually performed.
+! In the absence of this parameter, or if it's an
+! empty string, a default output depending on the type of the action
+! is used. For example, a command-line action will print
+! the executed command. The argument is either a python function
+! or a string.
+! 
+! In the first case, it's a function that returns
+! a string to be printed to describe the action being executed.
+  Like a function to build a file,
+! this function takes three arguments:
+  .B target
+  (a Node object representing the target file),
+  .B source
+--- 8503,8524 ----
+  None is returned.
+  .PP
+  
+! The second argument is optional and is used to define the output
+! which is printed when the Action is actually performed.
+! In the absence of this parameter,
+! or if it's an empty string,
+! a default output depending on the type of the action is used.
+! For example, a command-line action will print the executed command.
+! The argument must be either a Python function or a string.
+! 
+! In the first case,
+! it's a function that returns a string to be printed
+! to describe the action being executed.
+! The function may also be specified by the
+! .IR strfunction =
+! keyword argument.
+  Like a function to build a file,
+! this function must take three keyword arguments:
+  .B target
+  (a Node object representing the target file),
+  .B source
+***************
+*** 8537,8542 ****
+--- 8534,8542 ----
+  more than one target file or source file.
+  
+  In the second case, you provide the string itself.
++ The string may also be specified by the
++ .IR cmdstr =
++ keyword argument.
+  The string typically contains variables, notably
+  $TARGET(S) and $SOURCE(S), or consists of just a single
+  variable, which is optionally defined somewhere else.
+***************
+*** 8564,8580 ****
+  l = Action(build_it, '$STRINGIT')
+  .EE
+  
+! The third, also optional argument
+! is a list of construction variables
+! whose values will be included
+! in the signature of the Action
+! when deciding whether a target should
+! be rebuilt because the action changed.
+! This is necessary whenever you want a target to
+! be rebuilt when a specific
+! construction variable changes,
+! because the underlying Python code for a function
+! will not change when the value of the construction variable does.
+  
+  .ES
+  def build_it(target, source, env):
+--- 8564,8583 ----
+  l = Action(build_it, '$STRINGIT')
+  .EE
+  
+! The third and succeeding arguments, if present,
+! may either be a construction variable or a list of construction variables
+! whose values will be included in the signature of the Action
+! when deciding whether a target should be rebuilt because the action changed.
+! The variables may also be specified by a
+! .IR varlist =
+! keyword parameter;
+! if both are present, they are combined.
+! This is necessary whenever you want a target to be rebuilt
+! when a specific construction variable changes.
+! This is not often needed for a string action,
+! as the expanded variables will normally be part of the command line,
+! but may be needed if a Python function action uses
+! the value of a construction variable when generating the command line.
+  
+  .ES
+  def build_it(target, source, env):
