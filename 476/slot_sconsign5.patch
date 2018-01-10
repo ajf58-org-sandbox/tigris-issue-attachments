@@ -1,0 +1,766 @@
+Index: src/script/sconsign.py
+===================================================================
+--- src/script/sconsign.py	(revision 3233)
++++ src/script/sconsign.py	(working copy)
+@@ -265,7 +265,7 @@
+ def nodeinfo_raw(name, ninfo, prefix=""):
+     # This just formats the dictionary, which we would normally use str()
+     # to do, except that we want the keys sorted for deterministic output.
+-    d = ninfo.__dict__
++    d = ninfo.__getstate__()
+     try:
+         keys = ninfo.field_list + ['_version_id']
+     except AttributeError:
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 3234)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -1262,8 +1262,9 @@
+         return cwd.glob(pathname, ondisk, source, strings)
+ 
+ class DirNodeInfo(SCons.Node.NodeInfoBase):
++    __slots__ = ()
+     # This should get reset by the FS initialization.
+-    current_version_id = 1
++    current_version_id = 2
+ 
+     fs = None
+ 
+@@ -1279,7 +1280,8 @@
+         return root._lookup_abs(s, Entry)
+ 
+ class DirBuildInfo(SCons.Node.BuildInfoBase):
+-    current_version_id = 1
++    __slots__ = ()
++    current_version_id = 2
+ 
+ glob_magic_check = re.compile('[*?[]')
+ 
+@@ -2037,7 +2039,8 @@
+         return _null
+ 
+ class FileNodeInfo(SCons.Node.NodeInfoBase):
+-    current_version_id = 1
++    __slots__ = ("csig", "timestamp", "size")
++    current_version_id = 2
+ 
+     field_list = ['csig', 'timestamp', 'size']
+ 
+@@ -2056,8 +2059,10 @@
+         return root._lookup_abs(s, Entry)
+ 
+ class FileBuildInfo(SCons.Node.BuildInfoBase):
+-    current_version_id = 1
++    __slots__ = ()
+ 
++    current_version_id = 2
++
+     def convert_to_sconsign(self):
+         """
+         Converts this FileBuildInfo object for writing to a .sconsign file
+@@ -2491,7 +2496,7 @@
+             # any build information that's stored in the .sconsign file
+             # into our binfo object so it doesn't get lost.
+             old = self.get_stored_info()
+-            self.get_binfo().__dict__.update(old.binfo.__dict__)
++            self.get_binfo().merge(old.binfo)
+ 
+         self.store_info()
+ 
+Index: src/engine/SCons/Node/NodeTests.py
+===================================================================
+--- src/engine/SCons/Node/NodeTests.py	(revision 3233)
++++ src/engine/SCons/Node/NodeTests.py	(working copy)
+@@ -218,11 +218,19 @@
+ 
+ class NodeInfoBaseTestCase(unittest.TestCase):
+ 
++    # The abstract class NodeInfoBase has not enough default slots to perform
++    # the merge and format test (arbitrary attributes do not work). Do it with a
++    # derived class that does provide the slots.
++
+     def test_merge(self):
+         """Test merging NodeInfoBase attributes"""
+-        ni1 = SCons.Node.NodeInfoBase(SCons.Node.Node())
+-        ni2 = SCons.Node.NodeInfoBase(SCons.Node.Node())
+ 
++        class TestNodeInfo(SCons.Node.NodeInfoBase):
++            __slots__ = ('a1', 'a2', 'a3')
++
++        ni1 = TestNodeInfo()
++        ni2 = TestNodeInfo()
++
+         ni1.a1 = 1
+         ni1.a2 = 2
+ 
+@@ -230,27 +238,32 @@
+         ni2.a3 = 333
+ 
+         ni1.merge(ni2)
+-        expect = {'a1':1, 'a2':222, 'a3':333, '_version_id':1}
+-        assert ni1.__dict__ == expect, ni1.__dict__
++        assert ni1.a1 == 1, ni1.a1
++        assert ni1.a2 == 222, ni1.a2
++        assert ni1.a3 == 333, ni1.a3
+ 
+     def test_update(self):
+         """Test the update() method"""
+-        ni = SCons.Node.NodeInfoBase(SCons.Node.Node())
++        ni = SCons.Node.NodeInfoBase()
+         ni.update(SCons.Node.Node())
+ 
+     def test_format(self):
+         """Test the NodeInfoBase.format() method"""
+-        ni1 = SCons.Node.NodeInfoBase(SCons.Node.Node())
++
++        class TestNodeInfo(SCons.Node.NodeInfoBase):
++            __slots__ = ('xxx', 'yyy', 'zzz')
++
++        ni1 = TestNodeInfo()
+         ni1.xxx = 'x'
+         ni1.yyy = 'y'
+         ni1.zzz = 'z'
+ 
+         f = ni1.format()
+-        assert f == ['1', 'x', 'y', 'z'], f
++        assert f == ['x', 'y', 'z'], f
+ 
+-        ni1.field_list = ['xxx', 'zzz', 'aaa']
++        field_list = ['xxx', 'zzz', 'aaa']
+ 
+-        f = ni1.format()
++        f = ni1.format(field_list)
+         assert f == ['x', 'z', 'None'], f
+ 
+ 
+@@ -260,26 +273,26 @@
+     def test___init__(self):
+         """Test BuildInfoBase initialization"""
+         n = SCons.Node.Node()
+-        bi = SCons.Node.BuildInfoBase(n)
++        bi = SCons.Node.BuildInfoBase()
+         assert bi
+ 
+     def test_merge(self):
+         """Test merging BuildInfoBase attributes"""
+         n1 = SCons.Node.Node()
+-        bi1 = SCons.Node.BuildInfoBase(n1)
++        bi1 = SCons.Node.BuildInfoBase()
+         n2 = SCons.Node.Node()
+-        bi2 = SCons.Node.BuildInfoBase(n2)
++        bi2 = SCons.Node.BuildInfoBase()
+ 
+-        bi1.a1 = 1
+-        bi1.a2 = 2
++        bi1.bsources = 1
++        bi1.bdepends = 2
+ 
+-        bi2.a2 = 222
+-        bi2.a3 = 333
++        bi2.bdepends = 222
++        bi2.bact = 333
+ 
+         bi1.merge(bi2)
+-        assert bi1.a1 == 1, bi1.a1
+-        assert bi1.a2 == 222, bi1.a2
+-        assert bi1.a3 == 333, bi1.a3
++        assert bi1.bsources == 1, bi1.bsources
++        assert bi1.bdepends == 222, bi1.bdepends
++        assert bi1.bact == 333, bi1.bact
+ 
+ 
+ class NodeTestCase(unittest.TestCase):
+@@ -420,6 +433,7 @@
+     def test_built(self):
+         """Test the built() method"""
+         class SubNodeInfo(SCons.Node.NodeInfoBase):
++            __slots__ = ('updated',)
+             def update(self, node):
+                 self.updated = 1
+         class SubNode(SCons.Node.Node):
+@@ -427,7 +441,7 @@
+                 self.cleared = 1
+ 
+         n = SubNode()
+-        n.ninfo = SubNodeInfo(n)
++        n.ninfo = SubNodeInfo()
+         n.built()
+         assert n.cleared, n.cleared
+         assert n.ninfo.updated, n.ninfo.cleared
+@@ -555,22 +569,37 @@
+     def test_get_csig(self):
+         """Test generic content signature calculation
+         """
+-        node = SCons.Node.Node()
+-        node.get_contents = lambda: 444
+-        result = node.get_csig()
+-        assert result == '550a141f12de6341fba65b0ad0433500', result
++        class TestNodeInfo(SCons.Node.NodeInfoBase):
++            __slots__ = ('csig',)
++        try:
++            SCons.Node.Node.NodeInfo = TestNodeInfo
++            node = SCons.Node.Node()
++            node.get_contents = lambda: 444
++            result = node.get_csig()
++            assert result == '550a141f12de6341fba65b0ad0433500', result
++        finally:
++            SCons.Node.Node.NodeInfo = SCons.Node.NodeInfoBase
+ 
+     def test_get_cachedir_csig(self):
+         """Test content signature calculation for CacheDir
+         """
+-        node = SCons.Node.Node()
+-        node.get_contents = lambda: 555
+-        result = node.get_cachedir_csig()
+-        assert result == '15de21c670ae7c3f6f3f1f37029303c9', result
++        class TestNodeInfo(SCons.Node.NodeInfoBase):
++            __slots__ = ('csig',)
++        try:
++            SCons.Node.Node.NodeInfo = TestNodeInfo
++            node = SCons.Node.Node()
++            node.get_contents = lambda: 555
++            result = node.get_cachedir_csig()
++            assert result == '15de21c670ae7c3f6f3f1f37029303c9', result
++        finally:
++            SCons.Node.Node.NodeInfo = SCons.Node.NodeInfoBase
+ 
+     def test_get_binfo(self):
+         """Test fetching/creating a build information structure
+         """
++        class TestNodeInfo(SCons.Node.NodeInfoBase):
++            __slots__ = ('csig',)
++        SCons.Node.Node.NodeInfo = TestNodeInfo
+         node = SCons.Node.Node()
+ 
+         binfo = node.get_binfo()
+@@ -578,9 +607,11 @@
+ 
+         node = SCons.Node.Node()
+         d = SCons.Node.Node()
+-        d.get_ninfo().csig = 777
++        ninfo = d.get_ninfo()
++        assert isinstance(ninfo, SCons.Node.NodeInfoBase), ninfo
+         i = SCons.Node.Node()
+-        i.get_ninfo().csig = 888
++        ninfo = i.get_ninfo()
++        assert isinstance(ninfo, SCons.Node.NodeInfoBase), ninfo
+         node.depends = [d]
+         node.implicit = [i]
+ 
+Index: src/engine/SCons/Node/Alias.py
+===================================================================
+--- src/engine/SCons/Node/Alias.py	(revision 3233)
++++ src/engine/SCons/Node/Alias.py	(working copy)
+@@ -57,13 +57,15 @@
+             return None
+ 
+ class AliasNodeInfo(SCons.Node.NodeInfoBase):
+-    current_version_id = 1
++    __slots__ = ('csig',)
++    current_version_id = 2
+     field_list = ['csig']
+     def str_to_node(self, s):
+         return default_ans.Alias(s)
+ 
+ class AliasBuildInfo(SCons.Node.BuildInfoBase):
+-    current_version_id = 1
++    __slots__ = ()
++    current_version_id = 2
+ 
+ class Alias(SCons.Node.Node):
+ 
+Index: src/engine/SCons/Node/FSTests.py
+===================================================================
+--- src/engine/SCons/Node/FSTests.py	(revision 3233)
++++ src/engine/SCons/Node/FSTests.py	(working copy)
+@@ -698,19 +698,19 @@
+     def test___init__(self):
+         """Test DirNodeInfo initialization"""
+         ddd = self.fs.Dir('ddd')
+-        ni = SCons.Node.FS.DirNodeInfo(ddd)
++        ni = SCons.Node.FS.DirNodeInfo()
+ 
+ class DirBuildInfoTestCase(_tempdirTestCase):
+     def test___init__(self):
+         """Test DirBuildInfo initialization"""
+         ddd = self.fs.Dir('ddd')
+-        bi = SCons.Node.FS.DirBuildInfo(ddd)
++        bi = SCons.Node.FS.DirBuildInfo()
+ 
+ class FileNodeInfoTestCase(_tempdirTestCase):
+     def test___init__(self):
+         """Test FileNodeInfo initialization"""
+         fff = self.fs.File('fff')
+-        ni = SCons.Node.FS.FileNodeInfo(fff)
++        ni = SCons.Node.FS.FileNodeInfo()
+         assert isinstance(ni, SCons.Node.FS.FileNodeInfo)
+ 
+     def test_update(self):
+@@ -718,7 +718,7 @@
+         test = self.test
+         fff = self.fs.File('fff')
+ 
+-        ni = SCons.Node.FS.FileNodeInfo(fff)
++        ni = SCons.Node.FS.FileNodeInfo()
+ 
+         test.write('fff', "fff\n")
+ 
+@@ -765,37 +765,41 @@
+     def test___init__(self):
+         """Test File.BuildInfo initialization"""
+         fff = self.fs.File('fff')
+-        bi = SCons.Node.FS.FileBuildInfo(fff)
++        bi = SCons.Node.FS.FileBuildInfo()
+         assert bi, bi
+ 
+     def test_convert_to_sconsign(self):
+         """Test converting to .sconsign file format"""
+         fff = self.fs.File('fff')
+-        bi = SCons.Node.FS.FileBuildInfo(fff)
++        bi = SCons.Node.FS.FileBuildInfo()
+         assert hasattr(bi, 'convert_to_sconsign')
+ 
+     def test_convert_from_sconsign(self):
+         """Test converting from .sconsign file format"""
+         fff = self.fs.File('fff')
+-        bi = SCons.Node.FS.FileBuildInfo(fff)
++        bi = SCons.Node.FS.FileBuildInfo()
+         assert hasattr(bi, 'convert_from_sconsign')
+ 
+     def test_prepare_dependencies(self):
+         """Test that we have a prepare_dependencies() method"""
+         fff = self.fs.File('fff')
+-        bi = SCons.Node.FS.FileBuildInfo(fff)
++        bi = SCons.Node.FS.FileBuildInfo()
+         bi.prepare_dependencies()
+ 
+     def test_format(self):
+         """Test the format() method"""
+         f1 = self.fs.File('f1')
+-        bi1 = SCons.Node.FS.FileBuildInfo(f1)
++        bi1 = SCons.Node.FS.FileBuildInfo()
+ 
+-        s1sig = SCons.Node.FS.FileNodeInfo(self.fs.File('n1'))
++        self.fs.File('n1')
++        self.fs.File('n2')
++        self.fs.File('n3')
++
++        s1sig = SCons.Node.FS.FileNodeInfo()
+         s1sig.csig = 1
+-        d1sig = SCons.Node.FS.FileNodeInfo(self.fs.File('n2'))
++        d1sig = SCons.Node.FS.FileNodeInfo()
+         d1sig.timestamp = 2
+-        i1sig = SCons.Node.FS.FileNodeInfo(self.fs.File('n3'))
++        i1sig = SCons.Node.FS.FileNodeInfo()
+         i1sig.size = 3
+ 
+         bi1.bsources = [self.fs.File('s1')]
+Index: src/engine/SCons/Node/AliasTests.py
+===================================================================
+--- src/engine/SCons/Node/AliasTests.py	(revision 3233)
++++ src/engine/SCons/Node/AliasTests.py	(working copy)
+@@ -101,14 +101,14 @@
+         """Test AliasNodeInfo initialization"""
+         ans = SCons.Node.Alias.AliasNameSpace()
+         aaa = ans.Alias('aaa')
+-        ni = SCons.Node.Alias.AliasNodeInfo(aaa)
++        ni = SCons.Node.Alias.AliasNodeInfo()
+ 
+ class AliasBuildInfoTestCase(unittest.TestCase):
+     def test___init__(self):
+         """Test AliasBuildInfo initialization"""
+         ans = SCons.Node.Alias.AliasNameSpace()
+         aaa = ans.Alias('aaa')
+-        bi = SCons.Node.Alias.AliasBuildInfo(aaa)
++        bi = SCons.Node.Alias.AliasBuildInfo()
+ 
+ if __name__ == "__main__":
+     suite = unittest.TestSuite()
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 3233)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -101,18 +101,17 @@
+ 
+ # Classes for signature info for Nodes.
+ 
+-class NodeInfoBase:
++class NodeInfoBase(object):
+     """
+     The generic base class for signature information for a Node.
+ 
+     Node subclasses should subclass NodeInfoBase to provide their own
+     logic for dealing with their own Node-specific signature information.
+     """
+-    current_version_id = 1
+-    def __init__(self, node):
+-        # Create an object attribute from the class attribute so it ends up
+-        # in the pickled data in the .sconsign file.
+-        self._version_id = self.current_version_id
++    __slots__ = ("__weakref__",)
++
++    current_version_id = 2
++
+     def update(self, node):
+         try:
+             field_list = self.field_list
+@@ -132,13 +131,24 @@
+     def convert(self, node, val):
+         pass
+     def merge(self, other):
+-        self.__dict__.update(other.__dict__)
++        """
++        Merge the fields of another object into this object. Already existing
++        information is overwritten by the other instance's data.
++        WARNING: If a '__dict__' slot is added, it should be updated instead of
++        replaced.
++        """
++        state = other.__getstate__()
++        self.__setstate__(state)
+     def format(self, field_list=None, names=0):
+         if field_list is None:
+             try:
+                 field_list = self.field_list
+             except AttributeError:
+-                field_list = self.__dict__.keys()
++                field_list = getattr(self, '__dict__', {}).keys()
++                for obj in type(self).mro():
++                    for slot in getattr(obj, '__slots__', ()):
++                        if slot not in ('__weakref__', '__dict__'):
++                            field_list.append(slot)
+                 field_list.sort()
+         fields = []
+         for field in field_list:
+@@ -152,7 +162,37 @@
+             fields.append(f)
+         return fields
+ 
+-class BuildInfoBase:
++    def __getstate__(self):
++        """
++        Return all fields that shall be pickled. Walk the slots in the class
++        hierarchy and add those to the state dictionary. If a '__dict__' slot is
++        available, copy all entries to the dictionary. Also include the version
++        id, which is fixed for all instances of a class.
++        """
++        state = getattr(self, '__dict__', {}).copy()
++        for obj in type(self).mro():
++            for name in getattr(obj,'__slots__',()):
++                if hasattr(self, name):
++                    state[name] = getattr(self, name)
++
++        state['_version_id'] = self.current_version_id
++        try:
++            del state['__weakref__']
++        except KeyError:
++            pass
++        return state
++
++    def __setstate__(self, state):
++        """
++        Restore the attributes from a pickled state. The version is discarded.
++        """
++        # TODO check or discard version
++        del state['_version_id']
++
++        for key, value in state.items():
++            setattr(self, key, value)
++
++class BuildInfoBase(object):
+     """
+     The generic base class for build information for a Node.
+ 
+@@ -162,18 +202,56 @@
+     generic build stuff we have to track:  sources, explicit dependencies,
+     implicit dependencies, and action information.
+     """
+-    current_version_id = 1
+-    def __init__(self, node):
+-        # Create an object attribute from the class attribute so it ends up
+-        # in the pickled data in the .sconsign file.
+-        self._version_id = self.current_version_id
++    __slots__ = ("bsourcesigs", "bdependsigs", "bimplicitsigs", "bactsig",
++        "bsources", "bdepends", "bact", "bimplicit", "__weakref__")
++
++    current_version_id = 2
++    def __init__(self):
+         self.bsourcesigs = []
+         self.bdependsigs = []
+         self.bimplicitsigs = []
+         self.bactsig = None
++
+     def merge(self, other):
+-        self.__dict__.update(other.__dict__)
++        """
++        Merge the fields of another object into this object. Already existing
++        information is overwritten by the other instance's data.
++        WARNING: If a '__dict__' slot is added, it should be updated instead of
++        replaced.
++        """
++        state = other.__getstate__()
++        self.__setstate__(state)
+ 
++    def __getstate__(self):
++        """
++        Return all fields that shall be pickled. Walk the slots in the class
++        hierarchy and add those to the state dictionary. If a '__dict__' slot is
++        available, copy all entries to the dictionary. Also include the version
++        id, which is fixed for all instances of a class.
++        """
++        state = getattr(self, '__dict__', {}).copy()
++        for obj in type(self).mro():
++            for name in getattr(obj,'__slots__',()):
++                if hasattr(self, name):
++                    state[name] = getattr(self, name)
++
++        state['_version_id'] = self.current_version_id
++        try:
++            del state['__weakref__']
++        except KeyError:
++            pass
++        return state
++
++    def __setstate__(self, state):
++        """
++        Restore the attributes from a pickled state.
++        """
++        # TODO check or discard version
++        del state['_version_id']
++        for key, value in state.items():
++            setattr(self, key, value)
++
++
+ class Node:
+     """The base Node class, for entities that we know how to
+     build, or use to build other Nodes.
+@@ -668,7 +746,7 @@
+     BuildInfo = BuildInfoBase
+ 
+     def new_ninfo(self):
+-        ninfo = self.NodeInfo(self)
++        ninfo = self.NodeInfo()
+         return ninfo
+ 
+     def get_ninfo(self):
+@@ -679,7 +757,7 @@
+             return self.ninfo
+ 
+     def new_binfo(self):
+-        binfo = self.BuildInfo(self)
++        binfo = self.BuildInfo()
+         return binfo
+ 
+     def get_binfo(self):
+Index: src/engine/SCons/Node/Python.py
+===================================================================
+--- src/engine/SCons/Node/Python.py	(revision 3233)
++++ src/engine/SCons/Node/Python.py	(working copy)
+@@ -32,15 +32,17 @@
+ import SCons.Node
+ 
+ class ValueNodeInfo(SCons.Node.NodeInfoBase):
+-    current_version_id = 1
+-
++    __slots__ = ('csig',)
++    current_version_id = 2
++    
+     field_list = ['csig']
+ 
+     def str_to_node(self, s):
+         return Value(s)
+ 
+ class ValueBuildInfo(SCons.Node.BuildInfoBase):
+-    current_version_id = 1
++    __slots__ = ()
++    current_version_id = 2
+ 
+ class Value(SCons.Node.Node):
+     """A class for Python variables, typically passed on the command line 
+Index: src/engine/SCons/Node/PythonTests.py
+===================================================================
+--- src/engine/SCons/Node/PythonTests.py	(revision 3233)
++++ src/engine/SCons/Node/PythonTests.py	(working copy)
+@@ -102,13 +102,13 @@
+     def test___init__(self):
+         """Test ValueNodeInfo initialization"""
+         vvv = SCons.Node.Python.Value('vvv')
+-        ni = SCons.Node.Python.ValueNodeInfo(vvv)
++        ni = SCons.Node.Python.ValueNodeInfo()
+ 
+ class ValueBuildInfoTestCase(unittest.TestCase):
+     def test___init__(self):
+         """Test ValueBuildInfo initialization"""
+         vvv = SCons.Node.Python.Value('vvv')
+-        bi = SCons.Node.Python.ValueBuildInfo(vvv)
++        bi = SCons.Node.Python.ValueBuildInfo()
+ 
+ if __name__ == "__main__":
+     suite = unittest.TestSuite()
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 3233)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -168,9 +168,12 @@
+     are result (did the builder succeed last time?) and string, which
+     contains messages of the original build phase.
+     """
+-    result = None # -> 0/None -> no error, != 0 error
+-    string = None # the stdout / stderr output when building the target
++    __slots__ = ('result', 'string')
+ 
++    def __init__(self):
++        self.result = None # -> 0/None -> no error, != 0 error
++        self.string = None # the stdout / stderr output when building the target
++
+     def set_build_result(self, result, string):
+         self.result = result
+         self.string = string
+@@ -328,8 +331,10 @@
+                 raise SCons.Errors.ExplicitExit(self.targets[0],exc_value.code)
+             except Exception, e:
+                 for t in self.targets:
+-                    binfo = t.get_binfo()
+-                    binfo.__class__ = SConfBuildInfo
++                    #binfo = t.get_binfo()
++                    #binfo.__class__ = SConfBuildInfo
++                    binfo = SConfBuildInfo()
++                    binfo.merge(t.get_binfo())
+                     binfo.set_build_result(1, s.getvalue())
+                     sconsign_entry = SCons.SConsign.SConsignEntry()
+                     sconsign_entry.binfo = binfo
+@@ -346,8 +351,10 @@
+                 raise e
+             else:
+                 for t in self.targets:
+-                    binfo = t.get_binfo()
+-                    binfo.__class__ = SConfBuildInfo
++                    #binfo = t.get_binfo()
++                    #binfo.__class__ = SConfBuildInfo
++                    binfo = SConfBuildInfo()
++                    binfo.merge(t.get_binfo())
+                     binfo.set_build_result(0, s.getvalue())
+                     sconsign_entry = SCons.SConsign.SConsignEntry()
+                     sconsign_entry.binfo = binfo
+Index: src/engine/SCons/SConsign.py
+===================================================================
+--- src/engine/SCons/SConsign.py	(revision 3233)
++++ src/engine/SCons/SConsign.py	(working copy)
+@@ -108,7 +108,7 @@
+         else:
+             syncmethod()
+ 
+-class SConsignEntry:
++class SConsignEntry(object):
+     """
+     Wrapper class for the generic entry in a .sconsign file.
+     The Node subclass populates it with attributes as it pleases.
+@@ -116,16 +116,38 @@
+     XXX As coded below, we do expect a '.binfo' attribute to be added,
+     but we'll probably generalize this in the next refactorings.
+     """
+-    current_version_id = 1
++    __slots__ = ("binfo", "ninfo", "__weakref__")
++    current_version_id = 2
+     def __init__(self):
+         # Create an object attribute from the class attribute so it ends up
+         # in the pickled data in the .sconsign file.
+-        _version_id = self.current_version_id
++        #_version_id = self.current_version_id
++        pass
+     def convert_to_sconsign(self):
+         self.binfo.convert_to_sconsign()
+     def convert_from_sconsign(self, dir, name):
+         self.binfo.convert_from_sconsign(dir, name)
+ 
++    def __getstate__(self):
++        state = getattr(self, '__dict__', {}).copy()
++        for obj in type(self).mro():
++            for name in getattr(obj,'__slots__',()):
++                if hasattr(self, name):
++                    state[name] = getattr(self, name)
++
++        state['_version_id'] = self.current_version_id
++        try:
++            del state['__weakref__']
++        except KeyError:
++            pass
++        return state
++
++    def __setstate__(self, state):
++        for key, value in state.items():
++            if key not in ('_version_id'):
++                setattr(self, key, value)
++        
++
+ class Base:
+     """
+     This is the controlling class for the signatures for the collection of
+Index: test/sconsign/script/no-SConsignFile.py
+===================================================================
+--- test/sconsign/script/no-SConsignFile.py	(revision 3233)
++++ test/sconsign/script/no-SConsignFile.py	(working copy)
+@@ -142,12 +142,12 @@
+ #print test.stdout()
+ 
+ test.run_sconsign(arguments = "--raw sub1/.sconsign",
+-         stdout = r"""hello.c: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-hello.exe: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub1_hello_obj)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++         stdout = r"""hello.c: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++hello.exe: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub1_hello_obj)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+         %(sig_re)s \[.*\]
+-hello.obj: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub1_hello_c)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++hello.obj: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub1_hello_c)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+         %(sig_re)s \[.*\]
+ """ % locals())
+ 
+Index: test/sconsign/script/SConsignFile.py
+===================================================================
+--- test/sconsign/script/SConsignFile.py	(revision 3233)
++++ test/sconsign/script/SConsignFile.py	(working copy)
+@@ -161,27 +161,27 @@
+ 
+ test.run_sconsign(arguments = "--raw .sconsign",
+          stdout = r"""=== .:
+-SConstruct: {'csig': None, 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++SConstruct: {'csig': None, 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+ === sub1:
+-hello.c: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-hello.exe: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub1_hello_obj)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++hello.c: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++hello.exe: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub1_hello_obj)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+         %(sig_re)s \[.*\]
+-hello.obj: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub1_hello_c)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++hello.obj: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub1_hello_c)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+         %(sig_re)s \[.*\]
+ === sub2:
+-hello.c: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-hello.exe: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub2_hello_obj)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++hello.c: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++hello.exe: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub2_hello_obj)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+         %(sig_re)s \[.*\]
+-hello.obj: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub2_hello_c)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub2_inc1_h)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-        %(sub2_inc2_h)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++hello.obj: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub2_hello_c)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub2_inc1_h)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++        %(sub2_inc2_h)s: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+         %(sig_re)s \[.*\]
+-inc1.h: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+-inc2.h: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++inc1.h: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
++inc2.h: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 2}
+ """ % locals())
+ 
+ expect = r"""=== .:
