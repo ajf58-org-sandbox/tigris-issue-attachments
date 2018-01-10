@@ -1,0 +1,452 @@
+Index: QMTest/TestSCons.py
+===================================================================
+*** QMTest/TestSCons.py	(revision 3249)
+--- QMTest/TestSCons.py	(working copy)
+***************
+*** 230,237 ****
+          if not kw.has_key('workdir'):
+              kw['workdir'] = ''
+  
+! 	# Term causing test failures due to bogus readline init
+! 	# control character output on FC8
+          # TERM can cause test failures due to control chars in prompts etc.
+          os.environ['TERM'] = 'dumb'
+  
+--- 230,237 ----
+          if not kw.has_key('workdir'):
+              kw['workdir'] = ''
+  
+!         # Term causing test failures due to bogus readline init
+!         # control character output on FC8
+          # TERM can cause test failures due to control chars in prompts etc.
+          os.environ['TERM'] = 'dumb'
+  
+***************
+*** 492,499 ****
+--- 492,503 ----
+          import sys
+          if not version:
+              version=''
++             frame = '/System/Library/Frameworks/JavaVM.framework/Headers/jni.h'
++         else:
++             frame = '/System/Library/Frameworks/JavaVM.framework/Versions/%s*/Headers/jni.h'%version
+          jni_dirs = ['/usr/lib/jvm/java-*-sun-%s*/include/jni.h'%version,
+                      '/usr/java/jdk%s*/include/jni.h'%version,
++ 		    frame,
+                      ]
+          dirs = self.paths(jni_dirs)
+          if not dirs:
+***************
+*** 953,959 ****
+          testing must use the executable version that corresponds to the
+          framework we link against, or else we get interpreter errors.
+          """
+!         if sys.platform == 'darwin':
+              return '/System/Library/Frameworks/Python.framework/Versions/Current/bin/python'
+          else:
+              global python
+--- 957,963 ----
+          testing must use the executable version that corresponds to the
+          framework we link against, or else we get interpreter errors.
+          """
+!         if sys.platform[:6] == 'darwin':
+              return '/System/Library/Frameworks/Python.framework/Versions/Current/bin/python'
+          else:
+              global python
+***************
+*** 969,1018 ****
+          testing must use the executable version that corresponds to the
+          framework we link against, or else we get interpreter errors.
+          """
+!         if sys.platform == 'darwin':
+              return '"' + self.get_platform_python() + '"'
+          else:
+              global _python_
+              return _python_
+  
+!     def get_platform_sys_prefix(self):
+!         """
+!         Returns a "sys.prefix" value suitable for linking on this platform.
+! 
+!         Mac OS X has a built-in Python but no static libpython,
+!         so we must link to it using Apple's 'framework' scheme.
+!         """
+!         if sys.platform == 'darwin':
+!             fmt = '/System/Library/Frameworks/Python.framework/Versions/%s/'
+!             return fmt % self.get_python_version()
+!         else:
+!             return sys.prefix
+  
+      def get_python_frameworks_flags(self):
+          """
+!         Returns a FRAMEWORKSFLAGS value for linking with Python.
+  
+          Mac OS X has a built-in Python but no static libpython,
+          so we must link to it using Apple's 'framework' scheme.
+          """
+!         if sys.platform == 'darwin':
+!             return '-framework Python'
+          else:
+              return ''
+  
+      def get_python_inc(self):
+          """
+          Returns a path to the Python include directory.
+          """
+          try:
+              import distutils.sysconfig
+          except ImportError:
+!             return os.path.join(self.get_platform_sys_prefix(),
+!                                 'include',
+                                  'python' + self.get_python_version())
+          else:
+              return distutils.sysconfig.get_python_inc()
+  
+      def wait_for(self, fname, timeout=10.0, popen=None):
+          """
+          Waits for the specified file name to exist.
+--- 973,1044 ----
+          testing must use the executable version that corresponds to the
+          framework we link against, or else we get interpreter errors.
+          """
+!         if sys.platform[:6] == 'darwin':
+              return '"' + self.get_platform_python() + '"'
+          else:
+              global _python_
+              return _python_
+  
+! #    def get_platform_sys_prefix(self):
+! #        """
+! #        Returns a "sys.prefix" value suitable for linking on this platform.
+! #
+! #        Mac OS X has a built-in Python but no static libpython,
+! #        so we must link to it using Apple's 'framework' scheme.
+! #        """
+! #        if sys.platform[:6] == 'darwin':
+! #            fmt = '/System/Library/Frameworks/Python.framework/Versions/%s/'
+! #            return fmt % self.get_python_version()
+! #        else:
+! #            return sys.prefix
+  
+      def get_python_frameworks_flags(self):
+          """
+!         Returns a FRAMEWORKS value for linking with Python.
+  
+          Mac OS X has a built-in Python but no static libpython,
+          so we must link to it using Apple's 'framework' scheme.
+          """
+!         if sys.platform[:6] == 'darwin':
+!             return 'Python'
+          else:
+              return ''
+  
+      def get_python_inc(self):
+          """
+          Returns a path to the Python include directory.
++ 
++         Mac OS X has a built-in Python but no static libpython,
++         so we must link to it using Apple's 'framework' scheme.
+          """
++         if sys.platform[:6] == 'darwin':
++             return '/System/Library/Frameworks/Python.framework/Headers'
+          try:
+              import distutils.sysconfig
+          except ImportError:
+!             return os.path.join(sys.prefix, 'include',
+                                  'python' + self.get_python_version())
+          else:
+              return distutils.sysconfig.get_python_inc()
+  
++     def get_python_library_path(self):
++         """
++         Returns the full path of the Python static library (libpython*.a)
++         """
++         python_version = self.get_python_version()
++         python_lib = os.path.join(sys.prefix, 'lib',
++                                   'python%s' % python_version, 'config',
++                                   'libpython%s.a' % python_version)
++         if os.path.exists(python_lib):
++             return python_lib
++         # The library usually exists on OS X as above,
++         # but fall back to the framework layout just in case
++         python_lib = os.path.join(sys.prefix, 'Python')
++         if os.path.exists(python_lib):
++             return python_lib
++         # We can't find it, so maybe it's in the standard path
++         return ''
++ 
+      def wait_for(self, fname, timeout=10.0, popen=None):
+          """
+          Waits for the specified file name to exist.
+Index: test/SWIG/subdir.py
+===================================================================
+*** test/SWIG/subdir.py	(revision 3249)
+--- test/SWIG/subdir.py	(working copy)
+***************
+*** 70,76 ****
+                    CPPPATH='%(python_include_dir)s/',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKSFLAGS='%(python_frameworks_flags)s',
+                    )
+  
+  import sys
+--- 70,76 ----
+                    CPPPATH='%(python_include_dir)s/',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKS='%(python_frameworks_flags)s',
+                    )
+  
+  import sys
+Index: test/SWIG/build-dir.py
+===================================================================
+*** test/SWIG/build-dir.py	(revision 3249)
+--- test/SWIG/build-dir.py	(working copy)
+***************
+*** 70,76 ****
+                    SWIGCXXFILESUFFIX = "_wrap.cpp",
+                    LDMODULEPREFIX='_',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKSFLAGS='%(python_frameworks_flags)s')
+  
+  import sys
+  if sys.version[0] == '1':
+--- 70,76 ----
+                    SWIGCXXFILESUFFIX = "_wrap.cpp",
+                    LDMODULEPREFIX='_',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKS='%(python_frameworks_flags)s')
+  
+  import sys
+  if sys.version[0] == '1':
+Index: test/SWIG/module-parens.py
+===================================================================
+*** test/SWIG/module-parens.py	(revision 3249)
+--- test/SWIG/module-parens.py	(working copy)
+***************
+*** 29,34 ****
+--- 29,35 ----
+  without white space before the opening parenthesis.
+  """
+  
++ import os.path
+  import TestSCons
+  
+  test = TestSCons.TestSCons()
+***************
+*** 40,57 ****
+  
+  python_include_dir = test.get_python_inc()
+  
+  test.write(['SConstruct'], """\
+! env = Environment(SWIGFLAGS = '-python',
+!                   CPPPATH=r"%(python_include_dir)s")
+  
+  import sys
+  if sys.version[0] == '1':
+      # SWIG requires the -classic flag on pre-2.0 Python versions.
+      env.Append(SWIGFLAGS = ' -classic')
+  
+! env.SharedLibrary('test1.so', 'test1.i')
+! env.SharedLibrary('test2.so', 'test2.i')
+  """ % locals())
+  
+  test.write(['test1.cc'], """\
+  int test1func()
+--- 41,75 ----
+  
+  python_include_dir = test.get_python_inc()
+  
++ python_frameworks_flags = test.get_python_frameworks_flags()
++ 
++ Python_h = os.path.join(python_include_dir, 'Python.h')
++ if not os.path.exists(Python_h):
++     test.skip_test('Can not find %s, skipping test.\n' % Python_h)
++ 
+  test.write(['SConstruct'], """\
+! env = Environment(SWIGFLAGS = '-python -c++',
+!                   CPPPATH=r"%(python_include_dir)s",
+! 		  FRAMEWORKS='%(python_frameworks_flags)s',
+! 		  )
+  
+  import sys
+  if sys.version[0] == '1':
+      # SWIG requires the -classic flag on pre-2.0 Python versions.
+      env.Append(SWIGFLAGS = ' -classic')
+  
+! env.LoadableModule('test1.so', ['test1.i', 'test1.cc'])
+! env.LoadableModule('test2.so', ['test2.i', 'test2.cc'])
+! env.Clean('.', ['test1_wrap.h', 'test2_wrap.h'])  ### SEE NOTE BELOW
+  """ % locals())
++ # NOTE: For some reason, this test on OS X is unstable.  The first time 'scons'
++ # is run, it works as expected.  However, when 'scons' is run again, the
++ # 'test?_wrap.os' files are rebuilt.  (When run a third time, it correctly
++ # determines that nothing is to be rebuilt.)  When 'scons -c' is run, the
++ # 'test?_wrap.h' files are not removed, meaning that they are not identified
++ # by the emitter.  Mentioning the two files in the SConscript file stabilizes
++ # the runs and makes the test reliable.  When whatever that is causing this
++ # instability is chased down and cured, this hack should be removed.
+  
+  test.write(['test1.cc'], """\
+  int test1func()
+Index: test/SWIG/noproxy.py
+===================================================================
+*** test/SWIG/noproxy.py	(revision 3249)
+--- test/SWIG/noproxy.py	(working copy)
+***************
+*** 71,77 ****
+                    CPPPATH='%(python_include_dir)s',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKSFLAGS='%(python_frameworks_flags)s',
+                    )
+  
+  swig = foo.Dictionary('SWIG')
+--- 71,77 ----
+                    CPPPATH='%(python_include_dir)s',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKS='%(python_frameworks_flags)s',
+                    )
+  
+  swig = foo.Dictionary('SWIG')
+Index: test/SWIG/live.py
+===================================================================
+*** test/SWIG/live.py	(revision 3249)
+--- test/SWIG/live.py	(working copy)
+***************
+*** 39,45 ****
+  if sys.platform == 'win32':
+      _dll = '.dll'
+  else:
+!     _dll   = '.so' 
+  
+  test = TestSCons.TestSCons()
+  
+--- 39,45 ----
+  if sys.platform == 'win32':
+      _dll = '.dll'
+  else:
+!     _dll   = '.so'
+  
+  test = TestSCons.TestSCons()
+  
+***************
+*** 52,70 ****
+  _python_ = test.get_quoted_platform_python()
+  
+  
+- 
+  # handle testing on other platforms:
+  ldmodule_prefix = '_'
+  
+  python_include_dir = test.get_python_inc()
+  
+  Python_h = os.path.join(python_include_dir, 'Python.h')
+- 
+  if not os.path.exists(Python_h):
+      test.skip_test('Can not find %s, skipping test.\n' % Python_h)
+  
+! python_frameworks_flags = test.get_python_frameworks_flags()
+!     
+  test.write("wrapper.py",
+  """import os
+  import string
+--- 52,75 ----
+  _python_ = test.get_quoted_platform_python()
+  
+  
+  # handle testing on other platforms:
+  ldmodule_prefix = '_'
+  
+  python_include_dir = test.get_python_inc()
+  
+  Python_h = os.path.join(python_include_dir, 'Python.h')
+  if not os.path.exists(Python_h):
+      test.skip_test('Can not find %s, skipping test.\n' % Python_h)
+  
+! python_frameworks = test.get_python_frameworks_flags()
+! 
+! # To test the individual Python versions on OS X,
+! # particularly versions installed in non-framework locations,
+! # we'll need something like this.
+! python_library_path = test.get_python_library_path()
+! if python_library_path:
+!     python_library_path = 'File("""%s""")' % python_library_path
+! 
+  test.write("wrapper.py",
+  """import os
+  import string
+***************
+*** 78,84 ****
+                    CPPPATH='%(python_include_dir)s/',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKSFLAGS='%(python_frameworks_flags)s',
+                    )
+  
+  import sys
+--- 83,90 ----
+                    CPPPATH='%(python_include_dir)s/',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKS='%(python_frameworks)s',
+!                   #LIBS=%(python_library_path)s,
+                    )
+  
+  import sys
+Index: test/SWIG/remove-modules.py
+===================================================================
+*** test/SWIG/remove-modules.py	(revision 3249)
+--- test/SWIG/remove-modules.py	(working copy)
+***************
+*** 72,78 ****
+                    CPPPATH='%(python_include_dir)s',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKSFLAGS='%(python_frameworks_flags)s',
+                    )
+  
+  import sys
+--- 72,78 ----
+                    CPPPATH='%(python_include_dir)s',
+                    LDMODULEPREFIX='%(ldmodule_prefix)s',
+                    LDMODULESUFFIX='%(_dll)s',
+!                   FRAMEWORKS='%(python_frameworks_flags)s',
+                    )
+  
+  import sys
+Index: test/Java/swig-dependencies.py
+===================================================================
+*** test/Java/swig-dependencies.py	(revision 3249)
+--- test/Java/swig-dependencies.py	(working copy)
+***************
+*** 35,47 ****
+  test = TestSCons.TestSCons()
+  
+  swig = test.where_is('swig')
+- 
+  if not swig:
+      test.skip_test('Can not find installed "swig", skipping test.\n')
+  
+  where_javac, java_version = test.java_where_javac()
+  where_javah = test.java_where_javah()
+! where_jar = test.java_where_jar()
+  where_java_include=test.java_where_includes()
+  
+  test.subdir(['foo'],
+--- 35,47 ----
+  test = TestSCons.TestSCons()
+  
+  swig = test.where_is('swig')
+  if not swig:
+      test.skip_test('Can not find installed "swig", skipping test.\n')
+  
+  where_javac, java_version = test.java_where_javac()
+  where_javah = test.java_where_javah()
+! #where_jar = test.java_where_jar()
+! 
+  where_java_include=test.java_where_includes()
+  
+  test.subdir(['foo'],
