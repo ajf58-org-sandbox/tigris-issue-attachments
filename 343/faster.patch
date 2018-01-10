@@ -1,0 +1,1793 @@
+diff -r bcd9e67375e3 src/engine/SCons/Action.py
+--- a/src/engine/SCons/Action.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Action.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -865,8 +865,10 @@ class FunctionAction(_ActionAction):
+         except AttributeError:
+             contents = self.funccontents
+ 
+-        return contents + env.subst(string.join(map(lambda v: '${'+v+'}',
+-                                                    self.varlist)))
++        for v in self.varlist:
++            contents = contents + env.subst('${'+v+'}')
++
++        return contents 
+ 
+     def get_implicit_deps(self, target, source, env):
+         return []
+diff -r bcd9e67375e3 src/engine/SCons/Executor.py
+--- a/src/engine/SCons/Executor.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Executor.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -221,29 +221,29 @@ class Executor:
+         This essentially short-circuits an N*M scan of the sources for
+         each individual target, which is a hell of a lot more efficient.
+         """
+-        map(lambda N: N.disambiguate(), node_list)
++        env = self.get_build_env()
+ 
+-        env = self.get_build_env()
+-        select_specific_scanner = lambda t: (t[0], t[1].select(t[0]))
+-        remove_null_scanners = lambda t: not t[1] is None
+-        add_scanner_path = lambda t, s=self: \
+-                                  (t[0], t[1], s.get_build_scanner_path(t[1]))
++        deps = []
+         if scanner:
+-            scanner_list = map(lambda n, s=scanner: (n, s), node_list)
++            for node in node_list:
++                node.disambiguate()
++                scanner = scanner.select(node)
++                if not scanner:
++                    continue
++                path = self.get_build_scanner_path(scanner)
++                deps.extend(node.get_implicit_deps(env, scanner, path))
+         else:
+             kw = self.get_kw()
+-            get_initial_scanners = lambda n, e=env, kw=kw: \
+-                                          (n, n.get_env_scanner(e, kw))
+-            scanner_list = map(get_initial_scanners, node_list)
+-            scanner_list = filter(remove_null_scanners, scanner_list)
+-
+-        scanner_list = map(select_specific_scanner, scanner_list)
+-        scanner_list = filter(remove_null_scanners, scanner_list)
+-        scanner_path_list = map(add_scanner_path, scanner_list)
+-
+-        deps = []
+-        for node, scanner, path in scanner_path_list:
+-            deps.extend(node.get_implicit_deps(env, scanner, path))
++            for node in node_list:
++                node.disambiguate()
++                scanner = node.get_env_scanner(env, kw)
++                if not scanner:
++                    continue
++                scanner = scanner.select(node)
++                if not scanner:
++                    continue
++                path = self.get_build_scanner_path(scanner)
++                deps.extend(node.get_implicit_deps(env, scanner, path))
+ 
+         deps.extend(self.get_implicit_deps())
+ 
+diff -r bcd9e67375e3 src/engine/SCons/Job.py
+--- a/src/engine/SCons/Job.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Job.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -129,7 +129,8 @@ class Serial:
+ 
+             try:
+                 task.prepare()
+-                task.execute()
++                if task.needs_execute():
++                    task.execute()
+             except KeyboardInterrupt:
+                 raise
+             except:
+@@ -141,6 +142,7 @@ class Serial:
+                 task.executed()
+ 
+             task.postprocess()
++        self.taskmaster.cleanup()
+ 
+     def cleanup(self):
+         pass
+@@ -318,13 +320,16 @@ else:
+                         # Let the failed() callback function arrange
+                         # for the build to stop if that's appropriate.
+                         task.exception_set()
+-                        self.tp.preparation_failed(task)
+-                        jobs = jobs + 1
+-                        continue
+-
+-                    # dispatch task
+-                    self.tp.put(task)
+-                    jobs = jobs + 1
++                        task.failed()
++                        task.postprocess()
++                    else:
++                        if task.needs_execute():
++                            # dispatch task
++                            self.tp.put(task)
++                            jobs = jobs + 1
++                        else:
++                            task.executed()
++                            task.postprocess()
+ 
+                 if not task and not jobs: break
+ 
+@@ -346,3 +351,4 @@ else:
+ 
+         def cleanup(self):
+             self.tp.cleanup()
++            self.taskmaster.cleanup()
+diff -r bcd9e67375e3 src/engine/SCons/JobTests.py
+--- a/src/engine/SCons/JobTests.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/JobTests.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -68,6 +68,9 @@ class Task:
+     def _do_something(self):
+         pass
+ 
++    def needs_execute(self):
++        return True
++
+     def execute(self):
+         self.taskmaster.test_case.failUnless(self.was_prepared,
+                                   "the task wasn't prepared")
+@@ -119,6 +122,9 @@ class ExceptionTask:
+ 
+     def prepare(self):
+         self.was_prepared = 1
++
++    def needs_execute(self):
++        return True
+ 
+     def execute(self):
+         raise Exception
+@@ -198,6 +204,9 @@ class Taskmaster:
+         return serial
+ 
+     def exception_set(self):
++        pass
++
++    def cleanup(self):
+         pass
+ 
+ SaveThreadPool = None
+diff -r bcd9e67375e3 src/engine/SCons/Node/FS.py
+--- a/src/engine/SCons/Node/FS.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Node/FS.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -57,6 +57,8 @@ import SCons.Warnings
+ import SCons.Warnings
+ 
+ from SCons.Debug import Trace
++
++from SCons.compat import izip
+ 
+ # The max_drift value:  by default, use a cached signature value for
+ # any file that's been untouched for more than two days.
+@@ -1895,7 +1897,7 @@ class Dir(Base):
+                         rep_nodes = map(dir.Entry, disk_names)
+                         #rep_nodes = [ n.disambiguate() for n in rep_nodes ]
+                         rep_nodes = map(lambda n: n.disambiguate(), rep_nodes)
+-                        for node, name in zip(rep_nodes, disk_names):
++                        for node, name in izip(rep_nodes, disk_names):
+                             n = self.Entry(name)
+                             if n.__class__ != node.__class__:
+                                 n.__class__ = node.__class__
+@@ -2110,7 +2112,7 @@ class FileBuildInfo(SCons.Node.BuildInfo
+                 pass
+             else:
+                 nodes = []
+-                for s, ni in zip(strings, nodeinfos):
++                for s, ni in izip(strings, nodeinfos):
+                     if not isinstance(s, SCons.Node.Node):
+                         s = ni.str_to_node(s)
+                     nodes.append(s)
+@@ -2119,7 +2121,7 @@ class FileBuildInfo(SCons.Node.BuildInfo
+         result = []
+         bkids = self.bsources + self.bdepends + self.bimplicit
+         bkidsigs = self.bsourcesigs + self.bdependsigs + self.bimplicitsigs
+-        for bkid, bkidsig in zip(bkids, bkidsigs):
++        for bkid, bkidsig in izip(bkids, bkidsigs):
+             result.append(str(bkid) + ': ' +
+                           string.join(bkidsig.format(names=names), ' '))
+         result.append('%s [%s]' % (self.bactsig, self.bact))
+diff -r bcd9e67375e3 src/engine/SCons/Node/NodeTests.py
+--- a/src/engine/SCons/Node/NodeTests.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Node/NodeTests.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -714,23 +714,23 @@ class NodeTestCase(unittest.TestCase):
+         n1 = SCons.Node.Node()
+         n1.builder_set(Builder())
+         node.implicit = []
+-        node.implicit_dict = {}
+-        node._add_child(node.implicit, node.implicit_dict, [n1])
++        node.implicit_set = set()
++        node._add_child(node.implicit, node.implicit_set, [n1])
+ 
+         node.prepare()  # should not throw an exception
+ 
+         n2 = SCons.Node.Node()
+         n2.linked = 1
+         node.implicit = []
+-        node.implicit_dict = {}
+-        node._add_child(node.implicit, node.implicit_dict, [n2])
++        node.implicit_set = set()
++        node._add_child(node.implicit, node.implicit_set, [n2])
+ 
+         node.prepare()  # should not throw an exception
+ 
+         n3 = SCons.Node.Node()
+         node.implicit = []
+-        node.implicit_dict = {}
+-        node._add_child(node.implicit, node.implicit_dict, [n3])
++        node.implicit_set = set()
++        node._add_child(node.implicit, node.implicit_set, [n3])
+ 
+         node.prepare()  # should not throw an exception
+ 
+@@ -739,8 +739,8 @@ class NodeTestCase(unittest.TestCase):
+                 return None
+         n4 = MyNode()
+         node.implicit = []
+-        node.implicit_dict = {}
+-        node._add_child(node.implicit, node.implicit_dict, [n4])
++        node.implicit_set = set()
++        node._add_child(node.implicit, node.implicit_set, [n4])
+         exc_caught = 0
+         try:
+             node.prepare()
+@@ -810,7 +810,7 @@ class NodeTestCase(unittest.TestCase):
+             pass
+         else:
+             raise "did not catch expected exception"
+-        assert node.sources == [zero, one, two, three, four]
++        assert node.sources == [zero, one, two, three, four], node.sources
+ 
+     def test_add_ignore(self):
+         """Test adding files whose dependencies should be ignored.
+@@ -1033,9 +1033,9 @@ class NodeTestCase(unittest.TestCase):
+         node.add_source([n1, n2, n3])
+         node.add_dependency([n4, n5, n6])
+         node.implicit = []
+-        node.implicit_dict = {}
+-        node._add_child(node.implicit, node.implicit_dict, [n7, n8, n9])
+-        node._add_child(node.implicit, node.implicit_dict, [n10, n11, n12])
++        node.implicit_set = set()
++        node._add_child(node.implicit, node.implicit_set, [n7, n8, n9])
++        node._add_child(node.implicit, node.implicit_set, [n10, n11, n12])
+         node.add_ignore([n2, n5, n8, n11])
+ 
+         kids = node.children()
+@@ -1064,9 +1064,9 @@ class NodeTestCase(unittest.TestCase):
+         node.add_source([n1, n2, n3])
+         node.add_dependency([n4, n5, n6])
+         node.implicit = []
+-        node.implicit_dict = {}
+-        node._add_child(node.implicit, node.implicit_dict, [n7, n8, n9])
+-        node._add_child(node.implicit, node.implicit_dict, [n10, n11, n12])
++        node.implicit_set = set()
++        node._add_child(node.implicit, node.implicit_set, [n7, n8, n9])
++        node._add_child(node.implicit, node.implicit_set, [n10, n11, n12])
+         node.add_ignore([n2, n5, n8, n11])
+ 
+         kids = node.all_children()
+@@ -1217,7 +1217,6 @@ class NodeTestCase(unittest.TestCase):
+         n.clear()
+ 
+         assert n.includes is None, n.includes
+-        assert n.found_includes == {}, n.found_includes
+         assert x.cleaned_up
+ 
+     def test_get_subst_proxy(self):
+@@ -1241,32 +1240,22 @@ class NodeTestCase(unittest.TestCase):
+     def test_postprocess(self):
+         """Test calling the base Node postprocess() method"""
+         n = SCons.Node.Node()
+-        n.waiting_parents = {'foo':1, 'bar':1}
++        n.waiting_parents = set( ['foo','bar'] )
+ 
+         n.postprocess()
+-        assert n.waiting_parents == {}, n.waiting_parents
++        assert n.waiting_parents == set(), n.waiting_parents
+ 
+     def test_add_to_waiting_parents(self):
+         """Test the add_to_waiting_parents() method"""
+         n1 = SCons.Node.Node()
+         n2 = SCons.Node.Node()
+-        assert n1.waiting_parents == {}, n1.waiting_parents
++        assert n1.waiting_parents == set(), n1.waiting_parents
+         r = n1.add_to_waiting_parents(n2)
+         assert r == 1, r
+-        assert n1.waiting_parents == {n2:1}, n1.waiting_parents
++        assert n1.waiting_parents == set((n2,)), n1.waiting_parents
+         r = n1.add_to_waiting_parents(n2)
+         assert r == 0, r
+ 
+-    def test_call_for_all_waiting_parents(self):
+-        """Test the call_for_all_waiting_parents() method"""
+-        n1 = SCons.Node.Node()
+-        n2 = SCons.Node.Node()
+-        n1.add_to_waiting_parents(n2)
+-        result = []
+-        def func(node, result=result):
+-            result.append(node)
+-        n1.call_for_all_waiting_parents(func)
+-        assert result == [n1, n2], result
+ 
+ class NodeListTestCase(unittest.TestCase):
+     def test___str__(self):
+diff -r bcd9e67375e3 src/engine/SCons/Node/__init__.py
+--- a/src/engine/SCons/Node/__init__.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Node/__init__.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -57,6 +57,8 @@ import SCons.Util
+ 
+ from SCons.Debug import Trace
+ 
++from SCons.compat import chain, izip
++
+ def classname(obj):
+     return string.split(str(obj.__class__), '.')[-1]
+ 
+@@ -75,7 +77,7 @@ failed = 5
+ failed = 5
+ 
+ StateString = {
+-    0 : "0",
++    0 : "no_state",
+     1 : "pending",
+     2 : "executing",
+     3 : "up_to_date",
+@@ -202,15 +204,15 @@ class Node:
+         # a class.  (Of course, we could always still do that in the
+         # future if we had a good reason to...).
+         self.sources = []       # source files used to build node
+-        self.sources_dict = {}
++        self.sources_set = set()
+         self.depends = []       # explicit dependencies (from Depends)
+-        self.depends_dict = {}
++        self.depends_set = set()
+         self.ignore = []        # dependencies to ignore
+-        self.ignore_dict = {}
++        self.ignore_set = set()
+         self.prerequisites = SCons.Util.UniqueList()
+         self.implicit = None    # implicit (scanned) dependencies (None means not scanned yet)
+-        self.waiting_parents = {}
+-        self.waiting_s_e = {}
++        self.waiting_parents = set()
++        self.waiting_s_e = set()
+         self.ref_count = 0
+         self.wkids = None       # Kids yet to walk, when it's an array
+ 
+@@ -220,7 +222,6 @@ class Node:
+         self.noclean = 0
+         self.nocache = 0
+         self.always_build = None
+-        self.found_includes = {}
+         self.includes = None
+         self.attributes = self.Attrs() # Generic place to stick information about the Node.
+         self.side_effect = 0 # true iff this node is a side effect
+@@ -373,7 +374,7 @@ class Node:
+ 
+         # Clear the implicit dependency caches of any Nodes
+         # waiting for this Node to be built.
+-        for parent in self.waiting_parents.keys():
++        for parent in self.waiting_parents:
+             parent.implicit = None
+ 
+         self.clear()
+@@ -398,7 +399,7 @@ class Node:
+     #
+ 
+     def add_to_waiting_s_e(self, node):
+-        self.waiting_s_e[node] = 1
++        self.waiting_s_e.add(node)
+ 
+     def add_to_waiting_parents(self, node):
+         """
+@@ -409,23 +410,16 @@ class Node:
+         True and False instead...)
+         """
+         wp = self.waiting_parents
+-        if wp.has_key(node):
+-            result = 0
+-        else:
+-            result = 1
+-        wp[node] = 1
+-        return result
+-
+-    def call_for_all_waiting_parents(self, func):
+-        func(self)
+-        for parent in self.waiting_parents.keys():
+-            parent.call_for_all_waiting_parents(func)
++        if node in wp:
++            return 0
++        wp.add(node)
++        return 1
+ 
+     def postprocess(self):
+         """Clean up anything we don't need to hang onto after we've
+         been built."""
+         self.executor_cleanup()
+-        self.waiting_parents = {}
++        self.waiting_parents = set()
+ 
+     def clear(self):
+         """Completely clear a Node of all its cached state (so that it
+@@ -444,7 +438,6 @@ class Node:
+         except AttributeError:
+             pass
+         self.includes = None
+-        self.found_includes = {}
+ 
+     def clear_memoized_values(self):
+         self._memo = {}
+@@ -592,9 +585,9 @@ class Node:
+     def add_to_implicit(self, deps):
+         if not hasattr(self, 'implicit') or self.implicit is None:
+             self.implicit = []
+-            self.implicit_dict = {}
++            self.implicit_set = set()
+             self._children_reset()
+-        self._add_child(self.implicit, self.implicit_dict, deps)
++        self._add_child(self.implicit, self.implicit_set, deps)
+ 
+     def scan(self):
+         """Scan this node's dependents for implicit dependencies."""
+@@ -604,7 +597,7 @@ class Node:
+         if not self.implicit is None:
+             return
+         self.implicit = []
+-        self.implicit_dict = {}
++        self.implicit_set = set()
+         self._children_reset()
+         if not self.has_builder():
+             return
+@@ -633,7 +626,7 @@ class Node:
+                 # one of this node's sources has changed,
+                 # so we must recalculate the implicit deps:
+                 self.implicit = []
+-                self.implicit_dict = {}
++                self.implicit_set = set()
+ 
+         # Have the executor scan the sources.
+         executor.scan_sources(self.builder.source_scanner)
+@@ -706,33 +699,33 @@ class Node:
+         self.binfo = binfo
+ 
+         executor = self.get_executor()
+-
+-        sources = executor.get_unignored_sources(self.ignore)
+-
+-        depends = self.depends
+-        implicit = self.implicit or []
+-
+-        if self.ignore:
+-            depends = filter(self.do_not_ignore, depends)
+-            implicit = filter(self.do_not_ignore, implicit)
+-
+-        def get_ninfo(node):
+-            return node.get_ninfo()
+-
+-        sourcesigs = map(get_ninfo, sources)
+-        dependsigs = map(get_ninfo, depends)
+-        implicitsigs = map(get_ninfo, implicit)
++        ignore_set = self.ignore_set
+ 
+         if self.has_builder():
+             binfo.bact = str(executor)
+             binfo.bactsig = SCons.Util.MD5signature(executor.get_contents())
+ 
++        sources = executor.get_unignored_sources(self.ignore)
++        sourcesigs = []
++        for s in sources:
++            sourcesigs.append(s.get_ninfo())
+         binfo.bsources = sources
++        binfo.bsourcesigs = sourcesigs
++
++        depends = self.depends
++        dependsigs = []
++        for d in depends:
++            if d not in ignore_set:
++                dependsigs.append(d.get_ninfo())
+         binfo.bdepends = depends
++        binfo.bdependsigs = dependsigs
++
++        implicit = self.implicit or []
++        implicitsigs = []
++        for i in implicit:
++            if i not in ignore_set:
++                implicitsigs.append(i.get_ninfo())
+         binfo.bimplicit = implicit
+-
+-        binfo.bsourcesigs = sourcesigs
+-        binfo.bdependsigs = dependsigs
+         binfo.bimplicitsigs = implicitsigs
+ 
+         return binfo
+@@ -816,7 +809,7 @@ class Node:
+     def add_dependency(self, depend):
+         """Adds dependencies."""
+         try:
+-            self._add_child(self.depends, self.depends_dict, depend)
++            self._add_child(self.depends, self.depends_set, depend)
+         except TypeError, e:
+             e = e.args[0]
+             if SCons.Util.is_List(e):
+@@ -833,7 +826,7 @@ class Node:
+     def add_ignore(self, depend):
+         """Adds dependencies to ignore."""
+         try:
+-            self._add_child(self.ignore, self.ignore_dict, depend)
++            self._add_child(self.ignore, self.ignore_set, depend)
+         except TypeError, e:
+             e = e.args[0]
+             if SCons.Util.is_List(e):
+@@ -845,7 +838,7 @@ class Node:
+     def add_source(self, source):
+         """Adds sources."""
+         try:
+-            self._add_child(self.sources, self.sources_dict, source)
++            self._add_child(self.sources, self.sources_set, source)
+         except TypeError, e:
+             e = e.args[0]
+             if SCons.Util.is_List(e):
+@@ -854,9 +847,9 @@ class Node:
+                 s = str(e)
+             raise SCons.Errors.UserError("attempted to add a non-Node as source of %s:\n\t%s is a %s, not a Node" % (str(self), s, type(e)))
+ 
+-    def _add_child(self, collection, dict, child):
+-        """Adds 'child' to 'collection', first checking 'dict' to see
+-        if it's already present."""
++    def _add_child(self, collection, set, child):
++        """Adds 'child' to 'collection', first checking 'set' to see if it's
++        already present."""
+         #if type(child) is not type([]):
+         #    child = [child]
+         #for c in child:
+@@ -864,9 +857,9 @@ class Node:
+         #        raise TypeError, c
+         added = None
+         for c in child:
+-            if not dict.has_key(c):
++            if c not in set:
++                set.add(c)
+                 collection.append(c)
+-                dict[c] = 1
+                 added = 1
+         if added:
+             self._children_reset()
+@@ -882,10 +875,55 @@ class Node:
+         # build info that it's cached so we can re-calculate it.
+         self.executor_cleanup()
+ 
+-    def do_not_ignore(self, node):
+-        return node not in self.ignore
++    memoizer_counters.append(SCons.Memoize.CountValue('_children_get'))
+ 
+-    def _all_children_get(self):
++    def _children_get(self):
++        try:
++            return self._memo['children_get']
++        except KeyError:
++            pass
++
++        # The return list may contain duplicate Nodes, especially in
++        # source trees where there are a lot of repeated #includes
++        # of a tangle of .h files.  Profiling shows, however, that
++        # eliminating the duplicates with a brute-force approach that
++        # preserves the order (that is, something like:
++        #
++        #       u = []
++        #       for n in list:
++        #           if n not in u:
++        #               u.append(n)"
++        #
++        # takes more cycles than just letting the underlying methods
++        # hand back cached values if a Node's information is requested
++        # multiple times.  (Other methods of removing duplicates, like
++        # using dictionary keys, lose the order, and the only ordered
++        # dictionary patterns I found all ended up using "not in"
++        # internally anyway...)
++        if self.ignore_set:
++            if self.implicit is None:
++                iter = chain(self.sources,self.depends)
++            else:
++                iter = chain(self.sources, self.depends, self.implicit)
++
++            children = []
++            for i in iter:
++                if i not in self.ignore_set:
++                    children.append(i)
++        else:
++            if self.implicit is None:
++                children = self.sources + self.depends
++            else:
++                children = self.sources + self.depends + self.implicit
++
++        self._memo['children_get'] = children
++        return children
++
++    def all_children(self, scan=1):
++        """Return a list of all the node's direct children."""
++        if scan:
++            self.scan()
++
+         # The return list may contain duplicate Nodes, especially in
+         # source trees where there are a lot of repeated #includes
+         # of a tangle of .h files.  Profiling shows, however, that
+@@ -907,25 +945,6 @@ class Node:
+             return self.sources + self.depends
+         else:
+             return self.sources + self.depends + self.implicit
+-
+-    memoizer_counters.append(SCons.Memoize.CountValue('_children_get'))
+-
+-    def _children_get(self):
+-        try:
+-            return self._memo['children_get']
+-        except KeyError:
+-            pass
+-        children = self._all_children_get()
+-        if self.ignore:
+-            children = filter(self.do_not_ignore, children)
+-        self._memo['children_get'] = children
+-        return children
+-
+-    def all_children(self, scan=1):
+-        """Return a list of all the node's direct children."""
+-        if scan:
+-            self.scan()
+-        return self._all_children_get()
+ 
+     def children(self, scan=1):
+         """Return a list of the node's direct children, minus those
+@@ -1009,7 +1028,7 @@ class Node:
+             if t: Trace(': old %s new %s' % (len(then), len(children)))
+             result = True
+ 
+-        for child, prev_ni in zip(children, then):
++        for child, prev_ni in izip(children, then):
+             if child.changed_since_last_build(self, prev_ni):
+                 if t: Trace(': %s changed' % child)
+                 result = True
+@@ -1152,8 +1171,8 @@ class Node:
+         new_bkids    = new.bsources    + new.bdepends    + new.bimplicit
+         new_bkidsigs = new.bsourcesigs + new.bdependsigs + new.bimplicitsigs
+ 
+-        osig = dict(zip(old_bkids, old_bkidsigs))
+-        nsig = dict(zip(new_bkids, new_bkidsigs))
++        osig = dict(izip(old_bkids, old_bkidsigs))
++        nsig = dict(izip(new_bkids, new_bkidsigs))
+ 
+         # The sources and dependencies we'll want to report are all stored
+         # as relative paths to this target's directory, but we want to
+diff -r bcd9e67375e3 src/engine/SCons/SConfTests.py
+--- a/src/engine/SCons/SConfTests.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/SConfTests.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -163,9 +163,10 @@ class SConfTestCase(unittest.TestCase):
+                     def __init__(self, name):
+                         self.name = name
+                         self.state = None
+-                        self.waiting_parents = {}
++                        self.waiting_parents = set()
+                         self.side_effects = []
+                         self.builder = None
++                        self.prerequisites = []
+                     def disambiguate(self):
+                         return self
+                     def has_builder(self):
+diff -r bcd9e67375e3 src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Script/Main.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -168,28 +168,29 @@ class BuildTask(SCons.Taskmaster.Task):
+         self.progress(self.targets[0])
+         return SCons.Taskmaster.Task.prepare(self)
+ 
+-    def execute(self):
+-        for target in self.targets:
+-            if target.get_state() == SCons.Node.up_to_date: 
+-                continue
+-            if target.has_builder() and not hasattr(target.builder, 'status'):
+-                if print_time:
+-                    start_time = time.time()
+-                    global first_command_start
+-                    if first_command_start is None:
+-                        first_command_start = start_time
+-                SCons.Taskmaster.Task.execute(self)
+-                if print_time:
+-                    global cumulative_command_time
+-                    global last_command_end
+-                    finish_time = time.time()
+-                    last_command_end = finish_time
+-                    cumulative_command_time = cumulative_command_time+finish_time-start_time
+-                    sys.stdout.write("Command execution time: %f seconds\n"%(finish_time-start_time))
+-                break
++    def needs_execute(self):
++        target = self.targets[0]
++        if target.get_state() == SCons.Node.executing:
++            return True
+         else:
+             if self.top and target.has_builder():
+                 display("scons: `%s' is up to date." % str(self.node))
++            return False
++
++    def execute(self):
++        if print_time:
++            start_time = time.time()
++            global first_command_start
++            if first_command_start is None:
++                first_command_start = start_time
++        SCons.Taskmaster.Task.execute(self)
++        if print_time:
++            global cumulative_command_time
++            global last_command_end
++            finish_time = time.time()
++            last_command_end = finish_time
++            cumulative_command_time = cumulative_command_time+finish_time-start_time
++            sys.stdout.write("Command execution time: %f seconds\n"%(finish_time-start_time))
+ 
+     def do_failed(self, status=2):
+         _BuildFailures.append(self.exception[1])
+diff -r bcd9e67375e3 src/engine/SCons/Taskmaster.py
+--- a/src/engine/SCons/Taskmaster.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Taskmaster.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -57,11 +57,18 @@ import sys
+ import sys
+ import traceback
+ 
++from SCons.compat import chain
++
++import SCons.Errors
+ import SCons.Node
+-import SCons.Errors
+ 
+ StateString = SCons.Node.StateString
+-
++NODE_NO_STATE = SCons.Node.no_state
++NODE_PENDING = SCons.Node.pending
++NODE_EXECUTING = SCons.Node.executing
++NODE_UP_TO_DATE = SCons.Node.up_to_date
++NODE_EXECUTED = SCons.Node.executed
++NODE_FAILED = SCons.Node.failed
+ 
+ 
+ # A subsystem for recording stats about how different Nodes are handled by
+@@ -175,6 +182,17 @@ class Task:
+         """
+         return self.node
+ 
++    def needs_execute(self):
++        """
++        Called to determine whether the task's execute() method should
++        be run.
++
++        This method allows one to skip the somethat costly execution
++        of the execute() method in a seperate thread. For example,
++        that would be unnecessary for up-to-date targets.
++        """
++        return True
++
+     def execute(self):
+         """
+         Called to execute the task.
+@@ -212,10 +230,10 @@ class Task:
+         the Node's callback methods.
+         """
+         for t in self.targets:
+-            if t.get_state() == SCons.Node.executing:
++            if t.get_state() == NODE_EXECUTING:
+                 for side_effect in t.side_effects:
+-                    side_effect.set_state(SCons.Node.no_state)
+-                t.set_state(SCons.Node.executed)
++                    side_effect.set_state(NODE_NO_STATE)
++                t.set_state(NODE_EXECUTED)
+ 
+     def executed_with_callbacks(self):
+         """
+@@ -231,10 +249,10 @@ class Task:
+         or not the target was an actual built target or a source Node.
+         """
+         for t in self.targets:
+-            if t.get_state() == SCons.Node.executing:
++            if t.get_state() == NODE_EXECUTING:
+                 for side_effect in t.side_effects:
+-                    side_effect.set_state(SCons.Node.no_state)
+-                t.set_state(SCons.Node.executed)
++                    side_effect.set_state(NODE_NO_STATE)
++                t.set_state(NODE_EXECUTED)
+                 t.built()
+             t.visited()
+ 
+@@ -250,8 +268,12 @@ class Task:
+         """
+         Explicit stop-the-build failure.
+         """
+-        for t in self.targets:
+-            t.set_state(SCons.Node.failed)
++        
++        # Invoke fail_continue() to clean-up the pending children
++        # list.
++        self.fail_continue()
++
++        # Tell the taskmaster to not start any new tasks
+         self.tm.stop()
+ 
+         # We're stopping because of a build failure, but give the
+@@ -267,11 +289,43 @@ class Task:
+         This sets failure status on the target nodes and all of
+         their dependent parent nodes.
+         """
++        
++        pending_children = self.tm.pending_children
++
++        to_visit = set()
+         for t in self.targets:
+             # Set failure state on all of the parents that were dependent
+             # on this failed build.
+-            def set_state(node): node.set_state(SCons.Node.failed)
+-            t.call_for_all_waiting_parents(set_state)
++            if t.state != NODE_FAILED:
++                t.state = NODE_FAILED
++                parents = t.waiting_parents
++                to_visit = to_visit | parents
++                pending_children = pending_children - parents
++
++        try:
++            while 1:
++                try:
++                    node = to_visit.pop()
++                except AttributeError:
++                    # Python 1.5.2
++                    if len(to_visit):
++                        node = to_visit[0]
++                        to_visit.remove(node)
++                    else:
++                        break
++                if node.state != NODE_FAILED:
++                    node.state = NODE_FAILED
++                    parents = node.waiting_parents
++                    to_visit = to_visit | parents
++                    pending_children = pending_children - parents
++        except KeyError:
++            # The container to_visit has been emptied.
++            pass
++
++        # We have the stick back the pending_children list into the
++        # task master because the python 1.5.2 compatibility does not
++        # allow us to use in-place updates
++        self.tm.pending_children = pending_children
+ 
+     def make_ready_all(self):
+         """
+@@ -282,9 +336,9 @@ class Task:
+         """
+         self.out_of_date = self.targets[:]
+         for t in self.targets:
+-            t.disambiguate().set_state(SCons.Node.executing)
++            t.disambiguate().set_state(NODE_EXECUTING)
+             for s in t.side_effects:
+-                s.set_state(SCons.Node.executing)
++                s.set_state(NODE_EXECUTING)
+ 
+     def make_ready_current(self):
+         """
+@@ -294,6 +348,7 @@ class Task:
+         This is the default behavior for building only what's necessary.
+         """
+         self.out_of_date = []
++        needs_executing = False
+         for t in self.targets:
+             try:
+                 t.disambiguate().make_ready()
+@@ -301,13 +356,24 @@ class Task:
+                                 (not t.always_build and t.is_up_to_date())
+             except EnvironmentError, e:
+                 raise SCons.Errors.BuildError(node=t, errstr=e.strerror, filename=e.filename)
+-            if is_up_to_date:
+-                t.set_state(SCons.Node.up_to_date)
+-            else:
++
++            if not is_up_to_date:
+                 self.out_of_date.append(t)
+-                t.set_state(SCons.Node.executing)
++                needs_executing = True
++
++        if needs_executing:
++            for t in self.targets:
++                t.set_state(NODE_EXECUTING)
+                 for s in t.side_effects:
+-                    s.set_state(SCons.Node.executing)
++                    s.set_state(NODE_EXECUTING)
++        else:                
++            for t in self.targets:
++                # We must invoke visited() to ensure that the node
++                # information has been computed before allowing the
++                # parent nodes to execute. (That could occur in a
++                # parallel build...)
++                t.visited()
++                t.set_state(NODE_UP_TO_DATE)
+ 
+     make_ready = make_ready_current
+ 
+@@ -333,24 +399,25 @@ class Task:
+ 
+         parents = {}
+         for t in targets:
+-            for p in t.waiting_parents.keys():
++            for p in t.waiting_parents:
+                 parents[p] = parents.get(p, 0) + 1
+ 
+         for t in targets:
+             for s in t.side_effects:
+-                if s.get_state() == SCons.Node.executing:
+-                    s.set_state(SCons.Node.no_state)
+-                    for p in s.waiting_parents.keys():
+-                        if not parents.has_key(p):
+-                            parents[p] = 1
+-                for p in s.waiting_s_e.keys():
++                if s.get_state() == NODE_EXECUTING:
++                    s.set_state(NODE_NO_STATE)
++                    for p in s.waiting_parents:
++                        parents[p] = parents.get(p, 0) + 1
++                for p in s.waiting_s_e:
+                     if p.ref_count == 0:
+                         self.tm.candidates.append(p)
++                        self.tm.pending_children.discard(p)
+ 
+         for p, subtract in parents.items():
+             p.ref_count = p.ref_count - subtract
+             if p.ref_count == 0:
+                 self.tm.candidates.append(p)
++                self.tm.pending_children.discard(p)
+ 
+         for t in targets:
+             t.postprocess()
+@@ -409,12 +476,15 @@ class Task:
+         raise exc_type, exc_value, exc_traceback
+ 
+ 
+-def find_cycle(stack):
+-    if stack[0] == stack[-1]:
+-        return stack
+-    for n in stack[-1].waiting_parents.keys():
++def find_cycle(stack, visited):
++    if stack[-1] in visited:
++        return None
++    visited.add(stack[-1])
++    for n in stack[-1].waiting_parents:
+         stack.append(n)
+-        if find_cycle(stack):
++        if stack[0] == stack[-1]:
++            return stack
++        if find_cycle(stack, visited):
+             return stack
+         stack.pop()
+     return None
+@@ -437,6 +507,8 @@ class Taskmaster:
+         self.message = None
+         self.trace = trace
+         self.next_candidate = self.find_next_candidate
++        self.pending_children = set()
++
+ 
+     def find_next_candidate(self):
+         """
+@@ -505,10 +577,12 @@ class Taskmaster:
+         self.ready_exc = None
+ 
+         T = self.trace
++        if T: T.write('\nTaskmaster: Looking for a node to evaluate\n')
+ 
+         while 1:
+             node = self.next_candidate()
+             if node is None:
++                if T: T.write('Taskmaster: No candidate anymore.\n\n')
+                 return None
+ 
+             node = node.disambiguate()
+@@ -522,25 +596,26 @@ class Taskmaster:
+                 S.considered = S.considered + 1
+             else:
+                 S = None
++  
++            if T: T.write('Taskmaster:     Considering node <%-10s %s> and its children:\n' % 
++                          (StateString[node.get_state()], repr(str(node))))
+ 
+-            if T: T.write('Taskmaster: %s:' % repr(str(node)))
+-
+-            # Skip this node if it has already been evaluated:
+-            if state > SCons.Node.pending:
++            if state == NODE_NO_STATE:
++                # Mark this node as being on the execution stack:
++                node.set_state(NODE_PENDING)
++            elif state > NODE_PENDING:
++                # Skip this node if it has already been evaluated:
+                 if S: S.already_handled = S.already_handled + 1
+-                if T: T.write(' already handled (%s)\n' % StateString[state])
++                if T: T.write('Taskmaster:        already handled (executed)\n')
+                 continue
+ 
+-            # Mark this node as being on the execution stack:
+-            node.set_state(SCons.Node.pending)
+-
+             try:
+-                children = node.children() + node.prerequisites
++                children = node.children()
+             except SystemExit:
+                 exc_value = sys.exc_info()[1]
+                 e = SCons.Errors.ExplicitExit(node, exc_value.code)
+                 self.ready_exc = (SCons.Errors.ExplicitExit, e)
+-                if T: T.write(' SystemExit\n')
++                if T: T.write('Taskmaster:        SystemExit\n')
+                 return node
+             except KeyboardInterrupt:
+                 if T: T.write(' KeyboardInterrupt\n')
+@@ -552,70 +627,36 @@ class Taskmaster:
+                 # raise the exception when the Task is "executed."
+                 self.ready_exc = sys.exc_info()
+                 if S: S.problem = S.problem + 1
+-                if T: T.write(' exception\n')
++                if T: T.write('Taskmaster:        exception while scanning children.\n')
+                 return node
+ 
+-            if T and children:
+-                c = map(str, children)
+-                c.sort()
+-                T.write(' children:\n    %s\n   ' % c)
++            children_not_visited = []
++            children_pending = set()
++            children_not_ready = []
++            children_failed = False
+ 
+-            childstate = map(lambda N: (N, N.get_state()), children)
++            for child in chain(children,node.prerequisites):
++                childstate = child.get_state()
+ 
+-            # Detect dependency cycles:
+-            pending_nodes = filter(lambda I: I[1] == SCons.Node.pending, childstate)
+-            if pending_nodes:
+-                for p in pending_nodes:
+-                    cycle = find_cycle([p[0], node])
+-                    if cycle:
+-                        desc = "Dependency cycle: " + string.join(map(str, cycle), " -> ")
+-                        if T: T.write(' dependency cycle\n')
+-                        raise SCons.Errors.UserError, desc
++                if T: T.write('Taskmaster:        <%-10s %s>\n' % 
++                              (StateString[childstate], repr(str(child))))
+ 
+-            not_built = filter(lambda I: I[1] <= SCons.Node.executing, childstate)
+-            if not_built:
+-                # We're waiting on one or more derived targets that have
+-                # not yet finished building.
++                if childstate == NODE_NO_STATE:
++                    children_not_visited.append(child)
++                elif childstate == NODE_PENDING:
++                    children_pending.add(child)
++                elif childstate == NODE_FAILED:
++                    children_failed = True
+ 
+-                not_visited = filter(lambda I: not I[1], not_built)
+-                if not_visited:
+-                    # Some of them haven't even been visited yet.
+-                    # Add them to the list so that on some next pass
+-                    # we can take a stab at evaluating them (or
+-                    # their children).
+-                    not_visited = map(lambda I: I[0], not_visited)
+-                    not_visited.reverse()
+-                    self.candidates.extend(self.order(not_visited))
++                if childstate <= NODE_EXECUTING:
++                    children_not_ready.append(child)
+ 
+-                n_b_nodes = map(lambda I: I[0], not_built)
+ 
+-                # Add this node to the waiting parents lists of anything
+-                # we're waiting on, with a reference count so we can be
+-                # put back on the list for re-evaluation when they've
+-                # all finished.
+-                map(lambda n, P=node: n.add_to_waiting_parents(P), n_b_nodes)
+-                node.ref_count = len(set(n_b_nodes))
+-
+-                if S: S.not_built = S.not_built + 1
+-                if T:
+-                    c = map(str, n_b_nodes)
+-                    c.sort()
+-                    T.write(' waiting on unfinished children:\n    %s\n' % c)
+-                continue
+-
+-            # Skip this node if it has side-effects that are
+-            # currently being built:
+-            side_effects = filter(lambda N:
+-                                  N.get_state() == SCons.Node.executing,
+-                                  node.side_effects)
+-            if side_effects:
+-                map(lambda n, P=node: n.add_to_waiting_s_e(P), side_effects)
+-                if S: S.side_effects = S.side_effects + 1
+-                if T:
+-                    c = map(str, side_effects)
+-                    c.sort()
+-                    T.write(' waiting on side effects:\n    %s\n' % c)
+-                continue
++            # These nodes have not even been visited yet.  Add
++            # them to the list so that on some next pass we can
++            # take a stab at evaluating them (or their children).
++            children_not_visited.reverse()
++            self.candidates.extend(self.order(children_not_visited))
+ 
+             # Skip this node if any of its children have failed.
+             #
+@@ -635,21 +676,47 @@ class Taskmaster:
+             # Note that even if one of the children fails, we still
+             # added the other children to the list of candidate nodes
+             # to keep on building (--keep-going).
+-            failed_children = filter(lambda I: I[1] == SCons.Node.failed,
+-                                     childstate)
+-            if failed_children:
+-                node.set_state(SCons.Node.failed)
++            if children_failed:
++                node.set_state(NODE_FAILED)
++
+                 if S: S.child_failed = S.child_failed + 1
+-                if T:
+-                    c = map(lambda I: str(I[0]), failed_children)
+-                    c.sort()
+-                    T.write(' children failed:\n    %s\n' % c)
++                if T: T.write('Taskmaster:****** <%-10s %s>\n' % 
++                              (StateString[node.get_state()], repr(str(node))))
++                continue
++
++            if children_not_ready:
++                for child in children_not_ready:
++                    # We're waiting on one or more derived targets
++                    # that have not yet finished building.
++                    if S: S.not_built = S.not_built + 1
++
++                    # Add this node to the waiting parents lists of
++                    # anything we're waiting on, with a reference
++                    # count so we can be put back on the list for
++                    # re-evaluation when they've all finished.
++                    node.ref_count =  node.ref_count + child.add_to_waiting_parents(node)
++
++                self.pending_children = self.pending_children | children_pending
++                
++                continue
++
++            # Skip this node if it has side-effects that are
++            # currently being built:
++            wait_side_effects = False
++            for se in node.side_effects:
++                if se.get_state() == NODE_EXECUTING:
++                    se.add_to_waiting_s_e(node)
++                    wait_side_effects = True
++
++            if wait_side_effects:
++                if S: S.side_effects = S.side_effects + 1
+                 continue
+ 
+             # The default when we've gotten through all of the checks above:
+             # this node is ready to be built.
+             if S: S.build = S.build + 1
+-            if T: T.write(' evaluating %s\n' % node)
++            if T: T.write('Taskmaster: Evaluating <%-10s %s>\n' % 
++                          (StateString[node.get_state()], repr(str(node))))
+             return node
+ 
+         return None
+@@ -692,3 +759,18 @@ class Taskmaster:
+         Stops the current build completely.
+         """
+         self.next_candidate = self.no_next_candidate
++
++    def cleanup(self):
++        """
++        Check for dependency cycles.
++        """
++        if self.pending_children:
++            desc = 'Found dependency cycle(s):\n'
++            for node in self.pending_children:
++                cycle = find_cycle([node], set())
++                if cycle:
++                    desc = desc + "  " + string.join(map(str, cycle), " -> ") + "\n"
++                else:
++                    desc = desc + "  Internal Error: no cycle found for node %s (%s)\n" %  \
++                        (node, repr(node)) 
++            raise SCons.Errors.UserError, desc
+diff -r bcd9e67375e3 src/engine/SCons/TaskmasterTests.py
+--- a/src/engine/SCons/TaskmasterTests.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/TaskmasterTests.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -56,8 +56,8 @@ class Node:
+         self.state = SCons.Node.no_state
+         self.prepared = None
+         self.ref_count = 0
+-        self.waiting_parents = {}
+-        self.waiting_s_e = {}
++        self.waiting_parents = set()
++        self.waiting_s_e = set()
+         self.side_effect = 0
+         self.side_effects = []
+         self.alttargets = []
+@@ -119,17 +119,10 @@ class Node:
+ 
+     def add_to_waiting_parents(self, node):
+         wp = self.waiting_parents
+-        if wp.has_key(node):
+-            result = 0
+-        else:
+-            result = 1
+-        wp[node] = 1
+-        return result
+-
+-    def call_for_all_waiting_parents(self, func):
+-        func(self)
+-        for parent in self.waiting_parents.keys():
+-            parent.call_for_all_waiting_parents(func)
++        if node in wp:
++            return 0
++        wp.add(node)
++        return 1
+ 
+     def get_state(self):
+         return self.state
+@@ -166,6 +159,7 @@ class Node:
+ 
+     def postprocess(self):
+         self.postprocessed = 1
++        self.waiting_parents = set()
+ 
+     def get_executor(self):
+         class Executor:
+@@ -469,7 +463,7 @@ class TaskmasterTestCase(unittest.TestCa
+         t.postprocess()
+ 
+         s = n1.get_state()
+-        assert s == SCons.Node.up_to_date, s
++        assert s == SCons.Node.executed, s
+         s = n2.get_state()
+         assert s == SCons.Node.executed, s
+ 
+@@ -1030,16 +1024,29 @@ class TaskmasterTestCase(unittest.TestCa
+ 
+         value = trace.getvalue()
+         expect = """\
+-Taskmaster: 'n1': evaluating n1
+-Taskmaster: 'n1': already handled (executed)
+-Taskmaster: 'n3': children:
+-    ['n1', 'n2']
+-    waiting on unfinished children:
+-    ['n2']
+-Taskmaster: 'n2': evaluating n2
+-Taskmaster: 'n3': children:
+-    ['n1', 'n2']
+-    evaluating n3
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   'n1'> and its children:
++Taskmaster: Evaluating <pending    'n1'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <executed   'n1'> and its children:
++Taskmaster:        already handled (executed)
++Taskmaster:     Considering node <no_state   'n3'> and its children:
++Taskmaster:        <executed   'n1'>
++Taskmaster:        <no_state   'n2'>
++Taskmaster:     Considering node <no_state   'n2'> and its children:
++Taskmaster: Evaluating <pending    'n2'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <pending    'n3'> and its children:
++Taskmaster:        <executed   'n1'>
++Taskmaster:        <executed   'n2'>
++Taskmaster: Evaluating <pending    'n3'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster: No candidate anymore.
++
+ """
+         assert value == expect, value
+ 
+diff -r bcd9e67375e3 src/engine/SCons/Tool/intelc.py
+--- a/src/engine/SCons/Tool/intelc.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Tool/intelc.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -375,7 +375,7 @@ def generate(env, version=None, abi=None
+                    'LIB'             : 'lib',
+                    'PATH'            : 'bin',
+                    'LD_LIBRARY_PATH' : 'lib'}
+-            for p in paths:
++            for p in paths.keys():
+                 env.PrependENVPath(p, os.path.join(topdir, paths[p]))
+         if is_mac:
+             paths={'INCLUDE'         : 'include',
+diff -r bcd9e67375e3 src/engine/SCons/Util.py
+--- a/src/engine/SCons/Util.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/Util.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -108,41 +108,6 @@ def updrive(path):
+     if drive:
+         path = string.upper(drive) + rest
+     return path
+-
+-#
+-# Generic convert-to-string functions that abstract away whether or
+-# not the Python we're executing has Unicode support.  The wrapper
+-# to_String_for_signature() will use a for_signature() method if the
+-# specified object has one.
+-#
+-if hasattr(types, 'UnicodeType'):
+-    UnicodeType = types.UnicodeType
+-    def to_String(s):
+-        if isinstance(s, UserString):
+-            t = type(s.data)
+-        else:
+-            t = type(s)
+-        if t is UnicodeType:
+-            return unicode(s)
+-        else:
+-            return str(s)
+-else:
+-    to_String = str
+-
+-def to_String_for_signature(obj):
+-    try:
+-        f = obj.for_signature
+-    except AttributeError:
+-        return to_String_for_subst(obj)
+-    else:
+-        return f()
+-
+-def to_String_for_subst(s):
+-    if is_Sequence( s ):
+-        return string.join( map(to_String_for_subst, s) )
+-    
+-    return to_String( s )
+-
+ 
+ class CallableComposite(UserList):
+     """A simple composite callable class that, when called, will invoke all
+@@ -437,6 +402,41 @@ except TypeError:
+             else:
+                 flatten_sequence(item, result)
+         return result
++
++    #
++    # Generic convert-to-string functions that abstract away whether or
++    # not the Python we're executing has Unicode support.  The wrapper
++    # to_String_for_signature() will use a for_signature() method if the
++    # specified object has one.
++    #
++    if hasattr(types, 'UnicodeType'):
++        UnicodeType = types.UnicodeType
++        def to_String(s):
++            if isinstance(s, UserString):
++                t = type(s.data)
++            else:
++                t = type(s)
++            if t is UnicodeType:
++                return unicode(s)
++            else:
++                return str(s)
++    else:
++        to_String = str
++
++    def to_String_for_signature(obj):
++        try:
++            f = obj.for_signature
++        except AttributeError:
++            return to_String_for_subst(obj)
++        else:
++            return f()
++
++    def to_String_for_subst(s):
++        if is_Sequence( s ):
++            return string.join( map(to_String_for_subst, s) )
++
++        return to_String( s )
++
+ else:
+     # A modern Python version with new-style classes, so we can just use
+     # isinstance().
+@@ -458,6 +458,10 @@ else:
+     # explicitely with str and unicode instead of simply comparing
+     # with basestring. (at least on Python 2.5.1)
+     StringTypes = (str, unicode, UserString)
++
++    # Empirically, it is faster to check explicitely for str and
++    # unicode than for basestring.
++    BaseStringTypes = (str, unicode)
+ 
+     def is_Dict(obj, isinstance=isinstance, DictTypes=DictTypes):
+         return isinstance(obj, DictTypes)
+@@ -524,6 +528,56 @@ else:
+             else:
+                 do_flatten(item, result)
+         return result
++
++
++    #
++    # Generic convert-to-string functions that abstract away whether or
++    # not the Python we're executing has Unicode support.  The wrapper
++    # to_String_for_signature() will use a for_signature() method if the
++    # specified object has one.
++    #
++    def to_String(s, 
++                  isinstance=isinstance, str=str,
++                  UserString=UserString, BaseStringTypes=BaseStringTypes):
++        if isinstance(s,BaseStringTypes):
++            # Early out when already a string!
++            return s
++        elif isinstance(s, UserString):
++            # s.data can only be either a unicode or a regular
++            # string. Please see the UserString initializer.
++            return s.data
++        else:
++            return str(s)
++
++    def to_String_for_subst(s, 
++                            isinstance=isinstance, join=string.join, str=str, to_String=to_String,
++                            BaseStringTypes=BaseStringTypes, SequenceTypes=SequenceTypes,
++                            UserString=UserString):
++                            
++        # Note that the test cases are sorted by order of probability.
++        if isinstance(s, BaseStringTypes):
++            return s
++        elif isinstance(s, SequenceTypes):
++            l = []
++            for e in s:
++                l.append(to_String_for_subst(e))
++            return join( s )
++        elif isinstance(s, UserString):
++            # s.data can only be either a unicode or a regular
++            # string. Please see the UserString initializer.
++            return s.data
++        else:
++            return str(s)
++
++    def to_String_for_signature(obj, to_String_for_subst=to_String_for_subst, 
++                                AttributeError=AttributeError):
++        try:
++            f = obj.for_signature
++        except AttributeError:
++            return to_String_for_subst(obj)
++        else:
++            return f()
++
+ 
+ 
+ # The SCons "semi-deep" copy.
+diff -r bcd9e67375e3 src/engine/SCons/compat/__init__.py
+--- a/src/engine/SCons/compat/__init__.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/compat/__init__.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -188,3 +188,16 @@ except ImportError:
+ except ImportError:
+     # Pre-1.6 Python has no UserString module.
+     import_as('_scons_UserString', 'UserString')
++
++try:
++    from itertools import chain, izip
++except ImportError:
++    # Pre-2.3 Python has no subprocess module.
++    def chain(iterable1, *iterables):
++        result = list(iterable1)
++        for i in iterables:
++            result.extend(list(i))
++        return result
++
++    def izip(*iterables):
++        return apply(zip, iterables)
+diff -r bcd9e67375e3 src/engine/SCons/compat/_scons_sets15.py
+--- a/src/engine/SCons/compat/_scons_sets15.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/src/engine/SCons/compat/_scons_sets15.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -26,10 +26,11 @@ class Set:
+         if seq:
+             for elem in seq:
+                 if elem not in self.elems:
++                    hash(elem)
+                     self.elems.append(elem)
+ 
+     def __str__(self):
+-        return "{%s}" % string.join(map(str, self.elems), ", ")
++        return "set([%s])" % string.join(map(str, self.elems), ", ")
+ 
+ 
+     def copy(self):
+@@ -56,6 +57,7 @@ class Set:
+     def add(self, elem):
+         """Add one element to the set."""
+         if elem not in self.elems:
++            hash(elem)
+             self.elems.append(elem)
+ 
+     def remove(self, elem):
+@@ -157,3 +159,12 @@ class Set:
+             return 0
+         else:
+             return len(self - other) == 0
++
++    def __cmp__(self, other):
++        """Returns 1 if the sets are equal."""
++        if self.__lt__(other):
++            return -1
++        elif other.__lt__(self):
++            return 1
++        else:
++            return 0
+diff -r bcd9e67375e3 test/Parallel/multiple-parents.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/Parallel/multiple-parents.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -0,0 +1,128 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++"""
++Verify that a failed build action with -j works as expected.
++"""
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import TestSCons
++
++_python_ = TestSCons._python_
++
++try:
++    import threading
++except ImportError:
++    # if threads are not supported, then
++    # there is nothing to test
++    TestCmd.no_result()
++    sys.exit()
++
++
++test = TestSCons.TestSCons()
++
++# Test that we can handle parallel builds with a dependency graph
++# where:
++#    a) Some nodes have multiple parents
++#    b) Some targets fail building
++#    c) Some targets succeed building
++
++test.write('SConstruct', """
++def fail_action(target = None, source = None, env = None):
++    return 2
++
++failed_target0 = Command(target='failed00', source='', action=fail_action)
++ok_target0     = Command(target='ok00',     source='', action=Touch('${TARGET}'))
++
++prev_level = failed_target0 + ok_target0
++
++for i in range(1,20):
++    
++    failed_target = Command(target='failed%02d' % i, source='', action=fail_action)
++    ok_target     = Command(target='ok%02d' % i,     source='', action=Touch('${TARGET}'))
++
++    next_level = failed_target + ok_target
++    for j in range(1,10):
++        next_level = next_level + Alias('a%02d%02d' % (i,j), prev_level)
++
++    prev_level = next_level
++
++all = Alias('all', prev_level)
++
++Default(all)
++""")
++
++test.run(arguments = 'all',
++         status = 2,
++         stderr = "scons: *** [failed19] Error 2\n")
++test.must_not_exist(test.workpath('ok'))
++
++
++for i in range(5):
++    test.run(arguments = '-c all')
++
++    test.run(arguments = '-j8 all',
++             status = 2,
++             stderr = "(scons: \*\*\* \[failed\d+] Error 2\n)+",
++             match=TestSCons.match_re_dotall)
++
++
++for i in range(5):
++    test.run(arguments = '-c all')
++
++    test.run(arguments = '-j 8 -k all',
++             status = 2,
++             stderr = "(scons: \*\*\* \[failed\d+] Error 2\n)+",
++             match=TestSCons.match_re_dotall)
++    for i in range(20):
++        test.must_exist(test.workpath('ok%02d' % i))
++
++
++for i in range(5):
++    test.run(arguments = 'all --random',
++             status = 2,
++             stderr = "scons: \*\*\* \[failed\d+] Error 2\n",
++             match=TestSCons.match_re_dotall)
++    test.must_not_exist(test.workpath('ok'))
++
++for i in range(5):
++    test.run(arguments = '-c all')
++
++    test.run(arguments = '-j8 --random all',
++             status = 2,
++             stderr = "(scons: \*\*\* \[failed\d+] Error 2\n)+",
++             match=TestSCons.match_re_dotall)
++
++for i in range(5):
++    test.run(arguments = '-c all')
++
++    test.run(arguments = '-j 8 -k --random all',
++             status = 2,
++             stderr = "(scons: \*\*\* \[failed\d+] Error 2\n)+",
++             match=TestSCons.match_re_dotall)
++    for i in range(20):
++        test.must_exist(test.workpath('ok%02d' % i))
++
++test.pass_test()
+diff -r bcd9e67375e3 test/dependency-cycle.py
+--- a/test/dependency-cycle.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/test/dependency-cycle.py	Fri Mar 28 15:33:50 2008 -0400
+@@ -49,7 +49,10 @@ f1(void)
+ """)
+ 
+ test.run(arguments = ".", stderr=r"""
+-scons: \*\*\* Dependency cycle: .*foo1.* -> .*foo3.* -> .*foo2.* -> .*foo1.*
++scons: \*\*\* Found dependency cycle\(s\):
++  .*foo1.* -> .*foo3.* -> .*foo2.* -> .*foo1.*
++  .*foo3.* -> .*foo2.* -> .*foo1.* -> .*foo3.*
++
+ .*
+ """, status=2)
+ 
+diff -r bcd9e67375e3 test/exceptions.py
+--- a/test/exceptions.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/test/exceptions.py	Fri Mar 28 15:33:51 2008 -0400
+@@ -109,7 +109,7 @@ test.run(arguments = '.', status = 2, st
+ 
+ expected_stderr_list = [
+     "scons: *** [out.f1] Error 1\n",
+-    "scons: *** Source `in.f2' not found, needed by target `out.f2'.  Stop.\n",
++    "scons: *** Source `in.f2' not found, needed by target `out.f2'.\n",
+     "scons: *** [out.f3] Error 1\n",
+ ]
+ 
+@@ -120,7 +120,7 @@ expected_stderr_list = [
+ # walk of '.' and are already considered up-to-date when we kick off the
+ # "simultaneous" builds of the output (target) files.
+ 
+-test.run(arguments = '-j7 .', status = 2, stderr = None)
++test.run(arguments = '-j7 -k .', status = 2, stderr = None)
+ 
+ missing = []
+ for es in expected_stderr_list:
+diff -r bcd9e67375e3 test/option/taskmastertrace.py
+--- a/test/option/taskmastertrace.py	Fri Mar 28 08:13:53 2008 -0400
++++ b/test/option/taskmastertrace.py	Fri Mar 28 15:33:51 2008 -0400
+@@ -46,23 +46,43 @@ test.write('Tfile.in', "Tfile.in\n")
+ test.write('Tfile.in', "Tfile.in\n")
+ 
+ expect_stdout = test.wrap_stdout("""\
+-Taskmaster: '.': children:
+-    ['SConstruct', 'Tfile.in', 'Tfile.mid', 'Tfile.out']
+-    waiting on unfinished children:
+-    ['SConstruct', 'Tfile.in', 'Tfile.mid', 'Tfile.out']
+-Taskmaster: 'SConstruct': evaluating SConstruct
+-Taskmaster: 'Tfile.in': evaluating Tfile.in
+-Taskmaster: 'Tfile.mid': children:
+-    ['Tfile.in']
+-    evaluating Tfile.mid
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   '.'> and its children:
++Taskmaster:        <no_state   'SConstruct'>
++Taskmaster:        <no_state   'Tfile.in'>
++Taskmaster:        <no_state   'Tfile.mid'>
++Taskmaster:        <no_state   'Tfile.out'>
++Taskmaster:     Considering node <no_state   'SConstruct'> and its children:
++Taskmaster: Evaluating <pending    'SConstruct'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   'Tfile.in'> and its children:
++Taskmaster: Evaluating <pending    'Tfile.in'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   'Tfile.mid'> and its children:
++Taskmaster:        <up_to_date 'Tfile.in'>
++Taskmaster: Evaluating <pending    'Tfile.mid'>
+ Copy("Tfile.mid", "Tfile.in")
+-Taskmaster: 'Tfile.out': children:
+-    ['Tfile.mid']
+-    evaluating Tfile.out
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   'Tfile.out'> and its children:
++Taskmaster:        <executed   'Tfile.mid'>
++Taskmaster: Evaluating <pending    'Tfile.out'>
+ Copy("Tfile.out", "Tfile.mid")
+-Taskmaster: '.': children:
+-    ['SConstruct', 'Tfile.in', 'Tfile.mid', 'Tfile.out']
+-    evaluating .
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <pending    '.'> and its children:
++Taskmaster:        <up_to_date 'SConstruct'>
++Taskmaster:        <up_to_date 'Tfile.in'>
++Taskmaster:        <executed   'Tfile.mid'>
++Taskmaster:        <executed   'Tfile.out'>
++Taskmaster: Evaluating <pending    '.'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster: No candidate anymore.
++
+ """)
+ 
+ test.run(arguments='--taskmastertrace=- .', stdout=expect_stdout)
+@@ -81,21 +101,41 @@ test.run(arguments='--taskmastertrace=tr
+ test.run(arguments='--taskmastertrace=trace.out .', stdout=expect_stdout)
+ 
+ expect_trace = """\
+-Taskmaster: '.': children:
+-    ['SConstruct', 'Tfile.in', 'Tfile.mid', 'Tfile.out']
+-    waiting on unfinished children:
+-    ['SConstruct', 'Tfile.in', 'Tfile.mid', 'Tfile.out']
+-Taskmaster: 'SConstruct': evaluating SConstruct
+-Taskmaster: 'Tfile.in': evaluating Tfile.in
+-Taskmaster: 'Tfile.mid': children:
+-    ['Tfile.in']
+-    evaluating Tfile.mid
+-Taskmaster: 'Tfile.out': children:
+-    ['Tfile.mid']
+-    evaluating Tfile.out
+-Taskmaster: '.': children:
+-    ['SConstruct', 'Tfile.in', 'Tfile.mid', 'Tfile.out']
+-    evaluating .
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   '.'> and its children:
++Taskmaster:        <no_state   'SConstruct'>
++Taskmaster:        <no_state   'Tfile.in'>
++Taskmaster:        <no_state   'Tfile.mid'>
++Taskmaster:        <no_state   'Tfile.out'>
++Taskmaster:     Considering node <no_state   'SConstruct'> and its children:
++Taskmaster: Evaluating <pending    'SConstruct'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   'Tfile.in'> and its children:
++Taskmaster: Evaluating <pending    'Tfile.in'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   'Tfile.mid'> and its children:
++Taskmaster:        <up_to_date 'Tfile.in'>
++Taskmaster: Evaluating <pending    'Tfile.mid'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <no_state   'Tfile.out'> and its children:
++Taskmaster:        <executed   'Tfile.mid'>
++Taskmaster: Evaluating <pending    'Tfile.out'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster:     Considering node <pending    '.'> and its children:
++Taskmaster:        <up_to_date 'SConstruct'>
++Taskmaster:        <up_to_date 'Tfile.in'>
++Taskmaster:        <executed   'Tfile.mid'>
++Taskmaster:        <executed   'Tfile.out'>
++Taskmaster: Evaluating <pending    '.'>
++
++Taskmaster: Looking for a node to evaluate
++Taskmaster: No candidate anymore.
++
+ """
+ 
+ test.must_match('trace.out', expect_trace)
