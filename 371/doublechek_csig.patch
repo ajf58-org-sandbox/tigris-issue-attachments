@@ -1,0 +1,671 @@
+diff -r 7c1bf3bd7c37 src/engine/SCons/Node/FS.py
+--- a/src/engine/SCons/Node/FS.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/src/engine/SCons/Node/FS.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -1606,7 +1606,7 @@ class Dir(Base):
+             return 0
+         up_to_date = SCons.Node.up_to_date
+         for kid in self.children():
+-            if kid.get_state() > up_to_date:
++            if kid.get_state() is not up_to_date:
+                 return 0
+         return 1
+ 
+@@ -2472,10 +2472,7 @@ class File(Base):
+ 
+         ninfo = self.get_ninfo()
+ 
+-        csig = self.get_max_drift_csig()
+-        if csig:
+-            ninfo.csig = csig
+-
++        ninfo.csig      = self.get_csig()
+         ninfo.timestamp = self.get_timestamp()
+         ninfo.size      = self.get_size()
+ 
+@@ -2698,7 +2695,15 @@ class File(Base):
+             return 1
+ 
+     def changed_state(self, target, prev_ni):
+-        return (self.state != SCons.Node.up_to_date)
++        """Return whether this node was rebuilt.
++
++        changed_state() is only invoked by the function
++        TargetSignatures from Environment.py when the signature type
++        is 'build'. That function short-circuit the evaluation of
++        decide_source when change_state returns true. It is therefore
++        important to return False when the node is still pending.
++        """
++        return (self.state == SCons.Node.executed)
+ 
+     def changed_timestamp_then_content(self, target, prev_ni):
+         if not self.changed_timestamp_match(target, prev_ni):
+diff -r 7c1bf3bd7c37 src/engine/SCons/Node/NodeTests.py
+--- a/src/engine/SCons/Node/NodeTests.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/src/engine/SCons/Node/NodeTests.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -218,21 +218,6 @@ class Calculator:
+ 
+ class NodeInfoBaseTestCase(unittest.TestCase):
+ 
+-    def test_merge(self):
+-        """Test merging NodeInfoBase attributes"""
+-        ni1 = SCons.Node.NodeInfoBase(SCons.Node.Node())
+-        ni2 = SCons.Node.NodeInfoBase(SCons.Node.Node())
+-
+-        ni1.a1 = 1
+-        ni1.a2 = 2
+-
+-        ni2.a2 = 222
+-        ni2.a3 = 333
+-
+-        ni1.merge(ni2)
+-        expect = {'a1':1, 'a2':222, 'a3':333, '_version_id':1}
+-        assert ni1.__dict__ == expect, ni1.__dict__
+-
+     def test_update(self):
+         """Test the update() method"""
+         ni = SCons.Node.NodeInfoBase(SCons.Node.Node())
+@@ -262,25 +247,6 @@ class BuildInfoBaseTestCase(unittest.Tes
+         n = SCons.Node.Node()
+         bi = SCons.Node.BuildInfoBase(n)
+         assert bi
+-
+-    def test_merge(self):
+-        """Test merging BuildInfoBase attributes"""
+-        n1 = SCons.Node.Node()
+-        bi1 = SCons.Node.BuildInfoBase(n1)
+-        n2 = SCons.Node.Node()
+-        bi2 = SCons.Node.BuildInfoBase(n2)
+-
+-        bi1.a1 = 1
+-        bi1.a2 = 2
+-
+-        bi2.a2 = 222
+-        bi2.a3 = 333
+-
+-        bi1.merge(bi2)
+-        assert bi1.a1 == 1, bi1.a1
+-        assert bi1.a2 == 222, bi1.a2
+-        assert bi1.a3 == 333, bi1.a3
+-
+ 
+ class NodeTestCase(unittest.TestCase):
+ 
+diff -r 7c1bf3bd7c37 src/engine/SCons/Node/__init__.py
+--- a/src/engine/SCons/Node/__init__.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/src/engine/SCons/Node/__init__.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -131,8 +131,6 @@ class NodeInfoBase:
+                 setattr(self, f, func())
+     def convert(self, node, val):
+         pass
+-    def merge(self, other):
+-        self.__dict__.update(other.__dict__)
+     def format(self, field_list=None, names=0):
+         if field_list is None:
+             try:
+@@ -171,8 +169,6 @@ class BuildInfoBase:
+         self.bdependsigs = []
+         self.bimplicitsigs = []
+         self.bactsig = None
+-    def merge(self, other):
+-        self.__dict__.update(other.__dict__)
+ 
+ class Node:
+     """The base Node class, for entities that we know how to
+@@ -1035,7 +1031,8 @@ class Node:
+ 
+         result = False
+ 
+-        bi = node.get_stored_info().binfo
++        stored_info = node.get_stored_info() 
++        bi = stored_info.binfo
+         then = bi.bsourcesigs + bi.bdependsigs + bi.bimplicitsigs
+         children = self.children()
+ 
+@@ -1061,6 +1058,39 @@ class Node:
+             newsig = SCons.Util.MD5signature(contents)
+             if bi.bactsig != newsig:
+                 if t: Trace(': bactsig %s != newsig %s' % (bi.bactsig, newsig))
++                result = True
++
++        # Before assuming that self is up-to-date, we double check
++        # that our node info also matches. This is important because
++        # the binfo might tell us that the node is up-to-date (it's
++        # source and action signature matches), but the node's targets
++        # might still be a corrupted left-over of a previoulsy failed
++        # built. 
++        #
++        # Example:
++        # 
++        # We first fill the .sconsign file with valid binfo and ninfo's:
++        # 
++        #      scons  
++        #      scons -c
++        # 
++        # We create some corrupted objects. The interrupted build
++        # might leave some partially built targets.
++        #
++        #      scons
++        #      <CTRL+C>
++        #
++        # The partially built targets must not be considered has being
++        # up-to-date for the following invocations of scons.
++        try:
++            ni = stored_info.ninfo
++        except AttributeError:
++            # I don't understand why but some nodes might have stored
++            # informations that do not include any NodeInfo's.
++            if t: Trace(': %s has no NodeInfo' % self)
++        else:
++            if self.changed_since_last_build(self, ni):
++                if t: Trace(': %s changed' % self)
+                 result = True
+ 
+         if not result:
+diff -r 7c1bf3bd7c37 src/engine/SCons/SConf.py
+--- a/src/engine/SCons/SConf.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/src/engine/SCons/SConf.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -342,7 +342,6 @@ class SConfBuildTask(SCons.Taskmaster.Ta
+                     # regular File.
+                     sconsign = t.dir.sconsign()
+                     sconsign.set_entry(t.name, sconsign_entry)
+-                    sconsign.merge()
+                 raise e
+             else:
+                 for t in self.targets:
+@@ -360,7 +359,6 @@ class SConfBuildTask(SCons.Taskmaster.Ta
+                     # regular File.
+                     sconsign = t.dir.sconsign()
+                     sconsign.set_entry(t.name, sconsign_entry)
+-                    sconsign.merge()
+ 
+ class SConfBase:
+     """This is simply a class to represent a configure context. After
+diff -r 7c1bf3bd7c37 src/engine/SCons/SConsign.py
+--- a/src/engine/SCons/SConsign.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/src/engine/SCons/SConsign.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -138,7 +138,6 @@ class Base:
+     def __init__(self):
+         self.entries = {}
+         self.dirty = False
+-        self.to_be_merged = {}
+ 
+     def get_entry(self, filename):
+         """
+@@ -158,27 +157,26 @@ class Base:
+ 
+     def store_info(self, filename, node):
+         entry = node.get_stored_info()
+-        entry.binfo.merge(node.get_binfo())
+-        self.to_be_merged[filename] = node
++
++        # Merge back of any attribute of the node's binfo and info
++        # into the stored one.
++        entry.binfo.__dict__.update(node.get_binfo().__dict__)
++
++        try:
++            ninfo = entry.ninfo
++        except AttributeError:
++            # This happens with SConf Nodes, because the configuration
++            # subsystem takes direct control over how the build decision
++            # is made and its information stored.
++            pass
++        else:
++            ninfo.__dict__.update(node.get_ninfo().__dict__)
++
++        self.entries[filename] = entry
+         self.dirty = True
+ 
+     def do_not_store_info(self, filename, node):
+         pass
+-
+-    def merge(self):
+-        for key, node in self.to_be_merged.items():
+-            entry = node.get_stored_info()
+-            try:
+-                ninfo = entry.ninfo
+-            except AttributeError:
+-                # This happens with SConf Nodes, because the configuration
+-                # subsystem takes direct control over how the build decision
+-                # is made and its information stored.
+-                pass
+-            else:
+-                ninfo.merge(node.get_ninfo())
+-            self.entries[key] = entry
+-        self.to_be_merged = {}
+ 
+ class DB(Base):
+     """
+@@ -229,8 +227,6 @@ class DB(Base):
+     def write(self, sync=1):
+         if not self.dirty:
+             return
+-
+-        self.merge()
+ 
+         db, mode = Get_DataBase(self.dir)
+ 
+@@ -315,8 +311,6 @@ class DirFile(Dir):
+         if not self.dirty:
+             return
+ 
+-        self.merge()
+-
+         temp = os.path.join(self.dir.path, '.scons%d' % os.getpid())
+         try:
+             file = open(temp, 'wb')
+diff -r 7c1bf3bd7c37 src/engine/SCons/SConsignTests.py
+--- a/src/engine/SCons/SConsignTests.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/src/engine/SCons/SConsignTests.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -33,8 +33,7 @@ import SCons.SConsign
+ import SCons.SConsign
+ 
+ class BuildInfo:
+-    def merge(self, object):
+-        pass
++    pass
+ 
+ class DummySConsignEntry:
+     def __init__(self, name):
+@@ -83,8 +82,6 @@ class BaseTestCase(SConsignTestCase):
+         f = SCons.SConsign.Base()
+         f.set_entry('aaa', aaa)
+         f.set_entry('bbb', bbb)
+-
+-        #f.merge()
+ 
+         e = f.get_entry('aaa')
+         assert e == aaa, e
+@@ -138,22 +135,6 @@ class BaseTestCase(SConsignTestCase):
+         f.store_info('aaa', DummyNode('aaa', aaa))
+         f.store_info('bbb', DummyNode('bbb', bbb))
+ 
+-        try:
+-            e = f.get_entry('aaa')
+-        except KeyError:
+-            pass
+-        else:
+-            raise "unexpected entry %s" % e
+-
+-        try:
+-            e = f.get_entry('bbb')
+-        except KeyError:
+-            pass
+-        else:
+-            raise "unexpected entry %s" % e
+-
+-        f.merge()
+-
+         e = f.get_entry('aaa')
+         assert e == aaa, "aaa = %s, e = %s" % (aaa, e)
+         assert e.name == 'aaa', e.name
+@@ -165,14 +146,6 @@ class BaseTestCase(SConsignTestCase):
+         assert not hasattr(e, 'arg2'), e
+ 
+         f.store_info('bbb', DummyNode('bbb', ccc))
+-
+-        e = f.get_entry('bbb')
+-        assert e == bbb, e
+-        assert e.name == 'bbb', e.name
+-        assert e.arg1 == 'bbb arg1', e.arg1
+-        assert not hasattr(e, 'arg2'), e
+-
+-        f.merge()
+ 
+         e = f.get_entry('bbb')
+         assert e.name == 'ccc', e.name
+@@ -188,8 +161,6 @@ class BaseTestCase(SConsignTestCase):
+         f.store_info('ddd', DummyNode('ddd', ddd))
+         f.store_info('eee', DummyNode('eee', eee))
+ 
+-        f.merge()
+-
+         e = f.get_entry('ddd')
+         assert e == ddd, e
+         assert e.name == 'ddd', e.name
+@@ -200,13 +171,6 @@ class BaseTestCase(SConsignTestCase):
+         assert not hasattr(e, 'arg'), e
+ 
+         f.store_info('eee', DummyNode('eee', fff))
+-
+-        e = f.get_entry('eee')
+-        assert e == eee, e
+-        assert e.name == 'eee', e.name
+-        assert not hasattr(e, 'arg'), e
+-
+-        f.merge()
+ 
+         e = f.get_entry('eee')
+         assert e.name == 'fff', e.name
+diff -r 7c1bf3bd7c37 test/Decider/mixed.py
+--- a/test/Decider/mixed.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Decider/mixed.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -76,11 +76,15 @@ test.up_to_date(arguments = '.')
+ 
+ test.write('env-has-changed', "\n")
+ 
+-test.not_up_to_date(arguments = 'eee.out')
+-test.up_to_date(arguments = 'ccc.out ddd.out n1.out n2.out n3.out')
+ 
+-test.not_up_to_date(arguments = 'eee.out')
+-test.up_to_date(arguments = 'ccc.out ddd.out n1.out n2.out n3.out')
++# Note: n3.out is rebuilt because the env_decider() is invoked to
++# verify the that the target n3.out is up_to_date and it says that it
++# is not.
++test.not_up_to_date(arguments = 'eee.out n3.out')
++test.up_to_date(arguments = 'ccc.out ddd.out n1.out n2.out')
++
++test.not_up_to_date(arguments = 'eee.out n3.out')
++test.up_to_date(arguments = 'ccc.out ddd.out n1.out n2.out')
+ 
+ test.unlink('env-has-changed')
+ 
+@@ -88,11 +92,11 @@ test.unlink('env-has-changed')
+ 
+ test.write('default-has-changed', "\n")
+ 
+-test.not_up_to_date(arguments = 'ccc.out ddd.out')
+-test.up_to_date(arguments = 'eee.out n1.out n2.out n3.out')
++test.not_up_to_date(arguments = 'ccc.out ddd.out n1.out n2.out ')
++test.up_to_date(arguments = 'eee.out n3.out')
+ 
+-test.not_up_to_date(arguments = 'ccc.out ddd.out')
+-test.up_to_date(arguments = 'eee.out n1.out n2.out n3.out')
++test.not_up_to_date(arguments = 'ccc.out ddd.out n1.out n2.out ')
++test.up_to_date(arguments = 'eee.out n3.out')
+ 
+ test.unlink('default-has-changed')
+ 
+diff -r 7c1bf3bd7c37 test/Decider/timestamp.py
+--- a/test/Decider/timestamp.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Decider/timestamp.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -95,14 +95,17 @@ test.run(arguments = '.', stdout=expect)
+ # newer2.out timestamps to the older timestamp when the targets were
+ # first built.  This will cause newer2.out to be rebuilt, because
+ # the newer1.in timestamp is now newer than the older, reset target
+-# file timestamp, but match2.out is *not* rebuilt because its source
+-# file (match2.in) timestamp still exactly matches the timestamp
+-# recorded when the target file was last built.
++# file timestamp.
++#
++# match2.out is also rebuilt because its target file (match2.out)
++# timestamp no longer matches the timestamp recorded when the target
++# file was last built.
+ 
+ test.touch('match2.out', time_match)
+ test.touch('newer2.out', time_newer)
+ 
+ expect = test.wrap_stdout("""\
++Copy("match2.out", "match2.in")
+ Copy("newer2.out", "newer2.in")
+ """)
+ 
+diff -r 7c1bf3bd7c37 test/Deprecated/SourceSignatures/basic.py
+--- a/test/Deprecated/SourceSignatures/basic.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Deprecated/SourceSignatures/basic.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -93,14 +93,13 @@ scons: `f4.out' is up to date.
+ 
+ 
+ 
+-# Switching to content signatures from timestamps should rebuild,
+-# because we didn't record the content signatures last time.
++# Switching to content signatures from timestamps will not rebuild,
++# because the content signatures are always recorded.
+ 
+ write_SConstruct(test, 'MD5')
+ 
+-test.not_up_to_date(arguments = 'f1.out f2.out f3.out f4.out',
+-                    stderr = TestSCons.deprecated_python_expr)
+-
++test.up_to_date(arguments = 'f1.out f2.out f3.out f4.out',
++                stderr = TestSCons.deprecated_python_expr)
+ 
+ 
+ test.sleep()
+diff -r 7c1bf3bd7c37 test/Deprecated/SourceSignatures/env.py
+--- a/test/Deprecated/SourceSignatures/env.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Deprecated/SourceSignatures/env.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -79,7 +79,6 @@ build(["f4.out"], ["f4.in"])
+          stderr = TestSCons.deprecated_python_expr)
+ 
+ 
+-
+ test.sleep()
+ 
+ test.touch('f1.in')
+diff -r 7c1bf3bd7c37 test/Deprecated/SourceSignatures/no-csigs.py
+--- a/test/Deprecated/SourceSignatures/no-csigs.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Deprecated/SourceSignatures/no-csigs.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -51,19 +51,19 @@ test.run(arguments = '.',
+ test.run(arguments = '.',
+          stderr = TestSCons.deprecated_python_expr)
+ 
+-
++sig_re = r'[0-9a-fA-F]{32}'
+ 
+ expect = r"""=== .:
+-SConstruct: None \d+ \d+
+-f1.in: None \d+ \d+
++SConstruct: %(sig_re)s \d+ \d+
++f1.in: %(sig_re)s \d+ \d+
+ f1.out: \S+ \d+ \d+
+-        f1.in: None \d+ \d+
++        f1.in: %(sig_re)s \d+ \d+
+         \S+ \[build\(target, source, env\)\]
+-f2.in: None \d+ \d+
++f2.in: %(sig_re)s \d+ \d+
+ f2.out: \S+ \d+ \d+
+-        f2.in: None \d+ \d+
++        f2.in: %(sig_re)s \d+ \d+
+         \S+ \[build\(target, source, env\)\]
+-"""
++""" % locals()
+ 
+ test.run_sconsign(arguments = test.workpath('.sconsign'),
+                   stdout = expect)
+diff -r 7c1bf3bd7c37 test/Deprecated/SourceSignatures/switch-rebuild.py
+--- a/test/Deprecated/SourceSignatures/switch-rebuild.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Deprecated/SourceSignatures/switch-rebuild.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -71,9 +71,12 @@ test.up_to_date(arguments = 'switch.out'
+ 
+ 
+ 
++# Switching to content signatures from timestamps will not rebuild,
++# because the content signatures are always recorded.
++
+ write_SConstruct(test, 'MD5')
+ 
+-test.not_up_to_date(arguments = 'switch.out', stderr = None)
++test.up_to_date(arguments = 'switch.out', stderr = None)
+ 
+ 
+ 
+diff -r 7c1bf3bd7c37 test/Precious.py
+--- a/test/Precious.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Precious.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -89,8 +89,10 @@ test.fail_test(not os.path.exists(test.w
+ test.fail_test(not os.path.exists(test.workpath('subdir', 'f6.out')))
+ test.fail_test(os.path.exists(test.workpath('subdir', 'f7.out')))
+ 
+-test.write('f3.out', "SHOULD BE REMOVED\n")
+-test.write(['subdir', 'f7.out'], "SHOULD BE REMOVED\n")
++# Note that the signature system record the nonexisting files as empty
++# files.
++test.write('f3.out', "")
++test.write(['subdir', 'f7.out'], "")
+ 
+ test.run(arguments = '.')
+ 
+diff -r 7c1bf3bd7c37 test/Requires/basic.py
+--- a/test/Requires/basic.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Requires/basic.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -60,13 +60,16 @@ test.must_match('prereq.out', "prereq.in
+ test.must_match('prereq.out', "prereq.in 1\n")
+ test.must_match('file.out', "file.in 1\nprereq.in 1\n")
+ 
+-# Update the prereq.out file.  file.out should still be up to date because
+-# prereq.out is not actually a dependency, so we don't detect the
+-# underlying change.
++# Update the prereq.out file.  prereq.out is rebuilt but file.out
++# should still be up to date because prereq.out is not actually a
++# dependency.
+ 
+ test.write('prereq.out', "prereq.out 2\n")
+ 
+-test.up_to_date(arguments = 'file.out')
++test.run(arguments = 'file.out')
++
++test.must_match('prereq.out', "prereq.in 1\n")
++test.must_match('file.out', "file.in 1\nprereq.in 1\n")
+ 
+ # Now update the prereq.in file.  Trying to rebuild file.out should
+ # cause prereq.out to be updated because of the change, but file.out
+diff -r 7c1bf3bd7c37 test/Scanner/scan-once.py
+--- a/test/Scanner/scan-once.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/Scanner/scan-once.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -62,6 +62,8 @@ f1 = env.Echo(source=['file1'], target=[
+ f1 = env.Echo(source=['file1'], target=['file2'])
+ f2 = env.Echo(source=['file2'], target=['file3'])
+ f3 = env.Echo(source=['file3'], target=['file4'])
++
++env.Precious(f1+f2+f3)
+ """)
+ 
+ test.write('file1.x', 'file1.x\n')
+@@ -77,6 +79,7 @@ test.write('file2.x', 'file2.x\n')
+ 
+ test.run(stdout = test.wrap_stdout("""\
+ XScanner: node = file1.x
++create file2.x from file1.x
+ XScanner: node = file2.x
+ create file3.x from file2.x
+ create file4.x from file3.x
+@@ -87,8 +90,25 @@ test.run(stdout = test.wrap_stdout("""\
+ test.run(stdout = test.wrap_stdout("""\
+ XScanner: node = file1.x
+ XScanner: node = file2.x
++create file3.x from file2.x
+ XScanner: node = file3.x
+ create file4.x from file3.x
+ """))
+ 
++test.write('file4.x', 'file4.x\n')
++
++test.run(stdout = test.wrap_stdout("""\
++XScanner: node = file1.x
++XScanner: node = file2.x
++XScanner: node = file3.x
++create file4.x from file3.x
++"""))
++
++test.run(stdout = test.wrap_stdout("""\
++XScanner: node = file1.x
++XScanner: node = file2.x
++XScanner: node = file3.x
++scons: `.' is up to date.
++"""))
++
+ test.pass_test()
+diff -r 7c1bf3bd7c37 test/sconsign/script/Configure.py
+--- a/test/sconsign/script/Configure.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/sconsign/script/Configure.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -68,7 +68,7 @@ date_re = r'\S+ \S+ [ \d]\d \d\d:\d\d:\d
+ # Value node being printed actually begins with a newline.  It would
+ # probably be good to change that to a repr() of the contents.
+ expect = r"""=== .:
+-SConstruct: None \d+ \d+
++SConstruct: %(sig_re)s \d+ \d+
+ === .sconf_temp:
+ conftest_0.c:
+         '.*': 
+diff -r 7c1bf3bd7c37 test/sconsign/script/SConsignFile.py
+--- a/test/sconsign/script/SConsignFile.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/sconsign/script/SConsignFile.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -136,7 +136,7 @@ sig_re = r'[0-9a-fA-F]{32}'
+ 
+ test.run_sconsign(arguments = ".sconsign",
+          stdout = r"""=== .:
+-SConstruct: None \d+ \d+
++SConstruct: %(sig_re)s \d+ \d+
+ === sub1:
+ hello.c: %(sig_re)s \d+ \d+
+ hello.exe: %(sig_re)s \d+ \d+
+@@ -161,7 +161,7 @@ inc2.h: %(sig_re)s \d+ \d+
+ 
+ test.run_sconsign(arguments = "--raw .sconsign",
+          stdout = r"""=== .:
+-SConstruct: {'csig': None, 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
++SConstruct: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+ === sub1:
+ hello.c: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+ hello.exe: {'csig': '%(sig_re)s', 'timestamp': \d+, 'size': \d+L?, '_version_id': 1}
+@@ -186,7 +186,7 @@ inc2.h: {'csig': '%(sig_re)s', 'timestam
+ 
+ expect = r"""=== .:
+ SConstruct:
+-    csig: None
++    csig: %(sig_re)s
+     timestamp: \d+
+     size: \d+
+ === sub1:
+@@ -262,7 +262,7 @@ test.run_sconsign(arguments = "-c -v .sc
+ test.run_sconsign(arguments = "-c -v .sconsign",
+          stdout = r"""=== .:
+ SConstruct:
+-    csig: None
++    csig: %(sig_re)s
+ === sub1:
+ hello.c:
+     csig: %(sig_re)s
+diff -r 7c1bf3bd7c37 test/sconsign/script/Signatures.py
+--- a/test/sconsign/script/Signatures.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/sconsign/script/Signatures.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -137,7 +137,7 @@ test.run_sconsign(arguments = "-e hello.
+         %(sub1_hello_obj)s: %(sig_re)s \d+ \d+
+         %(sig_re)s \[.*\]
+ hello.obj: %(sig_re)s \d+ \d+
+-        %(sub1_hello_c)s: None \d+ \d+
++        %(sub1_hello_c)s: %(sig_re)s \d+ \d+
+         %(sig_re)s \[.*\]
+ """ % locals())
+ 
+@@ -146,7 +146,7 @@ test.run_sconsign(arguments = "-e hello.
+         %(sub1_hello_obj)s: %(sig_re)s '%(date_re)s' \d+
+         %(sig_re)s \[.*\]
+ hello.obj: %(sig_re)s '%(date_re)s' \d+
+-        %(sub1_hello_c)s: None '%(date_re)s' \d+
++        %(sub1_hello_c)s: %(sig_re)s '%(date_re)s' \d+
+         %(sig_re)s \[.*\]
+ """ % locals())
+ 
+diff -r 7c1bf3bd7c37 test/sconsign/script/dblite.py
+--- a/test/sconsign/script/dblite.py	Tue Apr 15 09:52:14 2008 -0400
++++ b/test/sconsign/script/dblite.py	Tue Apr 15 10:16:19 2008 -0400
+@@ -99,22 +99,22 @@ expect = r"""=== sub1:
+ expect = r"""=== sub1:
+ hello.exe: %(sig_re)s \d+ \d+
+         %(sub1_hello_obj)s: %(sig_re)s \d+ \d+
+-        %(LINK)s: None \d+ \d+
++        %(LINK)s: %(sig_re)s \d+ \d+
+         %(sig_re)s \[.*\]
+ hello.obj: %(sig_re)s \d+ \d+
+-        %(sub1_hello_c)s: None \d+ \d+
+-        %(CC)s: None \d+ \d+
++        %(sub1_hello_c)s: %(sig_re)s \d+ \d+
++        %(CC)s: %(sig_re)s \d+ \d+
+         %(sig_re)s \[.*\]
+ """ % locals()
+ 
+ expect_r = """=== sub1:
+ hello.exe: %(sig_re)s '%(date_re)s' \d+
+         %(sub1_hello_obj)s: %(sig_re)s '%(date_re)s' \d+
+-        %(LINK)s: None '%(date_re)s' \d+
++        %(LINK)s: %(sig_re)s '%(date_re)s' \d+
+         %(sig_re)s \[.*\]
+ hello.obj: %(sig_re)s '%(date_re)s' \d+
+-        %(sub1_hello_c)s: None '%(date_re)s' \d+
+-        %(CC)s: None '%(date_re)s' \d+
++        %(sub1_hello_c)s: %(sig_re)s '%(date_re)s' \d+
++        %(CC)s: %(sig_re)s '%(date_re)s' \d+
+         %(sig_re)s \[.*\]
+ """ % locals()
+ 
