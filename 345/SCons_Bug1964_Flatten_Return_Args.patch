@@ -1,0 +1,56 @@
+Index: src/engine/SCons/Script/SConscript.py
+===================================================================
+--- src/engine/SCons/Script/SConscript.py	(revision 2710)
++++ src/engine/SCons/Script/SConscript.py	(working copy)
+@@ -141,7 +141,8 @@
+ def Return(*vars, **kw):
+     retval = []
+     try:
+-        for var in vars:
++        fvars = SCons.Util.flatten(vars)
++        for var in fvars:
+             for v in string.split(var):
+                 retval.append(call_stack[-1].globals[v])
+     except KeyError, x:
+Index: test/SConscript/Return.py
+===================================================================
+--- test/SConscript/Return.py	(revision 2710)
++++ test/SConscript/Return.py	(working copy)
+@@ -38,11 +38,14 @@
+ x = SConscript('SConscript2')
+ y, z = SConscript('SConscript3')
+ a4, b4 = SConscript('SConscript4')
++foo, bar = SConscript('SConscript5')
+ print "x =", x
+ print "y =", y
+ print "z =", z
+ print "a4 =", a4
+ print "b4 =", b4
++print "foo =", foo
++print "bar =", bar
+ """)
+ 
+ test.write('SConscript1', """\
+@@ -75,6 +78,13 @@
+ print "line 8"
+ """)
+ 
++test.write('SConscript5', """\
++foo = 'foo'
++bar = 'bar'
++Return(["foo", "bar"])
++print "line 9"
++""")
++
+ expect = """\
+ line 1
+ line 3
+@@ -86,6 +96,8 @@
+ z = 9
+ a4 = aaa
+ b4 = bbb
++foo = foo
++bar = bar
+ """
+ 
+ test.run(arguments = '-q -Q', stdout=expect)
