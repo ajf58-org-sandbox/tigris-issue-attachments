@@ -1,0 +1,176 @@
+Index: src/engine/SCons/Action.py
+===================================================================
+--- src/engine/SCons/Action.py	(revision 2938)
++++ src/engine/SCons/Action.py	(working copy)
+@@ -788,7 +788,10 @@
+             except AttributeError:
+                 # This is weird, just do the best we can.
+                 self.funccontents = _object_contents(execfunction)
+-
++        except NotImplementedError:
++            # IronPython bug #15398
++            self.funccontents = str(execfunction)
++        
+         apply(_ActionAction.__init__, (self,)+args, kw)
+         self.varlist = kw.get('varlist', [])
+         self.cmdstr = cmdstr
+Index: src/engine/SCons/dblite.py
+===================================================================
+--- src/engine/SCons/dblite.py	(revision 2938)
++++ src/engine/SCons/dblite.py	(working copy)
+@@ -66,14 +66,14 @@
+     self._dict = {}
+     self._needs_sync = 00000
+     if (self._flag == "n"):
+-      self._open(self._file_name, "wb", self._mode)
++      self._open(self._file_name, "wb", self._mode).close()
+     else:
+       try:
+         f = self._open(self._file_name, "rb")
+       except IOError, e:
+         if (self._flag != "c"):
+           raise e
+-        self._open(self._file_name, "wb", self._mode)
++        self._open(self._file_name, "wb", self._mode).close()
+       else:
+         p = f.read()
+         if (len(p) > 0):
+@@ -99,8 +99,11 @@
+     # (e.g. from a previous run as root).  We should still be able to
+     # unlink() the file if the directory's writable, though, so ignore
+     # any OSError exception  thrown by the chmod() call.
+-    try: self._os_chmod(self._file_name, 0777)
+-    except OSError: pass
++    import sys
++    if sys.platform != 'cli':
++        # IronPython issue #16413
++        try: self._os_chmod(self._file_name, 0777)
++        except OSError: pass
+     self._os_unlink(self._file_name)
+     self._os_rename(self._tmp_name, self._file_name)
+     self._needs_sync = 00000
+Index: src/engine/SCons/Platform/__init__.py
+===================================================================
+--- src/engine/SCons/Platform/__init__.py	(revision 2938)
++++ src/engine/SCons/Platform/__init__.py	(working copy)
+@@ -80,6 +80,8 @@
+             return 'posix'
+     elif os.name == 'os2':
+         return 'os2'
++    elif osname == 'nt':
++        return 'win32'
+     else:
+         return sys.platform
+ 
+Index: src/engine/SCons/Platform/win32.py
+===================================================================
+--- src/engine/SCons/Platform/win32.py	(revision 2938)
++++ src/engine/SCons/Platform/win32.py	(working copy)
+@@ -183,10 +183,14 @@
+ # that "cmd /c" requires that if an argument ends with a backslash it
+ # needs to be escaped so as not to interfere with closing double quote
+ # that we add.
+-def escape(x):
+-    if x[-1] == '\\':
+-        x = x + '\\'
+-    return '"' + x + '"'
++if sys.platform != 'cli':
++    def escape(x):
++        if x[-1] == '\\':
++            x = x + '\\'
++        return '"' + x + '"'
++else:
++    def escape(x):
++        return x
+ 
+ # Get the windows system directory name
+ def get_system_root():
+@@ -241,8 +245,13 @@
+     # Attempt to find cmd.exe (for WinNT/2k/XP) or
+     # command.com for Win9x
+     cmd_interp = ''
++    
++    # First first, check comspec
++    if os.environ.has_key('COMSPEC'):
++        cmd_interp = os.environ['COMSPEC']
++    
+     # First see if we can look in the registry...
+-    if SCons.Util.can_read_reg:
++    if not cmd_interp and SCons.Util.can_read_reg:
+         try:
+             # Look for Windows NT system root
+             k=SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,
+@@ -283,8 +292,9 @@
+         cmd_interp = env.Detect('cmd')
+         if not cmd_interp:
+             cmd_interp = env.Detect('command')
+-
+     
++    # error not having cmd_interp?
++    
+     if not env.has_key('ENV'):
+         env['ENV']        = {}
+ 
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 2938)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -1224,7 +1224,7 @@
+     parts.append("__COPYRIGHT__")
+     version = string.join(parts, '')
+ 
+-    import SConsOptions
++    import SCons.Script.SConsOptions as SConsOptions
+     parser = SConsOptions.Parser(version)
+     values = SConsOptions.SConsValues(parser.get_default_values())
+ 
+Index: src/engine/SCons/Script/SConscript.py
+===================================================================
+--- src/engine/SCons/Script/SConscript.py	(revision 2938)
++++ src/engine/SCons/Script/SConscript.py	(working copy)
+@@ -90,12 +90,15 @@
+     # environment, and the locals and globals dictionaries from that
+     # frame as the calling namespaces.  See the comment below preceding
+     # the DefaultEnvironmentCall block for even more explanation.
+-    while frame.f_globals.get("__name__") == __name__:
+-        frame = frame.f_back
++    
++    # IPY issue #15399
++    #~ while frame.f_globals.get("__name__") == __name__:
++        #~ frame = frame.f_back
+ 
+-    return frame.f_locals, frame.f_globals
++    # IPY issue #15400
++    #~ return frame.f_locals, frame.f_globals
++    return {}, frame.f_globals
+ 
+-
+ def compute_exports(exports):
+     """Compute a dictionary of exports given one of the parameters
+     to the Export() function or the exports argument to SConscript()."""
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 2938)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -1451,7 +1451,7 @@
+         md5 = True
+         def MD5signature(s):
+             m = hashlib.md5()
+-            m.update(str(s))
++            m.update(s)
+             return m.hexdigest()
+ 
+ def MD5collect(signatures):
+Index: src/script/scons.py
+===================================================================
+--- src/script/scons.py	(revision 2938)
++++ src/script/scons.py	(working copy)
+@@ -75,7 +75,7 @@
+ 
+ prefs = []
+ 
+-if sys.platform == 'win32':
++if sys.platform == 'win32' or os.name == 'nt':
+     # sys.prefix is (likely) C:\Python*;
+     # check only C:\Python*.
+     prefs.append(sys.prefix)
