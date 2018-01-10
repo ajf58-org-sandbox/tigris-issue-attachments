@@ -1,0 +1,13 @@
+--- D:/Source/SCons/scons-src-0.98.4/src/engine/SCons/Variables/__init__.py	Sun May 18 03:09:25 2008
++++ C:/SOFT/Python25/Lib/site-packages/scons-0.98.4/SCons/Variables/__init__.py	Thu May 22 00:55:44 2008
+@@ -257,7 +257,10 @@
+ 
+                         defaultVal = env.subst(SCons.Util.to_String(option.default))
+                         if option.converter:
++                            try:
+                             defaultVal = option.converter(defaultVal)
++                            except TypeError:
++                                defaultVal = option.converter(defaultVal, env)
+ 
+                         if str(env.subst('${%s}' % option.key)) != str(defaultVal):
+                             fh.write('%s = %s\n' % (option.key, repr(value)))
