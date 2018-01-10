@@ -1,0 +1,341 @@
+scons: Reading SConscript files ...
+{ 'AR': 'ar',
+  'ARCOM': '$AR $ARFLAGS $TARGET $SOURCES\n$RANLIB $RANLIBFLAGS $TARGET',
+  'ARFLAGS': ['r'],
+  'AS': 'as',
+  'ASCOM': '$AS $ASFLAGS -o $TARGET $SOURCES',
+  'ASFLAGS': [],
+  'ASPPCOM': '$CC $ASPPFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES',
+  'ASPPFLAGS': '$ASFLAGS',
+  'BUILDERS': {'CFile': <SCons.Memoize.BuilderBase object at 0x405126b0>, 'Uic': <SCons.Memoize.BuilderBase object at 0x4043a7d0>, 'RPCGenService': <SCons.Memoize.BuilderBase object at 0x40512a70>, 'SharedLibrary': <SCons.Memoize.MultiStepBuilder object at 0x4043f610>, 'Tar': <SCons.Memoize.BuilderBase object at 0x404ff8d0>, 'CXXFile': <SCons.Memoize.BuilderBase object at 0x405127b0>, 'Object': <SCons.Memoize.MultiStepBuilder object at 0x405121b0>, 'Zip': <SCons.Memoize.BuilderBase object at 0x40508710>, 'StaticLibrary': <SCons.Memoize.MultiStepBuilder object at 0x40512370>, 'M4': <SCons.Memoize.BuilderBase object at 0x405128b0>, 'Program': <SCons.Memoize.MultiStepBuilder object at 0x4044dbd0>, 'Library': <SCons.Memoize.MultiStepBuilder object at 0x40512370>, 'Moc': <SCons.Memoize.BuilderBase object at 0x40517110>, 'RPCGenXDR': <SCons.Memoize.BuilderBase object at 0x40512b10>, 'LoadableModule': <SCons.Memoize.MultiStepBuilder object at 0x40508ff0>, 'StaticObject': <SCons.Memoize.MultiStepBuilder object at 0x405121b0>, 'RPCGenClient': <SCons.Memoize.BuilderBase object at 0x40512830>, 'SharedObject': <SCons.Memoize.MultiStepBuilder object at 0x405122d0>, 'RPCGenHeader': <SCons.Memoize.BuilderBase object at 0x40512990>},
+  'CC': 'cc',
+  'CCCOM': '$CC -o $TARGET -c $CCFLAGS $_CCCOMCOM $SOURCES',
+  'CCFLAGS': [],
+  'CFILESUFFIX': '.c',
+  'CONFIGUREDIR': '#/.sconf_temp',
+  'CONFIGURELOG': '#/config.log',
+  'CPPDEFPREFIX': '-D',
+  'CPPDEFSUFFIX': '',
+  'CPPPATH': ['$QT_CPPPATH'],
+  'CPPSUFFIXES': [ '.c',
+                   '.C',
+                   '.cxx',
+                   '.cpp',
+                   '.c++',
+                   '.cc',
+                   '.h',
+                   '.H',
+                   '.hxx',
+                   '.hpp',
+                   '.hh',
+                   '.F',
+                   '.fpp',
+                   '.FPP',
+                   '.m',
+                   '.mm',
+                   '.S',
+                   '.spp',
+                   '.SPP'],
+  'CXX': '/opt/aCC/bin/aCC',
+  'CXXCOM': '$CXX -o $TARGET -c $CXXFLAGS $_CCCOMCOM $SOURCES',
+  'CXXFILESUFFIX': '.cc',
+  'CXXFLAGS': ['$CCFLAGS'],
+  'CXXVERSION': 'A.03.70',
+  'DSUFFIXES': ['.d'],
+  'Dir': <SCons.Defaults.Variable_Method_Caller instance at 0x403a00d0>,
+  'Dirs': <SCons.Defaults.Variable_Method_Caller instance at 0x403a00f8>,
+  'ENV': {'PATH': '/usr/local/bin:/opt/bin:/bin:/usr/bin'},
+  'ESCAPE': <function escape at 0x404406b0>,
+  'FORTRANMODDIR': '',
+  'FORTRANMODDIRPREFIX': '',
+  'FORTRANMODDIRSUFFIX': '',
+  'FORTRANMODPREFIX': '',
+  'FORTRANMODSUFFIX': '.mod',
+  'FORTRANSUFFIXES': [ '.f',
+                       '.for',
+                       '.ftn',
+                       '.fpp',
+                       '.FPP',
+                       '.F',
+                       '.FOR',
+                       '.FTN',
+                       '.f95',
+                       '.F95'],
+  'FRAMEWORKPATH': [],
+  'FRAMEWORKS': [],
+  'File': <SCons.Defaults.Variable_Method_Caller instance at 0x403a0120>,
+  'IDLSUFFIXES': ['.idl', '.IDL'],
+  'INCPREFIX': '-I',
+  'INCSUFFIX': '',
+  'INSTALL': <function copyFunc at 0x4039f270>,
+  'LDMODULE': '$SHLINK',
+  'LDMODULECOM': '$SHLINKCOM',
+  'LDMODULEFLAGS': '$SHLINKFLAGS',
+  'LDMODULEPREFIX': '$SHLIBPREFIX',
+  'LDMODULESUFFIX': '$SHLIBSUFFIX',
+  'LEX': 'lex',
+  'LEXCOM': '$LEX $LEXFLAGS -t $SOURCES > $TARGET',
+  'LEXFLAGS': [],
+  'LIBDIRPREFIX': '-L',
+  'LIBDIRSUFFIX': '',
+  'LIBEMITTER': [<SCons.Tool.qt._Automoc instance at 0x4050ee18>],
+  'LIBLINKPREFIX': '-l',
+  'LIBLINKSUFFIX': '',
+  'LIBPATH': ['$QT_LIBPATH'],
+  'LIBPREFIX': 'lib',
+  'LIBPREFIXES': '$LIBPREFIX',
+  'LIBS': ['$QT_LIB'],
+  'LIBSUFFIX': '.a',
+  'LIBSUFFIXES': ['$LIBSUFFIX', '$SHLIBSUFFIX'],
+  'LINK': '$SMARTLINK',
+  'LINKCOM': '$LINK -o $TARGET $LINKFLAGS $SOURCES $_LIBDIRFLAGS $_LIBFLAGS',
+  'LINKFLAGS': ['-Wl,+s', '-Wl,+vnocompatwarnings'],
+  'M4': 'm4',
+  'M4COM': 'cd ${SOURCE.rsrcdir} && $M4 $M4FLAGS < ${SOURCE.file} > ${TARGET.abspath}',
+  'M4FLAGS': ['-E'],
+  'MAXLINELENGTH': 2045000,
+  'OBJPREFIX': '',
+  'OBJSUFFIX': '.o',
+  'PDFPREFIX': '',
+  'PDFSUFFIX': '.pdf',
+  'PLATFORM': 'hpux',
+  'PROGEMITTER': [<SCons.Tool.qt._Automoc instance at 0x4050ee18>],
+  'PROGPREFIX': '',
+  'PROGSUFFIX': '',
+  'PSPAWN': <function piped_env_spawn at 0x404402f0>,
+  'PSPREFIX': '',
+  'PSSUFFIX': '.ps',
+  'QTDIR': '/tools/rd/qt/v3.3.8',
+  'QT_AUTOSCAN': 1,
+  'QT_BINPATH': '$QTDIR/bin',
+  'QT_CPPPATH': '$QTDIR/include',
+  'QT_LIB': 'qt',
+  'QT_LIBPATH': '$QTDIR/lib',
+  'QT_MOC': '$QT_BINPATH/moc',
+  'QT_MOCCXXPREFIX': '',
+  'QT_MOCCXXSUFFIX': '.moc',
+  'QT_MOCFROMCXXCOM': [ ['$QT_MOC', '$QT_MOCFROMCXXFLAGS', '-o', '${TARGETS[0]}', '$SOURCE'],
+                        <SCons.Memoize.FunctionAction object at 0x40517270>],
+  'QT_MOCFROMCXXFLAGS': ['-i'],
+  'QT_MOCFROMHCOM': '$QT_MOC $QT_MOCFROMHFLAGS -o ${TARGETS[0]} $SOURCE',
+  'QT_MOCFROMHFLAGS': [],
+  'QT_MOCHPREFIX': 'moc_',
+  'QT_MOCHSUFFIX': '$CXXFILESUFFIX',
+  'QT_UIC': '$QT_BINPATH/uic',
+  'QT_UICCOM': [ ['$QT_UIC', '$QT_UICDECLFLAGS', '-o', '${TARGETS[0]}', '$SOURCE'],
+                 ['$QT_UIC', '$QT_UICIMPLFLAGS', '-impl', '${TARGETS[0].file}', '-o', '${TARGETS[1]}', '$SOURCE'],
+                 ['$QT_MOC', '$QT_MOCFROMHFLAGS', '-o', '${TARGETS[2]}', '${TARGETS[0]}']],
+  'QT_UICDECLFLAGS': [],
+  'QT_UICDECLPREFIX': '',
+  'QT_UICDECLSUFFIX': '.h',
+  'QT_UICIMPLFLAGS': [],
+  'QT_UICIMPLPREFIX': 'uic_',
+  'QT_UICIMPLSUFFIX': '$CXXFILESUFFIX',
+  'QT_UISUFFIX': '.ui',
+  'RANLIB': 'ranlib',
+  'RANLIBFLAGS': [],
+  'RCS': 'rcs',
+  'RCS_CO': 'co',
+  'RCS_COCOM': '$RCS_CO $RCS_COFLAGS $TARGET',
+  'RCS_COFLAGS': [],
+  'RDirs': <SCons.Defaults.Variable_Method_Caller instance at 0x403a0148>,
+  'RPCGEN': 'rpcgen',
+  'RPCGENCLIENTFLAGS': [],
+  'RPCGENFLAGS': [],
+  'RPCGENHEADERFLAGS': [],
+  'RPCGENSERVICEFLAGS': [],
+  'RPCGENXDRFLAGS': [],
+  'SCANNERS': [],
+  'SCCS': 'sccs',
+  'SCCSCOM': '$SCCS $SCCSFLAGS get $SCCSGETFLAGS $TARGET',
+  'SCCSFLAGS': [],
+  'SCCSGETFLAGS': [],
+  'SHCC': '$CC',
+  'SHCCCOM': '$SHCC -o $TARGET -c $SHCCFLAGS $_CCCOMCOM $SOURCES',
+  'SHCCFLAGS': ['$CCFLAGS', '-fPIC'],
+  'SHCXX': '$CXX',
+  'SHCXXCOM': '$SHCXX -o $TARGET -c $SHCXXFLAGS $_CCCOMCOM $SOURCES',
+  'SHCXXFLAGS': ['$CXXFLAGS', '+Z'],
+  'SHELL': 'sh',
+  'SHLIBEMITTER': [<SCons.Tool.qt._Automoc instance at 0x4050edf0>],
+  'SHLIBPREFIX': '$LIBPREFIX',
+  'SHLIBSUFFIX': '.sl',
+  'SHLINK': '$LINK',
+  'SHLINKCOM': '$SHLINK -o $TARGET $SHLINKFLAGS $SOURCES $_LIBDIRFLAGS $_LIBFLAGS',
+  'SHLINKFLAGS': ['$LINKFLAGS', '-b'],
+  'SHOBJPREFIX': '$OBJPREFIX',
+  'SHOBJSUFFIX': '.os',
+  'SMARTLINK': <function smart_link at 0x404443f0>,
+  'SPAWN': <function spawnvpe_spawn at 0x404401f0>,
+  'STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME': 0,
+  'TAR': 'tar',
+  'TARCOM': '$TAR $TARFLAGS -f $TARGET $SOURCES',
+  'TARFLAGS': ['-c'],
+  'TARSUFFIX': '.tar',
+  'TEMPFILE': <class SCons.Platform.TempFileMunge at 0x403c29c0>,
+  'TEMPFILEPREFIX': '@',
+  'TOOLS': [ 'default',
+             'hplink',
+             'gcc',
+             'hpc++',
+             'f95',
+             'as',
+             'ar',
+             'lex',
+             'm4',
+             'RCS',
+             'rpcgen',
+             'SCCS',
+             'tar',
+             'yacc',
+             'zip',
+             'qt'],
+  'YACC': 'yacc',
+  'YACCCOM': '$YACC $YACCFLAGS -o $TARGET $SOURCES',
+  'YACCFLAGS': [],
+  'YACCHFILESUFFIX': '.h',
+  'YACCHXXFILESUFFIX': '.hpp',
+  'ZIP': 'zip',
+  'ZIPCOM': <SCons.Memoize.FunctionAction object at 0x405084b0>,
+  'ZIPCOMPRESSION': 8,
+  'ZIPFLAGS': [],
+  'ZIPSUFFIX': '.zip',
+  '_CCCOMCOM': '$CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS',
+  '_CPPDEFFLAGS': '${_defines(CPPDEFPREFIX, CPPDEFINES, CPPDEFSUFFIX, __env__)}',
+  '_CPPINCFLAGS': '$( ${_concat(INCPREFIX, CPPPATH, INCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)',
+  '_F95COMD': '$_F95G -o $TARGET -c $_F95FLAGSG $_F95INCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_F95COMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f170>,
+  '_F95COMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f198>,
+  '_F95FLAGSG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f148>,
+  '_F95G': <SCons.Tool.fortran.VariableListGenerator instance at 0x40448af8>,
+  '_F95INCFLAGS': '$( ${_concat(INCPREFIX, F95PATH, INCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)',
+  '_F95PPCOMD': '$_F95G -o $TARGET -c $_F95FLAGSG $CPPFLAGS $_CPPDEFFLAGS $_F95INCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_F95PPCOMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f1c0>,
+  '_F95PPCOMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f1e8>,
+  '_FORTRANCOMD': '$_FORTRANG -o $TARGET -c $_FORTRANFLAGSG $_FORTRANINCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_FORTRANCOMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b148>,
+  '_FORTRANCOMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b1e8>,
+  '_FORTRAND': 'f95',
+  '_FORTRANFLAGSG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b058>,
+  '_FORTRANG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044bb70>,
+  '_FORTRANINCFLAGS': '$( ${_concat(INCPREFIX, FORTRANPATH, INCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)',
+  '_FORTRANMODFLAG': '$( ${_concat(FORTRANMODDIRPREFIX, FORTRANMODDIR, FORTRANMODDIRSUFFIX, __env__)} $)',
+  '_FORTRANPPCOMD': '$_FORTRANG -o $TARGET -c $_FORTRANFLAGSG $CPPFLAGS $_CPPDEFFLAGS $_FORTRANINCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_FORTRANPPCOMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b238>,
+  '_FORTRANPPCOMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b440>,
+  '_LIBDIRFLAGS': '$( ${_concat(LIBDIRPREFIX, LIBPATH, LIBDIRSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)',
+  '_LIBFLAGS': '${_stripixes(LIBLINKPREFIX, LIBS, LIBLINKSUFFIX, LIBPREFIX, LIBSUFFIX, __env__)}',
+  '_SHF95COMD': '$_SHF95G -o $TARGET -c $_SHF95FLAGSG $_F95INCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_SHF95COMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f260>,
+  '_SHF95COMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f288>,
+  '_SHF95FLAGSG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f238>,
+  '_SHF95G': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f210>,
+  '_SHF95PPCOMD': '$_SHF95G -o $TARGET -c $_SHF95FLAGSG $CPPFLAGS $_CPPDEFFLAGS $_F95INCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_SHF95PPCOMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f2d8>,
+  '_SHF95PPCOMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044f328>,
+  '_SHFORTRANCOMD': '$_SHFORTRANG -o $TARGET -c $_SHFORTRANFLAGSG $_FORTRANINCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_SHFORTRANCOMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b4b8>,
+  '_SHFORTRANCOMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b508>,
+  '_SHFORTRANFLAGSG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b490>,
+  '_SHFORTRANG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044ba08>,
+  '_SHFORTRANPPCOMD': '$_SHFORTRANG -o $TARGET -c $_SHFORTRANFLAGSG $CPPFLAGS $_CPPDEFFLAGS $_FORTRANINCFLAGS $_FORTRANMODFLAG $SOURCES',
+  '_SHFORTRANPPCOMG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b580>,
+  '_SHFORTRANPPCOMSTRG': <SCons.Tool.fortran.VariableListGenerator instance at 0x4044b620>,
+  '__RPATH': '$_RPATH',
+  '_concat': <function _concat at 0x4039f2f0>,
+  '_defines': <function _defines at 0x4039f370>,
+  '_stripixes': <function _stripixes at 0x4039f330>}
+scons: done reading SConscript files.
+scons: Building targets ...
+/tools/rd/qt/v3.3.8/bin/uic -o src/cpp/process/license_manager/migratelicencesform.h src/cpp/process/license_manager/migratelicencesform.ui
+QSettings: error creating /.qt
+QSettings: error creating /.qt
+/tools/rd/qt/v3.3.8/bin/uic -impl migratelicencesform.h -o src/cpp/process/license_manager/uic_migratelicencesform.cc src/cpp/process/license_manager/migratelicencesform.ui
+QSettings: error creating /.qt
+QSettings: error creating /.qt
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+QSettings: error creating /.qt
+QSettings::sync: filename is null/empty
+/tools/rd/qt/v3.3.8/bin/moc -o src/cpp/process/license_manager/moc_migratelicencesform.cc src/cpp/process/license_manager/migratelicencesform.h
+scons: done building targets.
