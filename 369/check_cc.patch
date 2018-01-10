@@ -1,0 +1,182 @@
+Index: src/engine/SCons/Conftest.py
+===================================================================
+--- src/engine/SCons/Conftest.py	(revision 2772)
++++ src/engine/SCons/Conftest.py	(working copy)
+@@ -142,6 +142,58 @@
+     _YesNoResult(context, ret, None, text)
+     return ret
+ 
++def CheckCC(context):
++    """
++    Configure check for a working C compiler.
++
++    This checks whether the C compiler, as defined in the $CC construction
++    variable, can compile a C source file. It uses the current $CFLAGS value
++    too, so that it can test against non working flags.
++
++    """
++    context.Display("Checking whether the C compiler works")
++    text = """
++int main()
++{
++    return 0;
++}
++"""
++    ret = _check_empty_program(context, 'CC', text, 'C')
++    _YesNoResult(context, ret, None, text)
++    return ret
++
++def CheckCXX(context):
++    """
++    Configure check for a working CXX compiler.
++
++    This checks whether the CXX compiler, as defined in the $CXX construction
++    variable, can compile a CXX source file. It uses the current $CXXFLAGS value
++    too, so that it can test against non working flags.
++
++    """
++    context.Display("Checking whether the C++ compiler works")
++    text = """
++int main()
++{
++    return 0;
++}
++"""
++    ret = _check_empty_program(context, 'CXX', text, 'C++')
++    _YesNoResult(context, ret, None, text)
++    return ret
++
++def _check_empty_program(context, comp, text, language):
++    """Return 0 on success, 1 otherwise."""
++    if not context.env.has_key(comp) or not context.env[comp]:
++        # The compiler construction variable is not set or empty
++        return 1
++
++    lang, suffix, msg = _lang2suffix(language)
++    if msg:
++        # XXX: this should not happen ?
++        assert 0 == 1
++
++    return context.BuildProg(text, suffix)
+ 
+ def CheckFunc(context, function_name, header = None, language = None):
+     """
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 2772)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -294,6 +294,57 @@
+             sconf.Finish()
+ 
+ 
++    def _test_check_compilers(self, comp, func, name):
++        """This is the implementation for CheckCC and CheckCXX tests."""
++        from copy import deepcopy
++
++        # Check that Check* works
++        r = func()
++        assert r, "could not find %s ?" % comp
++        # Check that Check* does fail if comp is not available in env
++        oldcomp = deepcopy(self.scons_env[comp])
++        del self.scons_env[comp] 
++        r = func()
++        assert not r, "CheckCC worked wo comp ?"
++        # Check that Check* does fail if comp is set but empty
++        self.scons_env[comp] = ''
++        r = func()
++        assert not r, "CheckCC worked with comp = '' ?"
++        # Check that Check* does fail if comp is set to buggy executable
++        self.scons_env[comp] = 'thiscccompilerdoesnotexist'
++        r = func()
++        assert not r, "Check* worked with comp = thiscompilerdoesnotexist ?"
++        #XXX: Check that Check* does fail if CFLAGS is buggy: how to do it ?
++        self.scons_env[comp] = oldcomp
++        self.scons_env['%sFLAGS' % comp] = 'qwertyuiop'
++        r = func()
++        assert not r, "Check* worked with %sFLAGS = qwertyuiop ?"
++
++    def test_CheckCC(self):
++        """Test SConf.CheckCC()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            self._test_check_compilers('CC', sconf.CheckCC, 'CheckCC')
++        finally:
++            sconf.Finish()
++
++    def test_CheckCXX(self):
++        """Test SConf.CheckCXX()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'))
++        try:
++            self._test_check_compilers('CXX', sconf.CheckCXX, 'CheckCXX')
++        finally:
++            sconf.Finish()
++
++
+     def test_CheckHeader(self):
+         """Test SConf.CheckHeader()
+         """
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 2772)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -401,6 +401,8 @@
+ 
+         # add default tests
+         default_tests = {
++                 'CheckCC'            : CheckCC,
++                 'CheckCXX'           : CheckCXX,
+                  'CheckFunc'          : CheckFunc,
+                  'CheckType'          : CheckType,
+                  'CheckTypeSize'      : CheckTypeSize,
+@@ -922,6 +924,14 @@
+     context.did_show_result = 1
+     return not res
+ 
++def CheckCC(context):
++    res = SCons.Conftest.CheckCC(context)
++    return not res
++
++def CheckCXX(context):
++    res = SCons.Conftest.CheckCXX(context)
++    return not res
++
+ # Bram: Make this function obsolete?  CheckHeader() is more generic.
+ 
+ def CheckCHeader(context, header, include_quotes = '""'):
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 2772)
++++ doc/man/scons.1	(working copy)
+@@ -6616,6 +6616,24 @@
+ and selects the compiler to be used for the check;
+ the default is "C".
+ 
++.TP
++.RI Configure.CheckCC( self )
++Checks whether the C compiler works, by trying to compile a small source file.
++
++This takes into account the $CFLAGS construction variable, so it can also be
++used to test against non working flags. It is also useful because, scons does
++not automatically check whether a C compiler is found when compiling C source
++files yet.
++
++.TP
++.RI Configure.CheclCXX( self )
++Checks whether the CXX compiler works, by trying to compile a small source file.
++
++This takes into account the $CXXFLAGS construction variable, so it can also be
++used to test against non working flags. It is also useful because, scons does
++not automatically check whether a CXX compiler is found when compiling CXX
++source files yet.
++
+ .EE
+ Example of a typical Configure usage:
+ 
