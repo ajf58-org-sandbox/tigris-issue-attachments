@@ -1,0 +1,668 @@
+=== modified file 'test/Fortran/F77.py'
+--- test/Fortran/F77.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/F77.py	2008-03-01 07:35:08 +0000
+@@ -176,9 +176,8 @@
+ test.must_match('test30' + _exe, "This is a .F77 file.\n")
+ 
+ 
+-
+-g77 = test.detect('F77', 'g77')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'g77'
++g77 = test.detect_tool(fc)
+ 
+ if g77:
+ 
+@@ -191,7 +190,7 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(F77 = '%(fc)s')
+ f77 = foo.Dictionary('F77')
+ bar = foo.Clone(F77 = r'%(_python_)s wrapper.py ' + f77)
+ foo.Program(target = 'foo', source = 'foo.f')
+
+=== modified file 'test/Fortran/F77FLAGS.py'
+--- test/Fortran/F77FLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/F77FLAGS.py	2008-03-01 09:28:21 +0000
+@@ -130,10 +130,9 @@
+ test.must_match('test09' + _exe, " -c -x\nThis is a .f77 file.\n")
+ test.must_match('test10' + _exe, " -c -x\nThis is a .F77 file.\n")
+ 
+-
+-
+-g77 = test.detect('F77', 'g77')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'f77'
++g77 = test.detect_tool(fc)
++
+ 
+ if g77:
+ 
+@@ -146,7 +145,7 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %FTN_LIBs)
++foo = Environment(F77 = '%(fc)s')
+ f77 = foo.Dictionary('F77')
+ bar = foo.Clone(F77 = r'%(_python_)s wrapper.py ' + f77, F77FLAGS = '-Ix')
+ foo.Program(target = 'foo', source = 'foo.f')
+
+=== modified file 'test/Fortran/F77PATH.py'
+--- test/Fortran/F77PATH.py	2005-09-26 04:19:32 +0000
++++ test/Fortran/F77PATH.py	2008-03-01 09:51:18 +0000
+@@ -38,8 +38,9 @@
+ 
+ test = TestSCons.TestSCons()
+ 
+-if not test.detect('_F77G', 'g77'):
+-    test.skip_test('Could not find a $F77 tool; skipping test.\n')
++fc = 'g77'
++if not test.detect_tool(fc):
++    test.skip_test('Could not find a fortran tool; skipping test.\n')
+     
+ test.subdir('include',
+             'subdir',
+
+=== modified file 'test/Fortran/F90.py'
+--- test/Fortran/F90.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/F90.py	2008-03-01 09:33:49 +0000
+@@ -142,11 +142,10 @@
+ test.must_match('test14' + _exe, "This is a .F95 file.\n")
+ 
+ 
+-
+-g90 = test.detect('F90', 'g90')
+-FTN_LIB = TestSCons.fortran_lib
+-
+-if g90:
++fc = 'gfortran'
++gfortran = test.detect_tool(fc)
++
++if gfortran:
+ 
+     test.write("wrapper.py",
+ """import os
+@@ -157,17 +156,17 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(F90 = '%(fc)s')
+ f90 = foo.Dictionary('F90')
+ bar = foo.Clone(F90 = r'%(_python_)s wrapper.py ' + f90)
+-foo.Program(target = 'foo', source = 'foo.f')
+-bar.Program(target = 'bar', source = 'bar.f')
++foo.Program(target = 'foo', source = 'foo.f90')
++bar.Program(target = 'bar', source = 'bar.f90')
+ """ % locals())
+ 
+-    test.write('foo.f', r"""
++    test.write('foo.f90', r"""
+       PROGRAM FOO
+       USE MOD_BAR
+-      PRINT *,'foo.f'
++      PRINT *,'foo.f90'
+       CALL P
+       STOP
+       END
+@@ -180,16 +179,16 @@
+       END MODULE MOD_BAR
+ """)
+ 
+-    test.write('bar.f', r"""
++    test.write('bar.f90', r"""
+       PROGRAM BAR
+       USE MOD_FOO
+-      PRINT *,'bar.f'
++      PRINT *,'bar.f90'
+       CALL P
+       STOP
+       END
+ """)
+ 
+-    test.write('foo_mod.f', r"""
++    test.write('foo_mod.f90', r"""
+       MODULE MOD_FOO
+          IMPLICIT NONE
+          CONTAINS
+@@ -201,13 +200,13 @@
+ 
+     test.run(arguments = 'foo' + _exe, stderr = None)
+ 
+-    test.run(program = test.workpath('foo'), stdout =  " foo.f\n")
++    test.run(program = test.workpath('foo'), stdout =  " foo.f90\n")
+ 
+     test.must_not_exist('wrapper.out')
+ 
+     test.run(arguments = 'bar' + _exe)
+ 
+-    test.run(program = test.workpath('bar'), stdout =  " bar.f\n")
++    test.run(program = test.workpath('bar'), stdout =  " bar.f90\n")
+ 
+     test.must_match('wrapper.out', "wrapper.py\n")
+ 
+
+=== modified file 'test/Fortran/F90FLAGS.py'
+--- test/Fortran/F90FLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/F90FLAGS.py	2008-03-01 09:57:16 +0000
+@@ -147,8 +147,8 @@
+ 
+ 
+ 
+-g90 = test.detect('F90', 'g90')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'gfortran'
++g90 = test.detect_tool(fc)
+ 
+ if g90:
+ 
+@@ -161,17 +161,17 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(F90 = '%(fc)s')
+ f90 = foo.Dictionary('F90')
+ bar = foo.Clone(F90 = r'%(_python_)s wrapper.py ' + f90, F90FLAGS = '-Ix')
+-foo.Program(target = 'foo', source = 'foo.f')
+-bar.Program(target = 'bar', source = 'bar.f')
++foo.Program(target = 'foo', source = 'foo.f90')
++bar.Program(target = 'bar', source = 'bar.f90')
+ """ % locals())
+ 
+-    test.write('foo.f', r"""
++    test.write('foo.f90', r"""
+       PROGRAM FOO
+       USE MOD_BAR
+-      PRINT *,'foo.f'
++      PRINT *,'foo.f90'
+       CALL P
+       STOP
+       END
+@@ -184,16 +184,16 @@
+       END MODULE MOD_BAR
+ """)
+ 
+-    test.write('bar.f', r"""
++    test.write('bar.f90', r"""
+       PROGRAM BAR
+       USE MOD_FOO
+-      PRINT *,'bar.f'
++      PRINT *,'bar.f90'
+       CALL P
+       STOP
+       END
+ """)
+ 
+-    test.write('foo_mod.f', r"""
++    test.write('foo_mod.f90', r"""
+       MODULE MOD_FOO
+          IMPLICIT NONE
+          CONTAINS
+@@ -205,13 +205,13 @@
+ 
+     test.run(arguments = 'foo' + _exe, stderr = None)
+ 
+-    test.run(program = test.workpath('foo'), stdout =  " foo.f\n")
++    test.run(program = test.workpath('foo'), stdout =  " foo.f90\n")
+ 
+     test.must_not_exist('wrapper.out')
+ 
+     test.run(arguments = 'bar' + _exe)
+ 
+-    test.run(program = test.workpath('bar'), stdout =  " bar.f\n")
++    test.run(program = test.workpath('bar'), stdout =  " bar.f90\n")
+ 
+     test.must_match('wrapper.out', "wrapper.py\n")
+ 
+
+=== modified file 'test/Fortran/F95.py'
+--- test/Fortran/F95.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/F95.py	2008-03-01 09:09:35 +0000
+@@ -143,8 +143,8 @@
+ 
+ 
+ 
+-g95 = test.detect('F95', 'g95')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'f95'
++g95 = test.detect_tool(fc)
+ 
+ if g95:
+ 
+@@ -157,23 +157,23 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(F95 = '%(fc)s')
+ f95 = foo.Dictionary('F95')
+ bar = foo.Clone(F95 = r'%(_python_)s wrapper.py ' + f95)
+-foo.Program(target = 'foo', source = 'foo.f')
+-bar.Program(target = 'bar', source = 'bar.f')
++foo.Program(target = 'foo', source = 'foo.f95')
++bar.Program(target = 'bar', source = 'bar.f95')
+ """ % locals())
+ 
+-    test.write('foo.f', r"""
++    test.write('foo.f95', r"""
+       PROGRAM FOO
+-      PRINT *,'foo.f'
++      PRINT *,'foo.f95'
+       STOP
+       END
+ """)
+ 
+-    test.write('bar.f', r"""
++    test.write('bar.f95', r"""
+       PROGRAM BAR
+-      PRINT *,'bar.f'
++      PRINT *,'bar.f95'
+       STOP
+       END
+ """)
+@@ -181,13 +181,13 @@
+ 
+     test.run(arguments = 'foo' + _exe, stderr = None)
+ 
+-    test.run(program = test.workpath('foo'), stdout =  " foo.f\n")
++    test.run(program = test.workpath('foo'), stdout =  " foo.f95\n")
+ 
+     test.must_not_exist('wrapper.out')
+ 
+     test.run(arguments = 'bar' + _exe)
+ 
+-    test.run(program = test.workpath('bar'), stdout =  " bar.f\n")
++    test.run(program = test.workpath('bar'), stdout =  " bar.f95\n")
+ 
+     test.must_match('wrapper.out', "wrapper.py\n")
+ 
+
+=== modified file 'test/Fortran/F95FLAGS.py'
+--- test/Fortran/F95FLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/F95FLAGS.py	2008-03-01 09:27:12 +0000
+@@ -147,8 +147,8 @@
+ 
+ 
+ 
+-g95 = test.detect('F95', 'g95')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'f95'
++g95 = test.detect_tool(fc)
+ 
+ if g95:
+ 
+@@ -161,23 +161,23 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(F95 = '%(fc)s')
+ f95 = foo.Dictionary('F95')
+ bar = foo.Clone(F95 = r'%(_python_)s wrapper.py ' + f95, F95FLAGS = '-Ix')
+-foo.Program(target = 'foo', source = 'foo.f')
+-bar.Program(target = 'bar', source = 'bar.f')
++foo.Program(target = 'foo', source = 'foo.f95')
++bar.Program(target = 'bar', source = 'bar.f95')
+ """ % locals())
+ 
+-    test.write('foo.f', r"""
++    test.write('foo.f95', r"""
+       PROGRAM FOO
+-      PRINT *,'foo.f'
++      PRINT *,'foo.f95'
+       STOP
+       END
+ """)
+ 
+-    test.write('bar.f', r"""
++    test.write('bar.f95', r"""
+       PROGRAM BAR
+-      PRINT *,'bar.f'
++      PRINT *,'bar.f95'
+       STOP
+       END
+ """)
+@@ -185,13 +185,13 @@
+ 
+     test.run(arguments = 'foo' + _exe, stderr = None)
+ 
+-    test.run(program = test.workpath('foo'), stdout =  " foo.f\n")
++    test.run(program = test.workpath('foo'), stdout =  " foo.f95\n")
+ 
+     test.must_not_exist('wrapper.out')
+ 
+     test.run(arguments = 'bar' + _exe)
+ 
+-    test.run(program = test.workpath('bar'), stdout =  " bar.f\n")
++    test.run(program = test.workpath('bar'), stdout =  " bar.f95\n")
+ 
+     test.must_match('wrapper.out', "wrapper.py\n")
+ 
+
+=== modified file 'test/Fortran/FORTRANFLAGS.py'
+--- test/Fortran/FORTRANFLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/FORTRANFLAGS.py	2008-03-01 09:55:21 +0000
+@@ -144,8 +144,8 @@
+ 
+ 
+ 
+-g77 = test.detect('FORTRAN', 'g77')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'f77'
++g77 = test.detect_tool(fc)
+ 
+ if g77:
+ 
+@@ -158,7 +158,7 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(FORTRAN = '%(fc)s')
+ f77 = foo.Dictionary('FORTRAN')
+ bar = foo.Clone(FORTRAN = r'%(_python_)s wrapper.py ' + f77, FORTRANFLAGS = '-Ix')
+ foo.Program(target = 'foo', source = 'foo.f')
+
+=== modified file 'test/Fortran/FORTRANPATH.py'
+--- test/Fortran/FORTRANPATH.py	2005-09-26 04:19:32 +0000
++++ test/Fortran/FORTRANPATH.py	2008-03-01 07:26:15 +0000
+@@ -38,8 +38,9 @@
+ 
+ test = TestSCons.TestSCons()
+ 
+-if not test.detect('_FORTRANG', 'g77'):
+-    test.skip_test('Could not find a $F77 tool; skipping test.\n')
++fc = 'g77'
++if not test.detect_tool(fc):
++    test.skip_test('Could not find a fortran tool; skipping test.\n')
+     
+ test.subdir('include',
+             'subdir',
+
+=== modified file 'test/Fortran/SHF77.py'
+--- test/Fortran/SHF77.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHF77.py	2008-03-01 09:37:20 +0000
+@@ -133,7 +133,8 @@
+ 
+ 
+ 
+-g77 = test.detect('F77', 'g77')
++fc = 'g77'
++g77 = test.detect_tool(fc)
+ 
+ if g77:
+ 
+@@ -146,7 +147,7 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = 'g2c')
++foo = Environment(SHF77 = '%(fc)s')
+ shf77 = foo.Dictionary('SHF77')
+ bar = foo.Clone(SHF77 = r'%(_python_)s wrapper.py ' + shf77)
+ foo.SharedObject(target = 'foo/foo', source = 'foo.f')
+
+=== modified file 'test/Fortran/SHF77FLAGS.py'
+--- test/Fortran/SHF77FLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHF77FLAGS.py	2008-03-01 09:56:43 +0000
+@@ -103,8 +103,9 @@
+ 
+ 
+ 
+-g77 = test.detect('F77', 'g77')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'f77'
++g77 = test.detect_tool(fc)
++
+ 
+ if g77:
+ 
+@@ -117,7 +118,7 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(SHF77 = '%(fc)s')
+ shf77 = foo.Dictionary('SHF77')
+ bar = foo.Clone(SHF77 = r'%(_python_)s wrapper.py ' + shf77, SHF77FLAGS = '-Ix')
+ foo.SharedLibrary(target = 'foo/foo', source = 'foo.f')
+
+=== modified file 'test/Fortran/SHF90.py'
+--- test/Fortran/SHF90.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHF90.py	2008-03-01 07:50:21 +0000
+@@ -105,8 +105,8 @@
+ test.must_match('test14' + _obj, "This is a .F95 file.\n")
+ 
+ 
+-
+-g90 = test.detect('F90', 'g90')
++fc = 'f90'
++g90 = test.detect_tool(fc)
+ 
+ if g90:
+ 
+@@ -119,7 +119,7 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = 'g2c')
++foo = Environment(F90 = '%(fc)')
+ shf90 = foo.Dictionary('SHF90')
+ bar = foo.Clone(SHF90 = r'%(_python_)s wrapper.py ' + shf90)
+ foo.SharedObject(target = 'foo/foo', source = 'foo.f')
+
+=== modified file 'test/Fortran/SHF90FLAGS.py'
+--- test/Fortran/SHF90FLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHF90FLAGS.py	2008-03-01 09:34:55 +0000
+@@ -117,11 +117,10 @@
+ test.must_match('test14' + _obj, " -c -y\nThis is a .F95 file.\n")
+ 
+ 
+-
+-g90 = test.detect('F90', 'g90')
+-FTN_LIB = TestSCons.fortran_lib
+-
+-if g90:
++fc = 'gfortran'
++gfortran = test.detect_tool(fc)
++
++if gfortran:
+ 
+     test.write("wrapper.py",
+ """import os
+@@ -132,23 +131,23 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(SHF90 = '%(fc)s')
+ shf90 = foo.Dictionary('SHF90')
+ bar = foo.Clone(SHF90 = r'%(_python_)s wrapper.py ' + shf90, SHF90FLAGS = '-Ix')
+-foo.SharedLibrary(target = 'foo/foo', source = 'foo.f')
+-bar.SharedLibrary(target = 'bar/bar', source = 'bar.f')
++foo.SharedLibrary(target = 'foo/foo', source = 'foo.f90')
++bar.SharedLibrary(target = 'bar/bar', source = 'bar.f90')
+ """ % locals())
+ 
+-    test.write('foo.f', r"""
++    test.write('foo.f90', r"""
+       PROGRAM FOO
+-      PRINT *,'foo.f'
++      PRINT *,'foo.f90'
+       STOP
+       END
+ """)
+ 
+-    test.write('bar.f', r"""
++    test.write('bar.f90', r"""
+       PROGRAM BAR
+-      PRINT *,'bar.f'
++      PRINT *,'bar.f90'
+       STOP
+       END
+ """)
+
+=== modified file 'test/Fortran/SHF95.py'
+--- test/Fortran/SHF95.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHF95.py	2008-03-01 10:00:06 +0000
+@@ -106,7 +106,9 @@
+ 
+ 
+ 
+-g95 = test.detect('F95', 'g95')
++fc = 'f95'
++g95 = test.detect_tool(fc)
++
+ 
+ if g95:
+ 
+@@ -119,23 +121,23 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = 'g2c')
++foo = Environment(SHF95 = '%(fc)s')
+ shf95 = foo.Dictionary('SHF95')
+ bar = foo.Clone(SHF95 = r'%(_python_)s wrapper.py ' + shf95)
+-foo.SharedObject(target = 'foo/foo', source = 'foo.f')
+-bar.SharedObject(target = 'bar/bar', source = 'bar.f')
++foo.SharedObject(target = 'foo/foo', source = 'foo.f95')
++bar.SharedObject(target = 'bar/bar', source = 'bar.f95')
+ """ % locals())
+ 
+-    test.write('foo.f', r"""
++    test.write('foo.f95', r"""
+       PROGRAM FOO
+-      PRINT *,'foo.f'
++      PRINT *,'foo.f95'
+       STOP
+       END
+ """)
+ 
+-    test.write('bar.f', r"""
++    test.write('bar.f95', r"""
+       PROGRAM BAR
+-      PRINT *,'bar.f'
++      PRINT *,'bar.f95'
+       STOP
+       END
+ """)
+
+=== modified file 'test/Fortran/SHF95FLAGS.py'
+--- test/Fortran/SHF95FLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHF95FLAGS.py	2008-03-01 09:35:59 +0000
+@@ -117,11 +117,10 @@
+ test.must_match('test14' + _obj, " -c -x\nThis is a .F95 file.\n")
+ 
+ 
+-
+-g95 = test.detect('F95', 'g95')
+-FTN_LIB = TestSCons.fortran_lib
+-
+-if g95:
++fc = 'gfortran'
++gfortran = test.detect_tool(fc)
++
++if gfortran:
+ 
+     test.write("wrapper.py",
+ """import os
+@@ -132,23 +131,23 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(SHF95 = '%(fc)s')
+ shf95 = foo.Dictionary('SHF95')
+ bar = foo.Clone(SHF95 = r'%(_python_)s wrapper.py ' + shf95, SHF95FLAGS = '-Ix')
+-foo.SharedLibrary(target = 'foo/foo', source = 'foo.f')
+-bar.SharedLibrary(target = 'bar/bar', source = 'bar.f')
++foo.SharedLibrary(target = 'foo/foo', source = 'foo.f95')
++bar.SharedLibrary(target = 'bar/bar', source = 'bar.f95')
+ """ % locals())
+ 
+-    test.write('foo.f', r"""
++    test.write('foo.f95', r"""
+       PROGRAM FOO
+-      PRINT *,'foo.f'
++      PRINT *,'foo.f95'
+       STOP
+       END
+ """)
+ 
+-    test.write('bar.f', r"""
++    test.write('bar.f95', r"""
+       PROGRAM BAR
+-      PRINT *,'bar.f'
++      PRINT *,'bar.f95'
+       STOP
+       END
+ """)
+
+=== modified file 'test/Fortran/SHFORTRAN.py'
+--- test/Fortran/SHFORTRAN.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHFORTRAN.py	2008-03-01 09:42:13 +0000
+@@ -104,7 +104,8 @@
+ 
+ 
+ 
+-fortran = test.detect('FORTRAN', 'g77')
++fc = 'g77'
++fortran = test.detect_tool(fc)
+ 
+ if fortran:
+ 
+@@ -117,10 +118,11 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = 'g2c')
++foo = Environment(SHFORTRAN = '%(fc)s')
+ shfortran = foo.Dictionary('SHFORTRAN')
+ bar = foo.Clone(SHFORTRAN = r'%(_python_)s wrapper.py ' + shfortran)
+ foo.SharedObject(target = 'foo/foo', source = 'foo.f')
++print bar['_SHFORTRANG'](bar, None, None)
+ bar.SharedObject(target = 'bar/bar', source = 'bar.f')
+ """ % locals())
+ 
+@@ -141,7 +143,7 @@
+ 
+     test.run(arguments = 'foo', stderr = None)
+ 
+-    test.must_exist('wrapper.out')
++    test.must_not_exist('wrapper.out')
+ 
+     test.run(arguments = 'bar')
+ 
+
+=== modified file 'test/Fortran/SHFORTRANFLAGS.py'
+--- test/Fortran/SHFORTRANFLAGS.py	2006-11-04 05:25:43 +0000
++++ test/Fortran/SHFORTRANFLAGS.py	2008-03-01 09:59:08 +0000
+@@ -115,10 +115,10 @@
+ 
+ 
+ 
+-fortran = test.detect('FORTRAN', 'g77')
+-FTN_LIB = TestSCons.fortran_lib
++fc = 'f77'
++g77 = test.detect_tool(fc)
+ 
+-if fortran:
++if g77:
+ 
+     test.write("wrapper.py",
+ """import os
+@@ -129,7 +129,7 @@
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+-foo = Environment(LIBS = %(FTN_LIB)s)
++foo = Environment(SHFORTRAN = '%(fc)s')
+ shfortran = foo.Dictionary('SHFORTRAN')
+ bar = foo.Clone(SHFORTRAN = r'%(_python_)s wrapper.py ' + shfortran,
+                 SHFORTRANFLAGS = '-Ix')
+
