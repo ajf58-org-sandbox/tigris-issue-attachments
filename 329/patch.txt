@@ -1,0 +1,49 @@
+Index: D:/temp/test/SCons/src/engine/SCons/Node/FS.py
+===================================================================
+--- D:/temp/test/SCons/src/engine/SCons/Node/FS.py	(revision 2683)
++++ D:/temp/test/SCons/src/engine/SCons/Node/FS.py	(working copy)
+@@ -102,6 +102,17 @@
+ 
+ initialize_do_splitdrive()
+ 
++do_splitunc = None
++
++def initialize_do_splitunc():
++    global do_splitunc
++    try:
++        unc, path = os.path.splitunc(r'\\SERVER\SHARE\Dir')
++        do_splitunc = not not unc
++    except AttriubteError:
++        do_splitunc = False
++
++initialize_do_splitunc()
+ #
+ 
+ needs_normpath_check = None
+@@ -1127,6 +1138,8 @@
+ 
+         if do_splitdrive:
+             drive, p = os.path.splitdrive(p)
++            if drive == '' and do_splitunc:
++                drive, p = os.path.splitunc(p)
+         else:
+             drive = ''
+         if drive and not p:
+Index: D:/temp/test/SCons/src/engine/SCons/Node/FSTests.py
+===================================================================
+--- D:/temp/test/SCons/src/engine/SCons/Node/FSTests.py	(revision 2683)
++++ D:/temp/test/SCons/src/engine/SCons/Node/FSTests.py	(working copy)
+@@ -1488,6 +1488,13 @@
+             SCons.Node.FS.initialize_do_splitdrive()
+             SCons.Node.FS.initialize_normpath_check()
+ 
++    SCons.Node.FS.initialize_do_splitunc()
++    if SCons.Node.FS.do_splitunc: # Only run the test wen necessary
++        def test_unc_drive_letter(self):
++            """Test drive-letter lookup for windows UNC-style directories"""
++            share = self.fs.Dir(r'\\SERVER\SHARE\Directory')
++            assert str(share) == r'\\SERVER\SHARE\Directory', str(share)
++        
+     def test_target_from_source(self):
+         """Test the method for generating target nodes from sources"""
+         fs = self.fs
