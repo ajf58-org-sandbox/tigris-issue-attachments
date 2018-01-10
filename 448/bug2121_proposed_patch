@@ -1,0 +1,14 @@
+--- scons-src-0.98.5/src/engine/SCons/Node/FS.py	2008-06-09 22:23:56.000000000 -0700
++++ scons-src-0.98.5-backup/src/engine/SCons/Node/FS.py	2008-07-12 16:14:46.000000000 -0700
+@@ -1765,7 +1765,10 @@ class Dir(Base):
+         if self.entry_exists_on_disk(name):
+             try: return self.Dir(name)
+             except TypeError: pass
+-        return None
++        node = self.srcdir_duplicate(name)
++        if isinstance(node, File):
++            return None
++        return node
+ 
+     def file_on_disk(self, name):
+         if self.entry_exists_on_disk(name) or \
