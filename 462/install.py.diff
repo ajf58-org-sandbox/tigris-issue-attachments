@@ -1,0 +1,20 @@
+*** install.py.orig	2008-07-30 15:13:21.937500000 -0700
+--- install.py	2008-07-30 15:12:46.968750000 -0700
+***************
+*** 61,67 ****
+                  os.makedirs(parent)
+          shutil.copytree(source, dest)
+      else:
+!         shutil.copy2(source, dest)
+          st = os.stat(source)
+          os.chmod(dest, stat.S_IMODE(st[stat.ST_MODE]) | stat.S_IWRITE)
+  
+--- 61,68 ----
+                  os.makedirs(parent)
+          shutil.copytree(source, dest)
+      else:
+!         #shutil.copy2(source, dest)
+!         os.system('copy ' + source + ' ' + dest + ' > NUL 2>&1');
+          st = os.stat(source)
+          os.chmod(dest, stat.S_IMODE(st[stat.ST_MODE]) | stat.S_IWRITE)
+  
