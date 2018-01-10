@@ -1,0 +1,661 @@
+diff -r 21d7ef2d196e src/engine/SCons/Job.py
+--- a/src/engine/SCons/Job.py	Wed Apr 23 14:56:39 2008 -0400
++++ b/src/engine/SCons/Job.py	Mon Apr 28 11:20:21 2008 -0400
+@@ -49,6 +49,18 @@ default_stack_size = 256
+ 
+ interrupt_msg = 'Build interrupted.'
+ 
++
++class InterruptState:
++   def __init__(self):
++       self.interrupted = False
++
++   def set(self):
++       self.interrupted = True
++
++   def __call__(self):
++       return self.interrupted
++
++
+ class Jobs:
+     """An instance of this class initializes N jobs, and provides
+     methods for starting, stopping, and waiting on all N jobs.
+@@ -84,8 +96,6 @@ class Jobs:
+             self.job = Serial(taskmaster)
+             self.num_jobs = 1
+ 
+-        self.job.interrupted = False
+-
+     def run(self, postfunc=lambda: None):
+         """Run the jobs.
+ 
+@@ -104,7 +114,7 @@ class Jobs:
+ 
+     def were_interrupted(self):
+         """Returns whether the jobs were interrupted by a signal."""
+-        return self.job.interrupted
++        return self.job.interrupted()
+ 
+     def _setup_sig_handler(self):
+         """Setup an interrupt handler so that SCons can shutdown cleanly in
+@@ -127,10 +137,10 @@ class Jobs:
+         SCons forks before executing another process. In that case, we
+         want the child to exit immediately.
+         """
+-        def handler(signum, stack, parentpid=os.getpid()):
++        def handler(signum, stack, self=self, parentpid=os.getpid()):
+             if os.getpid() == parentpid:
+                 self.job.taskmaster.stop()
+-                self.job.interrupted = True
++                self.job.interrupted.set()
+             else:
+                 os._exit(2)
+ 
+@@ -170,6 +180,7 @@ class Serial:
+         execute (e.g. execute() raised an exception)."""
+         
+         self.taskmaster = taskmaster
++        self.interrupted = InterruptState()
+ 
+     def start(self):
+         """Start the job. This will begin pulling tasks from the taskmaster
+@@ -188,7 +199,7 @@ class Serial:
+                 if task.needs_execute():
+                     task.execute()
+             except:
+-                if self.interrupted:
++                if self.interrupted():
+                     try:
+                         raise SCons.Errors.BuildError(
+                             task.targets[0], errstr=interrupt_msg)
+@@ -221,11 +232,12 @@ else:
+         dequeues the task, executes it, and posts a tuple including the task
+         and a boolean indicating whether the task executed successfully. """
+ 
+-        def __init__(self, requestQueue, resultsQueue):
++        def __init__(self, requestQueue, resultsQueue, interrupted):
+             threading.Thread.__init__(self)
+             self.setDaemon(1)
+             self.requestQueue = requestQueue
+             self.resultsQueue = resultsQueue
++            self.interrupted = interrupted
+             self.start()
+ 
+         def run(self):
+@@ -239,6 +251,9 @@ else:
+                     break
+ 
+                 try:
++                    if self.interrupted():
++                        raise SCons.Errors.BuildError(
++                            task.targets[0], errstr=interrupt_msg)
+                     task.execute()
+                 except:
+                     task.exception_set()
+@@ -251,7 +266,7 @@ else:
+     class ThreadPool:
+         """This class is responsible for spawning and managing worker threads."""
+ 
+-        def __init__(self, num, stack_size):
++        def __init__(self, num, stack_size, interrupted):
+             """Create the request and reply queues, and 'num' worker threads.
+             
+             One must specify the stack size of the worker threads. The
+@@ -277,7 +292,7 @@ else:
+             # Create worker threads
+             self.workers = []
+             for _ in range(num):
+-                worker = Worker(self.requestQueue, self.resultsQueue)
++                worker = Worker(self.requestQueue, self.resultsQueue, interrupted)
+                 self.workers.append(worker)
+ 
+             # Once we drop Python 1.5 we can change the following to:
+@@ -348,7 +363,8 @@ else:
+             multiple tasks simultaneously. """
+ 
+             self.taskmaster = taskmaster
+-            self.tp = ThreadPool(num, stack_size)
++            self.interrupted = InterruptState()
++            self.tp = ThreadPool(num, stack_size, self.interrupted)
+ 
+             self.maxjobs = num
+ 
+@@ -395,7 +411,7 @@ else:
+                     if ok:
+                         task.executed()
+                     else:
+-                        if self.interrupted:
++                        if self.interrupted():
+                             try:
+                                 raise SCons.Errors.BuildError(
+                                     task.targets[0], errstr=interrupt_msg)
+diff -r 21d7ef2d196e src/engine/SCons/Taskmaster.py
+--- a/src/engine/SCons/Taskmaster.py	Wed Apr 23 14:56:39 2008 -0400
++++ b/src/engine/SCons/Taskmaster.py	Mon Apr 28 11:20:21 2008 -0400
+@@ -277,9 +277,9 @@ class Task:
+         Explicit stop-the-build failure.
+         """
+         
+-        # Invoke fail_continue() to clean-up the pending children
++        # Invoke will_not_build() to clean-up the pending children
+         # list.
+-        self.fail_continue()
++        self.tm.will_not_build(self.targets)
+ 
+         # Tell the taskmaster to not start any new tasks
+         self.tm.stop()
+@@ -297,44 +297,8 @@ class Task:
+         This sets failure status on the target nodes and all of
+         their dependent parent nodes.
+         """
++        self.tm.will_not_build(self.targets)
+         
+-        pending_children = self.tm.pending_children
+-
+-        to_visit = set()
+-        for t in self.targets:
+-            # Set failure state on all of the parents that were dependent
+-            # on this failed build.
+-            if t.state != NODE_FAILED:
+-                t.state = NODE_FAILED
+-                parents = t.waiting_parents
+-                to_visit = to_visit | parents
+-                pending_children = pending_children - parents
+-
+-        try:
+-            while 1:
+-                try:
+-                    node = to_visit.pop()
+-                except AttributeError:
+-                    # Python 1.5.2
+-                    if len(to_visit):
+-                        node = to_visit[0]
+-                        to_visit.remove(node)
+-                    else:
+-                        break
+-                if node.state != NODE_FAILED:
+-                    node.state = NODE_FAILED
+-                    parents = node.waiting_parents
+-                    to_visit = to_visit | parents
+-                    pending_children = pending_children - parents
+-        except KeyError:
+-            # The container to_visit has been emptied.
+-            pass
+-
+-        # We have the stick back the pending_children list into the
+-        # task master because the python 1.5.2 compatibility does not
+-        # allow us to use in-place updates
+-        self.tm.pending_children = pending_children
+-
+     def make_ready_all(self):
+         """
+         Marks all targets in a task ready for execution.
+@@ -557,7 +521,15 @@ class Taskmaster:
+     def no_next_candidate(self):
+         """
+         Stops Taskmaster processing by not returning a next candidate.
++        
++        Note that we have to clean-up the Taskmaster candidate list
++        because the cycle detection depends on the fact all nodes have
++        been processed somehow.
+         """
++        while self.candidates:
++            candidates = self.candidates
++            self.candidates = []
++            self.will_not_build(candidates)
+         return None
+ 
+     def _find_next_ready_node(self):
+@@ -604,9 +576,9 @@ class Taskmaster:
+                 S.considered = S.considered + 1
+             else:
+                 S = None
+-  
+-            if T: T.write('Taskmaster:     Considering node <%-10s %s> and its children:\n' % 
+-                          (StateString[node.get_state()], repr(str(node))))
++
++            if T: T.write('Taskmaster:     Considering node <%-10s %-3s %s> and its children:\n' % 
++                          (StateString[node.get_state()], node.ref_count, repr(str(node))))
+ 
+             if state == NODE_NO_STATE:
+                 # Mark this node as being on the execution stack:
+@@ -643,8 +615,8 @@ class Taskmaster:
+             for child in chain(children,node.prerequisites):
+                 childstate = child.get_state()
+ 
+-                if T: T.write('Taskmaster:        <%-10s %s>\n' % 
+-                              (StateString[childstate], repr(str(child))))
++                if T: T.write('Taskmaster:        <%-10s %-3s %s>\n' % 
++                              (StateString[childstate], child.ref_count, repr(str(child))))
+ 
+                 if childstate == NODE_NO_STATE:
+                     children_not_visited.append(child)
+@@ -685,8 +657,8 @@ class Taskmaster:
+                 node.set_state(NODE_FAILED)
+ 
+                 if S: S.child_failed = S.child_failed + 1
+-                if T: T.write('Taskmaster:****** <%-10s %s>\n' % 
+-                              (StateString[node.get_state()], repr(str(node))))
++                if T: T.write('Taskmaster:****** <%-10s %-3s %s>\n' % 
++                              (StateString[node.get_state()], node.ref_count, repr(str(node))))
+                 continue
+ 
+             if children_not_ready:
+@@ -700,6 +672,8 @@ class Taskmaster:
+                     # count so we can be put back on the list for
+                     # re-evaluation when they've all finished.
+                     node.ref_count =  node.ref_count + child.add_to_waiting_parents(node)
++                    if T: T.write('Taskmaster:      adjusting ref count: <%-10s %-3s %s>\n' %
++                                  (StateString[node.get_state()], node.ref_count, repr(str(node))))
+ 
+                 self.pending_children = self.pending_children | children_pending
+                 
+@@ -720,8 +694,8 @@ class Taskmaster:
+             # The default when we've gotten through all of the checks above:
+             # this node is ready to be built.
+             if S: S.build = S.build + 1
+-            if T: T.write('Taskmaster: Evaluating <%-10s %s>\n' % 
+-                          (StateString[node.get_state()], repr(str(node))))
++            if T: T.write('Taskmaster: Evaluating <%-10s %-3s %s>\n' % 
++                          (StateString[node.get_state()], node.ref_count, repr(str(node))))
+             return node
+ 
+         return None
+@@ -757,6 +731,48 @@ class Taskmaster:
+ 
+         return task
+ 
++    def will_not_build(self, nodes):
++        """
++        Perform clean-up about nodes that will never be built.
++        """
++
++        pending_children = self.pending_children
++
++        to_visit = set()
++        for node in nodes:
++            # Set failure state on all of the parents that were dependent
++            # on this failed build.
++            if node.state != NODE_FAILED:
++                node.state = NODE_FAILED
++                parents = node.waiting_parents
++                to_visit = to_visit | parents
++                pending_children = pending_children - parents
++
++        try:
++            while 1:
++                try:
++                    node = to_visit.pop()
++                except AttributeError:
++                    # Python 1.5.2
++                    if len(to_visit):
++                        node = to_visit[0]
++                        to_visit.remove(node)
++                    else:
++                        break
++                if node.state != NODE_FAILED:
++                    node.state = NODE_FAILED
++                    parents = node.waiting_parents
++                    to_visit = to_visit | parents
++                    pending_children = pending_children - parents
++        except KeyError:
++            # The container to_visit has been emptied.
++            pass
++
++        # We have the stick back the pending_children list into the
++        # task master because the python 1.5.2 compatibility does not
++        # allow us to use in-place updates
++        self.pending_children = pending_children
++
+     def stop(self):
+         """
+         Stops the current build completely.
+@@ -774,6 +790,8 @@ class Taskmaster:
+                 if cycle:
+                     desc = desc + "  " + string.join(map(str, cycle), " -> ") + "\n"
+                 else:
+-                    desc = desc + "  Internal Error: no cycle found for node %s (%s)\n" %  \
+-                        (node, repr(node)) 
++                    desc = desc + \
++                        "  Internal Error: no cycle found for node %s (%s) in state %s\n" %  \
++                        (node, repr(node), StateString[node.get_state()]) 
++
+             raise SCons.Errors.UserError, desc
+diff -r 21d7ef2d196e src/engine/SCons/TaskmasterTests.py
+--- a/src/engine/SCons/TaskmasterTests.py	Wed Apr 23 14:56:39 2008 -0400
++++ b/src/engine/SCons/TaskmasterTests.py	Mon Apr 28 11:20:21 2008 -0400
+@@ -1053,23 +1053,24 @@ class TaskmasterTestCase(unittest.TestCa
+         expect = """\
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   'n1'> and its children:
+-Taskmaster: Evaluating <pending    'n1'>
++Taskmaster:     Considering node <no_state   0   'n1'> and its children:
++Taskmaster: Evaluating <pending    0   'n1'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <executed   'n1'> and its children:
++Taskmaster:     Considering node <executed   0   'n1'> and its children:
+ Taskmaster:        already handled (executed)
+-Taskmaster:     Considering node <no_state   'n3'> and its children:
+-Taskmaster:        <executed   'n1'>
+-Taskmaster:        <no_state   'n2'>
+-Taskmaster:     Considering node <no_state   'n2'> and its children:
+-Taskmaster: Evaluating <pending    'n2'>
++Taskmaster:     Considering node <no_state   0   'n3'> and its children:
++Taskmaster:        <executed   0   'n1'>
++Taskmaster:        <no_state   0   'n2'>
++Taskmaster:      adjusting ref count: <pending    1   'n3'>
++Taskmaster:     Considering node <no_state   0   'n2'> and its children:
++Taskmaster: Evaluating <pending    0   'n2'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <pending    'n3'> and its children:
+-Taskmaster:        <executed   'n1'>
+-Taskmaster:        <executed   'n2'>
+-Taskmaster: Evaluating <pending    'n3'>
++Taskmaster:     Considering node <pending    0   'n3'> and its children:
++Taskmaster:        <executed   0   'n1'>
++Taskmaster:        <executed   0   'n2'>
++Taskmaster: Evaluating <pending    0   'n3'>
+ 
+ Taskmaster: Looking for a node to evaluate
+ Taskmaster: No candidate anymore.
+diff -r 21d7ef2d196e test/Parallel/multiple-parents.py
+--- a/test/Parallel/multiple-parents.py	Wed Apr 23 14:56:39 2008 -0400
++++ b/test/Parallel/multiple-parents.py	Mon Apr 28 11:20:21 2008 -0400
+@@ -50,34 +50,69 @@ test = TestSCons.TestSCons()
+ #    c) Some targets succeed building
+ #    d) Some children are ignored
+ #    e) Some children are pre-requesites
+-#    f) Some sources are missing
++#    f) Some children have side-effects
++#    g) Some sources are missing
++#    h) Builds that are interrupted
+ 
+ test.write('SConstruct', """
++opts = Options()
++opts.Add( BoolOption('interrupt', 'Interrupt the build.', 0 ) )
++optEnv = Environment(options=opts)
++
+ def fail_action(target = None, source = None, env = None):
+     return 2
+ 
++def simulate_keyboard_interrupt(target = None, source = None, env = None):
++    # Directly invoked the SIGINT handler to simulate a
++    # KeyboardInterrupt. This hack is necessary because there is no
++    # easy way to get access to the current Job/Taskmaster object.
++    import signal
++    handler = signal.getsignal(signal.SIGINT)
++    handler(signal.SIGINT, None)
++    return 0
++
++interrupt = Command(target='interrupt',  source='', action=simulate_keyboard_interrupt)
++
++
+ failed0  = Command(target='failed00',  source='', action=fail_action)
+-ok0      = Command(target='ok00',      source='', action=Touch('${TARGET}'))
++ok0      = Command(target=['ok00a', 'ok00b', 'ok00c'], 
++                   source='', 
++                   action=[Touch('${TARGETS[0]}'), Touch('${TARGETS[1]}'), Touch('${TARGETS[2]}')])
+ prereq0  = Command(target='prereq00',  source='', action=Touch('${TARGET}'))
+ ignore0  = Command(target='ignore00',  source='', action=Touch('${TARGET}'))
+ igreq0   = Command(target='igreq00',   source='', action=Touch('${TARGET}'))
+ missing0 = Command(target='missing00', source='MissingSrc', action=Touch('${TARGET}'))
++withSE0  = Command(target=['withSE00a', 'withSE00b', 'withSE00c'], 
++                   source='', 
++                   action=[Touch('${TARGETS[0]}'), Touch('${TARGETS[1]}'), Touch('${TARGETS[2]}'), 
++                           Touch('side_effect')])
++SideEffect('side_effect', withSE0) 
+ 
+-prev_level  = failed0 + ok0 + ignore0
++prev_level  = failed0 + ok0 + ignore0 + missing0 + withSE0
+ prev_prereq = prereq0
+ prev_ignore = ignore0
+ prev_igreq  = igreq0
+ 
++if optEnv['interrupt']:
++    prev_level = prev_level + interrupt
++
+ for i in range(1,20):
+     
+     failed = Command(target='failed%02d' % i,  source='', action=fail_action)
+-    ok     = Command(target='ok%02d' % i,      source='', action=Touch('${TARGET}'))
++    ok     = Command(target=['ok%02da' % i, 'ok%02db' % i, 'ok%02dc' % i], 
++                     source='',
++                     action=[Touch('${TARGETS[0]}'), Touch('${TARGETS[1]}'), Touch('${TARGETS[2]}')])
+     prereq = Command(target='prereq%02d' % i,  source='', action=Touch('${TARGET}'))
+     ignore = Command(target='ignore%02d' % i,  source='', action=Touch('${TARGET}'))
+     igreq  = Command(target='igreq%02d' % i,   source='', action=Touch('${TARGET}'))
+     missing = Command(target='missing%02d' %i, source='MissingSrc', action=Touch('${TARGET}'))
++    withSE  = Command(target=['withSE%02da' % i, 'withSE%02db' % i, 'withSE%02dc' % i], 
++                       source='', 
++                       action=[Touch('${TARGETS[0]}'), Touch('${TARGETS[1]}'), Touch('${TARGETS[2]}'), 
++                               Touch('side_effect')])
++    SideEffect('side_effect', withSE) 
+ 
+-    next_level = failed + ok + ignore + igreq + missing
++    next_level = failed + ok + ignore + igreq + missing + withSE
+ 
+     for j in range(1,10):
+         a = Alias('a%02d%02d' % (i,j), prev_level)
+@@ -108,7 +143,8 @@ Default(all)
+ 
+ re_error = """\
+ (scons: \\*\\*\\* \\[failed\\d+] Error 2\\n)|\
+-(scons: \\*\\*\\* Source `MissingSrc' not found, needed by target `missing\\d+'\\.(  Stop\\.)?\\n)\
++(scons: \\*\\*\\* Source `MissingSrc' not found, needed by target `missing\\d+'\\.(  Stop\\.)?\\n)|\
++(scons: \\*\\*\\* \\[\\w+] Build interrupted\.\\n)\
+ """
+ 
+ re_errors = "(" + re_error + ")+"
+@@ -116,7 +152,17 @@ test.run(arguments = 'all',
+ test.run(arguments = 'all',
+          status = 2,
+          stderr = "scons: *** [failed19] Error 2\n")
+-test.must_not_exist(test.workpath('ok'))
++test.must_not_exist(test.workpath('side_effect'))
++for i in range(20):
++    test.must_not_exist(test.workpath('ok%02da' % i))
++    test.must_not_exist(test.workpath('ok%02db' % i))
++    test.must_not_exist(test.workpath('ok%02dc' % i))
++    test.must_not_exist(test.workpath('prereq%02d' % i))
++    test.must_not_exist(test.workpath('ignore%02d' % i))
++    test.must_not_exist(test.workpath('igreq%02d' % i))
++    test.must_not_exist(test.workpath('withSE%02da' % i))
++    test.must_not_exist(test.workpath('withSE%02db' % i))
++    test.must_not_exist(test.workpath('withSE%02dc' % i))
+ 
+ 
+ for i in range(5):
+@@ -135,11 +181,17 @@ for i in range(5):
+              status = 2,
+              stderr = re_errors,
+              match=TestSCons.match_re_dotall)
++    test.must_exist(test.workpath('side_effect'))
+     for i in range(20):
+-        test.must_exist(test.workpath('ok%02d' % i))
++        test.must_exist(test.workpath('ok%02da' % i))
++        test.must_exist(test.workpath('ok%02db' % i))
++        test.must_exist(test.workpath('ok%02dc' % i))
+         test.must_exist(test.workpath('prereq%02d' % i))
+         test.must_not_exist(test.workpath('ignore%02d' % i))
+         test.must_exist(test.workpath('igreq%02d' % i))
++        test.must_exist(test.workpath('withSE%02da' % i))
++        test.must_exist(test.workpath('withSE%02db' % i))
++        test.must_exist(test.workpath('withSE%02dc' % i))
+ 
+ 
+ for i in range(5):
+@@ -147,7 +199,7 @@ for i in range(5):
+              status = 2,
+              stderr = re_errors,
+              match=TestSCons.match_re_dotall)
+-    test.must_not_exist(test.workpath('ok'))
++
+ 
+ for i in range(5):
+     test.run(arguments = '-c all')
+@@ -157,6 +209,7 @@ for i in range(5):
+              stderr = re_errors,
+              match=TestSCons.match_re_dotall)
+ 
++
+ for i in range(5):
+     test.run(arguments = '-c all')
+ 
+@@ -164,10 +217,26 @@ for i in range(5):
+              status = 2,
+              stderr = re_errors,
+              match=TestSCons.match_re_dotall)
++    test.must_exist(test.workpath('side_effect'))
+     for i in range(20):
+-        test.must_exist(test.workpath('ok%02d' % i))
++        test.must_exist(test.workpath('ok%02da' % i))
++        test.must_exist(test.workpath('ok%02db' % i))
++        test.must_exist(test.workpath('ok%02dc' % i))
+         test.must_exist(test.workpath('prereq%02d' % i))
+         test.must_not_exist(test.workpath('ignore%02d' % i))
+         test.must_exist(test.workpath('igreq%02d' % i))
++        test.must_exist(test.workpath('withSE%02da' % i))
++        test.must_exist(test.workpath('withSE%02db' % i))
++        test.must_exist(test.workpath('withSE%02dc' % i))
++
++
++for i in range(5):
++    test.run(arguments = '-c all')
++
++    test.run(arguments = '-j 8 -k --random interrupt=yes all',
++             status = 2,
++             stderr = re_errors,
++             match=TestSCons.match_re_dotall)
++
+ 
+ test.pass_test()
+diff -r 21d7ef2d196e test/option/taskmastertrace.py
+--- a/test/option/taskmastertrace.py	Wed Apr 23 14:56:39 2008 -0400
++++ b/test/option/taskmastertrace.py	Mon Apr 28 11:20:21 2008 -0400
+@@ -48,37 +48,41 @@ expect_stdout = test.wrap_stdout("""\
+ expect_stdout = test.wrap_stdout("""\
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   '.'> and its children:
+-Taskmaster:        <no_state   'SConstruct'>
+-Taskmaster:        <no_state   'Tfile.in'>
+-Taskmaster:        <no_state   'Tfile.mid'>
+-Taskmaster:        <no_state   'Tfile.out'>
+-Taskmaster:     Considering node <no_state   'SConstruct'> and its children:
+-Taskmaster: Evaluating <pending    'SConstruct'>
++Taskmaster:     Considering node <no_state   0   '.'> and its children:
++Taskmaster:        <no_state   0   'SConstruct'>
++Taskmaster:        <no_state   0   'Tfile.in'>
++Taskmaster:        <no_state   0   'Tfile.mid'>
++Taskmaster:        <no_state   0   'Tfile.out'>
++Taskmaster:      adjusting ref count: <pending    1   '.'>
++Taskmaster:      adjusting ref count: <pending    2   '.'>
++Taskmaster:      adjusting ref count: <pending    3   '.'>
++Taskmaster:      adjusting ref count: <pending    4   '.'>
++Taskmaster:     Considering node <no_state   0   'SConstruct'> and its children:
++Taskmaster: Evaluating <pending    0   'SConstruct'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   'Tfile.in'> and its children:
+-Taskmaster: Evaluating <pending    'Tfile.in'>
++Taskmaster:     Considering node <no_state   0   'Tfile.in'> and its children:
++Taskmaster: Evaluating <pending    0   'Tfile.in'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   'Tfile.mid'> and its children:
+-Taskmaster:        <up_to_date 'Tfile.in'>
+-Taskmaster: Evaluating <pending    'Tfile.mid'>
++Taskmaster:     Considering node <no_state   0   'Tfile.mid'> and its children:
++Taskmaster:        <up_to_date 0   'Tfile.in'>
++Taskmaster: Evaluating <pending    0   'Tfile.mid'>
+ Copy("Tfile.mid", "Tfile.in")
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   'Tfile.out'> and its children:
+-Taskmaster:        <executed   'Tfile.mid'>
+-Taskmaster: Evaluating <pending    'Tfile.out'>
++Taskmaster:     Considering node <no_state   0   'Tfile.out'> and its children:
++Taskmaster:        <executed   0   'Tfile.mid'>
++Taskmaster: Evaluating <pending    0   'Tfile.out'>
+ Copy("Tfile.out", "Tfile.mid")
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <pending    '.'> and its children:
+-Taskmaster:        <up_to_date 'SConstruct'>
+-Taskmaster:        <up_to_date 'Tfile.in'>
+-Taskmaster:        <executed   'Tfile.mid'>
+-Taskmaster:        <executed   'Tfile.out'>
+-Taskmaster: Evaluating <pending    '.'>
++Taskmaster:     Considering node <pending    0   '.'> and its children:
++Taskmaster:        <up_to_date 0   'SConstruct'>
++Taskmaster:        <up_to_date 0   'Tfile.in'>
++Taskmaster:        <executed   0   'Tfile.mid'>
++Taskmaster:        <executed   0   'Tfile.out'>
++Taskmaster: Evaluating <pending    0   '.'>
+ 
+ Taskmaster: Looking for a node to evaluate
+ Taskmaster: No candidate anymore.
+@@ -103,35 +107,39 @@ expect_trace = """\
+ expect_trace = """\
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   '.'> and its children:
+-Taskmaster:        <no_state   'SConstruct'>
+-Taskmaster:        <no_state   'Tfile.in'>
+-Taskmaster:        <no_state   'Tfile.mid'>
+-Taskmaster:        <no_state   'Tfile.out'>
+-Taskmaster:     Considering node <no_state   'SConstruct'> and its children:
+-Taskmaster: Evaluating <pending    'SConstruct'>
++Taskmaster:     Considering node <no_state   0   '.'> and its children:
++Taskmaster:        <no_state   0   'SConstruct'>
++Taskmaster:        <no_state   0   'Tfile.in'>
++Taskmaster:        <no_state   0   'Tfile.mid'>
++Taskmaster:        <no_state   0   'Tfile.out'>
++Taskmaster:      adjusting ref count: <pending    1   '.'>
++Taskmaster:      adjusting ref count: <pending    2   '.'>
++Taskmaster:      adjusting ref count: <pending    3   '.'>
++Taskmaster:      adjusting ref count: <pending    4   '.'>
++Taskmaster:     Considering node <no_state   0   'SConstruct'> and its children:
++Taskmaster: Evaluating <pending    0   'SConstruct'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   'Tfile.in'> and its children:
+-Taskmaster: Evaluating <pending    'Tfile.in'>
++Taskmaster:     Considering node <no_state   0   'Tfile.in'> and its children:
++Taskmaster: Evaluating <pending    0   'Tfile.in'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   'Tfile.mid'> and its children:
+-Taskmaster:        <up_to_date 'Tfile.in'>
+-Taskmaster: Evaluating <pending    'Tfile.mid'>
++Taskmaster:     Considering node <no_state   0   'Tfile.mid'> and its children:
++Taskmaster:        <up_to_date 0   'Tfile.in'>
++Taskmaster: Evaluating <pending    0   'Tfile.mid'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <no_state   'Tfile.out'> and its children:
+-Taskmaster:        <executed   'Tfile.mid'>
+-Taskmaster: Evaluating <pending    'Tfile.out'>
++Taskmaster:     Considering node <no_state   0   'Tfile.out'> and its children:
++Taskmaster:        <executed   0   'Tfile.mid'>
++Taskmaster: Evaluating <pending    0   'Tfile.out'>
+ 
+ Taskmaster: Looking for a node to evaluate
+-Taskmaster:     Considering node <pending    '.'> and its children:
+-Taskmaster:        <up_to_date 'SConstruct'>
+-Taskmaster:        <up_to_date 'Tfile.in'>
+-Taskmaster:        <executed   'Tfile.mid'>
+-Taskmaster:        <executed   'Tfile.out'>
+-Taskmaster: Evaluating <pending    '.'>
++Taskmaster:     Considering node <pending    0   '.'> and its children:
++Taskmaster:        <up_to_date 0   'SConstruct'>
++Taskmaster:        <up_to_date 0   'Tfile.in'>
++Taskmaster:        <executed   0   'Tfile.mid'>
++Taskmaster:        <executed   0   'Tfile.out'>
++Taskmaster: Evaluating <pending    0   '.'>
+ 
+ Taskmaster: Looking for a node to evaluate
+ Taskmaster: No candidate anymore.
