@@ -1,0 +1,50 @@
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 3234)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -523,7 +523,7 @@
+         SCons.Node.Node.__init__(self)
+ 
+         self.name = name
+-        self.suffix = SCons.Util.splitext(name)[1]
++        self.suffix = intern(SCons.Util.splitext(name)[1])
+         self.fs = fs
+ 
+         assert directory, "A directory must be provided"
+@@ -544,6 +544,13 @@
+         self.cwd = None # will hold the SConscript directory for target nodes
+         self.duplicate = directory.duplicate
+ 
++        if self.abspath == self.labspath:
++            self.abspath = self.labspath = intern(self.abspath)
++        if self.path == self.tpath:
++            self.path = self.tpath = intern(self.path)
++        if self.name == self.path:
++            self.path = self.name = intern(self.path)
++
+     def str_for_display(self):
+         return '"' + self.__str__() + '"'
+ 
+@@ -582,7 +589,7 @@
+         except KeyError:
+             pass
+         result = self._get_str()
+-        self._memo['_save_str'] = result
++        self._memo['_save_str'] = intern(result)
+         return result
+ 
+     def _get_str(self):
+Index: src/engine/SCons/Scanner/__init__.py
+===================================================================
+--- src/engine/SCons/Scanner/__init__.py	(revision 3233)
++++ src/engine/SCons/Scanner/__init__.py	(working copy)
+@@ -356,6 +356,9 @@
+             includes = node.includes
+         else:
+             includes = self.find_include_names (node)
++            # Intern the names of the include files. Saves some memory if the
++            # same header is included many times.
++            includes = map( lambda (a,name,e): (a,intern(name),e), includes )
+             node.includes = includes
+ 
+         # This is a hand-coded DSU (decorate-sort-undecorate, or
