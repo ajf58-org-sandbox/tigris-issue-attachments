@@ -1,0 +1,312 @@
+=== modified file 'src/engine/SCons/Tool/FortranCommon.py'
+--- src/engine/SCons/Tool/FortranCommon.py	2008-02-28 05:59:10 +0000
++++ src/engine/SCons/Tool/FortranCommon.py	2008-02-28 06:35:01 +0000
+@@ -87,3 +87,29 @@
+             except KeyError: pass
+         return ''
+ 
++def CreateDialectGenerator(dialect, fallback, default):
++    """Create the generator variable for a given fortran dialect, fallback and
++    default.
++    
++    All arguments should be upper case strings: F77, FORTRAN, _FORTRAND,
++    etc..."""
++    # This is ugly, but this code should not stay long anyway. It will make
++    # changing fortran tools easier, because everything is in one place.
++    fVLG = VariableListGenerator
++
++    CompGen = fVLG(dialect, fallback, default)
++    FlagsGen = fVLG('%sFLAGS' % dialect, '%sFLAGS' % fallback)
++    ComGen = fVLG('%sCOM' % dialect, '%sCOM' % fallback, '_%sCOMD' % dialect)
++    ComStrGen = fVLG('%sCOMSTR' % dialect, '%sCOMSTR' % fallback, '_%sCOMSTRD' % dialect)
++    PPComGen = fVLG('%sPPCOM' % dialect, '%sPPCOM' % fallback, '_%sPPCOMD' % dialect)
++    PPComStrGen = fVLG('%sPPCOMSTR' % dialect, '%sPPCOMSTR' % fallback, '_%sPPCOMSTRD' % dialect)
++    ShCompGen = fVLG('SH%s' % dialect, 'SH%s' % fallback, '%s' % dialect, '%s' % fallback, '_FORTRAND')
++    ShFlagsGen = fVLG('SH%sFLAGS' % dialect, 'SH%sFLAGS' % fallback)
++    ShComGen = fVLG('SH%sCOM' % dialect, 'SH%sCOM' % fallback, '_SH%sCOMD' % dialect)
++    ShComStrGen = fVLG('SH%sCOMSTR' % dialect, 'SH%sCOMSTR' % fallback, '_SH%sCOMSTRD' % dialect)
++    ShPPComGen = fVLG('SH%sPPCOM' % dialect, 'SH%sPPCOM' % fallback, '_SH%sPPCOMD' % dialect)
++    ShPPComStrGen = fVLG('SH%sPPCOMSTR' % dialect, 'SH%sPPCOMSTR' % fallback, '_SH%sPPCOMSTRD' % dialect)
++
++    return CompGen, FlagsGen, ComGen, ComStrGen, PPComGen, PPComStrGen, \
++           ShCompGen, ShFlagsGen, ShComGen, ShComStrGen, ShPPComGen, \
++           ShPPComStrGen
+
+=== modified file 'src/engine/SCons/Tool/f77.py'
+--- src/engine/SCons/Tool/f77.py	2008-02-28 05:59:10 +0000
++++ src/engine/SCons/Tool/f77.py	2008-02-28 06:35:41 +0000
+@@ -40,7 +40,7 @@
+ import fortran
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     VariableListGenerator as fVLG
++                                     CreateDialectGenerator
+ 
+ compilers = ['f77']
+ 
+@@ -57,20 +57,10 @@
+ del suffix
+ 
+ #
+-F77Generator = fVLG('F77', 'FORTRAN', '_FORTRAND')
+-F77FlagsGenerator = fVLG('F77FLAGS', 'FORTRANFLAGS')
+-F77CommandGenerator = fVLG('F77COM', 'FORTRANCOM', '_F77COMD')
+-F77CommandStrGenerator = fVLG('F77COMSTR', 'FORTRANCOMSTR', '_F77COMSTRD')
+-F77PPCommandGenerator = fVLG('F77PPCOM', 'FORTRANPPCOM', '_F77PPCOMD')
+-F77PPCommandStrGenerator = fVLG('F77PPCOMSTR', 'FORTRANPPCOMSTR', '_F77PPCOMSTRD')
+-ShF77Generator = fVLG('SHF77', 'SHFORTRAN', 'F77', 'FORTRAN', '_FORTRAND')
+-ShF77FlagsGenerator = fVLG('SHF77FLAGS', 'SHFORTRANFLAGS')
+-ShF77CommandGenerator = fVLG('SHF77COM', 'SHFORTRANCOM', '_SHF77COMD')
+-ShF77CommandStrGenerator = fVLG('SHF77COMSTR', 'SHFORTRANCOMSTR', '_SHF77COMSTRD')
+-ShF77PPCommandGenerator = fVLG('SHF77PPCOM', 'SHFORTRANPPCOM', '_SHF77PPCOMD')
+-ShF77PPCommandStrGenerator = fVLG('SHF77PPCOMSTR', 'SHFORTRANPPCOMSTR', '_SHF77PPCOMSTRD')
+-
+-del fVLG
++F77Gen, F77FlagsGen, F77ComGen, F77ComStrGen, F77PPComGen, \
++F77PPComStrGen, ShF77Gen, ShF77FlagsGen, ShF77ComGen, \
++ShF77ComStrGen, ShF77PPComGen, ShF77PPComStrGen = \
++    CreateDialectGenerator("F77", "FORTRAN", "_FORTRAND")
+ 
+ #
+ F77Action = SCons.Action.Action('$_F77COMG ', '$_F77COMSTRG')
+@@ -96,19 +86,19 @@
+         static_obj.add_emitter(suffix, FortranEmitter)
+         shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+-    env['_F77G']            = F77Generator
+-    env['_F77FLAGSG']       = F77FlagsGenerator
+-    env['_F77COMG']         = F77CommandGenerator
+-    env['_F77PPCOMG']       = F77PPCommandGenerator
+-    env['_F77COMSTRG']      = F77CommandStrGenerator
+-    env['_F77PPCOMSTRG']    = F77PPCommandStrGenerator
++    env['_F77G']            = F77Gen
++    env['_F77FLAGSG']       = F77FlagsGen
++    env['_F77COMG']         = F77ComGen
++    env['_F77PPCOMG']       = F77PPComGen
++    env['_F77COMSTRG']      = F77ComStrGen
++    env['_F77PPCOMSTRG']    = F77PPComStrGen
+ 
+-    env['_SHF77G']          = ShF77Generator
+-    env['_SHF77FLAGSG']     = ShF77FlagsGenerator
+-    env['_SHF77COMG']       = ShF77CommandGenerator
+-    env['_SHF77PPCOMG']     = ShF77PPCommandGenerator
+-    env['_SHF77COMSTRG']    = ShF77CommandStrGenerator
+-    env['_SHF77PPCOMSTRG']  = ShF77PPCommandStrGenerator
++    env['_SHF77G']          = ShF77Gen
++    env['_SHF77FLAGSG']     = ShF77FlagsGen
++    env['_SHF77COMG']       = ShF77ComGen
++    env['_SHF77PPCOMG']     = ShF77PPComGen
++    env['_SHF77COMSTRG']    = ShF77ComStrGen
++    env['_SHF77PPCOMSTRG']  = ShF77PPComStrGen
+ 
+     env['_F77INCFLAGS'] = '$( ${_concat(INCPREFIX, F77PATH, INCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)'
+ 
+
+=== modified file 'src/engine/SCons/Tool/f90.py'
+--- src/engine/SCons/Tool/f90.py	2008-02-28 05:59:10 +0000
++++ src/engine/SCons/Tool/f90.py	2008-02-28 06:35:48 +0000
+@@ -40,7 +40,7 @@
+ import fortran
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     VariableListGenerator as fVLG
++                                     CreateDialectGenerator
+ 
+ compilers = ['f90']
+ 
+@@ -57,20 +57,10 @@
+ del suffix
+ 
+ #
+-F90Generator = fVLG('F90', 'FORTRAN', '_FORTRAND')
+-F90FlagsGenerator = fVLG('F90FLAGS', 'FORTRANFLAGS')
+-F90CommandGenerator = fVLG('F90COM', 'FORTRANCOM', '_F90COMD')
+-F90CommandStrGenerator = fVLG('F90COMSTR', 'FORTRANCOMSTR', '_F90COMSTRD')
+-F90PPCommandGenerator = fVLG('F90PPCOM', 'FORTRANPPCOM', '_F90PPCOMD')
+-F90PPCommandStrGenerator = fVLG('F90PPCOMSTR', 'FORTRANPPCOMSTR', '_F90PPCOMSTRD')
+-ShF90Generator = fVLG('SHF90', 'SHFORTRAN', 'F90', 'FORTRAN', '_FORTRAND')
+-ShF90FlagsGenerator = fVLG('SHF90FLAGS', 'SHFORTRANFLAGS')
+-ShF90CommandGenerator = fVLG('SHF90COM', 'SHFORTRANCOM', '_SHF90COMD')
+-ShF90CommandStrGenerator = fVLG('SHF90COMSTR', 'SHFORTRANCOMSTR', '_SHF90COMSTRD')
+-ShF90PPCommandGenerator = fVLG('SHF90PPCOM', 'SHFORTRANPPCOM', '_SHF90PPCOMD')
+-ShF90PPCommandStrGenerator = fVLG('SHF90PPCOMSTR', 'SHFORTRANPPCOMSTR', '_SHF90PPCOMSTRD')
+-
+-del fVLG
++F90Gen, F90FlagsGen, F90ComGen, F90ComStrGen, F90PPComGen, \
++F90PPComStrGen, ShF90Gen, ShF90FlagsGen, ShF90ComGen, \
++ShF90ComStrGen, ShF90PPComGen, ShF90PPComStrGen = \
++    CreateDialectGenerator("F90", "FORTRAN", "_F90D")
+ 
+ #
+ F90Action = SCons.Action.Action('$_F90COMG ', '$_F90COMSTRG')
+@@ -96,19 +86,19 @@
+         static_obj.add_emitter(suffix, FortranEmitter)
+         shared_obj.add_emitter(suffix, ShFortranEmitter)
+   
+-    env['_F90G']            = F90Generator
+-    env['_F90FLAGSG']       = F90FlagsGenerator
+-    env['_F90COMG']         = F90CommandGenerator
+-    env['_F90COMSTRG']      = F90CommandStrGenerator
+-    env['_F90PPCOMG']       = F90PPCommandGenerator
+-    env['_F90PPCOMSTRG']    = F90PPCommandStrGenerator
++    env['_F90G']            = F90Gen
++    env['_F90FLAGSG']       = F90FlagsGen
++    env['_F90COMG']         = F90ComGen
++    env['_F90COMSTRG']      = F90ComStrGen
++    env['_F90PPCOMG']       = F90PPComGen
++    env['_F90PPCOMSTRG']    = F90PPComStrGen
+ 
+-    env['_SHF90G']          = ShF90Generator
+-    env['_SHF90FLAGSG']     = ShF90FlagsGenerator
+-    env['_SHF90COMG']       = ShF90CommandGenerator
+-    env['_SHF90COMSTRG']    = ShF90CommandStrGenerator
+-    env['_SHF90PPCOMG']     = ShF90PPCommandGenerator
+-    env['_SHF90PPCOMSTRG']  = ShF90PPCommandStrGenerator
++    env['_SHF90G']          = ShF90Gen
++    env['_SHF90FLAGSG']     = ShF90FlagsGen
++    env['_SHF90COMG']       = ShF90ComGen
++    env['_SHF90COMSTRG']    = ShF90ComStrGen
++    env['_SHF90PPCOMG']     = ShF90PPComGen
++    env['_SHF90PPCOMSTRG']  = ShF90PPComStrGen
+ 
+     env['_F90INCFLAGS'] = '$( ${_concat(INCPREFIX, F90PATH, INCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)'
+     env['_F90COMD']     = '$_F90G -o $TARGET -c $_F90FLAGSG $_F90INCFLAGS $_FORTRANMODFLAG $SOURCES'
+
+=== modified file 'src/engine/SCons/Tool/f95.py'
+--- src/engine/SCons/Tool/f95.py	2008-02-28 05:59:10 +0000
++++ src/engine/SCons/Tool/f95.py	2008-02-28 06:35:53 +0000
+@@ -39,7 +39,7 @@
+ import fortran
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     VariableListGenerator as fVLG
++                                     CreateDialectGenerator
+ 
+ compilers = ['f95']
+ 
+@@ -56,20 +56,10 @@
+ del suffix
+ 
+ #
+-F95Generator = fVLG('F95', 'FORTRAN', '_FORTRAND')
+-F95FlagsGenerator = fVLG('F95FLAGS', 'FORTRANFLAGS')
+-F95CommandGenerator = fVLG('F95COM', 'FORTRANCOM', '_F95COMD')
+-F95CommandStrGenerator = fVLG('F95COMSTR', 'FORTRANCOMSTR', '_F95COMSTRD')
+-F95PPCommandGenerator = fVLG('F95PPCOM', 'FORTRANPPCOM', '_F95PPCOMD')
+-F95PPCommandStrGenerator = fVLG('F95PPCOMSTR', 'FORTRANPPCOMSTR', '_F95PPCOMSTRD')
+-ShF95Generator = fVLG('SHF95', 'SHFORTRAN', 'F95', 'FORTRAN', '_FORTRAND')
+-ShF95FlagsGenerator = fVLG('SHF95FLAGS', 'SHFORTRANFLAGS')
+-ShF95CommandGenerator = fVLG('SHF95COM', 'SHFORTRANCOM', '_SHF95COMD')
+-ShF95CommandStrGenerator = fVLG('SHF95COMSTR', 'SHFORTRANCOMSTR', '_SHF95COMSTRD')
+-ShF95PPCommandGenerator = fVLG('SHF95PPCOM', 'SHFORTRANPPCOM', '_SHF95PPCOMD')
+-ShF95PPCommandStrGenerator = fVLG('SHF95PPCOMSTR', 'SHFORTRANPPCOMSTR', '_SHF95PPCOMSTRD')
+-
+-del fVLG
++F95Gen, F95FlagsGen, F95ComGen, F95ComStrGen, F95PPComGen, \
++F95PPComStrGen, ShF95Gen, ShF95FlagsGen, ShF95ComGen, \
++ShF95ComStrGen, ShF95PPComGen, ShF95PPComStrGen = \
++    CreateDialectGenerator("F95", "FORTRAN", "_F95D")
+ 
+ #
+ F95Action = SCons.Action.Action('$_F95COMG ', '$_F95COMSTRG')
+@@ -95,19 +85,19 @@
+         static_obj.add_emitter(suffix, FortranEmitter)
+         shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+-    env['_F95G']           = F95Generator
+-    env['_F95FLAGSG']      = F95FlagsGenerator
+-    env['_F95COMG']        = F95CommandGenerator
+-    env['_F95COMSTRG']     = F95CommandStrGenerator
+-    env['_F95PPCOMG']      = F95PPCommandGenerator
+-    env['_F95PPCOMSTRG']   = F95PPCommandStrGenerator
++    env['_F95G']           = F95Gen
++    env['_F95FLAGSG']      = F95FlagsGen
++    env['_F95COMG']        = F95ComGen
++    env['_F95COMSTRG']     = F95ComStrGen
++    env['_F95PPCOMG']      = F95PPComGen
++    env['_F95PPCOMSTRG']   = F95PPComStrGen
+ 
+-    env['_SHF95G']         = ShF95Generator
+-    env['_SHF95FLAGSG']    = ShF95FlagsGenerator
+-    env['_SHF95COMG']      = ShF95CommandGenerator
+-    env['_SHF95COMSTRG']   = ShF95CommandStrGenerator
+-    env['_SHF95PPCOMG']    = ShF95PPCommandGenerator
+-    env['_SHF95PPCOMSTRG'] = ShF95PPCommandStrGenerator
++    env['_SHF95G']         = ShF95Gen
++    env['_SHF95FLAGSG']    = ShF95FlagsGen
++    env['_SHF95COMG']      = ShF95ComGen
++    env['_SHF95COMSTRG']   = ShF95ComStrGen
++    env['_SHF95PPCOMG']    = ShF95PPComGen
++    env['_SHF95PPCOMSTRG'] = ShF95PPComStrGen
+ 
+     env['_F95INCFLAGS'] = '$( ${_concat(INCPREFIX, F95PATH, INCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)'
+ 
+
+=== modified file 'src/engine/SCons/Tool/fortran.py'
+--- src/engine/SCons/Tool/fortran.py	2008-02-28 05:59:10 +0000
++++ src/engine/SCons/Tool/fortran.py	2008-02-28 06:35:33 +0000
+@@ -43,7 +43,7 @@
+ import SCons.Util
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     VariableListGenerator
++                                     CreateDialectGenerator
+ 
+ compilers = ['f95', 'f90', 'f77']
+ 
+@@ -65,18 +65,10 @@
+ del suffix
+ 
+ #
+-FortranGenerator = VariableListGenerator('FORTRAN', 'F77', '_FORTRAND')
+-FortranFlagsGenerator = VariableListGenerator('FORTRANFLAGS', 'F77FLAGS')
+-FortranCommandGenerator = VariableListGenerator('FORTRANCOM', 'F77COM', '_FORTRANCOMD')
+-FortranCommandStrGenerator = VariableListGenerator('FORTRANCOMSTR', 'F77COMSTR', '_FORTRANCOMSTRD')
+-FortranPPCommandGenerator = VariableListGenerator('FORTRANPPCOM', 'F77PPCOM', '_FORTRANPPCOMD')
+-FortranPPCommandStrGenerator = VariableListGenerator('FORTRANPPCOMSTR', 'F77PPCOMSTR', '_FORTRANPPCOMSTRD')
+-ShFortranGenerator = VariableListGenerator('SHFORTRAN', 'SHF77', 'FORTRAN', 'F77', '_FORTRAND')
+-ShFortranFlagsGenerator = VariableListGenerator('SHFORTRANFLAGS', 'SHF77FLAGS')
+-ShFortranCommandGenerator = VariableListGenerator('SHFORTRANCOM', 'SHF77COM', '_SHFORTRANCOMD')
+-ShFortranCommandStrGenerator = VariableListGenerator('SHFORTRANCOMSTR', 'SHF77COMSTR', '_SHFORTRANCOMSTRD')
+-ShFortranPPCommandGenerator = VariableListGenerator('SHFORTRANPPCOM', 'SHF77PPCOM', '_SHFORTRANPPCOMD')
+-ShFortranPPCommandStrGenerator = VariableListGenerator('SHFORTRANPPCOMSTR', 'SHF77PPCOMSTR', '_SHFORTRANPPCOMSTRD')
++FortranGen, FortranFlagsGen, FortranComGen, FortranComStrGen, FortranPPComGen, \
++FortranPPComStrGen, ShFortranGen, ShFortranFlagsGen, ShFortranComGen, \
++ShFortranComStrGen, ShFortranPPComGen, ShFortranPPComStrGen = \
++    CreateDialectGenerator("FORTRAN", "F77", "_FORTRAND")
+ 
+ #
+ FortranAction = SCons.Action.Action('$_FORTRANCOMG ', '$_FORTRANCOMSTRG')
+@@ -87,19 +79,19 @@
+ def add_to_env(env):
+     """Add Builders and construction variables for Fortran to an Environment."""
+ 
+-    env['_FORTRANG']            = FortranGenerator
+-    env['_FORTRANFLAGSG']       = FortranFlagsGenerator
+-    env['_FORTRANCOMG']         = FortranCommandGenerator
+-    env['_FORTRANCOMSTRG']      = FortranCommandStrGenerator
+-    env['_FORTRANPPCOMG']       = FortranPPCommandGenerator
+-    env['_FORTRANPPCOMSTRG']    = FortranPPCommandStrGenerator
++    env['_FORTRANG']            = FortranGen
++    env['_FORTRANFLAGSG']       = FortranFlagsGen
++    env['_FORTRANCOMG']         = FortranComGen
++    env['_FORTRANCOMSTRG']      = FortranComStrGen
++    env['_FORTRANPPCOMG']       = FortranPPComGen
++    env['_FORTRANPPCOMSTRG']    = FortranPPComStrGen
+ 
+-    env['_SHFORTRANG']          = ShFortranGenerator
+-    env['_SHFORTRANFLAGSG']     = ShFortranFlagsGenerator
+-    env['_SHFORTRANCOMG']       = ShFortranCommandGenerator
+-    env['_SHFORTRANCOMSTRG']    = ShFortranCommandStrGenerator
+-    env['_SHFORTRANPPCOMG']     = ShFortranPPCommandGenerator
+-    env['_SHFORTRANPPCOMSTRG']  = ShFortranPPCommandStrGenerator
++    env['_SHFORTRANG']          = ShFortranGen
++    env['_SHFORTRANFLAGSG']     = ShFortranFlagsGen
++    env['_SHFORTRANCOMG']       = ShFortranComGen
++    env['_SHFORTRANCOMSTRG']    = ShFortranComStrGen
++    env['_SHFORTRANPPCOMG']     = ShFortranPPComGen
++    env['_SHFORTRANPPCOMSTRG']  = ShFortranPPComStrGen
+ 
+     env['_FORTRANINCFLAGS'] = '$( ${_concat(INCPREFIX, FORTRANPATH, INCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)'
+ 
+
