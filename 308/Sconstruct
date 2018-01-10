@@ -1,0 +1,34 @@
+import os
+
+env_vars = {}
+for ev in ['PATH',  'SYSTEMROOT']:
+    env_vars[ev] = os.environ[ev]
+
+env = Environment(
+  platform='cygwin',
+  tools=['mscs', 'msvs'],
+  toolpath = ['.'],
+  ENV=env_vars,
+  MSVS_IGNORE_IDE_PATHS=1
+  )
+
+
+refpaths = []
+
+refs = Split("""
+  System
+  System.Data
+  System.Xml
+  """)
+
+sources = Split("""
+  AssemblyInfo.cs
+        """)
+
+r = env.CLIRefs(refpaths, refs)
+
+prog = env.CLILibrary('x', sources, ASSEMBLYREFS=r)
+# use the following call to allow programs built after this library to find it
+# without having to add to the refpaths (see next example)
+env.AddToRefPaths(prog)
+##print env.Dump()
