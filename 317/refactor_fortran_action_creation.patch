@@ -1,0 +1,122 @@
+=== modified file 'src/engine/SCons/Tool/FortranCommon.py'
+--- src/engine/SCons/Tool/FortranCommon.py	2008-02-28 06:35:01 +0000
++++ src/engine/SCons/Tool/FortranCommon.py	2008-02-28 06:41:14 +0000
+@@ -113,3 +113,12 @@
+     return CompGen, FlagsGen, ComGen, ComStrGen, PPComGen, PPComStrGen, \
+            ShCompGen, ShFlagsGen, ShComGen, ShComStrGen, ShPPComGen, \
+            ShPPComStrGen
++
++def CreateDialectActions(dialect):
++    """Create dialect specific actions."""
++    CompAction = SCons.Action.Action('$_%sCOMG ' % dialect, '$_%sCOMSTRG' % dialect)
++    CompPPAction = SCons.Action.Action('$_%sPPCOMG ' % dialect, '$_%sPPCOMSTRG' % dialect)
++    ShCompAction = SCons.Action.Action('$_SH%sCOMG ' % dialect, '$_SH%sCOMSTRG' % dialect)
++    ShCompPPAction = SCons.Action.Action('$_SH%sPPCOMG ' % dialect, '$_SH%sPPCOMSTRG' % dialect)
++
++    return CompAction, CompPPAction, ShCompAction, ShCompPPAction
+
+=== modified file 'src/engine/SCons/Tool/f77.py'
+--- src/engine/SCons/Tool/f77.py	2008-02-28 06:35:41 +0000
++++ src/engine/SCons/Tool/f77.py	2008-02-28 06:45:38 +0000
+@@ -40,7 +40,8 @@
+ import fortran
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     CreateDialectGenerator
++                                     CreateDialectGenerator, \
++                                     CreateDialectActions
+ 
+ compilers = ['f77']
+ 
+@@ -63,10 +64,7 @@
+     CreateDialectGenerator("F77", "FORTRAN", "_FORTRAND")
+ 
+ #
+-F77Action = SCons.Action.Action('$_F77COMG ', '$_F77COMSTRG')
+-F77PPAction = SCons.Action.Action('$_F77PPCOMG ', '$_F77PPCOMSTRG')
+-ShF77Action = SCons.Action.Action('$_SHF77COMG ', '$_SHF77COMSTRG')
+-ShF77PPAction = SCons.Action.Action('$_SHF77PPCOMG ', '$_SHF77PPCOMSTRG')
++F77Action, F77PPAction, ShF77Action, ShF77PPAction = CreateDialectActions("F77")
+ 
+ def add_to_env(env):
+     """Add Builders and construction variables for f77 to an Environment."""
+
+=== modified file 'src/engine/SCons/Tool/f90.py'
+--- src/engine/SCons/Tool/f90.py	2008-02-28 06:35:48 +0000
++++ src/engine/SCons/Tool/f90.py	2008-02-28 06:45:38 +0000
+@@ -40,7 +40,8 @@
+ import fortran
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     CreateDialectGenerator
++                                     CreateDialectGenerator, \
++                                     CreateDialectActions
+ 
+ compilers = ['f90']
+ 
+@@ -63,10 +64,7 @@
+     CreateDialectGenerator("F90", "FORTRAN", "_F90D")
+ 
+ #
+-F90Action = SCons.Action.Action('$_F90COMG ', '$_F90COMSTRG')
+-F90PPAction = SCons.Action.Action('$_F90PPCOMG ', '$_F90PPCOMSTRG')
+-ShF90Action = SCons.Action.Action('$_SHF90COMG ', '$_SHF90COMSTRG')
+-ShF90PPAction = SCons.Action.Action('$_SHF90PPCOMG ', '$_SHF90PPCOMSTRG')
++F90Action, F90PPAction, ShF90Action, ShF90PPAction = CreateDialectActions("F90")
+ 
+ def add_to_env(env):
+     """Add Builders and construction variables for f90 to an Environment."""
+
+=== modified file 'src/engine/SCons/Tool/f95.py'
+--- src/engine/SCons/Tool/f95.py	2008-02-28 06:35:53 +0000
++++ src/engine/SCons/Tool/f95.py	2008-02-28 06:45:38 +0000
+@@ -39,7 +39,8 @@
+ import fortran
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     CreateDialectGenerator
++                                     CreateDialectGenerator, \
++                                     CreateDialectActions
+ 
+ compilers = ['f95']
+ 
+@@ -62,10 +63,7 @@
+     CreateDialectGenerator("F95", "FORTRAN", "_F95D")
+ 
+ #
+-F95Action = SCons.Action.Action('$_F95COMG ', '$_F95COMSTRG')
+-F95PPAction = SCons.Action.Action('$_F95PPCOMG ', '$_F95PPCOMSTRG')
+-ShF95Action = SCons.Action.Action('$_SHF95COMG ', '$_SHF95COMSTRG')
+-ShF95PPAction = SCons.Action.Action('$_SHF95PPCOMG ', '$_SHF95PPCOMSTRG')
++F95Action, F95PPAction, ShF95Action, ShF95PPAction = CreateDialectActions("F95")
+ 
+ def add_to_env(env):
+     """Add Builders and construction variables for f95 to an Environment."""
+
+=== modified file 'src/engine/SCons/Tool/fortran.py'
+--- src/engine/SCons/Tool/fortran.py	2008-02-28 06:35:33 +0000
++++ src/engine/SCons/Tool/fortran.py	2008-02-28 06:42:04 +0000
+@@ -43,7 +43,8 @@
+ import SCons.Util
+ from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
+                                      ComputeFortranSuffixes,\
+-                                     CreateDialectGenerator
++                                     CreateDialectGenerator, \
++                                     CreateDialectActions
+ 
+ compilers = ['f95', 'f90', 'f77']
+ 
+@@ -71,10 +72,8 @@
+     CreateDialectGenerator("FORTRAN", "F77", "_FORTRAND")
+ 
+ #
+-FortranAction = SCons.Action.Action('$_FORTRANCOMG ', '$_FORTRANCOMSTRG')
+-FortranPPAction = SCons.Action.Action('$_FORTRANPPCOMG ', '$_FORTRANPPCOMSTRG')
+-ShFortranAction = SCons.Action.Action('$_SHFORTRANCOMG ', '$_SHFORTRANCOMSTRG')
+-ShFortranPPAction = SCons.Action.Action('$_SHFORTRANPPCOMG ', '$_SHFORTRANPPCOMSTRG')
++FortranAction, FortranPPAction, ShFortranAction, ShFortranPPAction = \
++        CreateDialectActions("FORTRAN")
+ 
+ def add_to_env(env):
+     """Add Builders and construction variables for Fortran to an Environment."""
+
