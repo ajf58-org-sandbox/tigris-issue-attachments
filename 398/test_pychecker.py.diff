@@ -1,0 +1,138 @@
+--- src/test_pycheckerORIG.py	2007-05-17 09:50:20.000000000 -0700
++++ src/test_pychecker.py	2008-04-30 14:25:22.000000000 -0700
+@@ -37,7 +37,7 @@
+ 
+ test = TestSCons.TestSCons()
+ 
+-test.skip_test('Not ready for clean pychecker output; skipping test.\n')
++#test.skip_test('Not ready for clean pychecker output; skipping test.\n')
+ 
+ try:
+     import pychecker
+@@ -113,29 +113,117 @@
+ 
+ os.environ['PYTHONPATH'] = src_engine
+ 
++class _Processor():  ## (object)
++    '''Processor to handle suppression of OK'd PyChecker
++       warning messages, marked as OK in the source code.
++
++       Adapted from Python Cookbook recipe at ActiveState
++       <http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/546532>.
++    '''
++    _name = ''  # source file name
++    _code = []  # source code lines
++    _dirs = ()  # source file directories
++    dbg   = 0   # debug print
++    OK    = '#PYCHECKER '  # source marker
++    OKd   = True  # print OK'd warnings
++
++    def __init__(self, *dirs):
++        self._dirs = dirs
++
++    def debugf(self, fmt, *args):
++        '''Debug print.
++        '''
++        if self.dbg:
++            f = 'DEBUG ' + fmt
++            if args:
++                print(f % args)
++            else:
++                print(f)
++
++    def get(self, name):
++        '''Get source code for given file.
++        '''
++        self._code = []
++        self._name = name
++        if name[-3:] == '.py':  ## name.endswith('.py')
++            self.debugf('looking for file: %s', name)
++            if os.path.isabs(name):
++                 # assert(is.path.join('', name) == name)
++                ds = ('',)
++            else:
++                ds = self._dirs
++            for d in ds:  # find file
++                try:
++                    t = os.path.join(d, name)
++                    f = open(t, 'r')
++                    s = f.readlines()
++                    f.close()
++                    self.debugf('found file: %s (%s lines)', t, len(s))
++                    self._code = s
++                    break
++                except (IOError, OSError):
++                    pass
++            else:
++                self.debugf('file not found: %s', name)
++
++    def isOK(self, name, line):
++        '''Check whether source line is marked.
++        '''
++        if name != self._name:
++            self.get(name)
++        try:  # get source line
++            s = self._code[int(line) - 1]
++            p = string.find(s, self.OK)
++            if p > 0:  # line OK'd
++                return string.rstrip(s[p:])
++        except (ValueError, IndexError):
++            self.debugf('no line %s in file: %s', line, self._name)
++        return ''  # not OK'd, not found, etc.
++
++    def process(self, output, *removes):
++        '''Process output, passed as single string.
++        '''
++        ms = []  # non-OK'd warning messages
++        for m in string.split(output, os.linesep):  # process each message
++            m = string.rstrip(m)
++            if m:  # only non-blank message
++                s, ok = string.split(m, ':', 2), ''
++                if len(s) > 2:  # file name, line number, rest
++                    if s[1] and s[1][0] in string.digits:  ## s[1].isdigit()
++                        ok = self.isOK(s[0], s[1])
++                for r in removes:
++                    m = string.replace(m, r, '')
++                if not ok:
++                    ms.append(m)
++                elif self.OKd:
++                    print('%s - %s' % (m, ok))
++        return string.join(ms, os.linesep)  # as string
++
+ for file in files:
+ 
+     file = os.path.join(src_engine, file)
+     args = default_arguments + per_file_arguments.get(file, []) + [file]
++    post = _Processor(src_engine, '.')
+ 
+     test.run(program=program, arguments=args, status=None, stderr=None)
+ 
+-    stdout = test.stdout()
+-    stdout = string.replace(stdout, src_engine_, '')
++    stdout = post.process(test.stdout(), src_engine_)
+ 
+-    stderr = test.stderr()
+-    stderr = string.replace(stderr, src_engine_, '')
+-    stderr = string.replace(stderr, pywintypes_warning, '')
++    stderr = string.replace(test.stderr(), pywintypes_warning, '')
++    stderr = post.process(stderr, src_engine_)
+ 
+     if test.status or stdout or stderr:
+-        mismatches.append('\n')
+-        mismatches.append(string.join([program] + args) + '\n')
++        mismatches.append(os.linesep)
++        mismatches.append(string.join([program] + args))
++        mismatches.append(os.linesep)
+ 
+-        mismatches.append('STDOUT =====================================\n')
++        mismatches.append('STDOUT =====================================')
++        mismatches.append(os.linesep)
+         mismatches.append(stdout)
+ 
+         if stderr:
+-            mismatches.append('STDERR =====================================\n')
++            mismatches.append('STDERR =====================================')
++            mismatches.append(os.linesep)
+             mismatches.append(stderr)
+ 
+ if mismatches:
