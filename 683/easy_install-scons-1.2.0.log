@@ -1,0 +1,37 @@
+C:\~env>python -m easy_install scons
+Searching for scons
+Reading http://pypi.python.org/simple/scons/
+Reading http://www.scons.org/
+Reading http://www.scons.org
+Best match: scons 1.2.0
+Downloading http://prdownloads.sourceforge.net/scons/scons-1.2.0.win32.exe
+Processing scons-1.2.0.win32.exe
+scons-1.2.0.SCons.compat.__init__: module references __file__
+scons-1.2.0.SCons.Platform.__init__: module references __path__
+scons-1.2.0.SCons.Script.SConscript: module references __file__
+scons-1.2.0.SCons.Tool.__init__: module references __path__
+scons-1.2.0.SCons.Tool.packaging.__init__: module references __path__
+creating 'c:\users\user\appdata\local\temp\easy_install-fjvulx\scons-1.2.0-py2.6-win32.egg' and adding
+lx\scons-1.2.0-py2.6-win32.egg.tmp' to it
+creating c:\~env\python26\lib\site-packages\scons-1.2.0-py2.6-win32.egg
+Extracting scons-1.2.0-py2.6-win32.egg to c:\~env\python26\lib\site-packages
+Adding scons 1.2.0 to easy-install.pth file
+Installing scons script to C:\~env\Python26\Scripts
+Installing scons-1.2.0 script to C:\~env\Python26\Scripts
+Installing scons-1.2.0.bat script to C:\~env\Python26\Scripts
+Installing scons-time script to C:\~env\Python26\Scripts
+Installing scons-time-1.2.0 script to C:\~env\Python26\Scripts
+Installing scons.bat script to C:\~env\Python26\Scripts
+Installing sconsign script to C:\~env\Python26\Scripts
+Installing sconsign-1.2.0 script to C:\~env\Python26\Scripts
+
+Installed c:\~env\python26\lib\site-packages\scons-1.2.0-py2.6-win32.egg
+Processing dependencies for scons
+Finished processing dependencies for scons
+
+...
+
+C:\~env\Python26\Scripts>scons.bat
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: No module named SCons.Script
