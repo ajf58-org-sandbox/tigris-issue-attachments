@@ -1,0 +1,13 @@
+Index: scons-1.0.1/engine/SCons/Tool/javac.py
+===================================================================
+--- scons-1.0.1.orig/engine/SCons/Tool/javac.py	2008-09-16 23:01:58.021175217 +0200
++++ scons-1.0.1/engine/SCons/Tool/javac.py	2008-09-16 23:02:27.242837126 +0200
+@@ -94,6 +94,8 @@
+     version = env.get('JAVAVERSION', '1.4')
+     full_tlist = []
+     for f in slist:
++        if not os.path.exists(f.rfile().get_abspath()):
++            continue
+         tlist = []
+         source_file_based = True
+         pkg_dir = None
