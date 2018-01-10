@@ -1,0 +1,15 @@
+import glob
+
+env = Environment(CXXFLAGS='-D_FILE_OFFSET_BITS=64')
+
+src = glob.glob('*.cc')
+print src
+
+exclude = Split('Heap.cc HeapFactory.cc Memory.cc')
+
+print exclude
+
+src = [x for x in src if x not in exclude]
+
+
+env.SharedLibrary('crsutil', src)
