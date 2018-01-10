@@ -1,0 +1,137 @@
+Index: src/engine/SCons/compat/_scons_itertools.py
+===================================================================
+--- src/engine/SCons/compat/_scons_itertools.py	(revision 0)
++++ src/engine/SCons/compat/_scons_itertools.py	(revision 0)
+@@ -0,0 +1,101 @@
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++__doc__ = """
++Implementations of itertools functions for Python versions that don't
++have iterators.
++"""
++
++def chain(*iterables):
++    result = []
++    for x in iterables:
++        result.extend(list(x))
++    return result
++
++def count(n=0):
++    # returns infinite length, should not be supported
++    raise NotImplementedError
++
++def cycle(iterable):
++    # returns infinite length, should not be supported
++    raise NotImplementedError
++
++def dropwhile(predicate, iterable):
++    result = []
++    for x in iterable:
++        if not predicate(x):
++            result.append(x)
++            break
++    result.extend(iterable)
++    return result
++
++def groupby(iterable, *args):
++    raise NotImplementedError
++
++def ifilter(predicate, iterable):
++    result = []
++    if predicate is None:
++        predicate = bool
++    for x in iterable:
++        if predicate(x):
++            result.append(x)
++    return result
++
++def ifilterfalse(predicate, iterable):
++    result = []
++    if predicate is None:
++        predicate = bool
++    for x in iterable:
++        if not predicate(x):
++            result.append(x)
++    return result
++
++def imap(function, *iterables):
++    return apply(map, (function,) + tuple(iterables))
++
++def islice(*args, **kw):
++    raise NotImplementedError
++
++def izip(*iterables):
++    return apply(zip, iterables)
++
++def repeat(*args, **kw):
++    # returns infinite length, should not be supported
++    raise NotImplementedError
++
++def starmap(*args, **kw):
++    raise NotImplementedError
++
++def takewhile(predicate, iterable):
++    result = []
++    for x in iterable:
++        if predicate(x):
++            result.append(x)
++        else:
++            break
++    return result
++
++def tee(*args, **kw):
++    raise NotImplementedError
+Index: src/engine/SCons/compat/__init__.py
+===================================================================
+--- src/engine/SCons/compat/__init__.py	(revision 2714)
++++ src/engine/SCons/compat/__init__.py	(working copy)
+@@ -138,8 +138,13 @@
+         return result
+     fnmatch.filter = filter
+     del filter
+-   
+ 
++try:
++    import itertools
++except ImportError:
++    # Pre-2.3 Python has no itertools module.
++    import_as('_scons_itertools', 'itertools')
++
+ # If we need the compatibility version of textwrap, it  must be imported
+ # before optparse, which uses it.
+ try:
+Index: src/engine/MANIFEST.in
+===================================================================
+--- src/engine/MANIFEST.in	(revision 2714)
++++ src/engine/MANIFEST.in	(working copy)
+@@ -3,6 +3,7 @@
+ SCons/Builder.py
+ SCons/compat/__init__.py
+ SCons/compat/_scons_hashlib.py
++SCons/compat/_scons_itertools.py
+ SCons/compat/_scons_optparse.py
+ SCons/compat/_scons_sets.py
+ SCons/compat/_scons_sets15.py
