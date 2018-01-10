@@ -1,0 +1,15 @@
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 3233)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -184,8 +184,8 @@
+ 
+     memoizer_counters = []
+ 
+-    class Attrs:
+-        pass
++    class Attrs(object):
++        __slots__ = ('shared', '__dict__')
+ 
+     def __init__(self):
+         if __debug__: logInstanceCreation(self, 'Node.Node')
