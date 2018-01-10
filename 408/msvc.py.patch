@@ -1,0 +1,47 @@
+Index: msvc.py
+===================================================================
+--- msvc.py	(revision 2943)
++++ msvc.py	(working copy)
+@@ -218,23 +218,37 @@
+                             elif property_name.value == 'IncludeDirectories':
+                                 include_dirs = property.childNodes[0].data
+                                 # ToDo: Support for other destinations than Win32
+-                                include_dirs = include_dirs.replace('Win32|', '')
++                                include_dirs = _get_settings_by_key('Win32', include_dirs)
+                                 dirs['INCLUDE'] = include_dirs
+                             elif property_name.value == 'LibraryDirectories':
+-                                lib_dirs = property.childNodes[0].data.replace('Win32|', '')
++                                lib_dirs = property.childNodes[0].data
+                                 # ToDo: Support for other destinations than Win32
+-                                lib_dirs = lib_dirs.replace('Win32|', '')
++                                lib_dirs = _get_settings_by_key('Win32', lib_dirs)
+                                 dirs['LIBRARY'] = lib_dirs
+                             elif property_name.value == 'ExecutableDirectories':
+-                                path_dirs = property.childNodes[0].data.replace('Win32|', '')
++                                path_dirs = property.childNodes[0].data
+                                 # ToDo: Support for other destinations than Win32
+-                                path_dirs = path_dirs.replace('Win32|', '')
++                                path_dirs = _get_settings_by_key('Win32', path_dirs)
+                                 dirs['PATH'] = path_dirs
+     else:
+         # There are no default directories in the registry for VS8 Express :(
+         raise SCons.Errors.InternalError, "Unable to find MSVC paths in the registry."
+     return dirs
+ 
++def _get_settings_by_key(key, settings, separator='|'):
++    """
++    Get settings matching a key in a string delimited by a separator for example:
++    'key1|value1|key2|value2|key3|value3|key4|value4'
++    """
++
++    key_index = 0
++    mixedlist = settings.split(separator)
++    while key_index+1 < len(mixedlist):
++        if key == mixedlist[key_index]:
++            return mixedlist[key_index+1]
++        key_index += 2
++    return ''
++
+ def _get_msvc7_path(path, version, platform):
+     """
+     Get Visual Studio directories from version 7 (MSVS .NET)
