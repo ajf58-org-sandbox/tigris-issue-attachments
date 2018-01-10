@@ -1,0 +1,5 @@
+env    = Environment()
+config = Configure (env)
+
+config.CheckFunc ('xyz')
+config.CheckFunc ('fopen')
