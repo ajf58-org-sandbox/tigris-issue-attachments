@@ -1,0 +1,18 @@
+Index: src/engine/SCons/Tool/g++.py
+===================================================================
+*** src/engine/SCons/Tool/g++.py	(revision 3216)
+--- src/engine/SCons/Tool/g++.py	(working copy)
+***************
+*** 61,66 ****
+--- 61,71 ----
+          env['SHOBJSUFFIX'] = '.pic.o'
+      elif env['PLATFORM'] == 'sunos':
+          env['SHOBJSUFFIX'] = '.pic.o'
++     elif env['PLATFORM'] in ['cygwin', 'win32']:
++         env['SHCXXFLAGS'] = SCons.Util.CLVar('$CXXFLAGS')
++     else:
++         env['SHCXXFLAGS'] = SCons.Util.CLVar('$CXXFLAGS -fPIC')
++     
+      # determine compiler version
+      if env['CXX']:
+          line = os.popen(env['CXX'] + ' --version').readline()
