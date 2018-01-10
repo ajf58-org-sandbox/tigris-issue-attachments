@@ -1,0 +1,24 @@
+--- ./Debug0.98.0.py	2008-03-31 12:52:11.000000000 -0700
++++ ./Debug.py	2008-04-08 07:43:57.000000000 -0700
+@@ -89,12 +89,20 @@
+ 
+ 
+ 
+-if sys.platform[:5] == "linux":
++if sys.platform[:5] == 'linux':
+     # Linux doesn't actually support memory usage stats from getrusage().
+     def memory():
+         mstr = open('/proc/self/stat').read()
+         mstr = string.split(mstr)[22]
+         return int(mstr)
++
++elif sys.platform[:6] == 'darwin' or sys.platform[:5] == 'sunos':
++    def memory():  # use ps command
++        mstr = os.popen('/bin/ps -p $$ -o vsz=').read()  # XXX or rss=?
++        mstr = string.strip(mstr)
++        if 0 < len(mstr) < 9:
++            return int(mstr) * 1024  # KB
++        return 0
+ else:
+     try:
+         import resource
