@@ -1,0 +1,60 @@
+file C:\Daten\DEVEL\sourcecode-cd\OSI\gen_updatedb\win32-cl-7.1\ReleaseStatic\SConstruct,line 2:
+	Configure(confdir = .sconf_temp)
+scons: Configure: Checking for C function xyz()... 
+scons: Configure: ".sconf_temp\conftest_0.c" is up to date.
+scons: Configure: The original builder output was:
+  |.sconf_temp\conftest_0.c <-
+  |  |
+  |  |
+  |  |#include <assert.h>
+  |  |
+  |  |#ifdef __cplusplus
+  |  |extern "C"
+  |  |#endif
+  |  |char xyz();
+  |  |
+  |  |int main() {
+  |  |#if defined (__stub_xyz) || defined (__stub___xyz)
+  |  |  fail fail fail
+  |  |#else
+  |  |  xyz();
+  |  |#endif
+  |  |
+  |  |  return 0;
+  |  |}
+  |  |
+  |
+cl /nologo /c .sconf_temp\conftest_0.c /Fo.sconf_temp\conftest_0.obj
+conftest_0.c
+c1 : fatal error C1083: Datei (Quelle) kann nicht ge”ffnet werden: ".sconf_temp\conftest_0.c": No such file or directory
+scons: Configure: no
+
+scons: Configure: Checking for C function fopen()... 
+scons: Configure: ".sconf_temp\conftest_1.c" is up to date.
+scons: Configure: The original builder output was:
+  |.sconf_temp\conftest_1.c <-
+  |  |
+  |  |
+  |  |#include <assert.h>
+  |  |
+  |  |#ifdef __cplusplus
+  |  |extern "C"
+  |  |#endif
+  |  |char fopen();
+  |  |
+  |  |int main() {
+  |  |#if defined (__stub_fopen) || defined (__stub___fopen)
+  |  |  fail fail fail
+  |  |#else
+  |  |  fopen();
+  |  |#endif
+  |  |
+  |  |  return 0;
+  |  |}
+  |  |
+  |
+cl /nologo /c .sconf_temp\conftest_1.c /Fo.sconf_temp\conftest_1.obj
+conftest_1.c
+c1 : fatal error C1083: Datei (Quelle) kann nicht ge”ffnet werden: ".sconf_temp\conftest_1.c": No such file or directory
+scons: Configure: no
+
