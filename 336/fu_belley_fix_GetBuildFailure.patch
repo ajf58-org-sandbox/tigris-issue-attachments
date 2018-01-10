@@ -1,0 +1,892 @@
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/Action.py
+--- a/src/engine/SCons/Action.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/Action.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -832,31 +832,38 @@ class FunctionAction(_ActionAction):
+         return "%s(target, source, env)" % name
+ 
+     def execute(self, target, source, env):
+-        rsources = map(rfile, source)
++        exc_info = (None,None,None)
+         try:
+-            result = self.execfunction(target=target, source=rsources, env=env)
+-        except EnvironmentError, e:
+-            # If an IOError/OSError happens, raise a BuildError.
+-            # Report the name of the file or directory that caused the
+-            # error, which might be different from the target being built
+-            # (for example, failure to create the directory in which the
+-            # target file will appear).
+-            try: filename = e.filename
+-            except AttributeError: filename = None
+-            result = SCons.Errors.BuildError(node=target,
+-                                             errstr=e.strerror,
+-                                             status=1,
+-                                             filename=filename,
+-                                             action=self,
+-                                             command=self.strfunction(target, source, env))
+-        else:
++            rsources = map(rfile, source)
++            try:
++                result = self.execfunction(target=target, source=rsources, env=env)
++            except Exception, e:
++                result = e
++                exc_info = sys.exc_info()
++
+             if result:
+-                msg = "Error %s" % result
+-                result = SCons.Errors.BuildError(errstr=msg,
+-                                                 status=result,
+-                                                 action=self,
+-                                                 command=self.strfunction(target, source, env))
+-        return result
++                result = SCons.Errors.convert_to_BuildError(result, exc_info)
++                result.node=target
++                result.action=self
++                result.command=self.strfunction(target, source, env)
++
++                # FIXME: This maintains backward compatibility with respect to
++                # which type of exception where returned by raising an
++                # exception and which one where returned by value. It would
++                # probably be best to always returned them by value here, but
++                # some code do not check the return value of Actions and I do
++                # not have the time to modify them at this point.
++                if (exc_info[1] and 
++                    not isinstance(exc_info[1],EnvironmentError)):
++                    raise result
++
++            return result
++        finally:
++            # Break the cycle between the traceback object and this
++            # fuction stack frame. See the sys.exc_info() doc info for
++            # more information about this issue.
++            del exc_info
++
+ 
+     def get_contents(self, target, source, env):
+         """Return the signature contents of this callable action."""
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/CacheDirTests.py
+--- a/src/engine/SCons/CacheDirTests.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/CacheDirTests.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -241,7 +241,8 @@ class FileTestCase(BaseTestCase):
+             warn_caught = 0
+             try:
+                 f7.built()
+-            except SCons.Warnings.CacheWriteErrorWarning:
++            except SCons.Errors.BuildError, e:
++                assert e.exc_info[0] == SCons.Warnings.CacheWriteErrorWarning
+                 warn_caught = 1
+             assert warn_caught
+         finally:
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/Errors.py
+--- a/src/engine/SCons/Errors.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/Errors.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -30,20 +30,78 @@ and user errors in SCons.
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
++import SCons.Util
+ 
++import exceptions
+ 
+ class BuildError(Exception):
+-    def __init__(self, node=None, errstr="Unknown error", status=0,
+-                       filename=None, executor=None, action=None, command=None,
+-                       *args):
+-        self.node = node
++    """ Errors occuring while building.
++
++    BuildError have the following attributes:
++
++        Information about the cause of the build error:
++        -----------------------------------------------
++
++        errstr : a description of the error message
++
++        status : the return code of the action that caused the build
++                 error. Must be set to a non-zero value even if the
++                 build error is not due to an action returning a
++                 non-zero returned code.
++
++        filename : The name of the file or directory that caused the
++                   build error. Set to None if no files are associated with
++                   this error. This might be different from the target
++                   being built. For example, failure to create the
++                   directory in which the target file will appear. It
++                   can be None if the error is not due to a particular
++                   filename.
++
++        exc_info : Info about exception that caused the build
++                   error. Set to (None, None, None) if this build
++                   error is not due to an exception.
++
++
++        Information about the cause of the location of the error:
++        ---------------------------------------------------------
++
++        node : the error occured while building this target node(s)
++        
++        executor : the executor that caused the build to fail (might
++                   be None if the build failures is not due to the
++                   executor failing)
++        
++        action : the action that caused the build to fail (might be
++                 None if the build failures is not due to the an
++                 action failure)
++
++        command : the command line for the action that caused the
++                  build to fail (might be None if the build failures
++                  is not due to the an action failure)
++        """
++
++    def __init__(self, 
++                 node=None, errstr="Unknown error", status=0, filename=None, 
++                 executor=None, action=None, command=None, exc_info=(None, None, None)):
++        
+         self.errstr = errstr
+         self.status = status
+         self.filename = filename
++        self.exc_info = exc_info
++
++        self.node = node
+         self.executor = executor
+         self.action = action
+         self.command = command
+-        apply(Exception.__init__, (self,) + args)
++
++        Exception.__init__(self, node, errstr, status, filename, 
++                           executor, action, command, exc_info)
++
++    def __str__(self):
++        if self.filename:
++            return self.filename + ': ' + self.errstr
++        else:
++            return self.errstr
+ 
+ class InternalError(Exception):
+     pass
+@@ -63,9 +121,54 @@ class ExplicitExit(Exception):
+         self.status = status
+         apply(Exception.__init__, (self,) + args)
+ 
+-class TaskmasterException(Exception):
+-    def __init__(self, node=None, exc_info=(None, None, None), *args):
+-        self.node = node
+-        self.errstr = "Exception"
+-        self.exc_info = exc_info
+-        apply(Exception.__init__, (self,) + args)
++def convert_to_BuildError(status, exc_info=None):
++    """
++    Convert any return code a BuildError Exception.
++
++    `status' can either be a return code or an Exception.
++    """
++    if not exc_info and isinstance(status, Exception):
++        exc_info = (status.__class__, status, None)
++
++    if isinstance(status, BuildError):
++        buildError = status
++    elif isinstance(status, ExplicitExit):
++        status = status.status
++        errstr = 'Explicit exit, status %s' % status
++        buildError = BuildError(
++            errstr=errstr,
++            status=status,
++            exc_info=exc_info)
++    elif isinstance(status, (StopError, UserError)):
++        buildError = BuildError(
++            errstr=str(status),
++            status=1,
++            exc_info=exc_info)
++    elif isinstance(status, exceptions.EnvironmentError):
++        # If an IOError/OSError happens, raise a BuildError.
++        # Report the name of the file or directory that caused the
++        # error, which might be different from the target being built
++        # (for example, failure to create the directory in which the
++        # target file will appear).
++        try: filename = status.filename
++        except AttributeError: filename = None
++        buildError = BuildError( 
++            errstr=status.strerror,
++            status=status.errno,
++            filename=filename,
++            exc_info=exc_info)
++    elif isinstance(status, Exception):
++        buildError = BuildError(
++            errstr='%s : %s' % (status.__class__.__name__, status),
++            status=1,
++            exc_info=exc_info)
++    elif SCons.Util.is_String(status):
++        buildError = BuildError(
++            errstr=status,
++            status=1)
++    else:
++        buildError = BuildError(
++            errstr="Error %s" % status,
++            status=status)
++    
++    return buildError
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/ErrorsTests.py
+--- a/src/engine/SCons/ErrorsTests.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/ErrorsTests.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -32,10 +32,46 @@ class ErrorsTestCase(unittest.TestCase):
+     def test_BuildError(self):
+         """Test the BuildError exception."""
+         try:
+-            raise SCons.Errors.BuildError(node = "n", errstr = "foo")
++            raise SCons.Errors.BuildError(
++                errstr = "foo", status=57, filename="file", exc_info=(1,2,3),
++                node = "n", executor="e", action="a", command="c")
+         except SCons.Errors.BuildError, e:
++            assert e.errstr == "foo"
++            assert e.status == 57
++            assert e.filename == "file"
++            assert e.exc_info == (1,2,3)
++
+             assert e.node == "n"
++            assert e.executor == "e"
++            assert e.action == "a"
++            assert e.command == "c"
++
++        try:
++            raise SCons.Errors.BuildError("n", "foo", 57, "file", 
++                                          "e", "a", "c", (1,2,3))
++        except SCons.Errors.BuildError, e:
+             assert e.errstr == "foo"
++            assert e.status == 57
++            assert e.filename == "file"
++            assert e.exc_info == (1,2,3)
++
++            assert e.node == "n"
++            assert e.executor == "e"
++            assert e.action == "a"
++            assert e.command == "c"
++
++        try:
++            raise SCons.Errors.BuildError()
++        except SCons.Errors.BuildError, e:
++            assert e.errstr == "Unknown error"
++            assert e.status == 0
++            assert e.filename == None
++            assert e.exc_info == (None, None, None)
++
++            assert e.node == None
++            assert e.executor == None
++            assert e.action == None
++            assert e.command == None
+ 
+     def test_InternalError(self):
+         """Test the InternalError exception."""
+@@ -58,14 +94,6 @@ class ErrorsTestCase(unittest.TestCase):
+         except SCons.Errors.ExplicitExit, e:
+             assert e.node == "node"
+ 
+-    def test_TaskmasterException(self):
+-        """Test the TaskmasterException exception."""
+-        try:
+-            raise SCons.Errors.TaskmasterException("tm exception", (1, 2, 3))
+-        except SCons.Errors.TaskmasterException, e:
+-            assert e.node == "tm exception"
+-            assert e.exc_info == (1, 2, 3)
+-
+ if __name__ == "__main__":
+     suite = unittest.makeSuite(ErrorsTestCase, 'test_')
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/Executor.py
+--- a/src/engine/SCons/Executor.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/Executor.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -134,7 +134,11 @@ class Executor:
+                 raise status
+             elif status:
+                 msg = "Error %s" % status
+-                raise SCons.Errors.BuildError(errstr=msg, executor=self, action=act)
++                raise SCons.Errors.BuildError(
++                    errstr=msg, 
++                    node=self.targets,
++                    executor=self, 
++                    action=act)
+         return status
+ 
+     # use extra indirection because with new-style objects (Python 2.2
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/Node/FSTests.py
+--- a/src/engine/SCons/Node/FSTests.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/Node/FSTests.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -361,7 +361,7 @@ class BuildDirTestCase(unittest.TestCase
+ 
+         save_Link = SCons.Node.FS.Link
+         def Link_IOError(target, source, env):
+-            raise IOError, "Link_IOError"
++            raise IOError, (17, "Link_IOError")
+         SCons.Node.FS.Link = SCons.Action.Action(Link_IOError, None)
+ 
+         test.write(['work', 'src', 'IOError'], "work/src/IOError\n")
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/Script/Main.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -191,9 +191,15 @@ class BuildTask(SCons.Taskmaster.Task):
+             if self.top and target.has_builder():
+                 display("scons: `%s' is up to date." % str(self.node))
+ 
+-    def do_failed(self, status=2):
+-        _BuildFailures.append(self.exception[1])
++    def do_failed(self, buildError):
++        _BuildFailures.append(buildError)
++
+         global exit_status
++        if buildError.exc_info[0] == SCons.Errors.ExplicitExit:
++            status = buildError.status
++        else:
++            status = 2
++
+         if self.options.ignore_errors:
+             SCons.Taskmaster.Task.executed(self)
+         elif self.options.keep_going:
+@@ -207,11 +213,15 @@ class BuildTask(SCons.Taskmaster.Task):
+         t = self.targets[0]
+         if self.top and not t.has_builder() and not t.side_effect:
+             if not t.exists():
+-                sys.stderr.write("scons: *** Do not know how to make target `%s'." % t)
+-                if not self.options.keep_going:
+-                    sys.stderr.write("  Stop.")
+-                sys.stderr.write("\n")
+-                self.do_failed()
++                errstr = "Do not know how to make target `%s'." % t
++                buildError = SCons.Errors.BuildError(
++                    node=self.node,
++                    errstr=errstr,
++                    status=2
++                    )
++
++                sys.stderr.write("scons: *** %s\n" % errstr)
++                self.do_failed(buildError)
+             else:
+                 print "scons: Nothing to be done for `%s'." % t
+                 SCons.Taskmaster.Task.executed(self)
+@@ -222,54 +232,50 @@ class BuildTask(SCons.Taskmaster.Task):
+         # Handle the failure of a build task.  The primary purpose here
+         # is to display the various types of Errors and Exceptions
+         # appropriately.
+-        status = 2
+         exc_info = self.exc_info()
+         try:
+             t, e, tb = exc_info
+         except ValueError:
+             t, e = exc_info
+             tb = None
++
+         if t is None:
+             # The Taskmaster didn't record an exception for this Task;
+             # see if the sys module has one.
+-            t, e = sys.exc_info()[:2]
++            try:
++                t, e, tb = sys.exc_info()[:]
++            except ValueError:
++                t, e = exc_info
++                tb = None
++                
++        # Deprecated string exceptions will have their string stored
++        # in the first entry of the tuple.
++        if e is None:
++            e = t
+ 
+-        def nodestring(n):
+-            if not SCons.Util.is_List(n):
+-                n = [ n ]
+-            return string.join(map(str, n), ', ')
++        buildError = SCons.Errors.convert_to_BuildError(e)
++        if not buildError.node:
++            buildError.node = self.node
++
++        node = buildError.node
++        if not SCons.Util.is_List(node):
++                node = [ node ]
++        nodename = string.join(map(str, node), ', ')
+ 
+         errfmt = "scons: *** [%s] %s\n"
++        sys.stderr.write(errfmt % (nodename, buildError))
+ 
+-        if t == SCons.Errors.BuildError:
+-            tname = nodestring(e.node)
+-            errstr = e.errstr
+-            if e.filename:
+-                errstr = e.filename + ': ' + errstr
+-            sys.stderr.write(errfmt % (tname, errstr))
+-        elif t == SCons.Errors.TaskmasterException:
+-            tname = nodestring(e.node)
+-            sys.stderr.write(errfmt % (tname, e.errstr))
+-            type, value, trace = e.exc_info
++        if (buildError.exc_info[2] and buildError.exc_info[1] and 
++            not isinstance(
++                buildError.exc_info[1], 
++                (EnvironmentError, SCons.Errors.StopError, SCons.Errors.UserError))):
++            type, value, trace = buildError.exc_info
+             traceback.print_exception(type, value, trace)
+-        elif t == SCons.Errors.ExplicitExit:
+-            status = e.status
+-            tname = nodestring(e.node)
+-            errstr = 'Explicit exit, status %s' % status
+-            sys.stderr.write(errfmt % (tname, errstr))
+-        else:
+-            if e is None:
+-                e = t
+-            s = str(e)
+-            if t == SCons.Errors.StopError and not self.options.keep_going:
+-                s = s + '  Stop.'
+-            sys.stderr.write("scons: *** %s\n" % s)
++        elif tb and print_stacktrace:
++            sys.stderr.write("scons: internal stack trace:\n")
++            traceback.print_tb(tb, file=sys.stderr)
+ 
+-            if tb and print_stacktrace:
+-                sys.stderr.write("scons: internal stack trace:\n")
+-                traceback.print_tb(tb, file=sys.stderr)
+-
+-        self.do_failed(status)
++        self.do_failed(buildError)
+ 
+         self.exc_clear()
+ 
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/Taskmaster.py
+--- a/src/engine/SCons/Taskmaster.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/Taskmaster.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -201,9 +201,11 @@ class Task:
+             raise
+         except SCons.Errors.BuildError:
+             raise
+-        except:
+-            raise SCons.Errors.TaskmasterException(self.targets[0],
+-                                                   sys.exc_info())
++        except Exception, e:
++            buildError = SCons.Errors.convert_to_BuildError(e)
++            buildError.node = self.targets[0]
++            buildError.exc_info = sys.exc_info()
++            raise buildError
+ 
+     def executed_without_callbacks(self):
+         """
+@@ -300,7 +302,9 @@ class Task:
+                 is_up_to_date = not t.has_builder() or \
+                                 (not t.always_build and t.is_up_to_date())
+             except EnvironmentError, e:
+-                raise SCons.Errors.BuildError(node=t, errstr=e.strerror, filename=e.filename)
++                raise SCons.Errors.BuildError(
++                        node=t, errstr=e.strerror, filename=e.filename, 
++                        exc_info=sys.exc_info)
+             if is_up_to_date:
+                 t.set_state(SCons.Node.up_to_date)
+             else:
+diff -r cbe3d4caf651 -r c0f903a6f7e3 src/engine/SCons/TaskmasterTests.py
+--- a/src/engine/SCons/TaskmasterTests.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/src/engine/SCons/TaskmasterTests.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -864,9 +864,9 @@ class TaskmasterTestCase(unittest.TestCa
+         t = tm.next_task()
+         try:
+             t.execute()
+-        except SCons.Errors.TaskmasterException, e:
++        except SCons.Errors.BuildError, e:
+             assert e.node == n4, e.node
+-            assert e.errstr == "Exception", e.errstr
++            assert e.errstr == "OtherError : ", e.errstr
+             assert len(e.exc_info) == 3, e.exc_info
+             exc_traceback = sys.exc_info()[2]
+             assert type(e.exc_info[2]) == type(exc_traceback), e.exc_info[2]
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/Alias/errors.py
+--- a/test/Alias/errors.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/Alias/errors.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -40,7 +40,7 @@ env.Alias('A', 'B')
+ """)
+ 
+ test.run(arguments='A',
+-         stderr="scons: *** Source `D' not found, needed by target `C'.  Stop.\n",
++         stderr="scons: *** [C] Source `D' not found, needed by target `C'.\n",
+          status=2)
+ 
+ test.pass_test()
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/Configure/Action-error.py
+--- a/test/Configure/Action-error.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/Configure/Action-error.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -41,7 +41,7 @@ env.MyAction('target', [])
+ env.MyAction('target', [])
+ """)
+ 
+-expect = "scons: *** Calling Configure from Builders is not supported.\n"
++expect = "scons: *** [target] Calling Configure from Builders is not supported.\n"
+ 
+ test.run(status=2, stderr=expect)
+ 
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/Errors/Exception.py
+--- a/test/Errors/Exception.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/Errors/Exception.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -53,7 +53,7 @@ test.write('exit.in', 'exit\n')
+ # no longer exists or that line in the source file no longer exists,
+ # so make sure the proper variations are supported in the following
+ # regexp.
+-expect = """scons: \*\*\* \[exit.out\] Exception
++expect = """scons: \*\*\* \[exit.out\] Exception : exit
+ Traceback \((most recent call|innermost) last\):
+ (  File ".+", line \d+, in \S+
+     [^\n]+
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/GetBuildFailures/serial.py
+--- a/test/GetBuildFailures/serial.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/GetBuildFailures/serial.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -31,6 +31,7 @@ __revision__ = "__FILE__ __REVISION__ __
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import TestSCons
++import re
+ 
+ _python_ = TestSCons._python_
+ 
+@@ -59,19 +60,43 @@ test.write('myfail.py', contents)
+ test.write('myfail.py', contents)
+ 
+ test.write('SConstruct', """\
+-Command('f3', 'f3.in', r'@%(_python_)s mypass.py -  f3 $TARGET $SOURCE')
+-Command('f4', 'f4.in', r'@%(_python_)s myfail.py f3 f4 $TARGET $SOURCE')
+-Command('f5', 'f5.in', r'@%(_python_)s myfail.py f4 f5 $TARGET $SOURCE')
+-Command('f6', 'f6.in', r'@%(_python_)s mypass.py f5 -  $TARGET $SOURCE')
++Command('f03', 'f03.in', r'@%(_python_)s mypass.py -   f03 $TARGET $SOURCE')
++Command('f04', 'f04.in', r'@%(_python_)s myfail.py f03 f04 $TARGET $SOURCE')
++Command('f05', 'f05.in', r'@%(_python_)s myfail.py f04 f05 $TARGET $SOURCE')
++Command('f06', 'f06.in', r'@%(_python_)s mypass.py f05 -   $TARGET $SOURCE')
++Command('f07', 'f07.in', r'@%(_python_)s mypass.py f07 -   $TARGET $SOURCE')
++
++import SCons.Errors
++def raiseExcAction(exc):
++    def action(env, target, source):
++        raise exc
++    return action
++def returnExcAction(exc):
++    def action(env, target, source):
++        return exc
++    return action
++class MyBuildError(SCons.Errors.BuildError):
++   pass
++
++Command('f08', 'f08.in', raiseExcAction(SCons.Errors.UserError("My User Error")))
++Command('f09', 'f09.in', returnExcAction(SCons.Errors.UserError("My User Error")))
++Command('f10', 'f10.in', raiseExcAction(MyBuildError(errstr="My Build Error", status=7)))
++Command('f11', 'f11.in', returnExcAction(MyBuildError(errstr="My Build Error", status=7)))
++Command('f12', 'f12.in', raiseExcAction(EnvironmentError(123, "My EnvironmentError", "f12")))
++Command('f13', 'f13.in', returnExcAction(EnvironmentError(123, "My EnvironmentError", "f13")))
++Command('f14', 'f14.in', raiseExcAction(SCons.Errors.InternalError("My InternalError")))
++Command('f15', 'f15.in', returnExcAction(SCons.Errors.InternalError("My InternalError")))
+ 
+ def print_build_failures():
+     from SCons.Script import GetBuildFailures
+     import string
+     bf_list = GetBuildFailures()
+-    bf_list.sort(lambda a,b: cmp(a.filename, b.filename))
++    bf_list.sort(lambda a,b: cmp(str(a.node), str(b.node)))
+     for bf in bf_list:
+-        print "%%s failed (%%s):  %%s" %% (bf.node, bf.status, bf.errstr)
+-        print "    %%s" %% string.join(bf.command)
++        assert( isinstance(bf, SCons.Errors.BuildError) )
++        print "BF: %%s failed (%%s):  %%s" %% (bf.node, bf.status, bf.errstr)
++        if bf.command:
++            print "BF:    %%s" %% string.join(Flatten(bf.command))
+ 
+ try:
+     import atexit
+@@ -82,22 +107,31 @@ else:
+     atexit.register(print_build_failures)
+ """ % locals())
+ 
+-test.write('f3.in', "f3.in\n")
+-test.write('f4.in', "f4.in\n")
+-test.write('f5.in', "f5.in\n")
+-test.write('f6.in', "f6.in\n")
++test.write('f03.in', "f03.in\n")
++test.write('f04.in', "f04.in\n")
++test.write('f05.in', "f05.in\n")
++test.write('f06.in', "f06.in\n")
++# f07.in is intentionally missing...
++test.write('f08.in', "f08.in\n")
++test.write('f09.in', "f09.in\n")
++test.write('f10.in', "f10.in\n")
++test.write('f11.in', "f11.in\n")
++test.write('f12.in', "f12.in\n")
++test.write('f13.in', "f13.in\n")
++test.write('f14.in', "f14.in\n")
++test.write('f15.in', "f15.in\n")
+ 
+ expect_stdout = """\
+ scons: Reading SConscript files ...
+ scons: done reading SConscript files.
+ scons: Building targets ...
+ scons: building terminated because of errors.
+-f4 failed (1):  Error 1
+-    %(_python_)s myfail.py f3 f4 "f4" "f4.in"
++BF: f04 failed (1):  Error 1
++BF:    %(_python_)s myfail.py f03 f04 "f04" "f04.in"
+ """ % locals()
+ 
+ expect_stderr = """\
+-scons: *** [f4] Error 1
++scons: *** [f04] Error 1
+ """
+ 
+ test.run(arguments = '.',
+@@ -105,11 +139,101 @@ test.run(arguments = '.',
+          stdout = expect_stdout,
+          stderr = expect_stderr)
+ 
+-test.must_match(test.workpath('f3'), 'f3.in\n')
+-test.must_not_exist(test.workpath('f4'))
+-test.must_not_exist(test.workpath('f5'))
+-test.must_not_exist(test.workpath('f6'))
++test.must_match(test.workpath('f03'), 'f03.in\n')
++test.must_not_exist(test.workpath('f04'))
++test.must_not_exist(test.workpath('f05'))
++test.must_not_exist(test.workpath('f06'))
++test.must_not_exist(test.workpath('f07'))
++test.must_not_exist(test.workpath('f08'))
++test.must_not_exist(test.workpath('f09'))
++test.must_not_exist(test.workpath('f10'))
++test.must_not_exist(test.workpath('f11'))
++test.must_not_exist(test.workpath('f12'))
++test.must_not_exist(test.workpath('f13'))
++test.must_not_exist(test.workpath('f14'))
++test.must_not_exist(test.workpath('f15'))
+ 
++
++expect_stdout = re.escape("""\
++scons: Reading SConscript files ...
++scons: done reading SConscript files.
++scons: Building targets ...
++action(["f08"], ["f08.in"])
++action(["f09"], ["f09.in"])
++action(["f10"], ["f10.in"])
++action(["f11"], ["f11.in"])
++action(["f12"], ["f12.in"])
++action(["f13"], ["f13.in"])
++action(["f14"], ["f14.in"])
++action(["f15"], ["f15.in"])
++scons: done building targets (errors occurred during build).
++BF: f04 failed (1):  Error 1
++BF:    %(_python_)s myfail.py f03 f04 "f04" "f04.in"
++BF: f05 failed (1):  Error 1
++BF:    %(_python_)s myfail.py f04 f05 "f05" "f05.in"
++BF: f07 failed (1):  Source `f07.in' not found, needed by target `f07'.
++BF: f08 failed (1):  My User Error
++BF:    action(["f08"], ["f08.in"])
++BF: f09 failed (1):  My User Error
++BF:    action(["f09"], ["f09.in"])
++BF: f10 failed (7):  My Build Error
++BF:    action(["f10"], ["f10.in"])
++BF: f11 failed (7):  My Build Error
++BF:    action(["f11"], ["f11.in"])
++BF: f12 failed (123):  My EnvironmentError
++BF:    action(["f12"], ["f12.in"])
++BF: f13 failed (123):  My EnvironmentError
++BF:    action(["f13"], ["f13.in"])
++BF: f14 failed (1):  InternalError : My InternalError
++BF:    action(["f14"], ["f14.in"])
++BF: f15 failed (1):  InternalError : My InternalError
++BF:    action(["f15"], ["f15.in"])
++""" % locals())
++
++expect_stderr = re.escape("""\
++scons: *** [f04] Error 1
++scons: *** [f05] Error 1
++scons: *** [f07] Source `f07.in' not found, needed by target `f07'.
++scons: *** [f08] My User Error
++scons: *** [f09] My User Error
++scons: *** [f10] My Build Error
++scons: *** [f11] My Build Error
++scons: *** [f12] f12: My EnvironmentError
++scons: *** [f13] f13: My EnvironmentError
++scons: *** [f14] InternalError : My InternalError
++""") + \
++"""\
++Traceback \((most recent call|innermost) last\):
++(  File ".+", line \d+, in \S+
++    [^\n]+
++)*(  File ".+", line \d+, in \S+
++)*(  File ".+", line \d+, in \S+
++    [^\n]+
++)*\S.+
++""" + \
++re.escape("""\
++scons: *** [f15] InternalError : My InternalError
++""")
++
++test.run(arguments = '-k .',
++         status = 2,
++         stdout = expect_stdout,
++         stderr = expect_stderr,
++         match = TestSCons.match_re_dotall)
++
++test.must_match(test.workpath('f03'), 'f03.in\n')
++test.must_not_exist(test.workpath('f04'))
++test.must_not_exist(test.workpath('f05'))
++test.must_match(test.workpath('f06'), 'f06.in\n')
++test.must_not_exist(test.workpath('f07'))
++test.must_not_exist(test.workpath('f08'))
++test.must_not_exist(test.workpath('f09'))
++test.must_not_exist(test.workpath('f10'))
++test.must_not_exist(test.workpath('f11'))
++test.must_not_exist(test.workpath('f12'))
++test.must_not_exist(test.workpath('f13'))
++test.must_not_exist(test.workpath('f14'))
++test.must_not_exist(test.workpath('f15'))
+ 
+ 
+ test.pass_test()
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/Libs/SharedLibrary.py
+--- a/test/Libs/SharedLibrary.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/Libs/SharedLibrary.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -213,13 +213,13 @@ if sys.platform == 'win32' or string.fin
+     test.run(arguments = '-f SConstructFoo')
+ else:
+     test.run(arguments = '-f SConstructFoo', status=2, stderr='''\
+-scons: \*\*\* Source file: foo\..* is static and is not compatible with shared target: .*
++scons: \*\*\* \[.*\] Source file: foo\..* is static and is not compatible with shared target: .*
+ ''',
+     match=TestSCons.match_re_dotall)
+     # Run it again to make sure that we still get the error
+     # even though the static objects already exist.
+     test.run(arguments = '-f SConstructFoo', status=2, stderr='''\
+-scons: \*\*\* Source file: foo\..* is static and is not compatible with shared target: .*
++scons: \*\*\* \[.*\] Source file: foo\..* is static and is not compatible with shared target: .*
+ ''',
+     match=TestSCons.match_re_dotall)
+ 
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/RCS/diskcheck.py
+--- a/test/RCS/diskcheck.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/RCS/diskcheck.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -122,7 +122,7 @@ expect = """\
+ 
+ scons: warning: Ignoring missing SConscript '%(sub_SConscript)s'
+ %(SConstruct_file_line)s
+-scons: *** Source `aaa.in' not found, needed by target `aaa.out'.  Stop.
++scons: *** [aaa.out] Source `aaa.in' not found, needed by target `aaa.out'.
+ """ % locals()
+ 
+ test.run(status=2, stderr=expect)
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/Scanner/exception.py
+--- a/test/Scanner/exception.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/Scanner/exception.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -109,7 +109,7 @@ test.run(arguments = '.',
+ test.run(arguments = '.',
+          status = 2,
+          stderr = """\
+-scons: *** kfile_scan error:  yyy 1
++scons: *** [foo] Exception : kfile_scan error:  yyy 1
+ """)
+ 
+ test.pass_test()
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/exceptions.py
+--- a/test/exceptions.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/exceptions.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -47,7 +47,7 @@ env.B(target = 'foo.out', source = 'foo.
+ 
+ test.write('foo.in', "foo.in\n")
+ 
+-expected_stderr = """scons: \*\*\* \[foo.out\] Exception
++expected_stderr = """scons: \*\*\* \[foo.out\] Exception : func exception
+ Traceback \((most recent call|innermost) last\):
+ (  File ".+", line \d+, in \S+
+     [^\n]+
+@@ -109,7 +109,7 @@ test.run(arguments = '.', status = 2, st
+ 
+ expected_stderr_list = [
+     "scons: *** [out.f1] Error 1\n",
+-    "scons: *** Source `in.f2' not found, needed by target `out.f2'.  Stop.\n",
++    "scons: *** [out.f2] Source `in.f2' not found, needed by target `out.f2'.\n",
+     "scons: *** [out.f3] Error 1\n",
+ ]
+ 
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/nonexistent.py
+--- a/test/nonexistent.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/nonexistent.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -46,7 +46,7 @@ Dir('ddd')
+ """)
+ 
+ test.run(arguments = 'foo',
+-         stderr = "scons: *** Do not know how to make target `foo'.  Stop.\n",
++         stderr = "scons: *** Do not know how to make target `foo'.\n",
+          status = 2)
+ 
+ test.run(arguments = '-k foo/bar foo',
+@@ -54,12 +54,12 @@ test.run(arguments = '-k foo/bar foo',
+          status = 2)
+ 
+ test.run(arguments = "aaa.out",
+-         stderr = "scons: *** Source `aaa.in' not found, needed by target `aaa.out'.  Stop.\n",
++         stderr = "scons: *** [aaa.out] Source `aaa.in' not found, needed by target `aaa.out'.\n",
+          status = 2)
+ 
+ test.run(arguments = "-k bbb.out aaa.out",
+-         stderr = """scons: *** Source `bbb.in' not found, needed by target `bbb.out'.
+-scons: *** Source `aaa.in' not found, needed by target `aaa.out'.
++         stderr = """scons: *** [bbb.out] Source `bbb.in' not found, needed by target `bbb.out'.
++scons: *** [aaa.out] Source `aaa.in' not found, needed by target `aaa.out'.
+ """,
+          status = 2)
+ 
+@@ -71,7 +71,7 @@ scons: *** Do not know how to make targe
+ 
+ 
+ test.run(arguments = 'xxx',
+-         stderr = "scons: *** Do not know how to make target `xxx'.  Stop.\n",
++         stderr = "scons: *** Do not know how to make target `xxx'.\n",
+          status = 2)
+ 
+ test.run(arguments = 'ddd')
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/option--U.py
+--- a/test/option--U.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/option--U.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -164,7 +164,7 @@ Default('not_a_target.in')
+ """)
+ 
+ test.run(arguments = '-U', status=2, stderr="""\
+-scons: *** Do not know how to make target `not_a_target.in'.  Stop.
++scons: *** Do not know how to make target `not_a_target.in'.
+ """)
+ 
+ # Make sure explicit targets beginning with ../ get built.
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/option/debug-stacktrace.py
+--- a/test/option/debug-stacktrace.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/option/debug-stacktrace.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -65,14 +65,14 @@ env.Command('foo', 'foo.k', Copy('$TARGE
+ 
+ test.write('foo.k', "foo.k\n")
+ 
+-test.run(status = 2, stderr = "scons: *** kfile_scan error\n")
++test.run(status = 2, stderr = "scons: *** [foo] Exception : kfile_scan error\n")
+ 
+ test.run(arguments = "--debug=stacktrace",
+          status = 2,
+          stderr = None)
+ 
+ lines = [
+-    "scons: *** kfile_scan error",
++    "scons: *** [foo] Exception : kfile_scan error",
+     "scons: internal stack trace:",
+     'raise Exception, "kfile_scan error"',
+ ]
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/symlink/dangling-include.py
+--- a/test/symlink/dangling-include.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/symlink/dangling-include.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -51,8 +51,8 @@ test.symlink('nonexistent', 'foo.h')
+ test.symlink('nonexistent', 'foo.h')
+ 
+ expect = """\
+-scons: *** Source `foo.h' not found, needed by target `%s'.  Stop.
+-"""% foo_obj
++scons: *** [%s] Source `foo.h' not found, needed by target `%s'.
++"""% (foo_obj, foo_obj)
+ 
+ test.run(arguments = '.', status = 2, stderr = expect)
+ 
+diff -r cbe3d4caf651 -r c0f903a6f7e3 test/symlink/dangling-source.py
+--- a/test/symlink/dangling-source.py	Tue Mar 11 13:42:41 2008 -0400
++++ b/test/symlink/dangling-source.py	Thu Mar 13 13:48:48 2008 -0400
+@@ -45,7 +45,7 @@ test.symlink('nonexistent', 'file.in')
+ test.symlink('nonexistent', 'file.in')
+ 
+ expect = """\
+-scons: *** Source `file.in' not found, needed by target `file.out'.  Stop.
++scons: *** [file.out] Source `file.in' not found, needed by target `file.out'.
+ """
+ 
+ test.run(arguments = '.', status = 2, stderr = expect)
