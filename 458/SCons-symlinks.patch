@@ -1,0 +1,75 @@
+diff -Naur /home/mati/scons-svn/core-clean-copy/src/engine/SCons/compat/__init__.py SCons/compat/__init__.py
+--- /home/mati/scons-svn/core-clean-copy/src/engine/SCons/compat/__init__.py	2008-07-27 15:32:02.000000000 +0000
++++ SCons/compat/__init__.py	2008-07-27 15:28:11.000000000 +0000
+@@ -193,3 +193,9 @@
+ except ImportError:
+     # Pre-1.6 Python has no UserString module.
+     import_as('_scons_UserString', 'UserString')
++
++try:
++    # Pre-2.4 Python has no os.path.lexists function
++    from os.path import lexists
++except ImportError:
++    import_as('_scons_os.path', 'os.path')
+diff -Naur /home/mati/scons-svn/core-clean-copy/src/engine/SCons/compat/_scons_os.path.py SCons/compat/_scons_os.path.py
+--- /home/mati/scons-svn/core-clean-copy/src/engine/SCons/compat/_scons_os.path.py	1970-01-01 00:00:00.000000000 +0000
++++ SCons/compat/_scons_os.path.py	2008-07-27 15:26:57.000000000 +0000
+@@ -0,0 +1,32 @@
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++from os.path import *
++
++try:
++    lexists
++except NameError:
++    def lexists(path):
++        return os.path.exists(path) or os.path.islink(path)
+diff -Naur /home/mati/scons-svn/core-clean-copy/src/engine/SCons/Script/Main.py SCons/Script/Main.py
+--- /home/mati/scons-svn/core-clean-copy/src/engine/SCons/Script/Main.py	2008-07-27 15:32:02.000000000 +0000
++++ SCons/Script/Main.py	2008-07-27 15:30:19.000000000 +0000
+@@ -306,8 +306,8 @@
+     """An SCons clean task."""
+     def fs_delete(self, path, pathstr, remove=1):
+         try:
+-            if os.path.exists(path):
+-                if os.path.isfile(path):
++            if os.path.lexists(path):
++                if os.path.isfile(path) or os.path.islink(path):
+                     if remove: os.unlink(path)
+                     display("Removed " + pathstr)
+                 elif os.path.isdir(path) and not os.path.islink(path):
+@@ -327,6 +327,11 @@
+                     # then delete dir itself
+                     if remove: os.rmdir(path)
+                     display("Removed directory " + pathstr)
++                else:
++                    errstr = "Path '%s' exists but isn't a file or directory."
++                    raise SCons.Errors.UserError(errstr % (pathstr))
++        except SCons.Errors.UserError, e:
++            print e
+         except (IOError, OSError), e:
+             print "scons: Could not remove '%s':" % pathstr, e.strerror
+ 
