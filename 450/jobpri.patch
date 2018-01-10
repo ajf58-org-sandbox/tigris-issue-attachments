@@ -1,0 +1,252 @@
+Index: src/engine/SCons/Node/Alias.py
+===================================================================
+--- src/engine/SCons/Node/Alias.py	(revision 3186)
++++ src/engine/SCons/Node/Alias.py	(working copy)
+@@ -98,6 +98,9 @@
+         childsigs = map(lambda n: n.get_csig(), self.children())
+         return string.join(childsigs, '')
+ 
++    def default_single_node_length(self):
++      return 0    # Aliases don't take time.
++      
+     def sconsign(self):
+         """An Alias is not recorded in .sconsign files"""
+         pass
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 3186)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -50,6 +50,7 @@
+ from itertools import chain, izip
+ import string
+ import UserList
++import time
+ 
+ from SCons.Debug import logInstanceCreation
+ import SCons.Executor
+@@ -115,9 +116,9 @@
+         self._version_id = self.current_version_id
+     def update(self, node):
+         try:
+-            field_list = self.field_list
++            field_list = self.field_list + ['bduration']
+         except AttributeError:
+-            return
++            field_list = ['bduration']
+         for f in field_list:
+             try:
+                 delattr(self, f)
+@@ -227,7 +228,9 @@
+         self.side_effect = 0 # true iff this node is a side effect
+         self.side_effects = [] # the side effects of building this target
+         self.linked = 0 # is this node linked to the variant directory?
+-
++        
++        self.critical_path_cache = dict()
++        
+         self.clear_memoized_values()
+ 
+         # Let the interface in which the build engine is embedded
+@@ -356,6 +359,19 @@
+                     raise SCons.Errors.StopError, msg % (i, self)
+         self.binfo = self.get_binfo()
+ 
++    def build_and_instrument(self, **kw):
++        stime = time.time()
++        #print "start %s at %f" % (self, stime)
++        
++        self.build(**kw)
++        
++        etime = time.time()
++        #print "finish %s at %f, total %f" % (self, etime, etime - stime)
++        dur = etime - stime
++        if not self.get_bduration() is None:
++          dur = self.get_bduration() + 0.33 * (dur - self.get_bduration()) # exponential falloff baby
++        self.bduration = dur
++        
+     def build(self, **kw):
+         """Actually build the node.
+ 
+@@ -763,7 +779,68 @@
+ 
+     def get_cachedir_csig(self):
+         return self.get_csig()
++        
++    def get_bduration(self):
++        try:
++          return self.bduration
++        except AttributeError:
++          try:
++            return self.get_stored_info().ninfo.bduration
++          except AttributeError:
++            return None
++    
++    def default_single_node_length(self):
++      return 15    # Magic number representing the average build time for a file in a project of mine. This actual value isn't all that important, and overestimating may be better than underestimating.
++      
++    def get_single_node_length(self):
++      if self.get_bduration() is None:
++        return self.default_single_node_length()
++      else:
++        return self.get_bduration()
++      
++    def critical_path_length(self, targets):
++      """ Figure out the critical path from this node to all accessible targets.
++      If no targets depend on this node, return None. """
++      def accum(lhs, rhs):
++        if lhs is None:
++          return rhs
++        if rhs is None:
++          return lhs
++        if lhs > rhs:
++          return lhs
++        return rhs
++      
++      if targets in self.critical_path_cache:
++        return self.critical_path_cache[targets]
++      
++      cpl = None
++      
++      #print "costs for %s" % self
++      #print self
++      #print targets
+ 
++      if self.state is up_to_date:
++        pass  # Even if this is a target, we don't want to imply that its prerequisites are needed.
++      elif self.state is pending or self.state is executing:
++        
++        # First, check all children. The critical path is at least the longest critical path among them.
++        for child in self.waiting_parents:
++          cpl = accum(cpl, child.critical_path_length(targets))
++      
++        if cpl is None:
++          if self in targets:
++            cpl = self.get_single_node_length()
++        else:
++          cpl = cpl + self.get_single_node_length()
++      else:
++        Internalerror()
++      
++      self.critical_path_cache[targets] = cpl
++      #print cpl
++      #print "costsdone"
++      
++      return cpl
++      
+     def store_info(self):
+         """Make the build signature permanent (that is, store it in the
+         .sconsign file or equivalent)."""
+Index: src/engine/SCons/Executor.py
+===================================================================
+--- src/engine/SCons/Executor.py	(revision 3186)
++++ src/engine/SCons/Executor.py	(working copy)
+@@ -31,6 +31,7 @@
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import string
++import time
+ 
+ from SCons.Debug import logInstanceCreation
+ import SCons.Errors
+@@ -127,6 +128,7 @@
+         env = self.get_build_env()
+         kw = self.get_kw(kw)
+         status = 0
++
+         for act in self.get_action_list():
+             status = apply(act, (self.targets, self.get_sources(), env), kw)
+             if isinstance(status, SCons.Errors.BuildError):
+@@ -135,6 +137,7 @@
+             elif status:
+                 msg = "Error %s" % status
+                 raise SCons.Errors.BuildError(errstr=msg, executor=self, action=act)
++
+         return status
+ 
+     # use extra indirection because with new-style objects (Python 2.2
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+--- src/engine/SCons/Taskmaster.py	(revision 3186)
++++ src/engine/SCons/Taskmaster.py	(working copy)
+@@ -57,6 +57,7 @@
+ import string
+ import sys
+ import traceback
++import time
+ 
+ import SCons.Errors
+ import SCons.Node
+@@ -186,6 +187,10 @@
+             t.prepare()
+             for s in t.side_effects:
+                 s.prepare()
++    
++    def critical_path_length(self, global_targets):
++      #print global_targets
++      return self.targets[0].critical_path_length(global_targets)
+ 
+     def get_target(self):
+         """Fetch the target being built or updated by this task.
+@@ -219,7 +224,7 @@
+                     everything_was_cached = 0
+                     break
+             if not everything_was_cached:
+-                self.targets[0].build()
++                self.targets[0].build_and_instrument()
+         except SystemExit:
+             exc_value = sys.exc_info()[1]
+             raise SCons.Errors.ExplicitExit(self.targets[0], exc_value.code)
+Index: src/engine/SCons/Job.py
+===================================================================
+--- src/engine/SCons/Job.py	(revision 3186)
++++ src/engine/SCons/Job.py	(working copy)
+@@ -375,11 +375,11 @@
+             an exception), then the job will stop."""
+ 
+             jobs = 0
++            readytasks = []
+             
+             while 1:
+-                # Start up as many available tasks as we're
+-                # allowed to.
+-                while jobs < self.maxjobs:
++                # Load all the known jobs from the taskmaster.
++                while 1:
+                     task = self.taskmaster.next_task()
+                     if task is None:
+                         break
+@@ -394,13 +394,31 @@
+                     else:
+                         if task.needs_execute():
+                             # dispatch task
+-                            self.tp.put(task)
+-                            jobs = jobs + 1
++                            readytasks += [task]
+                         else:
+                             task.executed()
+                             task.postprocess()
+ 
+-                if not task and not jobs: break
++                if not len(readytasks) and not jobs: break
++                
++                # Now that we have a list of sane available tasks, we figure out which we should make
++                # NOTE: This is ridiculously inefficient and only takes the form of a proof-of-concept. These items should be tossed in a priority queue, I just haven't done that yet.
++                while jobs < self.maxjobs:
++                  nexttask = None
++                  nexttaskcost = 0
++                  
++                  for task in readytasks:
++                    if task.critical_path_length(frozenset(self.taskmaster.original_top)) >= nexttaskcost:
++                      nexttask = task
++                      nexttaskcost = task.critical_path_length(frozenset(self.taskmaster.original_top))
++                  
++                  if nexttask is None:
++                    break
++                  
++                  print "Doing a task with a critical path of %s" % nexttaskcost
++                  self.tp.put(nexttask)
++                  readytasks.remove(nexttask)
++                  jobs = jobs + 1
+ 
+                 # Let any/all completed tasks finish up before we go
+                 # back and put the next batch of tasks on the queue.
