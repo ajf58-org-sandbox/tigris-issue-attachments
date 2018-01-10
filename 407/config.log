@@ -1,0 +1,53 @@
+file /tmp/xx/SConstruct,line 2:
+	Configure(confdir = .sconf_temp)
+scons: Configure: Checking for C function filelength()... 
+.sconf_temp/conftest_0.c <-
+  |
+  |
+  |#include <assert.h>
+  |
+  |#ifdef __cplusplus
+  |extern "C"
+  |#endif
+  |char filelength();
+  |
+  |int main() {
+  |#if defined (__stub_filelength) || defined (__stub___filelength)
+  |  fail fail fail
+  |#else
+  |  filelength();
+  |#endif
+  |
+  |  return 0;
+  |}
+  |
+gcc -o .sconf_temp/conftest_0.o -c .sconf_temp/conftest_0.c
+gcc -o .sconf_temp/conftest_0 .sconf_temp/conftest_0.o
+.sconf_temp/conftest_0.o: In function `main':
+conftest_0.c:(.text+0xa): undefined reference to `filelength'
+collect2: ld returned 1 exit status
+scons: Configure: no
+
+scons: Configure: Checking for C function fopen()... 
+.sconf_temp/conftest_1.c <-
+  |
+  |
+  |#include <assert.h>
+  |
+  |#ifdef __cplusplus
+  |extern "C"
+  |#endif
+  |char fopen();
+  |
+  |int main() {
+  |#if defined (__stub_fopen) || defined (__stub___fopen)
+  |  fail fail fail
+  |#else
+  |  fopen();
+  |#endif
+  |
+  |  return 0;
+  |}
+  |
+scons: Configure: no
+
