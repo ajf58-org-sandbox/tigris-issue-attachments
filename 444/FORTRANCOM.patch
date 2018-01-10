@@ -1,0 +1,13 @@
+Index: src/engine/SCons/Tool/fortran.xml
+===================================================================
+--- src/engine/SCons/Tool/fortran.xml	(revision 3149)
++++ src/engine/SCons/Tool/fortran.xml	(working copy)
+@@ -37,8 +37,6 @@
+ The command line used to compile a Fortran source file to an object file.
+ By default, any options specified
+ in the &cv-link-FORTRANFLAGS;,
+-&cv-link-CPPFLAGS;,
+-&cv-link-_CPPDEFFLAGS;,
+ &cv-link-_FORTRANMODFLAG;, and
+ &cv-link-_FORTRANINCFLAGS; construction variables
+ are included on this command line.
