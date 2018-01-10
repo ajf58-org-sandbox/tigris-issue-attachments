@@ -1,0 +1,34 @@
+
+env = Environment()
+
+testFiles = [
+'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
+]
+
+for file1 in testFiles:
+    for file2 in testFiles:
+        f = open(file1 + file2 + '.cpp', "w")
+        f.write('int test_' + file1 + file2 + '()\n')
+        f.write('{\nreturn 0;\n}')
+        f.close()
+    
+main = open('main.cpp', "w")
+for file1 in testFiles:
+    for file2 in testFiles:
+        main.write('int test_' + file1 + file2 + '(void);\n')
+main.write('int main()\n')
+main.write('{\n');
+for file1 in testFiles:
+    for file2 in testFiles:
+        main.write('test_' + file1 + file2 + '();\n')
+main.write('return 0;\n}')
+main.close()
+
+source = ['main.cpp']
+for file1 in testFiles:
+    for file2 in testFiles:
+        installedFile = 'test-' + file1 + file2 + '.cpp'
+        env.InstallAs(installedFile, file1 + file2 + '.cpp')
+        source.append(installedFile)
+    
+env.Program(target=  'testInstall', source = source)
