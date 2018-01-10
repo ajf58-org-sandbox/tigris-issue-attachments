@@ -1,0 +1,14 @@
+--- swig.py.orig	2008-03-07 17:05:42.000000000 +0000
++++ swig.py	2008-03-07 18:52:51.000000000 +0000
+@@ -61,7 +61,10 @@
+         mnames = None
+         if "-python" in flags and "-noproxy" not in flags:
+             if mnames is None:
+-                mnames = _reModule.findall(open(src).read())
++                try:
++                    mnames = _reModule.findall(open(src).read())
++                except:
++                    mnames = [os.path.splitext(src)[0]]
+             target.extend(map(lambda m: m + ".py", mnames))
+         if "-java" in flags:
+             if mnames is None:
