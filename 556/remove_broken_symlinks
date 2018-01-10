@@ -1,0 +1,15 @@
+Index: scons-1.2.0/engine/SCons/Script/Main.py
+===================================================================
+--- scons-1.2.0.orig/engine/SCons/Script/Main.py	2008-12-26 17:46:29.470044569 +0100
++++ scons-1.2.0/engine/SCons/Script/Main.py	2008-12-26 17:46:40.238042348 +0100
+@@ -328,6 +328,10 @@
+                     # then delete dir itself
+                     if remove: os.rmdir(path)
+                     display("Removed directory " + pathstr)
++            else:
++                if os.path.islink(path):
++                    if remove: os.unlink(path)
++                    display("Removed " + pathstr)
+         except (IOError, OSError), e:
+             print "scons: Could not remove '%s':" % pathstr, e.strerror
+ 
