@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="168"
+   height="60"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.45.1"
+   version="1.0"
+   sodipodi:docbase="/home/hartmut/projekte/misc/logos"
+   sodipodi:docname="SCons.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   inkscape:export-filename="Constructs-using-SCons.png"
+   inkscape:export-xdpi="100"
+   inkscape:export-ydpi="100">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="7.5246669"
+     inkscape:cx="71.710248"
+     inkscape:cy="14.572894"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     inkscape:window-width="1392"
+     inkscape:window-height="972"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     width="168px"
+     height="60px" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Constructs using SCons - SCons Logo</dc:title>
+        <dc:date>2008-05-18</dc:date>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Hartmut Goebel</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Hartmut Goebel &lt;h.goebel@goebel-consult.de&gt;</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:language>en</dc:language>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>SCons</rdf:li>
+            <rdf:li>software build tool</rdf:li>
+            <rdf:li>software construction tool</rdf:li>
+            <rdf:li />
+          </rdf:Bag>
+        </dc:subject>
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>Based on the pixeled SCons logo (author unknown).</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-nc-sa/2.5/" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-nc-sa/2.5/">
+        <cc:permits
+           rdf:resource="http://web.resource.org/cc/Reproduction" />
+        <cc:permits
+           rdf:resource="http://web.resource.org/cc/Distribution" />
+        <cc:requires
+           rdf:resource="http://web.resource.org/cc/Notice" />
+        <cc:requires
+           rdf:resource="http://web.resource.org/cc/Attribution" />
+        <cc:prohibits
+           rdf:resource="http://web.resource.org/cc/CommercialUse" />
+        <cc:permits
+           rdf:resource="http://web.resource.org/cc/DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://web.resource.org/cc/ShareAlike" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-264.32267,-503.6795)"
+     inkscape:export-filename="SCons.png"
+     style="display:inline">
+    <g
+       id="Brick-to-Brick"
+       inkscape:label="#g2189"
+       inkscape:export-filename="SCons-Bricks.png">
+      <rect
+         y="552.24042"
+         x="296.28955"
+         height="8.3218126"
+         width="25.570662"
+         id="rect2170"
+         style="opacity:1;fill:#cf291c;fill-opacity:1;stroke:#000000;stroke-width:1.4000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         y="552.24042"
+         x="267.02267"
+         height="8.3218126"
+         width="25.570662"
+         id="rect3143"
+         style="opacity:1;fill:#cf291c;fill-opacity:1;stroke:#000000;stroke-width:1.4000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         y="540.14984"
+         x="267.02267"
+         height="8.3218126"
+         width="13.012291"
+         id="rect3145"
+         style="opacity:1;fill:#cf291c;fill-opacity:1;stroke:#000000;stroke-width:1.40000021;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         y="540.14984"
+         x="308.84793"
+         height="8.3218126"
+         width="13.012291"
+         id="rect3147"
+         style="opacity:1;fill:#cf291c;fill-opacity:1;stroke:#000000;stroke-width:1.40000021;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <rect
+         transform="matrix(0.9059343,0.4234183,-0.4234183,0.9059343,0,0)"
+         y="335.94952"
+         x="480.29761"
+         height="8.3219995"
+         width="23"
+         id="rect3149"
+         style="opacity:1;fill:#cf291c;fill-opacity:1;stroke:#000000;stroke-width:1.4000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <g
+         id="g2185">
+        <path
+           style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;marker-start:none;marker-end:none;stroke-miterlimit:1;stroke-dasharray:none;stroke-opacity:1"
+           d="M 297.75417,522.67403 C 294.74777,528.76509 293.93388,529.32449 294.63123,541.35852"
+           id="path3155"
+           sodipodi:nodetypes="cc" />
+        <path
+           sodipodi:type="star"
+           style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2.56573844;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:1;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="path8218"
+           sodipodi:sides="3"
+           sodipodi:cx="269.17282"
+           sodipodi:cy="490.86679"
+           sodipodi:r1="14.074683"
+           sodipodi:r2="14.074683"
+           sodipodi:arg1="1.5922984"
+           sodipodi:arg2="-2.6531172"
+           inkscape:flatsided="false"
+           inkscape:rounded="0"
+           inkscape:randomized="0"
+           d="M 268.87021,504.93822 L 256.74418,484.26182 L 257.13791,483.56901 L 281.10721,483.40576 L 281.51034,484.09315 L 269.66707,504.93279 L 268.87021,504.93822 z "
+           transform="matrix(0.3707348,0,0,0.4097434,194.6666,341.50086)" />
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:31.6050415px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Charter"
+       x="323.55185"
+       y="568.01239"
+       id="text10160"
+       sodipodi:linespacing="100%"
+       transform="scale(1.0124967,0.9876576)"><tspan
+         sodipodi:role="line"
+         id="tspan10162"
+         x="323.55185"
+         y="568.01239">SCONS</tspan></text>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Constructs"
+     style="display:none">
+    <text
+       xml:space="preserve"
+       style="font-size:14.03494644px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#808080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Charter"
+       x="64.317062"
+       y="31.582228"
+       id="Text_Constructs_using"
+       sodipodi:linespacing="100%"
+       transform="scale(1.0024962,0.99751)"
+       inkscape:export-xdpi="100"
+       inkscape:export-ydpi="100"
+       inkscape:label="#text10183"><tspan
+         sodipodi:role="line"
+         id="tspan10185"
+         x="64.317062"
+         y="31.582228"
+         style="font-size:14.03494644px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#808080;font-family:Bitstream Charter">Constructs using</tspan></text>
+  </g>
+</svg>
