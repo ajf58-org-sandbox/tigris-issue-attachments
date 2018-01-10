@@ -1,0 +1,303 @@
+Index: test/SWIG/SWIGOUTDIR.py
+===================================================================
+--- test/SWIG/SWIGOUTDIR.py	(revision 3835)
++++ test/SWIG/SWIGOUTDIR.py	(working copy)
+@@ -26,57 +26,82 @@
+ 
+ """
+ Verify that use of the $SWIGOUTDIR variable causes SCons to recognize
+-that Java files are created in the specified output directory.
++that wrapper files are created in the specified output directory.
+ """
+ 
+ import sys
++import os.path
++import string
+ 
+ import TestSCons
+ 
+ test = TestSCons.TestSCons()
+ 
+-test = TestSCons.TestSCons()
+-
+ swig = test.where_is('swig')
+-
+ if not swig:
+     test.skip_test('Can not find installed "swig", skipping test.\n')
+ 
+-where_java_include=test.java_where_includes()
++def _write_sconstruct(lang, inc_path):
++    """ Write an SConstruct for the particular target language.
++    
++    The SConstruct uses an SConscript in a sub-directory. This is in order to
++    verify that the tool gets paths right when invoked from a nested script.
++    """
++    if isinstance(inc_path, basestring):
++        inc_path = [inc_path]
++    subdir = '%s_sub' % lang
++    test.subdir(subdir)
+ 
+-if not where_java_include:
+-    test.skip_test('Can not find installed Java include files, skipping test.\n')
++    test.write(os.path.join(subdir, 'foo_interface.i'), """\
++%module foopack
++""")
+ 
+-test.write(['SConstruct'], """\
+-env = Environment(tools = ['default', 'swig'],
+-                CPPPATH=%(where_java_include)s,                 
+-                )
++    test.write([os.path.join(subdir, 'SConscript')], """\
++import os            
+ 
+-Java_foo_interface = env.SharedLibrary(
+-    'Java_foo_interface', 
+-    'Java_foo_interface.i', 
+-    SWIGOUTDIR = 'java/build',
+-    SWIGFLAGS = '-c++ -java -Wall',
+-    SWIGCXXFILESUFFIX = "_wrap.cpp")
++# Duplicate OS environment, so required variables to find build tools etc. are
++# found
++env = Environment(tools=['default', 'swig'], CPPPATH=%(inc_path)s,
++    ENV=os.environ)
++
++env.LoadableModule(
++    'foo_interface', 
++    'foo_interface.i', 
++    SWIGOUTDIR = '%(lang)s/build',
++    SWIGFLAGS = '-c++ -%(lang)s -Wall',
++    SWIGCXXFILESUFFIX = '_wrap.cpp')
+ """ % locals())
+ 
+-test.write('Java_foo_interface.i', """\
+-%module foopack
+-""")
++    test.write("SConstruct", """\
++SConscript('%(subdir)s/SConscript')
++""" % locals())
+ 
+-# SCons should realize that it needs to create the java/build
+-# subdirectory to hold the generate .java files.
+-test.run(arguments = '.')
++def _check_build(generated):
++    # SCons should realize that it needs to create the output directory to hold the
++    # generated files.
++    test.run(arguments = '.')
+ 
+-# SCons should remove the built .java files.
+-test.run(arguments = '-c java/build/foopack.java java/build/foopackJNI.java')
++    # SCons should remove the generated files
++    test.run(arguments = '-c %s' % string.join(generated, ' '))
++    for f in generated:
++        test.must_not_exist(f)
+ 
+-test.must_not_exist('java/build/foopackJNI.java')
+-test.must_not_exist('java/build/foopack.java') 
++    # SCons should realize it needs to rebuild the removed files.
++    test.not_up_to_date(arguments = '.')
+ 
+-# SCons should realize it needs to rebuild the removed .java files.
+-test.not_up_to_date(arguments = '.')
++where_java_include = test.java_where_includes()
++if not where_java_include:
++    print 'Can not find installed Java include files, not testing Java aspect.'
++else:
++    _write_sconstruct('java', where_java_include)
++    _check_build(['java/build/foopackJNI.java', 'java/build/foopack.java'])
+ 
++py_inc = test.get_python_inc()
++if not py_inc:
++    print 'Can not find installed Python include files, not testing Python aspect.'
++else:
++    _write_sconstruct('python', py_inc)
++    _check_build(['python/build/foopack.py'])
+ 
+ 
+ test.pass_test()
+Index: test/SWIG/languages.py
+===================================================================
+--- test/SWIG/languages.py	(revision 0)
++++ test/SWIG/languages.py	(revision 0)
+@@ -0,0 +1,78 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++""" Test target emission logic for all SWIG target languages.
++
++We do this by replacing SWIG with a dummy version and verify that SCons expects
++targets corresponding to each language.
++"""
++import string
++
++import TestSCons
++import SCons.Tool.swig
++
++test = TestSCons.TestSCons()
++langs = list(SCons.Tool.swig.target_languages)
++
++test.write('myswig.py', r"""
++""")
++
++test.write('test.i', """%module test
++""")
++
++def _test_lang(lang, extra=[], expect_warn=False):
++    _python = test.get_quoted_platform_python()
++    test.write('SConstruct', """
++env = Environment(tools=['default', 'swig'], SWIG=r'%(_python)s myswig.py',
++        SWIGFLAGS=['-%(lang)s'])
++env.CFile(target='test', source='test.i')
++""" % locals())
++    test.not_up_to_date(arguments='test_wrap.c ' + string.join(extra, " "),
++            stderr=None) 
++    if expect_warn:
++        test.fail_test(not test.match_re(test.stderr(), r"""
++scons: warning: Not emitting targets for SWIG target language '%s'
++""" % lang + TestSCons.file_expr))
++
++# Test supported languages
++
++for x in ('tcl', ('python', 'test.py'), ('java', ('test.java',
++        'testJNI.java'))):
++    try: lang, extra = x
++    except ValueError: lang, extra = x, []
++    if isinstance(extra, basestring):
++        extra = [extra]
++
++    _test_lang(lang, extra)
++
++# Test unsupported languages
++
++for lang in ('python', 'tcl', 'java'):
++    langs.remove(lang)
++for lang in langs:
++    _test_lang(lang, expect_warn=True)
++
++test.pass_test()
+Index: src/engine/SCons/Tool/swig.py
+===================================================================
+--- src/engine/SCons/Tool/swig.py	(revision 3835)
++++ src/engine/SCons/Tool/swig.py	(working copy)
+@@ -41,6 +41,7 @@
+ import SCons.Scanner
+ import SCons.Tool
+ import SCons.Util
++import SCons.Warnings
+ 
+ SwigAction = SCons.Action.Action('$SWIGCOM', '$SWIGCOMSTR')
+ 
+@@ -52,31 +53,70 @@
+ 
+ # Match '%module test', as well as '%module(directors="1") test'
+ _reModule = re.compile(r'%module(?:\s*\(.*\))?\s+(.+)')
++ 
++target_languages = ('allegrocl', 'chicken', 'clisp', 'cffi', 'csharp', 'guile',
++        'java', 'lua', 'modula3', 'mzscheme', 'ocaml', 'perl',
++        'php4', 'php5', 'pike', 'python', 'r', 'ruby', 'sexp',
++        'tcl', 'uffi', 'xml',)
+ 
++class _UnsupportedLang(SCons.Warnings.Warning):
++    pass
++
+ def _swigEmitter(target, source, env):
+-    swigflags = env.subst("$SWIGFLAGS", target=target, source=source)
++    swigflags = env.subst('$SWIGFLAGS', target=target, source=source)
+     flags = SCons.Util.CLVar(swigflags)
++
++    # Determine the language for which to generate wrappers. SWIG will only
++    # target one language at a time, and if several are specified it will pick
++    # the last one.
++
++    # The list of currently (as of V1.3.33) known SWIG language switches.
++    # This needs to be up-to-date in order for us to recognize language
++    # switches from other flags, and thus determine correctly which language
++    # is generated for.
++    gen_lang = None
++    for f in reversed(flags):
++        poss_lang = f[1:]
++        if poss_lang in target_languages:
++            gen_lang = poss_lang
++            break
++    # Check whether extra targets will be generated at all
++    if (gen_lang is None or gen_lang in ('tcl',) or (gen_lang == 'python' and
++            '-noproxy' in flags)):
++        return (target, source)
++
++    outdir = env.get('SWIGOUTDIR')
++    if outdir:
++        if isinstance(outdir, basestring):
++            # Treat raw pathname as relative to root
++            outdir = env.fs.Dir(outdir, "#")
++    else:
++        outdir = target[0].dir
++
++    t_from_s = lambda t, p, s, x: t.dir
+     for src in source:
+-        src = str(src.rfile())
+-        mnames = None
+-        if "-python" in flags and "-noproxy" not in flags:
+-            if mnames is None:
+-                mnames = _reModule.findall(open(src).read())
+-            target.extend(map(lambda m, d=target[0].dir:
+-                                     d.File(m + ".py"), mnames))
+-        if "-java" in flags:
+-            if mnames is None:
+-                mnames = _reModule.findall(open(src).read())
+-            java_files = map(lambda m: [m + ".java", m + "JNI.java"], mnames)
+-            java_files = SCons.Util.flatten(java_files)
+-            outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
+-            if outdir:
+-                 java_files = map(lambda j, o=outdir: os.path.join(o, j), java_files)
+-            java_files = map(env.fs.File, java_files)
+-            for jf in java_files:
+-                t_from_s = lambda t, p, s, x: t.dir
+-                SCons.Util.AddMethod(jf, t_from_s, 'target_from_source')
+-            target.extend(java_files)
++        # Determine extra targets that are generated from this specification
++        mnames = _reModule.findall(open(src.srcnode().abspath).read())
++        for m in mnames:
++            generated = None    # Reset
++            if gen_lang == 'python':
++                generated = [m + '.py']
++            elif gen_lang == 'java':
++                generated = [m + '.java', m + 'JNI.java']
++            else:
++                SCons.Warnings.enableWarningClass(_UnsupportedLang)
++                SCons.Warnings.warn(_UnsupportedLang,
++                        'Not emitting targets for SWIG target language \'%s\'' %
++                        (gen_lang,))
++                continue
++
++            for gen in generated:
++                f = outdir.Entry(gen)
++                if gen_lang == 'java':
++                    # Not sure what this is good for
++                    SCons.Util.AddMethod(f, t_from_s, 'target_from_source')
++                target.append(f)
++
+     return (target, source)
+ 
+ def generate(env):
