@@ -1,0 +1,120 @@
+--- test_pycheckerORIG.py	2007-05-17 09:50:20.000000000 -0700
++++ test_pychecker.py	2008-04-27 08:13:18.000000000 -0700
+@@ -37,7 +37,7 @@
+ 
+ test = TestSCons.TestSCons()
+ 
+-test.skip_test('Not ready for clean pychecker output; skipping test.\n')
++#test.skip_test('Not ready for clean pychecker output; skipping test.\n')
+ 
+ try:
+     import pychecker
+@@ -113,6 +113,76 @@
+ 
+ os.environ['PYTHONPATH'] = src_engine
+ 
++def debugf(fmt, *args, **kwds):
++    '''Formatted print.
++    '''
++    if 0:  ## 1 or True
++        fmt = 'DEBUG ' + fmt
++        if kwds:  # either ...
++            print(fmt % kwds)
++        elif args:  # ... or
++            print(fmt % args)
++        else:
++            print(fmt)
++
++def pychecked(line, py, src, okd=''):
++    '''Check whether source line is OK'd.
++    '''
++    try:  # get source line
++        s = src[int(line) - 1]
++        p = string.find(s, '#PYCHECKER ')
++        if p > 0:  # line OK'd
++            okd = string.rstrip(s[p:])
++    except:  # ValueError, IndexError:
++        debugf('no line %s in file: %s', line, py)
++    return okd
++
++def python_source(name, py, src, paths):
++    '''Get source code for file name.
++    '''
++    if name != py and name[-3:] == '.py':  ## name.endswith('.py')
++        py, src = name, []  # other source file
++        debugf('looking for source file: %s', py)
++        for p in paths:  # find file in dirs
++            try:
++                t = os.path.join(p, py)
++                f = open(t, 'r')
++                src = f.readlines()
++                f.close()
++                debugf('found file: %s (%s lines)', t, len(src))
++                break
++            except (IOError, OSError):
++                pass
++        else:
++            debugf('file not found: %s', py)
++    return py, src
++
++OK_d = 1  # print OK'd PyChecker warning messages
++
++def postprocess(output, paths=('', src_engine)):
++    '''Process PyChecker output string.
++
++       Adapted from Python Cookbook recipe at ActiveState
++       <http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/546532>.
++    '''
++    py  = ''  # source file name
++    src = []  # source lines
++    ms  = []  # non-OK'd warning messages
++    for m in string.split(output, os.linesep):  # process each message
++        m = string.rstrip(m)
++        if m:  # only non-blank message
++            s, okd = string.split(m, ':', 2), ''
++            if len(s) > 2:  # file name, line number, rest
++                if s[1] and s[1][0] in string.digits:  ## s[1].isdigit()
++                    py, src = python_source(s[0], py, src, paths)
++                    okd = pychecked(s[1], py, src, okd)
++            if not okd:
++                ms.append(m)
++            elif OK_d:
++                m = string.replace(m, src_engine_, '')
++                print '%s - %s' % (m, okd)
++    return string.join(ms, os.linesep)
++
+ for file in files:
+ 
+     file = os.path.join(src_engine, file)
+@@ -120,22 +190,25 @@
+ 
+     test.run(program=program, arguments=args, status=None, stderr=None)
+ 
+-    stdout = test.stdout()
++    stdout = postprocess(test.stdout())
+     stdout = string.replace(stdout, src_engine_, '')
+ 
+-    stderr = test.stderr()
++    stderr = postprocess(test.stderr())
+     stderr = string.replace(stderr, src_engine_, '')
+     stderr = string.replace(stderr, pywintypes_warning, '')
+ 
+     if test.status or stdout or stderr:
+-        mismatches.append('\n')
+-        mismatches.append(string.join([program] + args) + '\n')
++        mismatches.append(os.linesep)
++        mismatches.append(string.join([program] + args))
++        mismatches.append(os.linesep)
+ 
+-        mismatches.append('STDOUT =====================================\n')
++        mismatches.append('STDOUT =====================================')
++        mismatches.append(os.linesep)
+         mismatches.append(stdout)
+ 
+         if stderr:
+-            mismatches.append('STDERR =====================================\n')
++            mismatches.append('STDERR =====================================')
++            mismatches.append(os.linesep)
+             mismatches.append(stderr)
+ 
+ if mismatches:
