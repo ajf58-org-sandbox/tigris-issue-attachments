@@ -1,0 +1,47 @@
+Index: src/engine/SCons/Defaults.py
+===================================================================
+--- src/engine/SCons/Defaults.py	(revision 2988)
++++ src/engine/SCons/Defaults.py	(working copy)
+@@ -414,7 +414,10 @@
+         self.method = method
+     def __call__(self, *args, **kw):
+         try: 1/0
+-        except ZeroDivisionError: frame = sys.exc_info()[2].tb_frame
++        except ZeroDivisionError: 
++            # Don't start iterating with the current stack-frame to
++            # prevent creating reference cycles (f_back is safe).
++            frame = sys.exc_info()[2].tb_frame.f_back
+         variable = self.variable
+         while frame:
+             if frame.f_locals.has_key(variable):
+Index: src/engine/SCons/Script/SConscript.py
+===================================================================
+--- src/engine/SCons/Script/SConscript.py	(revision 2988)
++++ src/engine/SCons/Script/SConscript.py	(working copy)
+@@ -81,7 +81,10 @@
+     """Return the locals and globals for the function that called
+     into this module in the current call stack."""
+     try: 1/0
+-    except ZeroDivisionError: frame = sys.exc_info()[2].tb_frame
++    except ZeroDivisionError: 
++        # Don't start iterating with the current stack-frame to
++        # prevent creating reference cycles (f_back is safe).
++        frame = sys.exc_info()[2].tb_frame.f_back
+ 
+     # Find the first frame that *isn't* from this file.  This means
+     # that we expect all of the SCons frames that implement an Export()
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 2988)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -235,7 +235,9 @@
+             raise
+         elif issubclass(exc_type, SCons.Errors.BuildError):
+             # we ignore Build Errors (occurs, when a test doesn't pass)
+-            pass
++            # Clear the exception to prevent the contained traceback to build a
++            # reference cycle.
++            self.exc_clear()
+         else:
+             self.display('Caught exception while building "%s":\n' %
+                          self.targets[0])
