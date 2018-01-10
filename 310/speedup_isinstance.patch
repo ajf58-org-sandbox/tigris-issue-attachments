@@ -1,0 +1,356 @@
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/Action.py
+--- a/src/engine/SCons/Action.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/Action.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -566,7 +566,7 @@ class CommandAction(_ActionAction):
+         """
+         from SCons.Subst import escape_list
+         import SCons.Util
+-        flatten = SCons.Util.flatten
++        flatten_sequence = SCons.Util.flatten_sequence
+         is_String = SCons.Util.is_String
+         is_List = SCons.Util.is_List
+ 
+@@ -601,7 +601,7 @@ class CommandAction(_ActionAction):
+                     # If the value is a list, then we assume it is a
+                     # path list, because that's a pretty common list-like
+                     # value to stick in an environment variable:
+-                    value = flatten(value)
++                    value = flatten_sequence(value)
+                     ENV[key] = string.join(map(str, value), os.pathsep)
+                 else:
+                     # If it isn't a string or a list, then we just coerce
+@@ -891,9 +891,8 @@ class ListAction(ActionBase):
+         return string.join(map(str, self.list), '\n')
+     
+     def presub_lines(self, env):
+-        return SCons.Util.flatten(map(lambda a, env=env:
+-                                      a.presub_lines(env),
+-                                      self.list))
++        return SCons.Util.flatten_sequence(
++            map(lambda a, env=env: a.presub_lines(env), self.list))
+ 
+     def get_contents(self, target, source, env):
+         """Return the signature contents of this action list.
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/Builder.py
+--- a/src/engine/SCons/Builder.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/Builder.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -712,12 +712,7 @@ class BuilderBase:
+             return None
+ 
+         result = []
+-
+-        if SCons.Util.is_List(source):
+-            source = SCons.Util.flatten(source)
+-        else:
+-            source = [source]
+-        for s in source:
++        for s in SCons.Util.flatten(source):
+             if SCons.Util.is_String(s):
+                 match_suffix = match_src_suffix(env.subst(s))
+                 if not match_suffix and not '.' in s:
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/BuilderTests.py
+--- a/src/engine/SCons/BuilderTests.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/BuilderTests.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -159,6 +159,7 @@ class MyNode_without_target_from_source:
+         self.builder = None
+         self.is_explicit = None
+         self.side_effect = 0
++        self.suffix = os.path.splitext(name)[1]
+     def disambiguate(self):
+         return self
+     def __str__(self):
+@@ -1110,9 +1111,9 @@ class BuilderTestCase(unittest.TestCase)
+         assert r == 'A_', r
+         r = builder.get_suffix(env)
+         assert r == '.B', r
+-        r = builder.get_prefix(env, ['X.C'])
++        r = builder.get_prefix(env, [MyNode('X.C')])
+         assert r == 'E_', r
+-        r = builder.get_suffix(env, ['X.C'])
++        r = builder.get_suffix(env, [MyNode('X.C')])
+         assert r == '.D', r
+ 
+         builder = SCons.Builder.Builder(prefix='A_', suffix={}, action={})
+@@ -1143,7 +1144,7 @@ class BuilderTestCase(unittest.TestCase)
+         assert r == 'A_', r
+         r = builder.get_suffix(env)
+         assert r == None, r
+-        r = builder.get_suffix(env, ['X.src_sfx1'])
++        r = builder.get_suffix(env, [MyNode('X.src_sfx1')])
+         assert r == None, r
+         r = builder.get_src_suffix(env)
+         assert r == '.src_sfx1', r
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/Defaults.py
+--- a/src/engine/SCons/Defaults.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/Defaults.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -253,9 +253,6 @@ def _concat(prefix, list, suffix, env, f
+     if not list:
+         return list
+ 
+-    if SCons.Util.is_List(list):
+-        list = SCons.Util.flatten(list)
+-
+     l = f(SCons.PathList.PathList(list).subst_path(env, target, source))
+     if not l is None:
+         list = l
+@@ -321,18 +318,8 @@ def _stripixes(prefix, list, suffix, str
+         else:
+             c = _concat_ixes
+     
+-    if SCons.Util.is_List(list):
+-        list = SCons.Util.flatten(list)
+-
+-    if SCons.Util.is_List(stripprefixes):
+-        stripprefixes = map(env.subst, SCons.Util.flatten(stripprefixes))
+-    else:
+-        stripprefixes = [env.subst(stripprefixes)]
+-
+-    if SCons.Util.is_List(stripsuffixes):
+-        stripsuffixes = map(env.subst, SCons.Util.flatten(stripsuffixes))
+-    else:
+-        stripsuffixes = [stripsuffixes]
++    stripprefixes = map(env.subst, SCons.Util.flatten(stripprefixes))
++    stripsuffixes = map(env.subst, SCons.Util.flatten(stripsuffixes))
+ 
+     stripped = []
+     for l in SCons.PathList.PathList(list).subst_path(env, None, None):
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/Environment.py
+--- a/src/engine/SCons/Environment.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/Environment.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -373,10 +373,7 @@ class SubstitutionEnvironment:
+         if not args:
+             return []
+ 
+-        if SCons.Util.is_List(args):
+-            args = SCons.Util.flatten(args)
+-        else:
+-            args = [args]
++        args = SCons.Util.flatten(args)
+ 
+         nodes = []
+         for v in args:
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/Scanner/Prog.py
+--- a/src/engine/SCons/Scanner/Prog.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/Scanner/Prog.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -54,10 +54,8 @@ def scan(node, env, libpath = ()):
+         return []
+     if SCons.Util.is_String(libs):
+         libs = string.split(libs)
+-    elif SCons.Util.is_List(libs):
++    else:
+         libs = SCons.Util.flatten(libs)
+-    else:
+-        libs = [libs]
+ 
+     try:
+         prefix = env['LIBPREFIXES']
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/Util.py
+--- a/src/engine/SCons/Util.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/Util.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -407,40 +407,130 @@ except TypeError:
+             t = type(obj)
+             return t is StringType \
+                 or (t is InstanceType and isinstance(obj, UserString))
++
++    def is_Scalar(obj):
++        return is_String(obj) or not is_Sequence(obj)
++
++    def flatten(obj, result=None):
++        """Flatten a sequence to a non-nested list.
++
++        Flatten() converts either a single scalar or a nested sequence
++        to a non-nested list. Note that flatten() considers strings
++        to be scalars instead of sequences like Python would.
++        """
++        if is_Scalar(obj):
++            result [obj]
++        if result is None:
++            result = []
++        for item in obj:
++            if is_Scalar(item):
++                result.append(item)
++            else:
++                flatten_sequence(item, scalarp, result)
++        return result
++
++    def flatten_sequence(sequence, result=None):
++        """Flatten a sequence to a non-nested list.
++
++        Same as flatten(), but it does not handle the single scalar
++        case. This is slightly more efficient when one knows that it
++        the sequence to flatten can not be a scalar.
++        """
++        if result is None:
++            result = []
++        for item in sequence:
++            if is_Scalar(item):
++                result.append(item)
++            else:
++                flatten_sequence(item, scalarp, result)
++        return result
+ else:
+     # A modern Python version with new-style classes, so we can just use
+     # isinstance().
+-    def is_Dict(obj):
+-        return isinstance(obj, (dict, UserDict))
++    #
++    # We are using the following trick to speed-up these
++    # functions. Default arguments are used to take a snapshot of the
++    # the global functions and constants used by these functions. This
++    # transforms accesses to global variable into local variables
++    # accesses (i.e. LOAD_FAST instead of LOAD_GLOBAL).
+ 
+-    def is_List(obj):
++    DictTypes = (dict, UserDict)
++    ListTypes = (list, UserList)
++    SequenceTypes = (list, tuple, UserList)
++
++    # Empirically, Python versions with new-style classes all have
++    # unicode.
++    #
++    # Note that profiling data shows a speed-up when comparing
++    # explicitely with str and unicode instead of simply comparing
++    # with basestring. (at least on Python 2.5.1)
++    StringTypes = (str, unicode, UserString)
++
++    def is_Dict(obj, isinstance=isinstance, DictTypes=DictTypes):
++        return isinstance(obj, DictTypes)
++
++    def is_List(obj, isinstance=isinstance, ListTypes=ListTypes):
+         return isinstance(obj, (list, UserList))
+ 
+-    def is_Sequence(obj):
+-        return isinstance(obj, (list, UserList, tuple))
++    def is_Sequence(obj, isinstance=isinstance, SequenceTypes=SequenceTypes):
++        return isinstance(obj, SequenceTypes)
+ 
+-    def is_Tuple(obj):
+-        return isinstance(obj, (tuple))
++    def is_Tuple(obj, isinstance=isinstance, tuple=tuple):
++        return isinstance(obj, tuple)
+ 
+-    def is_String(obj):
+-        # Empirically, Python versions with new-style classes all have unicode.
+-        return isinstance(obj, (str, unicode, UserString))
++    def is_String(obj, isinstance=isinstance, StringTypes=StringTypes):
++        return isinstance(obj, StringTypes)
+ 
++    def is_Scalar(obj, isinstance=isinstance, StringTypes=StringTypes, SequenceTypes=SequenceTypes):
++        # Profiling shows that there is an impressive speed-up of 2x
++        # when explicitely checking for strings instead of just not
++        # sequence when the argument (i.e. obj) is already a string.
++        # But, if obj is a not string than it is twice as fast to
++        # check only for 'not sequence'. The following code therefore
++        # assumes that the obj argument is a string must of the time.
++        return isinstance(obj, StringTypes) or not isinstance(obj, SequenceTypes)
+ 
++    def do_flatten(sequence, result, isinstance=isinstance, 
++                   StringTypes=StringTypes, SequenceTypes=SequenceTypes):
++        for item in sequence:
++            if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
++                result.append(item)
++            else:
++                do_flatten(item, result)
+ 
+-def is_Scalar(e):
+-    return is_String(e) or (not is_List(e) and not is_Tuple(e))
++    def flatten(obj, isinstance=isinstance, StringTypes=StringTypes, 
++                SequenceTypes=SequenceTypes, do_flatten=do_flatten):
++        """Flatten a sequence to a non-nested list.
+ 
+-def flatten(sequence, scalarp=is_Scalar, result=None):
+-    if result is None:
++        Flatten() converts either a single scalar or a nested sequence
++        to a non-nested list. Note that flatten() considers strings
++        to be scalars instead of sequences like Python would.
++        """
++        if isinstance(obj, StringTypes) or not isinstance(obj, SequenceTypes):
++            return [obj]
+         result = []
+-    for item in sequence:
+-        if scalarp(item):
+-            result.append(item)
+-        else:
+-            flatten(item, scalarp, result)
+-    return result
++        for item in obj:
++            if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
++                result.append(item)
++            else:
++                do_flatten(item, result)
++        return result
+ 
++    def flatten_sequence(sequence, isinstance=isinstance, StringTypes=StringTypes, 
++                         SequenceTypes=SequenceTypes, do_flatten=do_flatten):
++        """Flatten a sequence to a non-nested list.
++
++        Same as flatten(), but it does not handle the single scalar
++        case. This is slightly more efficient when one knows that it
++        the sequence to flatten can not be a scalar.
++        """
++        result = []
++        for item in sequence:
++            if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
++                result.append(item)
++            else:
++                do_flatten(item, result)
++        return result
+ 
+ 
+ # The SCons "semi-deep" copy.
+@@ -886,7 +976,7 @@ class Selector(OrderedDict):
+     so that get_suffix() calls always return the first suffix added."""
+     def __call__(self, env, source):
+         try:
+-            ext = splitext(str(source[0]))[1]
++            ext = source[0].suffix
+         except IndexError:
+             ext = ""
+         try:
+diff -r 21436ba467d5 -r 55a3ecfb8d62 src/engine/SCons/UtilTests.py
+--- a/src/engine/SCons/UtilTests.py	Tue Feb 12 11:53:03 2008 -0500
++++ b/src/engine/SCons/UtilTests.py	Fri Feb 22 10:37:22 2008 -0500
+@@ -635,6 +635,14 @@ class UtilTestCase(unittest.TestCase):
+     def test_Selector(self):
+         """Test the Selector class"""
+ 
++        class MyNode:
++            def __init__(self, name):
++                self.name = name
++                self.suffix = os.path.splitext(name)[1]
++
++            def __str__(self):
++                return self.name
++
+         s = Selector({'a' : 'AAA', 'b' : 'BBB'})
+         assert s['a'] == 'AAA', s['a']
+         assert s['b'] == 'BBB', s['b']
+@@ -658,22 +666,22 @@ class UtilTestCase(unittest.TestCase):
+         s = Selector({'.d' : 'DDD', '.e' : 'EEE'})
+         ret = s(env, [])
+         assert ret == None, ret
+-        ret = s(env, ['foo.d'])
++        ret = s(env, [MyNode('foo.d')])
+         assert ret == 'DDD', ret
+-        ret = s(env, ['bar.e'])
++        ret = s(env, [MyNode('bar.e')])
+         assert ret == 'EEE', ret
+-        ret = s(env, ['bar.x'])
++        ret = s(env, [MyNode('bar.x')])
+         assert ret == None, ret
+         s[None] = 'XXX'
+-        ret = s(env, ['bar.x'])
++        ret = s(env, [MyNode('bar.x')])
+         assert ret == 'XXX', ret
+ 
+         env = DummyEnv({'FSUFF' : '.f', 'GSUFF' : '.g'})
+ 
+         s = Selector({'$FSUFF' : 'FFF', '$GSUFF' : 'GGG'})
+-        ret = s(env, ['foo.f'])
++        ret = s(env, [MyNode('foo.f')])
+         assert ret == 'FFF', ret
+-        ret = s(env, ['bar.g'])
++        ret = s(env, [MyNode('bar.g')])
+         assert ret == 'GGG', ret
+ 
+     def test_adjustixes(self):
