@@ -1,0 +1,23 @@
+# Sample of 2 libraries with cylic dependencies
+# library_1 exports func_a using func_c of library 2
+# library_2 exports func_c using func_b of library 1
+import os
+
+env = Environment(ENV=os.environ)
+env.Append(LIBPATH="#")
+
+lib1_objs=[env.SharedObject(f,CPPDEFINES=["DLL_library_1_EXPORTS"])
+           for f in ["func_a.c", "func_b.c"]
+env.StaticLibrary(target="#/library_1',source=lib1_objs,LIBS="library_2")
+env.SharedLibrary(
+   target="#/library_1",
+   source=lib_objs+["#/library_1.lib"],
+   CPPDEFINES=["DLL_library_1_EXPORTS"],
+   LIBS="library_2",
+   no_import_lib=1)
+
+env.SharedLibrary(
+   target="#/library_2",
+   source = ["func_c.c"],
+   CPPDEFINES=["DLL_library_2_EXPORTS"],
+   LIBS="library_1")
