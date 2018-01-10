@@ -1,0 +1,17 @@
+Index: src/engine/SCons/Executor.py
+===================================================================
+--- src/engine/SCons/Executor.py	(revision 2901)
++++ src/engine/SCons/Executor.py	(working copy)
+@@ -237,9 +237,10 @@
+         if scanner:
+             for node in node_list:
+                 node.disambiguate()
+-                scanner = scanner.select(node)
+-                if not scanner:
++                the_scanner = scanner.select(node)
++                if not the_scanner:
+                     continue
++                scanner = the_scanner
+                 path = self.get_build_scanner_path(scanner)
+                 deps.extend(node.get_implicit_deps(env, scanner, path))
+         else:
