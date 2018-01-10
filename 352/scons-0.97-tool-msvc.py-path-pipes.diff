@@ -1,0 +1,48 @@
+--- Tool/msvc.py-orig	2007-05-17 12:36:38.000000000 +0200
++++ Tool/msvc.py	2008-03-19 23:41:02.000000000 +0100
+@@ -196,6 +196,12 @@
+ 
+     dirs = {}
+ 
++    def getPlatformPaths(paths, platform='Win32'):
++        paths = paths.split('|')
++        for (i, (k, v)) in enumerate(zip(paths[:-1], paths[1:])):
++            if i % 2 == 0 and k == platform:
++                return v
++
+     if os.path.exists(settings_path):
+         # now we parse the directories from this file, if it exists.
+         import xml.dom.minidom
+@@ -218,18 +224,15 @@
+                             elif property_name.value == 'IncludeDirectories':
+                                 include_dirs = property.childNodes[0].data
+                                 # ToDo: Support for other destinations than Win32
+-                                include_dirs = include_dirs.replace('Win32|', '')
+-                                dirs['INCLUDE'] = include_dirs
++                                dirs['INCLUDE'] = getPlatformPaths(include_dirs)
+                             elif property_name.value == 'LibraryDirectories':
+-                                lib_dirs = property.childNodes[0].data.replace('Win32|', '')
++                                lib_dirs = property.childNodes[0].data
+                                 # ToDo: Support for other destinations than Win32
+-                                lib_dirs = lib_dirs.replace('Win32|', '')
+-                                dirs['LIBRARY'] = lib_dirs
++                                dirs['LIBRARY'] = getPlatformPaths(lib_dirs)
+                             elif property_name.value == 'ExecutableDirectories':
+-                                path_dirs = property.childNodes[0].data.replace('Win32|', '')
++                                path_dirs = property.childNodes[0].data
+                                 # ToDo: Support for other destinations than Win32
+-                                path_dirs = path_dirs.replace('Win32|', '')
+-                                dirs['PATH'] = path_dirs
++                                dirs['PATH'] = getPlatformPaths(path_dirs)
+     else:
+         # There are no default directories in the registry for VS8 Express :(
+         raise SCons.Errors.InternalError, "Unable to find MSVC paths in the registry."
+@@ -310,6 +313,8 @@
+         key = string.upper(match.group(1))
+         if paths.has_key(key):
+             return paths[key]
++        elif os.environ.has_key(key):
++            return os.environ[key].replace('"', '')
+         else:
+             return '---Unknown Location %s---' % match.group()
+ 
