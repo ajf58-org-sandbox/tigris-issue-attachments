@@ -1,0 +1,324 @@
+=== added file 'src/engine/SCons/Tool/FortranCommon.py'
+--- src/engine/SCons/Tool/FortranCommon.py	1970-01-01 00:00:00 +0000
++++ src/engine/SCons/Tool/FortranCommon.py	2008-02-28 05:59:10 +0000
+@@ -0,0 +1,89 @@
++"""SCons.Tool.FortranCommon
++
++Stuff for processing Fortran, common to all fortran dialects.
++
++"""
++
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import re
++import string
++
++import SCons.Action
++import SCons.Defaults
++import SCons.Scanner.Fortran
++import SCons.Tool
++import SCons.Util
++
++def _fortranEmitter(target, source, env):
++    node = source[0].rfile()
++    if not node.exists() and not node.is_derived():
++       print "Could not locate " + str(node.name)
++       return ([], [])
++    mod_regex = """(?i)^\s*MODULE\s+(?!PROCEDURE)(\w+)"""
++    cre = re.compile(mod_regex,re.M)
++    # Retrieve all USE'd module names
++    modules = cre.findall(node.get_contents())
++    # Remove unique items from the list
++    modules = SCons.Util.unique(modules)
++    # Convert module name to a .mod filename
++    suffix = env.subst('$FORTRANMODSUFFIX', target=target, source=source)
++    moddir = env.subst('$FORTRANMODDIR', target=target, source=source)
++    modules = map(lambda x, s=suffix: string.lower(x) + s, modules)
++    for m in modules:
++       target.append(env.fs.File(m, moddir))
++    return (target, source)
++
++def FortranEmitter(target, source, env):
++    target, source = _fortranEmitter(target, source, env)
++    return SCons.Defaults.StaticObjectEmitter(target, source, env)
++
++def ShFortranEmitter(target, source, env):
++    target, source = _fortranEmitter(target, source, env)
++    return SCons.Defaults.SharedObjectEmitter(target, source, env)
++
++def ComputeFortranSuffixes(suffixes, ppsuffixes):
++    """suffixes are fortran source files, and ppsuffixes the ones to be
++    pre-processed. Both should be sequences, not strings."""
++    assert len(suffixes) > 0
++    s = suffixes[0]
++    sup = string.upper(s)
++    if SCons.Util.case_sensitive_suffixes(s, sup):
++        for i in suffixes:
++            ppsuffixes.append(string.upper(i))
++    else:
++        for i in suffixes:
++            suffixes.append(string.upper(i))
++
++class VariableListGenerator:
++    def __init__(self, *variablelist):
++        self.variablelist = variablelist
++    def __call__(self, env, target, source, for_signature=0):
++        for v in self.variablelist:
++            try: return env[v]
++            except KeyError: pass
++        return ''
++
+
+=== modified file 'src/engine/SCons/Tool/f77.py'
+--- src/engine/SCons/Tool/f77.py	2007-01-31 06:36:20 +0000
++++ src/engine/SCons/Tool/f77.py	2008-02-28 05:59:10 +0000
+@@ -38,16 +38,16 @@
+ import SCons.Tool
+ import SCons.Util
+ import fortran
++from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
++                                     ComputeFortranSuffixes,\
++                                     VariableListGenerator as fVLG
+ 
+ compilers = ['f77']
+ 
+ #
+ F77Suffixes = ['.f77']
+ F77PPSuffixes = []
+-if SCons.Util.case_sensitive_suffixes('.f77', '.F77'):
+-    F77PPSuffixes.append('.F77')
+-else:
+-    F77Suffixes.append('.F77')
++ComputeFortranSuffixes(F77Suffixes, F77PPSuffixes)
+ 
+ #
+ F77Scan = SCons.Scanner.Fortran.FortranScan("F77PATH")
+@@ -57,8 +57,6 @@
+ del suffix
+ 
+ #
+-fVLG = fortran.VariableListGenerator
+-
+ F77Generator = fVLG('F77', 'FORTRAN', '_FORTRAND')
+ F77FlagsGenerator = fVLG('F77FLAGS', 'FORTRANFLAGS')
+ F77CommandGenerator = fVLG('F77COM', 'FORTRANCOM', '_F77COMD')
+@@ -89,14 +87,14 @@
+     for suffix in F77Suffixes:
+         static_obj.add_action(suffix, F77Action)
+         shared_obj.add_action(suffix, ShF77Action)
+-        static_obj.add_emitter(suffix, fortran.FortranEmitter)
+-        shared_obj.add_emitter(suffix, fortran.ShFortranEmitter)
++        static_obj.add_emitter(suffix, FortranEmitter)
++        shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+     for suffix in F77PPSuffixes:
+         static_obj.add_action(suffix, F77PPAction)
+         shared_obj.add_action(suffix, ShF77PPAction)
+-        static_obj.add_emitter(suffix, fortran.FortranEmitter)
+-        shared_obj.add_emitter(suffix, fortran.ShFortranEmitter)
++        static_obj.add_emitter(suffix, FortranEmitter)
++        shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+     env['_F77G']            = F77Generator
+     env['_F77FLAGSG']       = F77FlagsGenerator
+
+=== modified file 'src/engine/SCons/Tool/f90.py'
+--- src/engine/SCons/Tool/f90.py	2007-01-31 06:36:20 +0000
++++ src/engine/SCons/Tool/f90.py	2008-02-28 05:59:10 +0000
+@@ -38,16 +38,16 @@
+ import SCons.Tool
+ import SCons.Util
+ import fortran
++from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
++                                     ComputeFortranSuffixes,\
++                                     VariableListGenerator as fVLG
+ 
+ compilers = ['f90']
+ 
+ #
+ F90Suffixes = ['.f90']
+ F90PPSuffixes = []
+-if SCons.Util.case_sensitive_suffixes('.f90', '.F90'):
+-    F90PPSuffixes.append('.F90')
+-else:
+-    F90Suffixes.append('.F90')
++ComputeFortranSuffixes(F90Suffixes, F90PPSuffixes)
+ 
+ #
+ F90Scan = SCons.Scanner.Fortran.FortranScan("F90PATH")
+@@ -57,8 +57,6 @@
+ del suffix
+ 
+ #
+-fVLG = fortran.VariableListGenerator
+-
+ F90Generator = fVLG('F90', 'FORTRAN', '_FORTRAND')
+ F90FlagsGenerator = fVLG('F90FLAGS', 'FORTRANFLAGS')
+ F90CommandGenerator = fVLG('F90COM', 'FORTRANCOM', '_F90COMD')
+@@ -89,14 +87,14 @@
+     for suffix in F90Suffixes:
+         static_obj.add_action(suffix, F90Action)
+         shared_obj.add_action(suffix, ShF90Action)
+-        static_obj.add_emitter(suffix, fortran.FortranEmitter)
+-        shared_obj.add_emitter(suffix, fortran.ShFortranEmitter)
++        static_obj.add_emitter(suffix, FortranEmitter)
++        shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+     for suffix in F90PPSuffixes:
+         static_obj.add_action(suffix, F90PPAction)
+         shared_obj.add_action(suffix, ShF90PPAction)
+-        static_obj.add_emitter(suffix, fortran.FortranEmitter)
+-        shared_obj.add_emitter(suffix, fortran.ShFortranEmitter)
++        static_obj.add_emitter(suffix, FortranEmitter)
++        shared_obj.add_emitter(suffix, ShFortranEmitter)
+   
+     env['_F90G']            = F90Generator
+     env['_F90FLAGSG']       = F90FlagsGenerator
+
+=== modified file 'src/engine/SCons/Tool/f95.py'
+--- src/engine/SCons/Tool/f95.py	2007-01-31 06:36:20 +0000
++++ src/engine/SCons/Tool/f95.py	2008-02-28 05:59:10 +0000
+@@ -37,16 +37,16 @@
+ import SCons.Tool
+ import SCons.Util
+ import fortran
++from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
++                                     ComputeFortranSuffixes,\
++                                     VariableListGenerator as fVLG
+ 
+ compilers = ['f95']
+ 
+ #
+ F95Suffixes = ['.f95']
+ F95PPSuffixes = []
+-if SCons.Util.case_sensitive_suffixes('.f95', '.F95'):
+-    F95PPSuffixes.append('.F95')
+-else:
+-    F95Suffixes.append('.F95')
++ComputeFortranSuffixes(F95Suffixes, F95PPSuffixes)
+ 
+ #
+ F95Scan = SCons.Scanner.Fortran.FortranScan("F95PATH")
+@@ -56,8 +56,6 @@
+ del suffix
+ 
+ #
+-fVLG = fortran.VariableListGenerator
+-
+ F95Generator = fVLG('F95', 'FORTRAN', '_FORTRAND')
+ F95FlagsGenerator = fVLG('F95FLAGS', 'FORTRANFLAGS')
+ F95CommandGenerator = fVLG('F95COM', 'FORTRANCOM', '_F95COMD')
+@@ -88,14 +86,14 @@
+     for suffix in F95Suffixes:
+         static_obj.add_action(suffix, F95Action)
+         shared_obj.add_action(suffix, ShF95Action)
+-        static_obj.add_emitter(suffix, fortran.FortranEmitter)
+-        shared_obj.add_emitter(suffix, fortran.ShFortranEmitter)
++        static_obj.add_emitter(suffix, FortranEmitter)
++        shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+     for suffix in F95PPSuffixes:
+         static_obj.add_action(suffix, F95PPAction)
+         shared_obj.add_action(suffix, ShF95PPAction)
+-        static_obj.add_emitter(suffix, fortran.FortranEmitter)
+-        shared_obj.add_emitter(suffix, fortran.ShFortranEmitter)
++        static_obj.add_emitter(suffix, FortranEmitter)
++        shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+     env['_F95G']           = F95Generator
+     env['_F95FLAGSG']      = F95FlagsGenerator
+
+=== modified file 'src/engine/SCons/Tool/fortran.py'
+--- src/engine/SCons/Tool/fortran.py	2007-07-31 21:15:18 +0000
++++ src/engine/SCons/Tool/fortran.py	2008-02-28 05:59:10 +0000
+@@ -41,6 +41,9 @@
+ import SCons.Scanner.Fortran
+ import SCons.Tool
+ import SCons.Util
++from SCons.Tool.FortranCommon import FortranEmitter, ShFortranEmitter, \
++                                     ComputeFortranSuffixes,\
++                                     VariableListGenerator
+ 
+ compilers = ['f95', 'f90', 'f77']
+ 
+@@ -52,11 +55,7 @@
+ #
+ FortranSuffixes = [".f", ".for", ".ftn", ]
+ FortranPPSuffixes = ['.fpp', '.FPP']
+-upper_case = [".F", ".FOR", ".FTN"]
+-if SCons.Util.case_sensitive_suffixes('.f', '.F'):
+-    FortranPPSuffixes.extend(upper_case)
+-else:
+-    FortranSuffixes.extend(upper_case)
++ComputeFortranSuffixes(FortranSuffixes, FortranPPSuffixes)
+ 
+ #
+ FortranScan = SCons.Scanner.Fortran.FortranScan("FORTRANPATH")
+@@ -66,43 +65,6 @@
+ del suffix
+ 
+ #
+-def _fortranEmitter(target, source, env):
+-    node = source[0].rfile()
+-    if not node.exists() and not node.is_derived():
+-       print "Could not locate " + str(node.name)
+-       return ([], [])
+-    mod_regex = """(?i)^\s*MODULE\s+(?!PROCEDURE)(\w+)"""
+-    cre = re.compile(mod_regex,re.M)
+-    # Retrieve all USE'd module names
+-    modules = cre.findall(node.get_contents())
+-    # Remove unique items from the list
+-    modules = SCons.Util.unique(modules)
+-    # Convert module name to a .mod filename
+-    suffix = env.subst('$FORTRANMODSUFFIX', target=target, source=source)
+-    moddir = env.subst('$FORTRANMODDIR', target=target, source=source)
+-    modules = map(lambda x, s=suffix: string.lower(x) + s, modules)
+-    for m in modules:
+-       target.append(env.fs.File(m, moddir))
+-    return (target, source)
+-
+-def FortranEmitter(target, source, env):
+-    target, source = _fortranEmitter(target, source, env)
+-    return SCons.Defaults.StaticObjectEmitter(target, source, env)
+-
+-def ShFortranEmitter(target, source, env):
+-    target, source = _fortranEmitter(target, source, env)
+-    return SCons.Defaults.SharedObjectEmitter(target, source, env)
+-
+-class VariableListGenerator:
+-    def __init__(self, *variablelist):
+-        self.variablelist = variablelist
+-    def __call__(self, env, target, source, for_signature=0):
+-        for v in self.variablelist:
+-            try: return env[v]
+-            except KeyError: pass
+-        return ''
+-
+-#
+ FortranGenerator = VariableListGenerator('FORTRAN', 'F77', '_FORTRAND')
+ FortranFlagsGenerator = VariableListGenerator('FORTRANFLAGS', 'F77FLAGS')
+ FortranCommandGenerator = VariableListGenerator('FORTRANCOM', 'F77COM', '_FORTRANCOMD')
+
