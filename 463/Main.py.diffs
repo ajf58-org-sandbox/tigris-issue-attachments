@@ -1,0 +1,19 @@
+*** Main.py.orig	2008-07-31 08:04:43.093750000 -0700
+--- Main.py	2008-07-31 08:14:10.031250000 -0700
+***************
+*** 78,84 ****
+      # globl in nest scopes and UnboundLocalErrors and the like in some
+      # versions (2.1) of Python.
+      import SCons.Platform.win32
+!     SCons.Platform.win32.parallel_msg
+  
+  #
+  
+--- 78,84 ----
+      # globl in nest scopes and UnboundLocalErrors and the like in some
+      # versions (2.1) of Python.
+      import SCons.Platform.win32
+!     print SCons.Platform.win32.parallel_msg
+  
+  #
+  
