@@ -1,0 +1,22 @@
+env = Environment()
+
+def makeTestCase(target, source, env):
+    open(str(target[0]), 'w').write("""
+    #if 0
+    #include "foo/bar.h"
+    #endif
+    int main(int argc, char *argv[]) {return 0;}
+    """)
+env.Command('testcase.cpp', None, makeTestCase)
+rule = env.Program('testcase', 'testcase.cpp')
+
+if 1:
+    # This works on the first build, but not the second
+    foo = env.Entry('foo')
+    if 0:
+        # this will fix your second build
+        foo.disambiguate()
+
+# This line forces the failure to occit on the second build (not the first)
+print map(str, rule[0].all_children()[0].all_children())
+
