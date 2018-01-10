@@ -1,0 +1,42 @@
+diff -Naur /home/mati/scons-svn/core-clean-copy/src/engine/SCons/compat/__init__.py SCons/compat/__init__.py
+--- /home/mati/scons-svn/core-clean-copy/src/engine/SCons/compat/__init__.py	2008-07-27 15:32:02.000000000 +0000
++++ SCons/compat/__init__.py	2008-07-28 10:44:39.000000000 +0000
+@@ -193,3 +193,12 @@
+ except ImportError:
+     # Pre-1.6 Python has no UserString module.
+     import_as('_scons_UserString', 'UserString')
++
++import os.path
++try:
++    os.path.lexists
++except AttributeError:
++    # Pre-2.4 Python has no os.path.lexists function
++    def lexists(path):
++        return os.path.exists(path) or os.path.islink(path)
++    os.path.lexists = lexists
+diff -Naur /home/mati/scons-svn/core-clean-copy/src/engine/SCons/Script/Main.py SCons/Script/Main.py
+--- /home/mati/scons-svn/core-clean-copy/src/engine/SCons/Script/Main.py	2008-07-27 15:32:02.000000000 +0000
++++ SCons/Script/Main.py	2008-07-27 15:30:19.000000000 +0000
+@@ -306,8 +306,8 @@
+     """An SCons clean task."""
+     def fs_delete(self, path, pathstr, remove=1):
+         try:
+-            if os.path.exists(path):
+-                if os.path.isfile(path):
++            if os.path.lexists(path):
++                if os.path.isfile(path) or os.path.islink(path):
+                     if remove: os.unlink(path)
+                     display("Removed " + pathstr)
+                 elif os.path.isdir(path) and not os.path.islink(path):
+@@ -327,6 +327,11 @@
+                     # then delete dir itself
+                     if remove: os.rmdir(path)
+                     display("Removed directory " + pathstr)
++                else:
++                    errstr = "Path '%s' exists but isn't a file or directory."
++                    raise SCons.Errors.UserError(errstr % (pathstr))
++        except SCons.Errors.UserError, e:
++            print e
+         except (IOError, OSError), e:
+             print "scons: Could not remove '%s':" % pathstr, e.strerror
+ 
