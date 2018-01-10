@@ -1,0 +1,33 @@
+# aboutlicmgrform.ui
+
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -o buildout/AIX5L/Debug/cpp/process/license_manager/aboutlicmgrform.h src/cpp/process/license_manager/aboutlicmgrform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -impl aboutlicmgrform.h -o buildout/AIX5L/Debug/cpp/process/license_manager/uic_aboutlicmgrform.cpp src/cpp/process/license_manager/aboutlicmgrform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/moc -o buildout/AIX5L/Debug/cpp/process/license_manager/moc_aboutlicmgrform.cpp buildout/AIX5L/Debug/cpp/process/license_manager/aboutlicmgrform.h
+
+
+# migratelicencesform.ui
+
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -o buildout/AIX5L/Debug/cpp/process/license_manager/migratelicencesform.h src/cpp/process/license_manager/migratelicencesform.ui
+
+#The line below was crashing
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -impl migratelicencesform.h -o buildout/AIX5L/Debug/cpp/process/license_manager/uic_migratelicencesform.cpp src/cpp/process/license_manager/migratelicencesform.ui
+
+/tools/rd/qt/v3.3.8_xlC8/bin/moc -o buildout/AIX5L/Debug/cpp/process/license_manager/moc_migratelicencesform.cpp buildout/AIX5L/Debug/cpp/process/license_manager/migratelicencesform.h
+
+# mainform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -o buildout/AIX5L/Debug/cpp/process/license_manager/mainform.h src/cpp/process/license_manager/mainform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -impl mainform.h -o buildout/AIX5L/Debug/cpp/process/license_manager/uic_mainform.cpp src/cpp/process/license_manager/mainform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/moc -o buildout/AIX5L/Debug/cpp/process/license_manager/moc_mainform.cpp buildout/AIX5L/Debug/cpp/process/license_manager/mainform.h
+
+# versioninfoform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -o buildout/AIX5L/Debug/cpp/process/license_manager/versioninfoform.h src/cpp/process/license_manager/versioninfoform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/uic -impl versioninfoform.h -o buildout/AIX5L/Debug/cpp/process/license_manager/uic_versioninfoform.cpp src/cpp/process/license_manager/versioninfoform.ui
+/tools/rd/qt/v3.3.8_xlC8/bin/moc -o buildout/AIX5L/Debug/cpp/process/license_manager/moc_versioninfoform.cpp buildout/AIX5L/Debug/cpp/process/license_manager/versioninfoform.h
+
+cd src/cpp/process/license_manager
+mv -f aboutlicmgrform.ui aboutlicmgrform.ui.bak
+mv -f migratelicencesform.ui migratelicencesform.ui.bak
+mv -f mainform.ui mainform.ui.bak
+
+
+
