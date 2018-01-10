@@ -1,0 +1,161 @@
+diff -ru scons-src-0.98.5_old/src/engine/SCons/Tool/swig.py scons-src-0.98.5/src/engine/SCons/Tool/swig.py
+--- scons-src-0.98.5_old/src/engine/SCons/Tool/swig.py	2008-06-11 13:43:11.000000000 +0200
++++ scons-src-0.98.5/src/engine/SCons/Tool/swig.py	2008-06-11 14:15:29.000000000 +0200
+@@ -56,27 +56,44 @@
+ def _swigEmitter(target, source, env):
+     swigflags = env.subst("$SWIGFLAGS", target=target, source=source)
+     flags = SCons.Util.CLVar(swigflags)
++    outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
++
++    # Determine the language for which to generate wrappers. SWIG will only
++    # target one language at a time, and if several are specified it will pick
++    # the last one.
++
++    gen_lang = None
++    for f in reversed(flags):
++        if f == "-python" and "-noproxy" not in flags:
++            gen_lang = "python"
++            break
++        elif f == "-java":
++            gen_lang = "java"
++            break
++    if gen_lang is None:
++        # We won't be scanning for generated targets anyway
++        return (target, source)
++
++    def add_files(names, files):
++        for name in names:
++            files.append(os.path.join(outdir, name))
++
+     for src in source:
++        # Determine wrapper sources that are generated from this specification
+         src = str(src.rfile())
+-        mnames = None
+-        if "-python" in flags and "-noproxy" not in flags:
+-            if mnames is None:
+-                mnames = _reModule.findall(open(src).read())
+-            target.extend(map(lambda m, d=target[0].dir:
+-                                     d.File(m + ".py"), mnames))
+-        if "-java" in flags:
+-            if mnames is None:
+-                mnames = _reModule.findall(open(src).read())
+-            java_files = map(lambda m: [m + ".java", m + "JNI.java"], mnames)
+-            java_files = SCons.Util.flatten(java_files)
+-            outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
+-            if outdir:
+-                 java_files = map(lambda j, o=outdir: os.path.join(o, j), java_files)
+-            java_files = map(env.fs.File, java_files)
+-            for jf in java_files:
+-                t_from_s = lambda t, p, s, x: t.dir
+-                SCons.Util.AddMethod(jf, t_from_s, 'target_from_source')
+-            target.extend(java_files)
++        mnames = _reModule.findall(open(src).read())
++        files = []
++        for m in mnames:
++            if gen_lang == "python":
++                add_files([m + ".py"], files)
++            elif gen_lang == "java":
++                add_files([m + ".java", m + "JNI.java"], files)
++
++        for f in files:
++            f = env.fs.File(f)
++            t_from_s = lambda t, p, s, x: t.dir
++            SCons.Util.AddMethod(f, t_from_s, 'target_from_source')
++            target.append(f)
+     return (target, source)
+ 
+ def generate(env):
+diff -ru scons-src-0.98.5_old/test/SWIG/SWIGOUTDIR.py scons-src-0.98.5/test/SWIG/SWIGOUTDIR.py
+--- scons-src-0.98.5_old/test/SWIG/SWIGOUTDIR.py	2008-06-11 13:40:06.000000000 +0200
++++ scons-src-0.98.5/test/SWIG/SWIGOUTDIR.py	2008-06-11 14:15:02.000000000 +0200
+@@ -26,7 +26,7 @@
+ 
+ """
+ Verify that use of the $SWIGOUTDIR variable causes SCons to recognize
+-that Java files are created in the specified output directory.
++that wrapper sources are created in the specified output directory.
+ """
+ 
+ import sys
+@@ -42,12 +42,27 @@
+ if not swig:
+     test.skip_test('Can not find installed "swig", skipping test.\n')
+ 
+-where_java_include=test.java_where_includes()
++def _check_build(generated):
++    # SCons should realize that it needs to create the output directory to hold the
++    # generated files.
++    test.run(arguments = '.')
++
++    # SCons should remove the built .java files.
++    test.run(arguments = '-c %s' % " ".join(generated))
++
++    for f in generated:
++        test.must_not_exist(f)
++
++    # SCons should realize it needs to rebuild the removed files.
++    test.not_up_to_date(arguments = '.')
++
++def _test_java():
++    where_java_include=test.java_where_includes()
++    if not where_java_include:
++        print 'Can not find installed Java include files, not testing Java aspect.'
++        return
+ 
+-if not where_java_include:
+-    test.skip_test('Can not find installed Java include files, skipping test.\n')
+-
+-test.write(['SConstruct'], """\
++    test.write(['SConstruct'], """\
+ env = Environment(tools = ['default', 'swig'],
+                 CPPPATH=%(where_java_include)s,                 
+                 )
+@@ -60,23 +75,38 @@
+     SWIGCXXFILESUFFIX = "_wrap.cpp")
+ """ % locals())
+ 
+-test.write('Java_foo_interface.i', """\
++    test.write('Java_foo_interface.i', """\
+ %module foopack
+ """)
+ 
+-# SCons should realize that it needs to create the java/build
+-# subdirectory to hold the generate .java files.
+-test.run(arguments = '.')
++    _check_build(['java/build/foopackJNI.java', 'java/build/foopack.java'])
++
++def _test_python():
++    py_inc = test.get_python_inc()
++    if not py_inc:
++        print 'Can not find installed Python include files, not testing Python aspect.'
++        return
++    test.write(['SConstruct'], """\
++
++env = Environment(tools=['default', 'swig'], CPPPATH=['%(py_inc)s']
++                )
+ 
+-# SCons should remove the built .java files.
+-test.run(arguments = '-c java/build/foopack.java java/build/foopackJNI.java')
++env.LoadableModule(
++    'pyfoo_interface', 
++    'py_foo_interface.i', 
++    SWIGOUTDIR = 'python/build',
++    SWIGFLAGS = '-c++ -python -Wall',
++    SWIGCXXFILESUFFIX = "_wrap.cpp")
++""" % locals())
+ 
+-test.must_not_exist('java/build/foopackJNI.java')
+-test.must_not_exist('java/build/foopack.java') 
++    test.write('py_foo_interface.i', """\
++%module foopack
++""")
+ 
+-# SCons should realize it needs to rebuild the removed .java files.
+-test.not_up_to_date(arguments = '.')
++    _check_build(['python/build/foopack.py'])
+ 
++_test_java()
++_test_python()
+ 
+ 
+ test.pass_test()
