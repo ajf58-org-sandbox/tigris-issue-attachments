@@ -1,0 +1,25 @@
+Index: scons-0.98.4/scons.1
+===================================================================
+--- scons-0.98.4.orig/scons.1	2008-05-31 20:03:22.000000000 +0200
++++ scons-0.98.4/scons.1	2008-05-31 20:10:08.000000000 +0200
+@@ -21,17 +21,19 @@
+ .\"
+ .\" doc/man/scons.1 2949 2008/05/17 23:07:00 knight
+ .\"
++.TH SCONS 1 "May 2008"
+ .\" ES - Example Start - indents and turns off line fill
++.rm ES
+ .de ES
+ .RS
+ .nf
+ ..
+ .\" EE - Example End - ends indent and turns line fill back on
++.rm EE
+ .de EE
+ .fi
+ .RE
+ ..
+-.TH SCONS 1 "May 2008"
+ .SH NAME
+ scons \- a software construction tool
+ .SH SYNOPSIS
