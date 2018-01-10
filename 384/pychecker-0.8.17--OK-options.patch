@@ -1,0 +1,169 @@
+Binary files pychecker-0.8.17/pychecker/.DS_Store and pychecker-0.8.17--OK/pychecker/.DS_Store differ
+diff -r -u pychecker-0.8.17/pychecker/Config.py pychecker-0.8.17--OK/pychecker/Config.py
+--- pychecker-0.8.17/pychecker/Config.py	2006-02-03 18:29:46.000000000 -0800
++++ pychecker-0.8.17--OK/pychecker/Config.py	2008-04-28 08:33:06.000000000 -0700
+@@ -45,6 +45,7 @@
+ 
+ _OPTIONS = (
+     ('Major Options', [
++ ('',  1, 'OK', 'OK', "warnings from source lines marked #<string> ... are OK"),
+  ('',  0, 'only', 'only', 'only warn about files passed on the command line'),
+  ('e', 1, 'level', None, 'the maximum error level of warnings to be displayed'),
+  ('#', 1, 'limit', 'limit', 'the maximum number of warnings to be displayed'),
+@@ -111,6 +112,7 @@
+  ('6', 0, 'exec', 'usesExec', 'check if the exec statement is used'),
+      ]),
+     ('Suppressions', [
++ ('',  0, 'OKd', 'OKd', "ignore OK'd warnings"),
+  ('q', 0, 'stdlib', 'ignoreStandardLibrary', 'ignore warnings from files under standard library'),
+  ('b', 1, 'blacklist', 'blacklist', 'ignore warnings from the list of modules\n\t\t\t'),
+  ('Z', 1, 'varlist', 'variablesToIgnore', 'ignore global variables not used if name is one of these values\n\t\t\t'),
+@@ -224,6 +226,8 @@
+         self.debug = 0
+         self.quiet = 0
+         self.only = 0
++        self.OK = 'PYCHECKER'
++        self.OKd = True  # print OK'd warnings
+         self.level = 0
+         self.limit = 10
+ 
+diff -r -u pychecker-0.8.17/pychecker/Warning.py pychecker-0.8.17--OK/pychecker/Warning.py
+--- pychecker-0.8.17/pychecker/Warning.py	2006-02-03 18:29:46.000000000 -0800
++++ pychecker-0.8.17--OK/pychecker/Warning.py	2008-04-28 06:20:34.000000000 -0700
+@@ -11,6 +11,8 @@
+ class Warning :
+     "Class which holds error information."
+ 
++    ok = ''  # see checker._printWarnings()
++
+     def __init__(self, file, line, err) :
+         if hasattr(file, "function") :
+             file = file.function.func_code.co_filename
+@@ -44,7 +46,7 @@
+     def format(self) :
+         if not self.file and not self.line:
+             return str(self.err)
+-        return "%s:%d: %s" % (self.file, self.line, self.err)
++        return "%s:%d: %s%s" % (self.file, self.line, self.err, self.ok)
+ 
+     def output(self, stream) :
+         stream.write(self.format() + "\n")
+diff -r -u pychecker-0.8.17/pychecker/checker.py pychecker-0.8.17--OK/pychecker/checker.py
+--- pychecker-0.8.17/pychecker/checker.py	2006-02-03 18:29:46.000000000 -0800
++++ pychecker-0.8.17--OK/pychecker/checker.py	2008-04-28 08:25:46.000000000 -0700
+@@ -659,13 +659,93 @@
+                 module.attributes = [ '__dict__' ] + dir(m) + extra_attrs
+ 
+ 
+-def _printWarnings(warnings, stream=None):
++def _debugf(fmt, *args):
++    '''Formatted print.
++    '''
++    if _cfg.debug :
++        print(('Debug ' + fmt) % args)
++
++def _getDirs(files):
++    '''Get all source directories.
++    '''
++    ds = []
++    if _cfg.OK :
++        for f in files :
++            d = os.path.dirname(f)
++            if d and d not in ds :
++                ds.append(d)
++        ds.append('.')
++        for d in sys.path :
++            if os.path.isdir(d) and d not in ds :
++                ds.append(d)
++        if _cfg.debug :
++            _debugf('dirs to search for source files ...')
++            for d in enumerate(ds) :
++                print('%5d: %r' % d)
++            print('')
++    return tuple(ds)
++
++class _Source(object):
++    '''Source file name and code.
++    '''
++    def __init__(self, name='', lines=()):
++        self.name  = name
++        self.lines = lines
++
++def _getSource(name, dirs):
++    '''Get source code for file name.
++    '''
++    if name.endswith('.py') :
++        _debugf('looking for source file: %s', name)
++        for d in dirs :  # find file in dirs
++            try :
++                t = os.path.join(d, name)
++                f = open(t, 'r')
++                s = f.readlines()
++                f.close()
++                _debugf('found file: %s (%s lines)', t, len(s))
++                return _Source(name, s)
++            except (IOError, OSError) :
++                pass
++        _debugf('file not found: %s', name)
++    return _Source(name)  # no code
++
++def _isOK(line, OK, src):
++    '''Check whether source line is OK'd.
++    '''
++    try :  # get source line
++        s = src.lines[int(line) - 1]
++        p = s.find(OK)
++        if p > 0 :  # line OK'd
++            return s[p:].rstrip()
++    except (ValueError, IndexError) :
++        pass
++    _debugf('no line %s in file: %s', line, src.name)
++    return ''  # not OK'd, not found, etc.
++
++
++def _printWarnings(warnings, stream=None, dirs=('',)):
+     if stream is None:
+         stream = sys.stdout
+-    
++    OK = _cfg.OK
++    if OK :
++       OK = '#%s ' % OK
++    src = _Source() # source file name and code
++
+     warnings.sort()
+     lastWarning = None
+     for warning in warnings :
++
++        # check whether warning is OK'd in the source code
++        if OK and warning.file and warning.line :
++            if warning.file != src.name :
++                src = _getSource(warning.file, dirs)
++            ok = _isOK(warning.line, OK, src)
++            if ok :
++                warning.ok = ' - ' + ok
++                if not _cfg.OKd :
++                    continue  # ignore OK'd warning
++            
+         if lastWarning is not None:
+             # ignore duplicate warnings
+             if cmp(lastWarning, warning) == 0:
+@@ -677,6 +757,8 @@
+         lastWarning = warning
+         warning.output(stream)
+ 
++    return lastWarning is not None
++
+ 
+ def processFiles(files, cfg = None, pre_process_cb = None) :
+     # insert this here, so we find files in the local dir before std library
+@@ -764,8 +846,8 @@
+     if not _cfg.quiet :
+         print "\nWarnings...\n"
+     if warnings or importWarnings :
+-        _printWarnings(importWarnings + warnings)
+-        return 1
++        if _printWarnings(importWarnings + warnings, dirs=_getDirs(files)) :
++            return 1
+ 
+     if not _cfg.quiet :
+         print "None"
