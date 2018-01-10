@@ -1,0 +1,12 @@
+import os
+
+subdir = Split('''
+COM
+common
+''')
+
+for sub in subdir:
+	SConscript(
+		sub + os.sep + 'SConscript',
+		build_dir = 'build' + os.sep + sub,
+		duplicate=0)
