@@ -1,0 +1,68 @@
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 3271)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -1593,10 +1593,22 @@
+         return None
+ 
+     def get_contents(self):
+-        """Return aggregate contents of all our children."""
+-        contents = map(lambda n: n.get_contents(), self.children())
+-        return  string.join(contents, '')
++        """Return content signatures and names of all our children separated by
++        new-lines."""
++        contents = []
++        for node in self.children():
++            contents.append('%s %s\n' % (node.get_csig(), node.name))
++        return string.join(contents, '')
+ 
++    def get_csig(self):
++        """Compute the content signature for Directory nodes. In general, this
++        is not needed and the content signature is not stored in the
++        DirNodeInfo. However, if get_contents on a Dir node is called which has
++        a child directory, the child directory should return the hash of its
++        contents."""
++        contents = self.get_contents()
++        return SCons.Util.MD5signature(contents)
++
+     def do_duplicate(self, src):
+         pass
+ 
+Index: src/engine/SCons/Node/FSTests.py
+===================================================================
+--- src/engine/SCons/Node/FSTests.py	(revision 3271)
++++ src/engine/SCons/Node/FSTests.py	(working copy)
+@@ -1689,6 +1689,33 @@
+                         os.path.join('ddd', 'f2'),
+                         os.path.join('ddd', 'f3')], kids
+ 
++    def test_get_contents(self):
++        """Test getting the contents for a directory.
++        """
++        test = self.test
++
++        test.subdir('d')
++        test.write(['d', 'g'], "67890\n")
++        test.write(['d', 'f'], "12345\n")
++        test.subdir(['d','sub'])
++        test.write(['d', 'sub','h'], "abcdef\n")
++        test.subdir(['d','empty'])
++
++        d = self.fs.Dir('d')
++        g = self.fs.File(os.path.join('d', 'g'))
++        f = self.fs.File(os.path.join('d', 'f'))
++        h = self.fs.File(os.path.join('d', 'sub', 'h'))
++        e = self.fs.Dir(os.path.join('d', 'empty'))
++        s = self.fs.Dir(os.path.join('d', 'sub'))
++
++        files = d.get_contents().split('\n')
++
++        assert e.get_contents() == '', e.get_contents()
++        assert e.get_csig()+" empty" == files[0], files
++        assert f.get_csig()+" f" == files[1], files
++        assert g.get_csig()+" g" == files[2], files
++        assert s.get_csig()+" sub" == files[3], files
++
+     def test_implicit_re_scans(self):
+         """Test that adding entries causes a directory to be re-scanned
+         """
