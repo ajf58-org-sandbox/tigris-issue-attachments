@@ -1,0 +1,13 @@
+import os
+
+env = Environment(ENV = os.environ,tools = ['default', 'ifort'])
+
+f90_common = ['src/calculator.f90']
+f90_main  = ['src/main.f90']
+o_f90_common = env.Object(f90_common)
+
+#f90_common.extend(f90_main)
+#f90_main = f90_common
+f90_main.extend(f90_common)
+
+env.Program('app',f90_main)
