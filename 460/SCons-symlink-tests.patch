@@ -1,0 +1,54 @@
+--- /home/mati/scons-svn/core-clean-copy/test/option-c.py	2008-07-27 15:32:02.000000000 +0000
++++ option-c.py	2008-07-28 16:32:41.000000000 +0000
+@@ -28,7 +28,7 @@
+ Test various uses of the -c (clean) option.
+ """
+ 
+-import os.path
++import os
+ import sys
+ import TestSCons
+ 
+@@ -312,6 +312,41 @@
+ test.run(arguments='foo.out')
+ test.must_not_exist(test.workpath('foo.out'))
+ 
+-test.pass_test()
+ 
++# While cleaning up the target directory SCons should report an error
++# because of the named pipe created with os.mkfifo()
++if hasattr(os, 'mkfifo'):
++    test.subdir('subd2')
++
++    test.write(['subd2', 'SConstruct'], """Execute(Mkdir("testdir"))
++dir = Dir("testdir")
++Clean(dir, 'testdir')
++""")
++
++    test.run(chdir = 'subd2', arguments = '-Q -q', stdout = r"""Mkdir("testdir")
++""")
++    os.mkfifo('subd2/testdir/namedpipe')
++    test.run(chdir = 'subd2', arguments = '-c -Q -q', stdout = r"""Mkdir("testdir")
++Path 'testdir/namedpipe' exists but isn't a file or directory.
++scons: Could not remove 'testdir': Directory not empty
++""")
+ 
++    test.must_exist(test.workpath('subd2/testdir/namedpipe'))
++
++# SCons should delete broken symbolic links
++if hasattr(os, 'symlink'):
++    test.subdir('subd3')
++
++    test.write(['subd3', 'SConstruct'], """Execute(Mkdir("testdir"))
++dir = Dir("testdir")
++Clean(dir, 'testdir')
++""")
++
++    test.run(chdir = 'subd3', arguments = '-Q -q', stdout = r"""Mkdir("testdir")
++""")
++    os.symlink('subd3/testdir/symlinksrc', 'subd3/testdir/symlinkdst')
++    test.run(chdir = 'subd3', arguments = '-c -Q -q', stdout = r"""Removed testdir/symlinkdst
++Removed directory testdir
++""")
++
++test.pass_test()
