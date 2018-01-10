@@ -1,0 +1,99 @@
+import glob
+
+# Custom configure checks:
+
+# Check if a package exists by trying to run a PKGNAME-config script:
+def CheckPkg(context, name, params):
+	context.Message( "Checking for %s ... " % name )
+	ret = context.TryAction( "%s-config %s" % (name, params))[0]
+	context.Result(ret)
+	return ret
+
+
+
+opts = Options("build.conf")
+opts.Add(BoolOption("DEBUG", "Generate debug code", "False"))
+opts.Add(BoolOption("DEBUG_CHECKS", "Activate checks of assertions and unexpected failures", "True"))
+opts.Add(BoolOption("DEBUG_OUTPUT", "Activate debug output and visualizations", "True"))
+opts.Add(BoolOption("PROFILING", "Activate profiling", "True"))
+
+env = Environment(
+	options=opts,
+	tools=["default", "doxygen"],
+	CCFLAGS=["-Wall"], 
+	LINKFLAGS=["-rdynamic"],
+	CPPPATH=["include"],
+	LIBS=["dl","expat"],
+)
+
+#env = Environment(
+#	options=opts,
+#	tools=["default", "doxygen"],
+#	CCFLAGS=["-Wall"], 
+#	LINKFLAGS=["-rdynamic"],
+#	CPPPATH=["include", "../SAIMpara/include"],
+#	LIBPATH=["../SAIMpara"],
+#	LIBS=["SAIMpara","dl"],
+#	RPATH=["../SAIMpara"]
+#)
+
+# Configure SAIMlib:
+fltk_available = 0
+if not env.GetOption('clean'):
+	conf = env.Configure(custom_tests = { "CheckPkg" : CheckPkg })
+
+
+#env = Environment()
+#  conf = Configure(env)
+	if not conf.CheckLib('expat'):
+		print 'Did not find libexpat.so or expat.h, exiting!'
+		Exit(1)
+
+	if not conf.CheckPkg( "sundials", "-m cvode -l c -t s" ):
+		print "Library sundials is not installed!"
+		Exit(1)
+
+	if conf.CheckPkg( "fltk2", "--api-version" ):
+		env.Append(CPPDEFINES=["FLTK_AVAILABLE"])
+		fltk_available = 1
+
+	env = conf.Finish()
+
+
+if env["DEBUG"] == 1:
+	env.Append(CPPDEFINES=["DEBUG"])
+	env.Append(CCFLAGS="-g")
+else:
+	env.Append(CCFLAGS=["-O3", "-fomit-frame-pointer", "-ffast-math", "-march=pentium4",
+		"-mfpmath=sse,387", "-mmmx", "-msse", "-msse2", "-malign-double"])
+
+if env["DEBUG_CHECKS"] == 1:
+	env.Append(CPPDEFINES=["DEBUG_CHECKS"])
+if env["DEBUG_OUTPUT"] == 1:
+	env.Append(CPPDEFINES=["DEBUG_OUTPUT"])
+if env["PROFILING"] == 1:
+	env.Append(CPPDEFINES=["PROFILING"])
+
+
+# Add cflags, ldflags and libs for libraries:
+env.ParseConfig("sundials-config -m cvode -l c -t s")
+if fltk_available:
+	env.ParseConfig("fltk2-config --ldflags --cxxflags")
+
+
+# Add all cpp files in the src directory to the build:
+sources = glob.glob("src/*.cpp")
+
+# Build a shared library:
+dynsaim = env.Program("dynsaim", sources)
+
+
+# Build the documentation (target name is docs):
+env.Doxygen("doc/Doxyfile")
+
+# Only build the library when no targets are given. The
+# documentation has to be built explicitly:
+Default(dynsaim)
+
+
+Help(opts.GenerateHelpText(env))
