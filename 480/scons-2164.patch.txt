@@ -1,0 +1,63 @@
+$ svn diff
+Index: src/engine/SCons/Tool/bcc32.py
+===================================================================
+--- src/engine/SCons/Tool/bcc32.py	(revision 3286)
++++ src/engine/SCons/Tool/bcc32.py	(working copy)
+@@ -47,8 +47,8 @@
+ 
+ def generate(env):
+     findIt('bcc32', env)
+-    """Add Builders and construction variables for bcc to an
+-    Environment."""
++    """Add Builders and construction variables for bcc (Borland C
++    Compiler) to an Environment."""
+     static_obj, shared_obj = SCons.Tool.createObjBuilders(env)
+     for suffix in ['.c', '.cpp']:
+         static_obj.add_action(suffix, SCons.Defaults.CAction)
+@@ -63,14 +63,15 @@
+     env['SHCC']      = '$CC'
+     env['SHCCFLAGS'] = SCons.Util.CLVar('$CCFLAGS')
+     env['SHCFLAGS'] = SCons.Util.CLVar('$CFLAGS')
+-    env['SHCCCOM']   = '$SHCC -WD $SHCFLAGS $SHCCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o$TARGET $SOURCES'
++    env['SHCCCOM'] = '$SHCC $SHCFLAGS $SHCCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o$TARGET $SOURCES'
++
+     env['CPPDEFPREFIX']  = '-D'
+     env['CPPDEFSUFFIX']  = ''
+     env['INCPREFIX']  = '-I'
+     env['INCSUFFIX']  = ''
+-    env['SHOBJSUFFIX'] = '.dll'
+     env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME'] = 0
+     env['CFILESUFFIX'] = '.cpp'
++    env['SHOBJSUFFIX'] = '.obj'
+ 
+ def exists(env):
+     return findIt('bcc32', env)
+Index: src/engine/SCons/Tool/ilink32.py
+===================================================================
+--- src/engine/SCons/Tool/ilink32.py	(revision 3286)
++++ src/engine/SCons/Tool/ilink32.py	(working copy)
+@@ -38,16 +38,21 @@
+     Environment."""
+     SCons.Tool.createSharedLibBuilder(env)
+     SCons.Tool.createProgBuilder(env)
+-
+-    env['LINK']        = '$CC'
++    
++    env['LINK'] = 'ilink32'
++    env['LINKCOM'] = '$LINK $LINKFLAGS -L\"${TARGET.srcdir};$LIBPATH\" -j\"$OBJ_BPI_PATH\" $BORLAND_DLL_STARTUP_OBJ $PACKAGES $SOURCES,$TARGET,,$LIBS,,${TARGET.filebase}.RES'
++    env['SHLINKCOM'] = '$LINK $LINKFLAGS -L\"${TARGET.srcdir};$LIBPATH\" -j\"$OBJ_BPI_PATH\" $BORLAND_WIN_STARTUP_OBJ $PACKAGES $SOURCES,$TARGET,,$LIBS,,${TARGET.filebase}.RES'
+     env['LINKFLAGS']   = SCons.Util.CLVar('')
+-    env['LINKCOM']     = '$LINK -q $LINKFLAGS $SOURCES $LIBS'
+     env['LIBDIRPREFIX']=''
+     env['LIBDIRSUFFIX']=''
+     env['LIBLINKPREFIX']=''
+     env['LIBLINKSUFFIX']='$LIBSUFFIX'
+ 
++    env['BORLAND_DLL_STARTUP_OBJ']='c0d32.obj' # for DLLs
++    env['BORLAND_WIN_STARTUP_OBJ']='c0w32.obj' # for GUI exes
++    env['BORLAND_CON_STARTUP_OBJ']='c0x32.obj' # for console exes
+ 
++
+ def exists(env):
+     # Uses bcc32 to do linking as it generally knows where the standard
+     # LIBS are and set up the linking correctly
