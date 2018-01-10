@@ -1,0 +1,25 @@
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+RCS file: /cvsroot/scons/scons/src/engine/SCons/Node/FS.py,v
+retrieving revision 1.275
+diff -u -d -w -r1.275 FS.py
+--- src/engine/SCons/Node/FS.py	23 Feb 2007 16:46:08 -0000	1.275
++++ src/engine/SCons/Node/FS.py	24 Aug 2008 07:44:32 -0000
+@@ -1401,7 +1401,7 @@
+ 
+     def get_all_rdirs(self):
+         try:
+-            return self._memo['get_all_rdirs']
++            return list(self._memo['get_all_rdirs'])
+         except KeyError:
+             pass
+ 
+@@ -1414,7 +1414,7 @@
+             fname = dir.name + os.sep + fname
+             dir = dir.up()
+ 
+-        self._memo['get_all_rdirs'] = result
++        self._memo['get_all_rdirs'] = list(result)
+ 
+         return result
+ 
