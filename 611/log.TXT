@@ -1,0 +1,868 @@
+C:\Files\Dev\Build\Make\scons>svn info .
+Path: .
+URL: http://scons.tigris.org/svn/scons/trunk
+Repository Root: http://scons.tigris.org/svn/scons
+Repository UUID: fdb21ef1-2011-0410-befe-b5e4ea1792b1
+Revision: 4226
+Node Kind: directory
+Schedule: normal
+Last Changed Author: pankrat
+Last Changed Rev: 4218
+Last Changed Date: 2009-05-30 13:43:22 +0200 (Sat, 30 May 2009)
+
+
+C:\Files\Dev\Build\Make\scons>python bootstrap.py build\scons
+
+C:\Files\Dev\Build\Make\scons>scons: Reading SConscript files ...
+jw not found, skipping building User Guide.
+epydoc not found, skipping building API documentation.
+scons: done reading SConscript files.
+scons: Building targets ...
+SCons_revision(["build\scons\CHANGES.txt"], ["src\CHANGES.txt"])
+SCons_revision(["build\scons\engine\SCons\__init__.py"], ["src\engine\SCons\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Action.py"], ["src\engine\SCons\Action.py"])
+SCons_revision(["build\scons\engine\SCons\Builder.py"], ["src\engine\SCons\Builder.py"])
+SCons_revision(["build\scons\engine\SCons\compat\__init__.py"], ["src\engine\SCons\compat\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_hashlib.py"], ["src\engine\SCons\compat\_scons_hashlib.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_itertools.py"], ["src\engine\SCons\compat\_scons_itertools.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_optparse.py"], ["src\engine\SCons\compat\_scons_optparse.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_sets.py"], ["src\engine\SCons\compat\_scons_sets.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_sets15.py"], ["src\engine\SCons\compat\_scons_sets15.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_shlex.py"], ["src\engine\SCons\compat\_scons_shlex.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_subprocess.py"], ["src\engine\SCons\compat\_scons_subprocess.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_textwrap.py"], ["src\engine\SCons\compat\_scons_textwrap.py"])
+SCons_revision(["build\scons\engine\SCons\compat\_scons_UserString.py"], ["src\engine\SCons\compat\_scons_UserString.py"])
+SCons_revision(["build\scons\engine\SCons\compat\builtins.py"], ["src\engine\SCons\compat\builtins.py"])
+SCons_revision(["build\scons\engine\SCons\CacheDir.py"], ["src\engine\SCons\CacheDir.py"])
+SCons_revision(["build\scons\engine\SCons\Conftest.py"], ["src\engine\SCons\Conftest.py"])
+SCons_revision(["build\scons\engine\SCons\cpp.py"], ["src\engine\SCons\cpp.py"])
+SCons_revision(["build\scons\engine\SCons\dblite.py"], ["src\engine\SCons\dblite.py"])
+SCons_revision(["build\scons\engine\SCons\Debug.py"], ["src\engine\SCons\Debug.py"])
+SCons_revision(["build\scons\engine\SCons\Defaults.py"], ["src\engine\SCons\Defaults.py"])
+SCons_revision(["build\scons\engine\SCons\Environment.py"], ["src\engine\SCons\Environment.py"])
+SCons_revision(["build\scons\engine\SCons\Errors.py"], ["src\engine\SCons\Errors.py"])
+SCons_revision(["build\scons\engine\SCons\Executor.py"], ["src\engine\SCons\Executor.py"])
+SCons_revision(["build\scons\engine\SCons\Job.py"], ["src\engine\SCons\Job.py"])
+SCons_revision(["build\scons\engine\SCons\exitfuncs.py"], ["src\engine\SCons\exitfuncs.py"])
+SCons_revision(["build\scons\engine\SCons\Memoize.py"], ["src\engine\SCons\Memoize.py"])
+SCons_revision(["build\scons\engine\SCons\Node\__init__.py"], ["src\engine\SCons\Node\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Node\Alias.py"], ["src\engine\SCons\Node\Alias.py"])
+SCons_revision(["build\scons\engine\SCons\Node\FS.py"], ["src\engine\SCons\Node\FS.py"])
+SCons_revision(["build\scons\engine\SCons\Node\Python.py"], ["src\engine\SCons\Node\Python.py"])
+SCons_revision(["build\scons\engine\SCons\Options\__init__.py"], ["src\engine\SCons\Options\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Options\BoolOption.py"], ["src\engine\SCons\Options\BoolOption.py"])
+SCons_revision(["build\scons\engine\SCons\Options\EnumOption.py"], ["src\engine\SCons\Options\EnumOption.py"])
+SCons_revision(["build\scons\engine\SCons\Options\ListOption.py"], ["src\engine\SCons\Options\ListOption.py"])
+SCons_revision(["build\scons\engine\SCons\Options\PackageOption.py"], ["src\engine\SCons\Options\PackageOption.py"])
+SCons_revision(["build\scons\engine\SCons\Options\PathOption.py"], ["src\engine\SCons\Options\PathOption.py"])
+SCons_revision(["build\scons\engine\SCons\PathList.py"], ["src\engine\SCons\PathList.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\__init__.py"], ["src\engine\SCons\Platform\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\aix.py"], ["src\engine\SCons\Platform\aix.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\cygwin.py"], ["src\engine\SCons\Platform\cygwin.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\darwin.py"], ["src\engine\SCons\Platform\darwin.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\hpux.py"], ["src\engine\SCons\Platform\hpux.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\irix.py"], ["src\engine\SCons\Platform\irix.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\os2.py"], ["src\engine\SCons\Platform\os2.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\posix.py"], ["src\engine\SCons\Platform\posix.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\sunos.py"], ["src\engine\SCons\Platform\sunos.py"])
+SCons_revision(["build\scons\engine\SCons\Platform\win32.py"], ["src\engine\SCons\Platform\win32.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\__init__.py"], ["src\engine\SCons\Scanner\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\C.py"], ["src\engine\SCons\Scanner\C.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\D.py"], ["src\engine\SCons\Scanner\D.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\Dir.py"], ["src\engine\SCons\Scanner\Dir.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\Fortran.py"], ["src\engine\SCons\Scanner\Fortran.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\IDL.py"], ["src\engine\SCons\Scanner\IDL.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\LaTeX.py"], ["src\engine\SCons\Scanner\LaTeX.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\Prog.py"], ["src\engine\SCons\Scanner\Prog.py"])
+SCons_revision(["build\scons\engine\SCons\Scanner\RC.py"], ["src\engine\SCons\Scanner\RC.py"])
+SCons_revision(["build\scons\engine\SCons\SConf.py"], ["src\engine\SCons\SConf.py"])
+SCons_revision(["build\scons\engine\SCons\SConsign.py"], ["src\engine\SCons\SConsign.py"])
+SCons_revision(["build\scons\engine\SCons\Script\__init__.py"], ["src\engine\SCons\Script\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Script\Interactive.py"], ["src\engine\SCons\Script\Interactive.py"])
+SCons_revision(["build\scons\engine\SCons\Script\Main.py"], ["src\engine\SCons\Script\Main.py"])
+SCons_revision(["build\scons\engine\SCons\Script\SConscript.py"], ["src\engine\SCons\Script\SConscript.py"])
+SCons_revision(["build\scons\engine\SCons\Script\SConsOptions.py"], ["src\engine\SCons\Script\SConsOptions.py"])
+SCons_revision(["build\scons\engine\SCons\Sig.py"], ["src\engine\SCons\Sig.py"])
+SCons_revision(["build\scons\engine\SCons\Subst.py"], ["src\engine\SCons\Subst.py"])
+SCons_revision(["build\scons\engine\SCons\Taskmaster.py"], ["src\engine\SCons\Taskmaster.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\__init__.py"], ["src\engine\SCons\Tool\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\386asm.py"], ["src\engine\SCons\Tool\386asm.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\aixc++.py"], ["src\engine\SCons\Tool\aixc++.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\aixcc.py"], ["src\engine\SCons\Tool\aixcc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\aixf77.py"], ["src\engine\SCons\Tool\aixf77.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\aixlink.py"], ["src\engine\SCons\Tool\aixlink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\applelink.py"], ["src\engine\SCons\Tool\applelink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\ar.py"], ["src\engine\SCons\Tool\ar.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\as.py"], ["src\engine\SCons\Tool\as.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\bcc32.py"], ["src\engine\SCons\Tool\bcc32.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\BitKeeper.py"], ["src\engine\SCons\Tool\BitKeeper.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\c++.py"], ["src\engine\SCons\Tool\c++.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\cc.py"], ["src\engine\SCons\Tool\cc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\cvf.py"], ["src\engine\SCons\Tool\cvf.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\CVS.py"], ["src\engine\SCons\Tool\CVS.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\default.py"], ["src\engine\SCons\Tool\default.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\dmd.py"], ["src\engine\SCons\Tool\dmd.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\dvi.py"], ["src\engine\SCons\Tool\dvi.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\dvipdf.py"], ["src\engine\SCons\Tool\dvipdf.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\dvips.py"], ["src\engine\SCons\Tool\dvips.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\f77.py"], ["src\engine\SCons\Tool\f77.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\f90.py"], ["src\engine\SCons\Tool\f90.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\f95.py"], ["src\engine\SCons\Tool\f95.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\filesystem.py"], ["src\engine\SCons\Tool\filesystem.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\fortran.py"], ["src\engine\SCons\Tool\fortran.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\FortranCommon.py"], ["src\engine\SCons\Tool\FortranCommon.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\g++.py"], ["src\engine\SCons\Tool\g++.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\g77.py"], ["src\engine\SCons\Tool\g77.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\gas.py"], ["src\engine\SCons\Tool\gas.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\gcc.py"], ["src\engine\SCons\Tool\gcc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\gfortran.py"], ["src\engine\SCons\Tool\gfortran.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\gnulink.py"], ["src\engine\SCons\Tool\gnulink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\gs.py"], ["src\engine\SCons\Tool\gs.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\hpc++.py"], ["src\engine\SCons\Tool\hpc++.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\hpcc.py"], ["src\engine\SCons\Tool\hpcc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\hplink.py"], ["src\engine\SCons\Tool\hplink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\icc.py"], ["src\engine\SCons\Tool\icc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\icl.py"], ["src\engine\SCons\Tool\icl.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\ifl.py"], ["src\engine\SCons\Tool\ifl.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\ifort.py"], ["src\engine\SCons\Tool\ifort.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\ilink.py"], ["src\engine\SCons\Tool\ilink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\ilink32.py"], ["src\engine\SCons\Tool\ilink32.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\install.py"], ["src\engine\SCons\Tool\install.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\intelc.py"], ["src\engine\SCons\Tool\intelc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\ipkg.py"], ["src\engine\SCons\Tool\ipkg.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\jar.py"], ["src\engine\SCons\Tool\jar.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\JavaCommon.py"], ["src\engine\SCons\Tool\JavaCommon.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\javac.py"], ["src\engine\SCons\Tool\javac.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\javah.py"], ["src\engine\SCons\Tool\javah.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\latex.py"], ["src\engine\SCons\Tool\latex.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\lex.py"], ["src\engine\SCons\Tool\lex.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\link.py"], ["src\engine\SCons\Tool\link.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\linkloc.py"], ["src\engine\SCons\Tool\linkloc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\MSCommon\__init__.py"], ["src\engine\SCons\Tool\MSCommon\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\MSCommon\common.py"], ["src\engine\SCons\Tool\MSCommon\common.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\MSCommon\netframework.py"], ["src\engine\SCons\Tool\MSCommon\netframework.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\MSCommon\sdk.py"], ["src\engine\SCons\Tool\MSCommon\sdk.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\MSCommon\vs.py"], ["src\engine\SCons\Tool\MSCommon\vs.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\m4.py"], ["src\engine\SCons\Tool\m4.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\masm.py"], ["src\engine\SCons\Tool\masm.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\midl.py"], ["src\engine\SCons\Tool\midl.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\mingw.py"], ["src\engine\SCons\Tool\mingw.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\mslib.py"], ["src\engine\SCons\Tool\mslib.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\mslink.py"], ["src\engine\SCons\Tool\mslink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\mssdk.py"], ["src\engine\SCons\Tool\mssdk.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\msvc.py"], ["src\engine\SCons\Tool\msvc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\msvs.py"], ["src\engine\SCons\Tool\msvs.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\mwcc.py"], ["src\engine\SCons\Tool\mwcc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\mwld.py"], ["src\engine\SCons\Tool\mwld.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\nasm.py"], ["src\engine\SCons\Tool\nasm.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\__init__.py"], ["src\engine\SCons\Tool\packaging\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\ipk.py"], ["src\engine\SCons\Tool\packaging\ipk.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\msi.py"], ["src\engine\SCons\Tool\packaging\msi.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\rpm.py"], ["src\engine\SCons\Tool\packaging\rpm.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\src_tarbz2.py"], ["src\engine\SCons\Tool\packaging\src_tarbz2.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\src_targz.py"], ["src\engine\SCons\Tool\packaging\src_targz.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\src_zip.py"], ["src\engine\SCons\Tool\packaging\src_zip.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\tarbz2.py"], ["src\engine\SCons\Tool\packaging\tarbz2.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\targz.py"], ["src\engine\SCons\Tool\packaging\targz.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\packaging\zip.py"], ["src\engine\SCons\Tool\packaging\zip.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\pdf.py"], ["src\engine\SCons\Tool\pdf.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\pdflatex.py"], ["src\engine\SCons\Tool\pdflatex.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\pdftex.py"], ["src\engine\SCons\Tool\pdftex.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\Perforce.py"], ["src\engine\SCons\Tool\Perforce.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\PharLapCommon.py"], ["src\engine\SCons\Tool\PharLapCommon.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\qt.py"], ["src\engine\SCons\Tool\qt.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\RCS.py"], ["src\engine\SCons\Tool\RCS.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\rmic.py"], ["src\engine\SCons\Tool\rmic.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\rpcgen.py"], ["src\engine\SCons\Tool\rpcgen.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\rpm.py"], ["src\engine\SCons\Tool\rpm.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\SCCS.py"], ["src\engine\SCons\Tool\SCCS.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sgiar.py"], ["src\engine\SCons\Tool\sgiar.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sgic++.py"], ["src\engine\SCons\Tool\sgic++.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sgicc.py"], ["src\engine\SCons\Tool\sgicc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sgilink.py"], ["src\engine\SCons\Tool\sgilink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\Subversion.py"], ["src\engine\SCons\Tool\Subversion.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sunar.py"], ["src\engine\SCons\Tool\sunar.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sunc++.py"], ["src\engine\SCons\Tool\sunc++.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\suncc.py"], ["src\engine\SCons\Tool\suncc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sunf77.py"], ["src\engine\SCons\Tool\sunf77.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sunf90.py"], ["src\engine\SCons\Tool\sunf90.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sunf95.py"], ["src\engine\SCons\Tool\sunf95.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\sunlink.py"], ["src\engine\SCons\Tool\sunlink.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\swig.py"], ["src\engine\SCons\Tool\swig.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\tar.py"], ["src\engine\SCons\Tool\tar.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\tex.py"], ["src\engine\SCons\Tool\tex.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\textfile.py"], ["src\engine\SCons\Tool\textfile.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\tlib.py"], ["src\engine\SCons\Tool\tlib.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\wix.py"], ["src\engine\SCons\Tool\wix.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\yacc.py"], ["src\engine\SCons\Tool\yacc.py"])
+SCons_revision(["build\scons\engine\SCons\Tool\zip.py"], ["src\engine\SCons\Tool\zip.py"])
+SCons_revision(["build\scons\engine\SCons\Util.py"], ["src\engine\SCons\Util.py"])
+SCons_revision(["build\scons\engine\SCons\Variables\__init__.py"], ["src\engine\SCons\Variables\__init__.py"])
+SCons_revision(["build\scons\engine\SCons\Variables\BoolVariable.py"], ["src\engine\SCons\Variables\BoolVariable.py"])
+SCons_revision(["build\scons\engine\SCons\Variables\EnumVariable.py"], ["src\engine\SCons\Variables\EnumVariable.py"])
+SCons_revision(["build\scons\engine\SCons\Variables\ListVariable.py"], ["src\engine\SCons\Variables\ListVariable.py"])
+SCons_revision(["build\scons\engine\SCons\Variables\PackageVariable.py"], ["src\engine\SCons\Variables\PackageVariable.py"])
+SCons_revision(["build\scons\engine\SCons\Variables\PathVariable.py"], ["src\engine\SCons\Variables\PathVariable.py"])
+SCons_revision(["build\scons\engine\SCons\Warnings.py"], ["src\engine\SCons\Warnings.py"])
+SCons_revision(["build\scons\script\scons"], ["src\script\scons.py"])
+SCons_revision(["build\scons\script\sconsign"], ["src\script\sconsign.py"])
+SCons_revision(["build\scons\script\scons-time"], ["src\script\scons-time.py"])
+SCons_revision(["build\scons\LICENSE.txt"], ["src\LICENSE.txt"])
+SCons_revision(["build\scons\README.txt"], ["src\README.txt"])
+SCons_revision(["build\scons\RELEASE.txt"], ["src\RELEASE.txt"])
+SCons_revision(["build\scons\os_spawnv_fix.diff"], ["src\os_spawnv_fix.diff"])
+SCons_revision(["build\doc\man\scons.1"], ["doc\man\scons.1"])
+"c:\CAD\Python26\python.exe" bin\scons-proc.py --man -b build\doc\man\builders.man -t build\doc\man\tools.man -v build\doc\man\v
+ariables.man src\engine\SCons\Action.xml src\engine\SCons\Defaults.xml src\engine\SCons\Environment.xml src\engine\SCons\Platfor
+m\__init__.xml src\engine\SCons\Platform\posix.xml src\engine\SCons\Platform\sunos.xml src\engine\SCons\Platform\win32.xml src\e
+ngine\SCons\Tool\386asm.xml src\engine\SCons\Tool\BitKeeper.xml src\engine\SCons\Tool\CVS.xml src\engine\SCons\Tool\Perforce.xml
+ src\engine\SCons\Tool\RCS.xml src\engine\SCons\Tool\SCCS.xml src\engine\SCons\Tool\Subversion.xml src\engine\SCons\Tool\__init_
+_.xml src\engine\SCons\Tool\aixc++.xml src\engine\SCons\Tool\aixcc.xml src\engine\SCons\Tool\aixf77.xml src\engine\SCons\Tool\ai
+xlink.xml src\engine\SCons\Tool\applelink.xml src\engine\SCons\Tool\ar.xml src\engine\SCons\Tool\as.xml src\engine\SCons\Tool\bc
+c32.xml src\engine\SCons\Tool\c++.xml src\engine\SCons\Tool\cc.xml src\engine\SCons\Tool\cvf.xml src\engine\SCons\Tool\default.x
+ml src\engine\SCons\Tool\dmd.xml src\engine\SCons\Tool\dvi.xml src\engine\SCons\Tool\dvipdf.xml src\engine\SCons\Tool\dvips.xml
+src\engine\SCons\Tool\f77.xml src\engine\SCons\Tool\f90.xml src\engine\SCons\Tool\f95.xml src\engine\SCons\Tool\fortran.xml src\
+engine\SCons\Tool\g++.xml src\engine\SCons\Tool\g77.xml src\engine\SCons\Tool\gas.xml src\engine\SCons\Tool\gcc.xml src\engine\S
+Cons\Tool\gnulink.xml src\engine\SCons\Tool\gs.xml src\engine\SCons\Tool\hpc++.xml src\engine\SCons\Tool\hpcc.xml src\engine\SCo
+ns\Tool\hplink.xml src\engine\SCons\Tool\icc.xml src\engine\SCons\Tool\icl.xml src\engine\SCons\Tool\ifl.xml src\engine\SCons\To
+ol\ifort.xml src\engine\SCons\Tool\ilink.xml src\engine\SCons\Tool\ilink32.xml src\engine\SCons\Tool\install.xml src\engine\SCon
+s\Tool\intelc.xml src\engine\SCons\Tool\jar.xml src\engine\SCons\Tool\javac.xml src\engine\SCons\Tool\javah.xml src\engine\SCons
+\Tool\latex.xml src\engine\SCons\Tool\lex.xml src\engine\SCons\Tool\link.xml src\engine\SCons\Tool\linkloc.xml src\engine\SCons\
+Tool\m4.xml src\engine\SCons\Tool\masm.xml src\engine\SCons\Tool\midl.xml src\engine\SCons\Tool\mingw.xml src\engine\SCons\Tool\
+mslib.xml src\engine\SCons\Tool\mslink.xml src\engine\SCons\Tool\mssdk.xml src\engine\SCons\Tool\msvc.xml src\engine\SCons\Tool\
+msvs.xml src\engine\SCons\Tool\mwcc.xml src\engine\SCons\Tool\mwld.xml src\engine\SCons\Tool\nasm.xml src\engine\SCons\Tool\pack
+aging.xml src\engine\SCons\Tool\packaging\__init__.xml src\engine\SCons\Tool\pdf.xml src\engine\SCons\Tool\pdflatex.xml src\engi
+ne\SCons\Tool\pdftex.xml src\engine\SCons\Tool\qt.xml src\engine\SCons\Tool\rmic.xml src\engine\SCons\Tool\rpcgen.xml src\engine
+\SCons\Tool\sgiar.xml src\engine\SCons\Tool\sgic++.xml src\engine\SCons\Tool\sgicc.xml src\engine\SCons\Tool\sgilink.xml src\eng
+ine\SCons\Tool\sunar.xml src\engine\SCons\Tool\sunc++.xml src\engine\SCons\Tool\suncc.xml src\engine\SCons\Tool\sunlink.xml src\
+engine\SCons\Tool\swig.xml src\engine\SCons\Tool\tar.xml src\engine\SCons\Tool\tex.xml src\engine\SCons\Tool\textfile.xml src\en
+gine\SCons\Tool\tlib.xml src\engine\SCons\Tool\yacc.xml src\engine\SCons\Tool\zip.xml
+soelim(["build\scons\scons.1"], ["build\doc\man\scons.1"])
+SCons_revision(["build\doc\man\sconsign.1"], ["doc\man\sconsign.1"])
+soelim(["build\scons\sconsign.1"], ["build\doc\man\sconsign.1"])
+SCons_revision(["build\doc\man\scons-time.1"], ["doc\man\scons-time.1"])
+soelim(["build\scons\scons-time.1"], ["build\doc\man\scons-time.1"])
+SCons_revision(["build\scons\script\scons.bat"], ["src\script\scons.bat"])
+SCons_revision(["build\scons\setup.cfg"], ["src\setup.cfg"])
+SCons_revision(["build\scons\setup.py"], ["src\setup.py"])
+write_src_files(["build\scons\MANIFEST"], ["src\engine\MANIFEST.in", "src\script\MANIFEST.in", "src\MANIFEST.in"])
+Delete("C:\Files\Dev\Build\Make\scons\build\scons\build\lib")
+Delete("C:\Files\Dev\Build\Make\scons\build\scons\build\scripts")
+Delete("C:\Files\Dev\Build\Make\scons\build\scons\build\bdist.win32\dumb")
+"c:\CAD\Python26\python.exe" -tt "C:\Files\Dev\Build\Make\scons\build\scons\setup.py" bdist_dumb -f gztar
+running bdist_dumb
+running build
+running build_py
+creating build
+creating build\lib
+creating build\lib\SCons
+copying engine\SCons\Action.py -> build\lib\SCons
+copying engine\SCons\Builder.py -> build\lib\SCons
+copying engine\SCons\CacheDir.py -> build\lib\SCons
+copying engine\SCons\Conftest.py -> build\lib\SCons
+copying engine\SCons\cpp.py -> build\lib\SCons
+copying engine\SCons\dblite.py -> build\lib\SCons
+copying engine\SCons\Debug.py -> build\lib\SCons
+copying engine\SCons\Defaults.py -> build\lib\SCons
+copying engine\SCons\Environment.py -> build\lib\SCons
+copying engine\SCons\Errors.py -> build\lib\SCons
+copying engine\SCons\Executor.py -> build\lib\SCons
+copying engine\SCons\exitfuncs.py -> build\lib\SCons
+copying engine\SCons\Job.py -> build\lib\SCons
+copying engine\SCons\Memoize.py -> build\lib\SCons
+copying engine\SCons\PathList.py -> build\lib\SCons
+copying engine\SCons\SConf.py -> build\lib\SCons
+copying engine\SCons\SConsign.py -> build\lib\SCons
+copying engine\SCons\Sig.py -> build\lib\SCons
+copying engine\SCons\Subst.py -> build\lib\SCons
+copying engine\SCons\Taskmaster.py -> build\lib\SCons
+copying engine\SCons\Util.py -> build\lib\SCons
+copying engine\SCons\Warnings.py -> build\lib\SCons
+copying engine\SCons\__init__.py -> build\lib\SCons
+creating build\lib\SCons\compat
+copying engine\SCons\compat\builtins.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_hashlib.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_itertools.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_optparse.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_sets.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_sets15.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_shlex.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_subprocess.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_textwrap.py -> build\lib\SCons\compat
+copying engine\SCons\compat\_scons_UserString.py -> build\lib\SCons\compat
+copying engine\SCons\compat\__init__.py -> build\lib\SCons\compat
+creating build\lib\SCons\Node
+copying engine\SCons\Node\Alias.py -> build\lib\SCons\Node
+copying engine\SCons\Node\FS.py -> build\lib\SCons\Node
+copying engine\SCons\Node\Python.py -> build\lib\SCons\Node
+copying engine\SCons\Node\__init__.py -> build\lib\SCons\Node
+creating build\lib\SCons\Options
+copying engine\SCons\Options\BoolOption.py -> build\lib\SCons\Options
+copying engine\SCons\Options\EnumOption.py -> build\lib\SCons\Options
+copying engine\SCons\Options\ListOption.py -> build\lib\SCons\Options
+copying engine\SCons\Options\PackageOption.py -> build\lib\SCons\Options
+copying engine\SCons\Options\PathOption.py -> build\lib\SCons\Options
+copying engine\SCons\Options\__init__.py -> build\lib\SCons\Options
+creating build\lib\SCons\Platform
+copying engine\SCons\Platform\aix.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\cygwin.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\darwin.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\hpux.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\irix.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\os2.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\posix.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\sunos.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\win32.py -> build\lib\SCons\Platform
+copying engine\SCons\Platform\__init__.py -> build\lib\SCons\Platform
+creating build\lib\SCons\Scanner
+copying engine\SCons\Scanner\C.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\D.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\Dir.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\Fortran.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\IDL.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\LaTeX.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\Prog.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\RC.py -> build\lib\SCons\Scanner
+copying engine\SCons\Scanner\__init__.py -> build\lib\SCons\Scanner
+creating build\lib\SCons\Script
+copying engine\SCons\Script\Interactive.py -> build\lib\SCons\Script
+copying engine\SCons\Script\Main.py -> build\lib\SCons\Script
+copying engine\SCons\Script\SConscript.py -> build\lib\SCons\Script
+copying engine\SCons\Script\SConsOptions.py -> build\lib\SCons\Script
+copying engine\SCons\Script\__init__.py -> build\lib\SCons\Script
+creating build\lib\SCons\Tool
+copying engine\SCons\Tool\386asm.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\aixc++.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\aixcc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\aixf77.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\aixlink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\applelink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\ar.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\as.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\bcc32.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\BitKeeper.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\c++.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\cc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\cvf.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\CVS.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\default.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\dmd.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\dvi.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\dvipdf.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\dvips.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\f77.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\f90.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\f95.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\filesystem.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\fortran.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\FortranCommon.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\g++.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\g77.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\gas.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\gcc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\gfortran.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\gnulink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\gs.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\hpc++.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\hpcc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\hplink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\icc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\icl.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\ifl.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\ifort.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\ilink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\ilink32.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\install.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\intelc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\ipkg.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\jar.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\javac.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\JavaCommon.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\javah.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\latex.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\lex.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\link.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\linkloc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\m4.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\masm.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\midl.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\mingw.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\mslib.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\mslink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\mssdk.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\msvc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\msvs.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\mwcc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\mwld.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\nasm.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\pdf.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\pdflatex.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\pdftex.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\Perforce.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\PharLapCommon.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\qt.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\RCS.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\rmic.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\rpcgen.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\rpm.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\SCCS.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sgiar.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sgic++.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sgicc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sgilink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\Subversion.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sunar.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sunc++.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\suncc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sunf77.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sunf90.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sunf95.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\sunlink.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\swig.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\tar.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\tex.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\textfile.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\tlib.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\wix.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\yacc.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\zip.py -> build\lib\SCons\Tool
+copying engine\SCons\Tool\__init__.py -> build\lib\SCons\Tool
+creating build\lib\SCons\Tool\MSCommon
+copying engine\SCons\Tool\MSCommon\common.py -> build\lib\SCons\Tool\MSCommon
+copying engine\SCons\Tool\MSCommon\netframework.py -> build\lib\SCons\Tool\MSCommon
+copying engine\SCons\Tool\MSCommon\sdk.py -> build\lib\SCons\Tool\MSCommon
+copying engine\SCons\Tool\MSCommon\vs.py -> build\lib\SCons\Tool\MSCommon
+copying engine\SCons\Tool\MSCommon\__init__.py -> build\lib\SCons\Tool\MSCommon
+creating build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\ipk.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\msi.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\rpm.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\src_tarbz2.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\src_targz.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\src_zip.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\tarbz2.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\targz.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\zip.py -> build\lib\SCons\Tool\packaging
+copying engine\SCons\Tool\packaging\__init__.py -> build\lib\SCons\Tool\packaging
+creating build\lib\SCons\Variables
+copying engine\SCons\Variables\BoolVariable.py -> build\lib\SCons\Variables
+copying engine\SCons\Variables\EnumVariable.py -> build\lib\SCons\Variables
+copying engine\SCons\Variables\ListVariable.py -> build\lib\SCons\Variables
+copying engine\SCons\Variables\PackageVariable.py -> build\lib\SCons\Variables
+copying engine\SCons\Variables\PathVariable.py -> build\lib\SCons\Variables
+copying engine\SCons\Variables\__init__.py -> build\lib\SCons\Variables
+running build_scripts
+creating build\scripts
+copying and adjusting script\scons -> build\scripts
+copying and adjusting script\sconsign -> build\scripts
+copying and adjusting script\scons-time -> build\scripts
+copying script\scons.bat -> build\scripts
+installing to build\bdist.win32\dumb
+running install
+running install_lib
+creating build\bdist.win32
+creating build\bdist.win32\dumb
+creating build\bdist.win32\dumb\CAD
+creating build\bdist.win32\dumb\CAD\Python26
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Action.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Builder.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\CacheDir.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\builtins.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_hashlib.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_itertools.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_optparse.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_sets.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_sets15.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_shlex.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_subprocess.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_textwrap.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\_scons_UserString.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\compat\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat
+copying build\lib\SCons\Conftest.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\cpp.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\dblite.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Debug.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Defaults.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Environment.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Errors.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Executor.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\exitfuncs.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Job.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Memoize.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node
+copying build\lib\SCons\Node\Alias.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node
+copying build\lib\SCons\Node\FS.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node
+copying build\lib\SCons\Node\Python.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node
+copying build\lib\SCons\Node\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options
+copying build\lib\SCons\Options\BoolOption.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options
+copying build\lib\SCons\Options\EnumOption.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options
+copying build\lib\SCons\Options\ListOption.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options
+copying build\lib\SCons\Options\PackageOption.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options
+copying build\lib\SCons\Options\PathOption.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options
+copying build\lib\SCons\Options\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options
+copying build\lib\SCons\PathList.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\aix.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\cygwin.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\darwin.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\hpux.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\irix.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\os2.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\posix.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\sunos.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\win32.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+copying build\lib\SCons\Platform\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\C.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\D.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\Dir.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\Fortran.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\IDL.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\LaTeX.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\Prog.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\RC.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\Scanner\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner
+copying build\lib\SCons\SConf.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\SConsign.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script
+copying build\lib\SCons\Script\Interactive.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script
+copying build\lib\SCons\Script\Main.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script
+copying build\lib\SCons\Script\SConscript.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script
+copying build\lib\SCons\Script\SConsOptions.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script
+copying build\lib\SCons\Script\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script
+copying build\lib\SCons\Sig.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Subst.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\Taskmaster.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\386asm.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\aixc++.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\aixcc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\aixf77.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\aixlink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\applelink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\ar.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\as.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\bcc32.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\BitKeeper.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\c++.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\cc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\cvf.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\CVS.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\default.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\dmd.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\dvi.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\dvipdf.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\dvips.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\f77.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\f90.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\f95.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\filesystem.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\fortran.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\FortranCommon.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\g++.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\g77.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\gas.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\gcc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\gfortran.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\gnulink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\gs.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\hpc++.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\hpcc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\hplink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\icc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\icl.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\ifl.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\ifort.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\ilink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\ilink32.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\install.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\intelc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\ipkg.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\jar.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\javac.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\JavaCommon.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\javah.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\latex.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\lex.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\link.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\linkloc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\m4.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\masm.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\midl.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\mingw.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon
+copying build\lib\SCons\Tool\MSCommon\common.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon
+copying build\lib\SCons\Tool\MSCommon\netframework.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon
+copying build\lib\SCons\Tool\MSCommon\sdk.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon
+copying build\lib\SCons\Tool\MSCommon\vs.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon
+copying build\lib\SCons\Tool\MSCommon\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon
+copying build\lib\SCons\Tool\mslib.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\mslink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\mssdk.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\msvc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\msvs.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\mwcc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\mwld.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\nasm.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\ipk.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\msi.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\rpm.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\src_tarbz2.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\src_targz.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\src_zip.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\tarbz2.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\targz.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\zip.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\packaging\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging
+copying build\lib\SCons\Tool\pdf.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\pdflatex.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\pdftex.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\Perforce.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\PharLapCommon.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\qt.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\RCS.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\rmic.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\rpcgen.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\rpm.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\SCCS.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sgiar.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sgic++.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sgicc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sgilink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\Subversion.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sunar.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sunc++.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\suncc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sunf77.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sunf90.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sunf95.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\sunlink.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\swig.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\tar.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\tex.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\textfile.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\tlib.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\wix.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\yacc.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\zip.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Tool\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool
+copying build\lib\SCons\Util.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+creating build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables
+copying build\lib\SCons\Variables\BoolVariable.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables
+copying build\lib\SCons\Variables\EnumVariable.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables
+copying build\lib\SCons\Variables\ListVariable.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables
+copying build\lib\SCons\Variables\PackageVariable.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables
+copying build\lib\SCons\Variables\PathVariable.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables
+copying build\lib\SCons\Variables\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables
+copying build\lib\SCons\Warnings.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+copying build\lib\SCons\__init__.py -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Action.py to Action.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Builder.py to Builder.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\CacheDir.py to CacheDir.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\builtins.py to builtins.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_hashlib.py to _scons_hashlib.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_itertools.py to _scons_itertools.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_optparse.py to _scons_optparse.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_sets.py to _scons_sets.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_sets15.py to _scons_sets15.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_shlex.py to _scons_shlex.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_subprocess.py to _scons_subprocess.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_textwrap.py to _scons_textwrap.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\_scons_UserString.py to _scons_UserString.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\compat\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Conftest.py to Conftest.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\cpp.py to cpp.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\dblite.py to dblite.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Debug.py to Debug.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Defaults.py to Defaults.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Environment.py to Environment.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Errors.py to Errors.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Executor.py to Executor.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\exitfuncs.py to exitfuncs.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Job.py to Job.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Memoize.py to Memoize.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node\Alias.py to Alias.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node\FS.py to FS.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node\Python.py to Python.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Node\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options\BoolOption.py to BoolOption.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options\EnumOption.py to EnumOption.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options\ListOption.py to ListOption.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options\PackageOption.py to PackageOption.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options\PathOption.py to PathOption.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Options\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\PathList.py to PathList.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\aix.py to aix.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\cygwin.py to cygwin.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\darwin.py to darwin.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\hpux.py to hpux.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\irix.py to irix.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\os2.py to os2.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\posix.py to posix.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\sunos.py to sunos.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\win32.py to win32.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Platform\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\C.py to C.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\D.py to D.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\Dir.py to Dir.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\Fortran.py to Fortran.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\IDL.py to IDL.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\LaTeX.py to LaTeX.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\Prog.py to Prog.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\RC.py to RC.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Scanner\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\SConf.py to SConf.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\SConsign.py to SConsign.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script\Interactive.py to Interactive.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script\Main.py to Main.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script\SConscript.py to SConscript.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script\SConsOptions.py to SConsOptions.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Script\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Sig.py to Sig.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Subst.py to Subst.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Taskmaster.py to Taskmaster.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\386asm.py to 386asm.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\aixc++.py to aixc++.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\aixcc.py to aixcc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\aixf77.py to aixf77.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\aixlink.py to aixlink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\applelink.py to applelink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\ar.py to ar.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\as.py to as.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\bcc32.py to bcc32.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\BitKeeper.py to BitKeeper.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\c++.py to c++.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\cc.py to cc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\cvf.py to cvf.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\CVS.py to CVS.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\default.py to default.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\dmd.py to dmd.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\dvi.py to dvi.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\dvipdf.py to dvipdf.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\dvips.py to dvips.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\f77.py to f77.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\f90.py to f90.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\f95.py to f95.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\filesystem.py to filesystem.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\fortran.py to fortran.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\FortranCommon.py to FortranCommon.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\g++.py to g++.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\g77.py to g77.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\gas.py to gas.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\gcc.py to gcc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\gfortran.py to gfortran.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\gnulink.py to gnulink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\gs.py to gs.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\hpc++.py to hpc++.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\hpcc.py to hpcc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\hplink.py to hplink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\icc.py to icc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\icl.py to icl.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\ifl.py to ifl.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\ifort.py to ifort.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\ilink.py to ilink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\ilink32.py to ilink32.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\install.py to install.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\intelc.py to intelc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\ipkg.py to ipkg.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\jar.py to jar.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\javac.py to javac.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\JavaCommon.py to JavaCommon.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\javah.py to javah.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\latex.py to latex.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\lex.py to lex.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\link.py to link.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\linkloc.py to linkloc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\m4.py to m4.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\masm.py to masm.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\midl.py to midl.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\mingw.py to mingw.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon\common.py to common.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon\netframework.py to netframework.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon\sdk.py to sdk.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon\vs.py to vs.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\MSCommon\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\mslib.py to mslib.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\mslink.py to mslink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\mssdk.py to mssdk.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\msvc.py to msvc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\msvs.py to msvs.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\mwcc.py to mwcc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\mwld.py to mwld.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\nasm.py to nasm.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\ipk.py to ipk.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\msi.py to msi.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\rpm.py to rpm.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\src_tarbz2.py to src_tarbz2.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\src_targz.py to src_targz.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\src_zip.py to src_zip.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\tarbz2.py to tarbz2.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\targz.py to targz.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\zip.py to zip.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\packaging\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\pdf.py to pdf.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\pdflatex.py to pdflatex.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\pdftex.py to pdftex.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\Perforce.py to Perforce.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\PharLapCommon.py to PharLapCommon.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\qt.py to qt.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\RCS.py to RCS.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\rmic.py to rmic.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\rpcgen.py to rpcgen.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\rpm.py to rpm.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\SCCS.py to SCCS.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sgiar.py to sgiar.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sgic++.py to sgic++.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sgicc.py to sgicc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sgilink.py to sgilink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\Subversion.py to Subversion.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sunar.py to sunar.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sunc++.py to sunc++.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\suncc.py to suncc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sunf77.py to sunf77.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sunf90.py to sunf90.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sunf95.py to sunf95.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\sunlink.py to sunlink.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\swig.py to swig.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\tar.py to tar.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\tex.py to tex.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\textfile.py to textfile.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\tlib.py to tlib.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\wix.py to wix.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\yacc.py to yacc.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\zip.py to zip.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Tool\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Util.py to Util.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables\BoolVariable.py to BoolVariable.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables\EnumVariable.py to EnumVariable.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables\ListVariable.py to ListVariable.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables\PackageVariable.py to PackageVariable.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables\PathVariable.py to PathVariable.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Variables\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\Warnings.py to Warnings.pyc
+byte-compiling build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\SCons\__init__.py to __init__.pyc
+running install_scripts
+creating build\bdist.win32\dumb\CAD\Python26\Scripts
+copying script/scons -> build\bdist.win32\dumb\CAD\Python26\Scripts\scons-1.2.0
+copying script/scons -> build\bdist.win32\dumb\CAD\Python26\Scripts
+copying script/sconsign -> build\bdist.win32\dumb\CAD\Python26\Scripts\sconsign-1.2.0
+copying script/sconsign -> build\bdist.win32\dumb\CAD\Python26\Scripts
+copying script/scons-time -> build\bdist.win32\dumb\CAD\Python26\Scripts\scons-time-1.2.0
+copying script/scons-time -> build\bdist.win32\dumb\CAD\Python26\Scripts
+copying script/scons.bat -> build\bdist.win32\dumb\CAD\Python26
+copying script/scons.bat -> build\bdist.win32\dumb\CAD\Python26\scons-1.2.0.bat
+running install_data
+running install_egg_info
+Writing build\bdist.win32\dumb\CAD\Python26\scons-1.2.0\scons-1.2.0-py2.6.egg-info
+c:\CAD\Cygwin\bin\tar.exe -cf C:\Files\Dev\Build\Make\scons\build\scons\dist\scons-1.2.0.win32.tar .
+C: Unknown Host
+tar: C\:\\Files\\Dev\\Build\\Make\\scons\\build\\scons\\dist\\scons-1.2.0.win32.tar: Cannot open: Input/Output error
+tar: Error is not recoverable: exiting now
+error: command 'tar' failed with exit status 2
+scons: *** [build\scons\dist\scons-1.2.0.win32.exe] Error 1
+scons: building terminated because of errors.
