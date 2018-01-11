@@ -1,0 +1,2287 @@
+RefactoringTool: Files that were modified:
+RefactoringTool: SConstruct
+RefactoringTool: runtest.py
+RefactoringTool: src/engine/SCons/ActionTests.py
+RefactoringTool: src/engine/SCons/Builder.py
+RefactoringTool: src/engine/SCons/BuilderTests.py
+RefactoringTool: src/engine/SCons/Conftest.py
+RefactoringTool: src/engine/SCons/Debug.py
+RefactoringTool: src/engine/SCons/Defaults.py
+RefactoringTool: src/engine/SCons/Environment.py
+RefactoringTool: src/engine/SCons/EnvironmentTests.py
+RefactoringTool: src/engine/SCons/Executor.py
+RefactoringTool: src/engine/SCons/Memoize.py
+RefactoringTool: src/engine/SCons/SConf.py
+RefactoringTool: src/engine/SCons/Subst.py
+RefactoringTool: src/engine/SCons/Util.py
+RefactoringTool: src/engine/SCons/cpp.py
+RefactoringTool: src/engine/SCons/Node/FS.py
+RefactoringTool: src/engine/SCons/Node/NodeTests.py
+RefactoringTool: src/engine/SCons/Node/__init__.py
+RefactoringTool: src/engine/SCons/Platform/__init__.py
+RefactoringTool: src/engine/SCons/Platform/os2.py
+RefactoringTool: src/engine/SCons/Platform/posix.py
+RefactoringTool: src/engine/SCons/Platform/win32.py
+RefactoringTool: src/engine/SCons/Scanner/Dir.py
+RefactoringTool: src/engine/SCons/Scanner/Fortran.py
+RefactoringTool: src/engine/SCons/Scanner/FortranTests.py
+RefactoringTool: src/engine/SCons/Scanner/IDLTests.py
+RefactoringTool: src/engine/SCons/Scanner/ProgTests.py
+RefactoringTool: src/engine/SCons/Scanner/RCTests.py
+RefactoringTool: src/engine/SCons/Script/Interactive.py
+RefactoringTool: src/engine/SCons/Script/Main.py
+RefactoringTool: src/engine/SCons/Script/SConsOptions.py
+RefactoringTool: src/engine/SCons/Script/SConscript.py
+RefactoringTool: src/engine/SCons/Tool/FortranCommon.py
+RefactoringTool: src/engine/SCons/Tool/ToolTests.py
+RefactoringTool: src/engine/SCons/Tool/__init__.py
+RefactoringTool: src/engine/SCons/Tool/cc.py
+RefactoringTool: src/engine/SCons/Tool/gs.py
+RefactoringTool: src/engine/SCons/Tool/ifl.py
+RefactoringTool: src/engine/SCons/Tool/ifort.py
+RefactoringTool: src/engine/SCons/Tool/intelc.py
+RefactoringTool: src/engine/SCons/Tool/javah.py
+RefactoringTool: src/engine/SCons/Tool/mslink.py
+RefactoringTool: src/engine/SCons/Tool/msvc.py
+RefactoringTool: src/engine/SCons/Tool/msvs.py
+RefactoringTool: src/engine/SCons/Tool/msvsTests.py
+RefactoringTool: src/engine/SCons/Tool/textfile.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/common.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/sdk.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/vs.py
+RefactoringTool: src/engine/SCons/Tool/packaging/__init__.py
+RefactoringTool: src/engine/SCons/Tool/packaging/ipk.py
+RefactoringTool: src/engine/SCons/Tool/packaging/msi.py
+RefactoringTool: src/engine/SCons/Tool/packaging/rpm.py
+RefactoringTool: src/engine/SCons/Variables/VariablesTests.py
+RefactoringTool: src/engine/SCons/Variables/__init__.py
+RefactoringTool: src/script/scons.py
+RefactoringTool: src/script/sconsign.py
+RefactoringTool: QMTest/TestCmd.py
+RefactoringTool: QMTest/TestRuntest.py
+RefactoringTool: QMTest/TestSCons.py
+RefactoringTool: QMTest/TestSConsMSVS.py
+RefactoringTool: QMTest/TestSCons_time.py
+RefactoringTool: QMTest/TestSConsign.py
+RefactoringTool: QMTest/scons_tdb.py
+RefactoringTool: bench/env.__setitem__.py
+RefactoringTool: bench/lvars-gvars.py
+--- SConstruct (original)
++++ SConstruct (refactored)
+@@ -175,7 +175,7 @@
+ 
+ ENV = { 'PATH' : os.environ['PATH'] }
+ for key in ['LOGNAME', 'PYTHONPATH', 'LD_LIBRARY_PATH']:
+-    if os.environ.has_key(key):
++    if key in os.environ:
+         ENV[key] = os.environ[key]
+ 
+ build_dir = ARGUMENTS.get('BUILDDIR', 'build')
+@@ -708,7 +708,7 @@
+     pkg_version = "%s-%s" % (pkg, version)
+ 
+     src = 'src'
+-    if p.has_key('src_subdir'):
++    if 'src_subdir' in p:
+         src = os.path.join(src, p['src_subdir'])
+ 
+     build = os.path.join(build_dir, pkg)
+@@ -754,7 +754,7 @@
+ 
+     MANIFEST_in_list = []
+ 
+-    if p.has_key('subpkgs'):
++    if 'subpkgs' in p:
+         #
+         # This package includes some sub-packages.  Read up their
+         # MANIFEST.in files, and add them to our source and destination
+--- runtest.py (original)
++++ runtest.py (refactored)
+@@ -446,7 +446,7 @@
+         'deb'        : os.path.join('python2.1', 'site-packages')
+     }
+ 
+-    if not dir.has_key(package):
++    if package not in dir:
+         sys.stderr.write("Unknown package '%s'\n" % package)
+         sys.exit(2)
+ 
+@@ -647,7 +647,7 @@
+         cmd = "aegis -list -unf pf 2>/dev/null"
+         for line in os.popen(cmd, "r").readlines():
+             a = line.split()
+-            if a[0] == "test" and not tdict.has_key(a[-1]):
++            if a[0] == "test" and a[-1] not in tdict:
+                 tdict[a[-1]] = Test(a[-1], spe)
+         cmd = "aegis -list -unf cf 2>/dev/null"
+         for line in os.popen(cmd, "r").readlines():
+@@ -655,7 +655,7 @@
+             if a[0] == "test":
+                 if a[1] == "remove":
+                     del tdict[a[-1]]
+-                elif not tdict.has_key(a[-1]):
++                elif a[-1] not in tdict:
+                     tdict[a[-1]] = Test(a[-1], spe)
+ 
+     tests = tdict.keys()
+--- src/engine/SCons/ActionTests.py (original)
++++ src/engine/SCons/ActionTests.py (refactored)
+@@ -146,7 +146,7 @@
+     def __setitem__(self, item, value):
+         self.d[item] = value
+     def has_key(self, item):
+-        return self.d.has_key(item)
++        return item in self.d
+     def get(self, key, value=None):
+         return self.d.get(key, value)
+     def items(self):
+@@ -1075,7 +1075,7 @@
+ 
+         act = SCons.Action.CommandAction(cmd5)
+         env5 = Environment()
+-        if scons_env.has_key('ENV'):
++        if 'ENV' in scons_env:
+             env5['ENV'] = scons_env['ENV']
+             PATH = scons_env['ENV'].get('PATH', '')
+         else:
+--- src/engine/SCons/Builder.py (original)
++++ src/engine/SCons/Builder.py (refactored)
+@@ -234,7 +234,7 @@
+         if self.already_warned:
+             return
+         for k in self.keys():
+-            if misleading_keywords.has_key(k):
++            if k in misleading_keywords:
+                 alt = misleading_keywords[k]
+                 msg = "Did you mean to use `%s' instead of `%s'?" % (alt, k)
+                 SCons.Warnings.warn(SCons.Warnings.MisleadingKeywordsWarning, msg)
+@@ -243,14 +243,14 @@
+ def Builder(**kw):
+     """A factory for builder objects."""
+     composite = None
+-    if kw.has_key('generator'):
+-        if kw.has_key('action'):
++    if 'generator' in kw:
++        if 'action' in kw:
+             raise UserError, "You must not specify both an action and a generator."
+         kw['action'] = SCons.Action.CommandGeneratorAction(kw['generator'], {})
+         del kw['generator']
+-    elif kw.has_key('action'):
++    elif 'action' in kw:
+         source_ext_match = kw.get('source_ext_match', 1)
+-        if kw.has_key('source_ext_match'):
++        if 'source_ext_match' in kw:
+             del kw['source_ext_match']
+         if SCons.Util.is_Dict(kw['action']):
+             composite = DictCmdGenerator(kw['action'], source_ext_match)
+@@ -259,7 +259,7 @@
+         else:
+             kw['action'] = SCons.Action.Action(kw['action'])
+ 
+-    if kw.has_key('emitter'):
++    if 'emitter' in kw:
+         emitter = kw['emitter']
+         if SCons.Util.is_String(emitter):
+             # This allows users to pass in an Environment
+@@ -337,7 +337,7 @@
+         # Recursively substitute the variable.
+         # We can't use env.subst() because it deals only
+         # in strings.  Maybe we should change that?
+-        while SCons.Util.is_String(emitter) and env.has_key(emitter):
++        while SCons.Util.is_String(emitter) and emitter in env:
+             emitter = env[emitter]
+         if callable(emitter):
+             target, source = emitter(target, source, env)
+@@ -390,13 +390,13 @@
+             suffix = CallableSelector(suffix)
+         self.env = env
+         self.single_source = single_source
+-        if overrides.has_key('overrides'):
++        if 'overrides' in overrides:
+             SCons.Warnings.warn(SCons.Warnings.DeprecatedWarning,
+                 "The \"overrides\" keyword to Builder() creation has been deprecated;\n" +\
+                 "\tspecify the items as keyword arguments to the Builder() call instead.")
+             overrides.update(overrides['overrides'])
+             del overrides['overrides']
+-        if overrides.has_key('scanner'):
++        if 'scanner' in overrides:
+             SCons.Warnings.warn(SCons.Warnings.DeprecatedWarning,
+                                 "The \"scanner\" keyword to Builder() creation has been deprecated;\n"
+                                 "\tuse: source_scanner or target_scanner as appropriate.")
+@@ -614,7 +614,7 @@
+             ekw = self.executor_kw.copy()
+             ekw['chdir'] = chdir
+         if kw:
+-            if kw.has_key('srcdir'):
++            if 'srcdir' in kw:
+                 def prependDirIfRelative(f, srcdir=kw['srcdir']):
+                     import os.path
+                     if SCons.Util.is_String(f) and not os.path.isabs(f):
+@@ -838,7 +838,7 @@
+             sdict[s] = 1
+         for builder in self.get_src_builders(env):
+             for s in builder.src_suffixes(env):
+-                if not sdict.has_key(s):
++                if s not in sdict:
+                     sdict[s] = 1
+                     suffixes.append(s)
+         return suffixes
+--- src/engine/SCons/BuilderTests.py (original)
++++ src/engine/SCons/BuilderTests.py (refactored)
+@@ -121,7 +121,7 @@
+     def __contains__(self, item):
+         return self.d.__contains__(item)
+     def has_key(self, item):
+-        return self.d.has_key(item)
++        return item in self.d
+     def keys(self):
+         return self.d.keys()
+     def get(self, key, value=None):
+--- src/engine/SCons/Conftest.py (original)
++++ src/engine/SCons/Conftest.py (refactored)
+@@ -229,7 +229,7 @@
+ 
+ def _check_empty_program(context, comp, text, language, use_shared = False):
+     """Return 0 on success, 1 otherwise."""
+-    if not context.env.has_key(comp) or not context.env[comp]:
++    if comp not in context.env or not context.env[comp]:
+         # The compiler construction variable is not set or empty
+         return 1
+ 
+--- src/engine/SCons/Debug.py (original)
++++ src/engine/SCons/Debug.py (refactored)
+@@ -45,7 +45,7 @@
+     def logInstanceCreation(instance, name=None):
+         if name is None:
+             name = instance.__class__.__name__
+-        if not tracked_classes.has_key(name):
++        if name not in tracked_classes:
+             tracked_classes[name] = []
+         tracked_classes[name].append(weakref.ref(instance))
+ 
+@@ -155,7 +155,7 @@
+     leader = '      '*level
+     for v,c in l:
+         file.write("%s  %6d %s:%d(%s)\n" % ((leader,-v) + func_shorten(c[-3:])))
+-        if caller_dicts.has_key(c):
++        if c in caller_dicts:
+             _dump_one_caller(c, file, level+1)
+ 
+ # print each call tree
+--- src/engine/SCons/Defaults.py (original)
++++ src/engine/SCons/Defaults.py (refactored)
+@@ -445,7 +445,7 @@
+             frame = sys.exc_info()[2].tb_frame.f_back
+         variable = self.variable
+         while frame:
+-            if frame.f_locals.has_key(variable):
++            if variable in frame.f_locals:
+                 v = frame.f_locals[variable]
+                 if v:
+                     method = getattr(v, self.method)
+--- src/engine/SCons/Environment.py (original)
++++ src/engine/SCons/Environment.py (refactored)
+@@ -170,7 +170,7 @@
+         l.reverse()
+     for i in l:
+         try:
+-            if not seen.has_key(i):
++            if i not in seen:
+                 result.append(i)
+                 seen[i]=1
+         except TypeError:
+@@ -427,7 +427,7 @@
+             # key and we don't need to check.  If we do check, using a
+             # global, pre-compiled regular expression directly is more
+             # efficient than calling another function or a method.
+-            if not self._dict.has_key(key) \
++            if key not in self._dict \
+                and not _is_valid_var.match(key):
+                     raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
+             self._dict[key] = value
+@@ -437,7 +437,7 @@
+         return self._dict.get(key, default)
+ 
+     def has_key(self, key):
+-        return self._dict.has_key(key)
++        return key in self._dict
+ 
+     def __contains__(self, key):
+         return self._dict.__contains__(key)
+@@ -975,7 +975,7 @@
+         # Apply the passed-in and customizable variables to the
+         # environment before calling the tools, because they may use
+         # some of them during initialization.
+-        if kw.has_key('options'):
++        if 'options' in kw:
+             # Backwards compatibility:  they may stll be using the
+             # old "options" keyword.
+             variables = kw['options']
+@@ -1236,13 +1236,13 @@
+         """
+ 
+         orig = ''
+-        if self._dict.has_key(envname) and self._dict[envname].has_key(name):
++        if envname in self._dict and name in self._dict[envname]:
+             orig = self._dict[envname][name]
+ 
+         nv = SCons.Util.AppendPath(orig, newpath, sep, delete_existing,
+                                    canonicalize=self._canonicalize)
+ 
+-        if not self._dict.has_key(envname):
++        if envname not in self._dict:
+             self._dict[envname] = {}
+ 
+         self._dict[envname][name] = nv
+@@ -1257,7 +1257,7 @@
+         for key, val in kw.items():
+             if SCons.Util.is_List(val):
+                 val = _delete_duplicates(val, delete_existing)
+-            if not self._dict.has_key(key) or self._dict[key] in ('', None):
++            if key not in self._dict or self._dict[key] in ('', None):
+                 self._dict[key] = val
+             elif SCons.Util.is_Dict(self._dict[key]) and \
+                  SCons.Util.is_Dict(val):
+@@ -1594,13 +1594,13 @@
+         """
+ 
+         orig = ''
+-        if self._dict.has_key(envname) and self._dict[envname].has_key(name):
++        if envname in self._dict and name in self._dict[envname]:
+             orig = self._dict[envname][name]
+ 
+         nv = SCons.Util.PrependPath(orig, newpath, sep, delete_existing,
+                                     canonicalize=self._canonicalize)
+ 
+-        if not self._dict.has_key(envname):
++        if envname not in self._dict:
+             self._dict[envname] = {}
+ 
+         self._dict[envname][name] = nv
+@@ -1615,7 +1615,7 @@
+         for key, val in kw.items():
+             if SCons.Util.is_List(val):
+                 val = _delete_duplicates(val, not delete_existing)
+-            if not self._dict.has_key(key) or self._dict[key] in ('', None):
++            if key not in self._dict or self._dict[key] in ('', None):
+                 self._dict[key] = val
+             elif SCons.Util.is_Dict(self._dict[key]) and \
+                  SCons.Util.is_Dict(val):
+@@ -1688,7 +1688,7 @@
+ 
+     def SetDefault(self, **kw):
+         for k in kw.keys():
+-            if self._dict.has_key(k):
++            if k in self._dict:
+                 del kw[k]
+         self.Replace(**kw)
+ 
+@@ -1825,7 +1825,7 @@
+         return tlist
+ 
+     def BuildDir(self, *args, **kw):
+-        if kw.has_key('build_dir'):
++        if 'build_dir' in kw:
+             kw['variant_dir'] = kw['build_dir']
+             del kw['build_dir']
+         return self.VariantDir(*args, **kw)
+@@ -2233,7 +2233,7 @@
+             self.__dict__['overrides'][key]
+             return 1
+         except KeyError:
+-            return self.__dict__['__subject'].has_key(key)
++            return key in self.__dict__['__subject']
+     def __contains__(self, key):
+         if self.__dict__['overrides'].__contains__(key):
+             return 1
+--- src/engine/SCons/EnvironmentTests.py (original)
++++ src/engine/SCons/EnvironmentTests.py (refactored)
+@@ -43,14 +43,14 @@
+     keys = d.keys()
+     keys.sort()
+     for k in keys:
+-        if env1.has_key(k):
+-           if env2.has_key(k):
++        if k in env1:
++           if k in env2:
+                if env1[k] != env2[k]:
+                    s1 = s1 + "    " + repr(k) + " : " + repr(env1[k]) + "\n"
+                    s2 = s2 + "    " + repr(k) + " : " + repr(env2[k]) + "\n"
+            else:
+                s1 = s1 + "    " + repr(k) + " : " + repr(env1[k]) + "\n"
+-        elif env2.has_key(k):
++        elif k in env2:
+            s2 = s2 + "    " + repr(k) + " : " + repr(env2[k]) + "\n"
+     s1 = s1 + "}\n"
+     s2 = s2 + "}\n"
+@@ -65,14 +65,14 @@
+     keys = d.keys()
+     keys.sort()
+     for k in keys:
+-        if d1.has_key(k):
+-           if d2.has_key(k):
++        if k in d1:
++           if k in d2:
+                if d1[k] != d2[k]:
+                    s1 = s1 + "    " + repr(k) + " : " + repr(d1[k]) + "\n"
+                    s2 = s2 + "    " + repr(k) + " : " + repr(d2[k]) + "\n"
+            else:
+                s1 = s1 + "    " + repr(k) + " : " + repr(d1[k]) + "\n"
+-        elif env2.has_key(k):
++        elif k in env2:
+            s2 = s2 + "    " + repr(k) + " : " + repr(d2[k]) + "\n"
+     s1 = s1 + "}\n"
+     s2 = s2 + "}\n"
+@@ -157,15 +157,15 @@
+ 
+ class TestEnvironmentFixture:
+     def TestEnvironment(self, *args, **kw):
+-        if not kw or not kw.has_key('tools'):
++        if not kw or 'tools' not in kw:
+             kw['tools'] = [test_tool]
+         default_keys = { 'CC' : 'cc',
+                          'CCFLAGS' : '-DNDEBUG',
+                          'ENV' : { 'TMP' : '/tmp' } }
+         for key, value in default_keys.items():
+-            if not kw.has_key(key):
++            if key not in kw:
+                 kw[key] = value
+-        if not kw.has_key('BUILDERS'):
++        if 'BUILDERS' not in kw:
+             static_obj = SCons.Builder.Builder(action = {},
+                                                emitter = {},
+                                                suffix = '.o',
+@@ -182,7 +182,7 @@
+         """Test initializing a SubstitutionEnvironment
+         """
+         env = SubstitutionEnvironment()
+-        assert not env.has_key('__env__')
++        assert '__env__' not in env
+ 
+     def test___cmp__(self):
+         """Test comparing SubstitutionEnvironments
+@@ -230,8 +230,8 @@
+         """Test the SubstitutionEnvironment has_key() method
+         """
+         env = SubstitutionEnvironment(XXX = 'x')
+-        assert env.has_key('XXX')
+-        assert not env.has_key('YYY')
++        assert 'XXX' in env
++        assert 'YYY' not in env
+ 
+     def test_contains(self):
+         """Test the SubstitutionEnvironment __contains__() method
+@@ -263,7 +263,7 @@
+         class X(SCons.Node.Node):
+             pass
+         def Factory(name, directory = None, create = 1, dict=dict, X=X):
+-            if not dict.has_key(name):
++            if name not in dict:
+                 dict[name] = X()
+                 dict[name].name = name
+             return dict[name]
+@@ -844,7 +844,7 @@
+         """
+         env = SubstitutionEnvironment()
+         env.MergeFlags('')
+-        assert not env.has_key('CCFLAGS'), env['CCFLAGS']
++        assert 'CCFLAGS' not in env, env['CCFLAGS']
+         env.MergeFlags('-X')
+         assert env['CCFLAGS'] == ['-X'], env['CCFLAGS']
+         env.MergeFlags('-X')
+@@ -908,8 +908,8 @@
+         env2 = self.TestEnvironment(XXX = 'x', YYY = 'y')
+         assert env1 == env2, diff_env(env1, env2)
+ 
+-        assert not env1.has_key('__env__')
+-        assert not env2.has_key('__env__')
++        assert '__env__' not in env1
++        assert '__env__' not in env2
+ 
+     def test_variables(self):
+         """Test that variables only get applied once."""
+@@ -1149,7 +1149,7 @@
+         """Test setting the external ENV in Environments
+         """
+         env = Environment()
+-        assert env.Dictionary().has_key('ENV')
++        assert 'ENV' in env.Dictionary()
+ 
+         env = self.TestEnvironment(ENV = { 'PATH' : '/foo:/bar' })
+         assert env.Dictionary('ENV')['PATH'] == '/foo:/bar'
+@@ -1181,7 +1181,7 @@
+                 except warning:
+                     exc_caught = 1
+                 assert exc_caught, "Did not catch ReservedVariableWarning for `%s'" % kw
+-                assert not env4.has_key(kw), "`%s' variable was incorrectly set" % kw
++                assert kw not in env4, "`%s' variable was incorrectly set" % kw
+         finally:
+             SCons.Warnings.warningAsException(old)
+ 
+@@ -1203,7 +1203,7 @@
+                 except warning:
+                     exc_caught = 1
+                 assert exc_caught, "Did not catch FutureReservedVariableWarning for `%s'" % kw
+-                assert env4.has_key(kw), "`%s' variable was not set" % kw
++                assert kw in env4, "`%s' variable was not set" % kw
+         finally:
+             SCons.Warnings.warningAsException(old)
+ 
+@@ -1773,8 +1773,8 @@
+         assert env1.Dictionary('XXX') is env2.Dictionary('XXX')
+         assert 4 in env2.Dictionary('YYY')
+         assert not 4 in env1.Dictionary('YYY')
+-        assert env2.Dictionary('ZZZ').has_key(5)
+-        assert not env1.Dictionary('ZZZ').has_key(5)
++        assert 5 in env2.Dictionary('ZZZ')
++        assert 5 not in env1.Dictionary('ZZZ')
+ 
+         #
+         env1 = self.TestEnvironment(BUILDERS = {'b1' : 1})
+@@ -1950,16 +1950,16 @@
+         xxx, zzz = env.Dictionary('XXX', 'ZZZ')
+         assert xxx == 'x'
+         assert zzz == 'z'
+-        assert env.Dictionary().has_key('BUILDERS')
+-        assert env.Dictionary().has_key('CC')
+-        assert env.Dictionary().has_key('CCFLAGS')
+-        assert env.Dictionary().has_key('ENV')
++        assert 'BUILDERS' in env.Dictionary()
++        assert 'CC' in env.Dictionary()
++        assert 'CCFLAGS' in env.Dictionary()
++        assert 'ENV' in env.Dictionary()
+ 
+         assert env['XXX'] == 'x'
+         env['XXX'] = 'foo'
+         assert env.Dictionary('XXX') == 'foo'
+         del env['XXX']
+-        assert not env.Dictionary().has_key('XXX')
++        assert 'XXX' not in env.Dictionary()
+ 
+     def test_FindIxes(self):
+         "Test FindIxes()"
+@@ -3415,9 +3415,9 @@
+         bad_msg = '%s is not reserved, but got omitted; see Environment.construction_var_name_ok'
+         added.append('INIT')
+         for x in self.reserved_variables:
+-            assert not env.has_key(x), env[x]
++            assert x not in env, env[x]
+         for x in added:
+-            assert env.has_key(x), bad_msg % x
++            assert x in env, bad_msg % x
+ 
+         env.Append(TARGETS = 'targets',
+                    SOURCES = 'sources',
+@@ -3430,9 +3430,9 @@
+                    APPEND = 'append')
+         added.append('APPEND')
+         for x in self.reserved_variables:
+-            assert not env.has_key(x), env[x]
++            assert x not in env, env[x]
+         for x in added:
+-            assert env.has_key(x), bad_msg % x
++            assert x in env, bad_msg % x
+ 
+         env.AppendUnique(TARGETS = 'targets',
+                          SOURCES = 'sources',
+@@ -3445,9 +3445,9 @@
+                          APPENDUNIQUE = 'appendunique')
+         added.append('APPENDUNIQUE')
+         for x in self.reserved_variables:
+-            assert not env.has_key(x), env[x]
++            assert x not in env, env[x]
+         for x in added:
+-            assert env.has_key(x), bad_msg % x
++            assert x in env, bad_msg % x
+ 
+         env.Prepend(TARGETS = 'targets',
+                     SOURCES = 'sources',
+@@ -3460,9 +3460,9 @@
+                     PREPEND = 'prepend')
+         added.append('PREPEND')
+         for x in self.reserved_variables:
+-            assert not env.has_key(x), env[x]
++            assert x not in env, env[x]
+         for x in added:
+-            assert env.has_key(x), bad_msg % x
++            assert x in env, bad_msg % x
+ 
+         env.Prepend(TARGETS = 'targets',
+                     SOURCES = 'sources',
+@@ -3475,9 +3475,9 @@
+                     PREPENDUNIQUE = 'prependunique')
+         added.append('PREPENDUNIQUE')
+         for x in self.reserved_variables:
+-            assert not env.has_key(x), env[x]
++            assert x not in env, env[x]
+         for x in added:
+-            assert env.has_key(x), bad_msg % x
++            assert x in env, bad_msg % x
+ 
+         env.Replace(TARGETS = 'targets',
+                     SOURCES = 'sources',
+@@ -3490,9 +3490,9 @@
+                     REPLACE = 'replace')
+         added.append('REPLACE')
+         for x in self.reserved_variables:
+-            assert not env.has_key(x), env[x]
++            assert x not in env, env[x]
+         for x in added:
+-            assert env.has_key(x), bad_msg % x
++            assert x in env, bad_msg % x
+ 
+         copy = env.Clone(TARGETS = 'targets',
+                          SOURCES = 'sources',
+@@ -3504,9 +3504,9 @@
+                          UNCHANGED_TARGETS = 'unchanged_targets',
+                          COPY = 'copy')
+         for x in self.reserved_variables:
+-            assert not copy.has_key(x), env[x]
++            assert x not in copy, env[x]
+         for x in added + ['COPY']:
+-            assert copy.has_key(x), bad_msg % x
++            assert x in copy, bad_msg % x
+ 
+         over = env.Override({'TARGETS' : 'targets',
+                              'SOURCES' : 'sources',
+@@ -3518,9 +3518,9 @@
+                              'UNCHANGED_TARGETS' : 'unchanged_targets',
+                              'OVERRIDE' : 'override'})
+         for x in self.reserved_variables:
+-            assert not over.has_key(x), over[x]
++            assert x not in over, over[x]
+         for x in added + ['OVERRIDE']:
+-            assert over.has_key(x), bad_msg % x
++            assert x in over, bad_msg % x
+ 
+     def test_parse_flags(self):
+         '''Test the Base class parse_flags argument'''
+@@ -3541,7 +3541,7 @@
+         # all we have to show is that it gets to MergeFlags internally
+         env = Environment(tools = [])
+         env2 = env.Clone(parse_flags = '-X')
+-        assert not env.has_key('CCFLAGS')
++        assert 'CCFLAGS' not in env
+         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
+ 
+         env = Environment(tools = [], CCFLAGS=None)
+@@ -3551,9 +3551,9 @@
+ 
+         env = Environment(tools = [], CPPDEFINES = 'FOO')
+         env2 = env.Clone(parse_flags = '-std=c99 -X -DBAR')
+-        assert not env.has_key('CFLAGS')
++        assert 'CFLAGS' not in env
+         assert env2['CFLAGS']  == ['-std=c99'], env2['CFLAGS']
+-        assert not env.has_key('CCFLAGS')
++        assert 'CCFLAGS' not in env
+         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
+         assert env['CPPDEFINES'] == 'FOO', env['CPPDEFINES']
+         assert env2['CPPDEFINES'] == ['FOO','BAR'], env2['CPPDEFINES']
+@@ -3587,19 +3587,19 @@
+         env, env2, env3 = self.envs
+ 
+         del env3['XXX']
+-        assert not env.has_key('XXX'), "env has XXX?"
+-        assert not env2.has_key('XXX'), "env2 has XXX?"
+-        assert not env3.has_key('XXX'), "env3 has XXX?"
++        assert 'XXX' not in env, "env has XXX?"
++        assert 'XXX' not in env2, "env2 has XXX?"
++        assert 'XXX' not in env3, "env3 has XXX?"
+ 
+         del env3['YYY']
+-        assert not env.has_key('YYY'), "env has YYY?"
+-        assert not env2.has_key('YYY'), "env2 has YYY?"
+-        assert not env3.has_key('YYY'), "env3 has YYY?"
++        assert 'YYY' not in env, "env has YYY?"
++        assert 'YYY' not in env2, "env2 has YYY?"
++        assert 'YYY' not in env3, "env3 has YYY?"
+ 
+         del env3['ZZZ']
+-        assert not env.has_key('ZZZ'), "env has ZZZ?"
+-        assert not env2.has_key('ZZZ'), "env2 has ZZZ?"
+-        assert not env3.has_key('ZZZ'), "env3 has ZZZ?"
++        assert 'ZZZ' not in env, "env has ZZZ?"
++        assert 'ZZZ' not in env2, "env2 has ZZZ?"
++        assert 'ZZZ' not in env3, "env3 has ZZZ?"
+ 
+     def test_get(self):
+         """Test the OverrideEnvironment get() method"""
+@@ -3617,15 +3617,15 @@
+     def test_has_key(self):
+         """Test the OverrideEnvironment has_key() method"""
+         env, env2, env3 = self.envs
+-        assert env.has_key('XXX'), env.has_key('XXX')
+-        assert env2.has_key('XXX'), env2.has_key('XXX')
+-        assert env3.has_key('XXX'), env3.has_key('XXX')
+-        assert env.has_key('YYY'), env.has_key('YYY')
+-        assert env2.has_key('YYY'), env2.has_key('YYY')
+-        assert env3.has_key('YYY'), env3.has_key('YYY')
+-        assert not env.has_key('ZZZ'), env.has_key('ZZZ')
+-        assert not env2.has_key('ZZZ'), env2.has_key('ZZZ')
+-        assert env3.has_key('ZZZ'), env3.has_key('ZZZ')
++        assert 'XXX' in env, 'XXX' in env
++        assert 'XXX' in env2, 'XXX' in env2
++        assert 'XXX' in env3, 'XXX' in env3
++        assert 'YYY' in env, 'YYY' in env
++        assert 'YYY' in env2, 'YYY' in env2
++        assert 'YYY' in env3, 'YYY' in env3
++        assert 'ZZZ' not in env, 'ZZZ' in env
++        assert 'ZZZ' not in env2, 'ZZZ' in env2
++        assert 'ZZZ' in env3, 'ZZZ' in env3
+ 
+     def test_contains(self):
+         """Test the OverrideEnvironment __contains__() method"""
+@@ -3812,7 +3812,7 @@
+         # all we have to show is that it gets to MergeFlags internally
+         env = SubstitutionEnvironment()
+         env2 = env.Override({'parse_flags' : '-X'})
+-        assert not env.has_key('CCFLAGS')
++        assert 'CCFLAGS' not in env
+         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
+ 
+         env = SubstitutionEnvironment(CCFLAGS=None)
+@@ -3822,9 +3822,9 @@
+ 
+         env = SubstitutionEnvironment(CPPDEFINES = 'FOO')
+         env2 = env.Override({'parse_flags' : '-std=c99 -X -DBAR'})
+-        assert not env.has_key('CFLAGS')
++        assert 'CFLAGS' not in env
+         assert env2['CFLAGS']  == ['-std=c99'], env2['CFLAGS']
+-        assert not env.has_key('CCFLAGS')
++        assert 'CCFLAGS' not in env
+         assert env2['CCFLAGS'] == ['-X'], env2['CCFLAGS']
+         assert env['CPPDEFINES'] == 'FOO', env['CPPDEFINES']
+         assert env2['CPPDEFINES'] == ['FOO','BAR'], env2['CPPDEFINES']
+--- src/engine/SCons/Executor.py (original)
++++ src/engine/SCons/Executor.py (refactored)
+@@ -523,7 +523,7 @@
+             idict = {}
+             for i in ignore:
+                 idict[i] = 1
+-            sourcelist = [s for s in sourcelist if not idict.has_key(s)]
++            sourcelist = [s for s in sourcelist if s not in idict]
+ 
+         memo_dict[key] = sourcelist
+ 
+@@ -549,7 +549,7 @@
+     return _batch_executors[key]
+ 
+ def AddBatchExecutor(key, executor):
+-    assert not _batch_executors.has_key(key)
++    assert key not in _batch_executors
+     _batch_executors[key] = executor
+ 
+ nullenv = None
+--- src/engine/SCons/Memoize.py (original)
++++ src/engine/SCons/Memoize.py (refactored)
+@@ -165,7 +165,7 @@
+     """
+     def __call__(self, *args, **kw):
+         obj = args[0]
+-        if obj._memo.has_key(self.method_name):
++        if self.method_name in obj._memo:
+             self.hit = self.hit + 1
+         else:
+             self.miss = self.miss + 1
+@@ -200,7 +200,7 @@
+             self.miss = self.miss + 1
+         else:
+             key = self.keymaker(*args, **kw)
+-            if memo_dict.has_key(key):
++            if key in memo_dict:
+                 self.hit = self.hit + 1
+             else:
+                 self.miss = self.miss + 1
+--- src/engine/SCons/SConf.py (original)
++++ src/engine/SCons/SConf.py (refactored)
+@@ -686,7 +686,7 @@
+         if self.logfile is not None and not dryrun:
+             # truncate logfile, if SConf.Configure is called for the first time
+             # in a build
+-            if _ac_config_logs.has_key(self.logfile):
++            if self.logfile in _ac_config_logs:
+                 log_mode = "a"
+             else:
+                 _ac_config_logs[self.logfile] = None
+--- src/engine/SCons/Subst.py (original)
++++ src/engine/SCons/Subst.py (refactored)
+@@ -450,9 +450,9 @@
+                                 return ''
+                             raise_exception(e, lvars['TARGETS'], s)
+                     else:
+-                        if lvars.has_key(key):
++                        if key in lvars:
+                             s = lvars[key]
+-                        elif self.gvars.has_key(key):
++                        elif key in self.gvars:
+                             s = self.gvars[key]
+                         elif not NameError in AllowableExceptions:
+                             raise_exception(NameError(key), lvars['TARGETS'], s)
+@@ -540,7 +540,7 @@
+     # If we dropped that behavior (or found another way to cover it),
+     # we could get rid of this call completely and just rely on the
+     # Executor setting the variables.
+-    if not lvars.has_key('TARGET'):
++    if 'TARGET' not in lvars:
+         d = subst_dict(target, source)
+         if d:
+             lvars = lvars.copy()
+@@ -665,9 +665,9 @@
+                                 return
+                             raise_exception(e, lvars['TARGETS'], s)
+                     else:
+-                        if lvars.has_key(key):
++                        if key in lvars:
+                             s = lvars[key]
+-                        elif self.gvars.has_key(key):
++                        elif key in self.gvars:
+                             s = self.gvars[key]
+                         elif not NameError in AllowableExceptions:
+                             raise_exception(NameError(), lvars['TARGETS'], s)
+@@ -834,7 +834,7 @@
+     # If we dropped that behavior (or found another way to cover it),
+     # we could get rid of this call completely and just rely on the
+     # Executor setting the variables.
+-    if not lvars.has_key('TARGET'):
++    if 'TARGET' not in lvars:
+         d = subst_dict(target, source)
+         if d:
+             lvars = lvars.copy()
+--- src/engine/SCons/Util.py (original)
++++ src/engine/SCons/Util.py (refactored)
+@@ -200,7 +200,7 @@
+         else:
+             retval = retval + "  "
+ 
+-    if visited.has_key(rname):
++    if rname in visited:
+         return retval + "+-[" + rname + "]\n"
+ 
+     retval = retval + "+-" + rname + "\n"
+@@ -273,7 +273,7 @@
+ 
+     children = child_func(root)
+ 
+-    if prune and visited.has_key(rname) and children:
++    if prune and rname in visited and children:
+         print ''.join(tags + margins + ['+-[', rname, ']'])
+         return
+ 
+@@ -1128,7 +1128,7 @@
+             for (k,v) in self.items():
+                 if k is not None:
+                     s_k = env.subst(k)
+-                    if s_dict.has_key(s_k):
++                    if s_k in s_dict:
+                         # We only raise an error when variables point
+                         # to the same suffix.  If one suffix is literal
+                         # and a variable suffix contains this literal,
+@@ -1275,7 +1275,7 @@
+     result = []
+     for item in seq:
+         #if not item in seen:
+-        if not seen.has_key(item):
++        if item not in seen:
+             seen[item] = 1
+             result.append(item)
+     return result
+--- src/engine/SCons/cpp.py (original)
++++ src/engine/SCons/cpp.py (refactored)
+@@ -443,13 +443,13 @@
+         """
+         Default handling of a #ifdef line.
+         """
+-        self._do_if_else_condition(self.cpp_namespace.has_key(t[1]))
++        self._do_if_else_condition(t[1] in self.cpp_namespace)
+ 
+     def do_ifndef(self, t):
+         """
+         Default handling of a #ifndef line.
+         """
+-        self._do_if_else_condition(not self.cpp_namespace.has_key(t[1]))
++        self._do_if_else_condition(t[1] not in self.cpp_namespace)
+ 
+     def do_if(self, t):
+         """
+--- src/engine/SCons/Node/FS.py (original)
++++ src/engine/SCons/Node/FS.py (refactored)
+@@ -1783,7 +1783,7 @@
+                 d[name] = result
+             return result
+         else:
+-            return d.has_key(name)
++            return name in d
+ 
+     memoizer_counters.append(SCons.Memoize.CountValue('srcdir_list'))
+ 
+--- src/engine/SCons/Node/NodeTests.py (original)
++++ src/engine/SCons/Node/NodeTests.py (refactored)
+@@ -1130,13 +1130,13 @@
+         nw = SCons.Node.Walker(n1)
+         assert nw.next().name ==  "n4"
+         assert nw.next().name ==  "n5"
+-        assert nw.history.has_key(n2)
++        assert n2 in nw.history
+         assert nw.next().name ==  "n2"
+         assert nw.next().name ==  "n6"
+         assert nw.next().name ==  "n7"
+-        assert nw.history.has_key(n3)
++        assert n3 in nw.history
+         assert nw.next().name ==  "n3"
+-        assert nw.history.has_key(n1)
++        assert n1 in nw.history
+         assert nw.next().name ==  "n1"
+         assert nw.next() is None
+ 
+--- src/engine/SCons/Node/__init__.py (original)
++++ src/engine/SCons/Node/__init__.py (refactored)
+@@ -548,7 +548,7 @@
+         deps = []
+         while nodes:
+             n = nodes.pop(0)
+-            d = [x for x in n.get_found_includes(env, scanner, path) if not seen.has_key(x)]
++            d = [x for x in n.get_found_includes(env, scanner, path) if x not in seen]
+             if d:
+                 deps.extend(d)
+                 for n in d:
+@@ -1309,7 +1309,7 @@
+                 node = self.stack[-1].wkids.pop(0)
+                 if not self.stack[-1].wkids:
+                     self.stack[-1].wkids = None
+-                if self.history.has_key(node):
++                if node in self.history:
+                     self.cycle_func(node, self.stack)
+                 else:
+                     node.wkids = copy.copy(self.kids_func(node, self.stack[-1]))
+--- src/engine/SCons/Platform/__init__.py (original)
++++ src/engine/SCons/Platform/__init__.py (refactored)
+@@ -93,7 +93,7 @@
+     our execution environment.
+     """
+     full_name = 'SCons.Platform.' + name
+-    if not sys.modules.has_key(full_name):
++    if full_name not in sys.modules:
+         if os.name == 'java':
+             eval(full_name)
+         else:
+--- src/engine/SCons/Platform/os2.py (original)
++++ src/engine/SCons/Platform/os2.py (refactored)
+@@ -34,7 +34,7 @@
+ import win32
+ 
+ def generate(env):
+-    if not env.has_key('ENV'):
++    if 'ENV' not in env:
+         env['ENV']        = {}
+     env['OBJPREFIX']      = ''
+     env['OBJSUFFIX']      = '.obj'
+--- src/engine/SCons/Platform/posix.py (original)
++++ src/engine/SCons/Platform/posix.py (refactored)
+@@ -216,7 +216,7 @@
+     # os.fork()/os.exec() works better than os.system().  There may just
+     # not be a default that works best for all users.
+ 
+-    if os.__dict__.has_key('spawnvpe'):
++    if 'spawnvpe' in os.__dict__:
+         spawn = spawnvpe_spawn
+     elif env.Detect('env'):
+         spawn = env_spawn
+@@ -228,7 +228,7 @@
+     else:
+         pspawn = piped_fork_spawn
+ 
+-    if not env.has_key('ENV'):
++    if 'ENV' not in env:
+         env['ENV']        = {}
+     env['ENV']['PATH']    = '/usr/local/bin:/opt/bin:/bin:/usr/bin'
+     env['OBJPREFIX']      = ''
+--- src/engine/SCons/Platform/win32.py (original)
++++ src/engine/SCons/Platform/win32.py (refactored)
+@@ -317,7 +317,7 @@
+         tmp_path = systemroot + os.pathsep + \
+                    os.path.join(systemroot,'System32')
+         tmp_pathext = '.com;.exe;.bat;.cmd'
+-        if os.environ.has_key('PATHEXT'):
++        if 'PATHEXT' in os.environ:
+             tmp_pathext = os.environ['PATHEXT'] 
+         cmd_interp = SCons.Util.WhereIs('cmd', tmp_path, tmp_pathext)
+         if not cmd_interp:
+@@ -329,7 +329,7 @@
+             cmd_interp = env.Detect('command')
+ 
+     
+-    if not env.has_key('ENV'):
++    if 'ENV' not in env:
+         env['ENV']        = {}
+ 
+     # Import things from the external environment to the construction
+@@ -346,7 +346,7 @@
+         if v:
+             env['ENV'][var] = v
+ 
+-    if not env['ENV'].has_key('COMSPEC'):
++    if 'COMSPEC' not in env['ENV']:
+         v = os.environ.get("COMSPEC")
+         if v:
+             env['ENV']['COMSPEC'] = v
+--- src/engine/SCons/Scanner/Dir.py (original)
++++ src/engine/SCons/Scanner/Dir.py (refactored)
+@@ -68,7 +68,7 @@
+     skip_entry[skip] = 1
+     skip_entry[SCons.Node.FS._my_normcase(skip)] = 1
+ 
+-do_not_scan = lambda k: not skip_entry.has_key(k)
++do_not_scan = lambda k: k not in skip_entry
+ 
+ def scan_on_disk(node, env, path=()):
+     """
+--- src/engine/SCons/Scanner/Fortran.py (original)
++++ src/engine/SCons/Scanner/Fortran.py (refactored)
+@@ -94,7 +94,7 @@
+             d = {}
+             for m in defmodules:
+                 d[m] = 1
+-            modules = [m for m in modules if not d.has_key(m)]
++            modules = [m for m in modules if m not in d]
+             #modules = self.undefinedModules(modules, defmodules)
+ 
+             # Convert module name to a .mod filename
+--- src/engine/SCons/Scanner/FortranTests.py (original)
++++ src/engine/SCons/Scanner/FortranTests.py (refactored)
+@@ -221,7 +221,7 @@
+             raise KeyError, "Dummy environment only has FORTRANPATH attribute."
+ 
+     def has_key(self, key):
+-        return self.Dictionary().has_key(key)
++        return key in self.Dictionary()
+ 
+     def __getitem__(self,key):
+         return self.Dictionary()[key]
+--- src/engine/SCons/Scanner/IDLTests.py (original)
++++ src/engine/SCons/Scanner/IDLTests.py (refactored)
+@@ -208,7 +208,7 @@
+         return list(map(self.subst, path))
+ 
+     def has_key(self, key):
+-        return self.Dictionary().has_key(key)
++        return key in self.Dictionary()
+ 
+     def __getitem__(self,key):
+         return self.Dictionary()[key]
+--- src/engine/SCons/Scanner/ProgTests.py (original)
++++ src/engine/SCons/Scanner/ProgTests.py (refactored)
+@@ -59,7 +59,7 @@
+             return [self._dict[x] for x in args]
+ 
+     def has_key(self, key):
+-        return self.Dictionary().has_key(key)
++        return key in self.Dictionary()
+ 
+     def __getitem__(self,key):
+         return self.Dictionary()[key]
+--- src/engine/SCons/Scanner/RCTests.py (original)
++++ src/engine/SCons/Scanner/RCTests.py (refactored)
+@@ -91,7 +91,7 @@
+         return list(map(self.subst, path))
+ 
+     def has_key(self, key):
+-        return self.Dictionary().has_key(key)
++        return key in self.Dictionary()
+ 
+     def get_calculator(self):
+         return None
+--- src/engine/SCons/Script/Interactive.py (original)
++++ src/engine/SCons/Script/Interactive.py (refactored)
+@@ -222,7 +222,7 @@
+ 
+         def get_unseen_children(node, parent, seen_nodes=seen_nodes):
+             def is_unseen(node, seen_nodes=seen_nodes):
+-                return not seen_nodes.has_key(node)
++                return node not in seen_nodes
+             return list(filter(is_unseen, node.children(scan=1)))
+ 
+         def add_to_seen_nodes(node, parent, seen_nodes=seen_nodes):
+--- src/engine/SCons/Script/Main.py (original)
++++ src/engine/SCons/Script/Main.py (refactored)
+@@ -345,7 +345,7 @@
+             for t in self.targets:
+                 if not t.isdir():
+                     display("Removed " + str(t))
+-        if SCons.Environment.CleanTargets.has_key(target):
++        if target in SCons.Environment.CleanTargets:
+             files = SCons.Environment.CleanTargets[target]
+             for f in files:
+                 self.fs_delete(f.abspath, str(f), 0)
+@@ -366,7 +366,7 @@
+                 else:
+                     if removed:
+                         display("Removed " + str(t))
+-        if SCons.Environment.CleanTargets.has_key(target):
++        if target in SCons.Environment.CleanTargets:
+             files = SCons.Environment.CleanTargets[target]
+             for f in files:
+                 self.fs_delete(f.abspath, str(f))
+@@ -469,7 +469,7 @@
+ OptionsParser = FakeOptionParser()
+ 
+ def AddOption(*args, **kw):
+-    if not kw.has_key('default'):
++    if 'default' not in kw:
+         kw['default'] = None
+     result = OptionsParser.add_local_option(*args, **kw)
+     return result
+--- src/engine/SCons/Script/SConsOptions.py (original)
++++ src/engine/SCons/Script/SConsOptions.py (refactored)
+@@ -168,7 +168,7 @@
+                 value = diskcheck_convert(value)
+             except ValueError, v:
+                 raise SCons.Errors.UserError, "Not a valid diskcheck value: %s"%v
+-            if not self.__dict__.has_key('diskcheck'):
++            if 'diskcheck' not in self.__dict__:
+                 # No --diskcheck= option was specified on the command line.
+                 # Set this right away so it can affect the rest of the
+                 # file/Node lookups while processing the SConscript files.
+--- src/engine/SCons/Script/SConscript.py (original)
++++ src/engine/SCons/Script/SConscript.py (refactored)
+@@ -312,7 +312,7 @@
+     up to where we exec the SConscript."""
+     exc_type, exc_value, exc_tb = sys.exc_info()
+     tb = exc_tb
+-    while tb and not tb.tb_frame.f_locals.has_key(stack_bottom):
++    while tb and stack_bottom not in tb.tb_frame.f_locals:
+         tb = tb.tb_next
+     if not tb:
+         # We did not find our exec statement, so this was actually a bug
+@@ -334,7 +334,7 @@
+     """Annotate a node with the stack frame describing the
+     SConscript file and line number that created it."""
+     tb = sys.exc_info()[2]
+-    while tb and not tb.tb_frame.f_locals.has_key(stack_bottom):
++    while tb and stack_bottom not in tb.tb_frame.f_locals:
+         tb = tb.tb_next
+     if not tb:
+         # We did not find any exec of an SConscript file: what?!
+@@ -520,7 +520,7 @@
+                         globals.update(global_exports)
+                         globals.update(exports)
+                     else:
+-                        if exports.has_key(v):
++                        if v in exports:
+                             globals[v] = exports[v]
+                         else:
+                             globals[v] = global_exports[v]
+--- src/engine/SCons/Tool/FortranCommon.py (original)
++++ src/engine/SCons/Tool/FortranCommon.py (refactored)
+@@ -134,17 +134,17 @@
+         static_obj.add_emitter(suffix, FortranEmitter)
+         shared_obj.add_emitter(suffix, ShFortranEmitter)
+ 
+-    if not env.has_key('%sFLAGS' % dialect):
++    if '%sFLAGS' % dialect not in env:
+         env['%sFLAGS' % dialect] = SCons.Util.CLVar('')
+ 
+-    if not env.has_key('SH%sFLAGS' % dialect):
++    if 'SH%sFLAGS' % dialect not in env:
+         env['SH%sFLAGS' % dialect] = SCons.Util.CLVar('$%sFLAGS' % dialect)
+ 
+     # If a tool does not define fortran prefix/suffix for include path, use C ones
+-    if not env.has_key('INC%sPREFIX' % dialect):
++    if 'INC%sPREFIX' % dialect not in env:
+         env['INC%sPREFIX' % dialect] = '$INCPREFIX'
+ 
+-    if not env.has_key('INC%sSUFFIX' % dialect):
++    if 'INC%sSUFFIX' % dialect not in env:
+         env['INC%sSUFFIX' % dialect] = '$INCSUFFIX'
+ 
+     env['_%sINCFLAGS' % dialect] = '$( ${_concat(INC%sPREFIX, %sPATH, INC%sSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)' % (dialect, dialect, dialect)
+--- src/engine/SCons/Tool/ToolTests.py (original)
++++ src/engine/SCons/Tool/ToolTests.py (refactored)
+@@ -48,7 +48,7 @@
+             def __contains__(self, key):
+                 return self.dict.__contains__(key)
+             def has_key(self, key):
+-                return self.dict.has_key(key)
++                return key in self.dict
+         env = Environment()
+         env['BUILDERS'] = {}
+         env['ENV'] = {}
+--- src/engine/SCons/Tool/__init__.py (original)
++++ src/engine/SCons/Tool/__init__.py (refactored)
+@@ -171,7 +171,7 @@
+         env.Append(TOOLS = [ self.name ])
+         if hasattr(self, 'options'):
+             import SCons.Variables
+-            if not env.has_key('options'):
++            if 'options' not in env:
+                 from SCons.Script import ARGUMENTS
+                 env['options']=SCons.Variables.Variables(args=ARGUMENTS)
+             opts=env['options']
+--- src/engine/SCons/Tool/cc.py (original)
++++ src/engine/SCons/Tool/cc.py (refactored)
+@@ -45,7 +45,7 @@
+     Add underlying common "C compiler" variables that
+     are used by multiple tools (specifically, c++).
+     """
+-    if not env.has_key('_CCCOMCOM'):
++    if '_CCCOMCOM' not in env:
+         env['_CCCOMCOM'] = '$CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS'
+         # It's a hack to test for darwin here, but the alternative
+         # of creating an applecc.py to contain this seems overkill.
+@@ -56,10 +56,10 @@
+         if env['PLATFORM'] == 'darwin':
+             env['_CCCOMCOM'] = env['_CCCOMCOM'] + ' $_FRAMEWORKPATH'
+ 
+-    if not env.has_key('CCFLAGS'):
++    if 'CCFLAGS' not in env:
+         env['CCFLAGS']   = SCons.Util.CLVar('')
+ 
+-    if not env.has_key('SHCCFLAGS'):
++    if 'SHCCFLAGS' not in env:
+         env['SHCCFLAGS'] = SCons.Util.CLVar('$CCFLAGS')
+ 
+ def generate(env):
+--- src/engine/SCons/Tool/gs.py (original)
++++ src/engine/SCons/Tool/gs.py (refactored)
+@@ -69,7 +69,7 @@
+ 
+ 
+ def exists(env):
+-    if env.has_key('PS2PDF'):
++    if 'PS2PDF' in env:
+         return env.Detect(env['PS2PDF'])
+     else:
+         return env.Detect(gs) or SCons.Util.WhereIs(gs)
+--- src/engine/SCons/Tool/ifl.py (original)
++++ src/engine/SCons/Tool/ifl.py (refactored)
+@@ -43,12 +43,12 @@
+     SCons.Tool.SourceFileScanner.add_scanner('.i', fscan)
+     SCons.Tool.SourceFileScanner.add_scanner('.i90', fscan)
+ 
+-    if not env.has_key('FORTRANFILESUFFIXES'):
++    if 'FORTRANFILESUFFIXES' not in env:
+         env['FORTRANFILESUFFIXES'] = ['.i']
+     else:
+         env['FORTRANFILESUFFIXES'].append('.i')
+ 
+-    if not env.has_key('F90FILESUFFIXES'):
++    if 'F90FILESUFFIXES' not in env:
+         env['F90FILESUFFIXES'] = ['.i90']
+     else:
+         env['F90FILESUFFIXES'].append('.i90')
+--- src/engine/SCons/Tool/ifort.py (original)
++++ src/engine/SCons/Tool/ifort.py (refactored)
+@@ -46,12 +46,12 @@
+     SCons.Tool.SourceFileScanner.add_scanner('.i', fscan)
+     SCons.Tool.SourceFileScanner.add_scanner('.i90', fscan)
+ 
+-    if not env.has_key('FORTRANFILESUFFIXES'):
++    if 'FORTRANFILESUFFIXES' not in env:
+         env['FORTRANFILESUFFIXES'] = ['.i']
+     else:
+         env['FORTRANFILESUFFIXES'].append('.i')
+ 
+-    if not env.has_key('F90FILESUFFIXES'):
++    if 'F90FILESUFFIXES' not in env:
+         env['F90FILESUFFIXES'] = ['.i90']
+     else:
+         env['F90FILESUFFIXES'].append('.i90')
+--- src/engine/SCons/Tool/intelc.py (original)
++++ src/engine/SCons/Tool/intelc.py (refactored)
+@@ -38,7 +38,7 @@
+ 
+ is_windows = sys.platform == 'win32'
+ is_win64 = is_windows and (os.environ['PROCESSOR_ARCHITECTURE'] == 'AMD64' or 
+-                           (os.environ.has_key('PROCESSOR_ARCHITEW6432') and
++                           ('PROCESSOR_ARCHITEW6432' in os.environ and
+                             os.environ['PROCESSOR_ARCHITEW6432'] == 'AMD64'))
+ is_linux = sys.platform == 'linux2'
+ is_mac     = sys.platform == 'darwin'
+--- src/engine/SCons/Tool/javah.py (original)
++++ src/engine/SCons/Tool/javah.py (refactored)
+@@ -111,7 +111,7 @@
+ 
+ def getJavaHClassPath(env,target, source, for_signature):
+     path = "${SOURCE.attributes.java_classdir}"
+-    if env.has_key('JAVACLASSPATH') and env['JAVACLASSPATH']:
++    if 'JAVACLASSPATH' in env and env['JAVACLASSPATH']:
+         path = SCons.Util.AppendPath(path, env['JAVACLASSPATH'])
+     return "-classpath %s" % (path)
+ 
+--- src/engine/SCons/Tool/mslink.py (original)
++++ src/engine/SCons/Tool/mslink.py (refactored)
+@@ -123,7 +123,7 @@
+                             '%sPREFIX' % paramtp, '%sSUFFIX' % paramtp,
+                             "WINDOWSSHLIBMANIFESTPREFIX", "WINDOWSSHLIBMANIFESTSUFFIX"))
+ 
+-    if env.has_key('PDB') and env['PDB']:
++    if 'PDB' in env and env['PDB']:
+         pdb = env.arg2nodes('$PDB', target=target, source=source)[0]
+         extratargets.append(pdb)
+         target[0].attributes.pdb = pdb
+@@ -171,7 +171,7 @@
+                             "PROGPREFIX", "PROGSUFFIX",
+                             "WINDOWSPROGMANIFESTPREFIX", "WINDOWSPROGMANIFESTSUFFIX"))
+ 
+-    if env.has_key('PDB') and env['PDB']:
++    if 'PDB' in env and env['PDB']:
+         pdb = env.arg2nodes('$PDB', target=target, source=source)[0]
+         extratargets.append(pdb)
+         target[0].attributes.pdb = pdb
+@@ -179,7 +179,7 @@
+     return (target+extratargets,source)
+ 
+ def RegServerFunc(target, source, env):
+-    if env.has_key('register') and env['register']:
++    if 'register' in env and env['register']:
+         ret = regServerAction([target[0]], [source[0]], env)
+         if ret:
+             raise SCons.Errors.UserError, "Unable to register %s" % target[0]
+--- src/engine/SCons/Tool/msvc.py (original)
++++ src/engine/SCons/Tool/msvc.py (refactored)
+@@ -54,8 +54,8 @@
+ 
+ def validate_vars(env):
+     """Validate the PCH and PCHSTOP construction variables."""
+-    if env.has_key('PCH') and env['PCH']:
+-        if not env.has_key('PCHSTOP'):
++    if 'PCH' in env and env['PCH']:
++        if 'PCHSTOP' not in env:
+             raise SCons.Errors.UserError, "The PCHSTOP construction must be defined if PCH is defined."
+         if not SCons.Util.is_String(env['PCHSTOP']):
+             raise SCons.Errors.UserError, "The PCHSTOP construction variable must be a string: %r"%env['PCHSTOP']
+@@ -98,7 +98,7 @@
+     # See issue #2505 for a discussion of what to do if it turns
+     # out this assumption causes trouble in the wild:
+     # http://scons.tigris.org/issues/show_bug.cgi?id=2505
+-    if env.has_key('PCH'):
++    if 'PCH' in env:
+         pch = env['PCH']
+         if str(target[0]) != SCons.Util.splitext(str(pch))[0] + '.obj':
+             env.Depends(target, pch)
+@@ -253,9 +253,9 @@
+     env['PCHCOM'] = '$CXX /Fo${TARGETS[1]} $CXXFLAGS $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS /c $SOURCES /Yc$PCHSTOP /Fp${TARGETS[0]} $CCPDBFLAGS $PCHPDBFLAGS'
+     env['BUILDERS']['PCH'] = pch_builder
+ 
+-    if not env.has_key('ENV'):
++    if 'ENV' not in env:
+         env['ENV'] = {}
+-    if not env['ENV'].has_key('SystemRoot'):    # required for dlls in the winsxs folders
++    if 'SystemRoot' not in env['ENV']:    # required for dlls in the winsxs folders
+         env['ENV']['SystemRoot'] = SCons.Platform.win32.get_system_root()
+ 
+ def exists(env):
+--- src/engine/SCons/Tool/msvs.py (original)
++++ src/engine/SCons/Tool/msvs.py (refactored)
+@@ -101,7 +101,7 @@
+ # which works regardless of how we were invoked.
+ def getExecScriptMain(env, xml=None):
+     scons_home = env.get('SCONS_HOME')
+-    if not scons_home and os.environ.has_key('SCONS_LIB_DIR'):
++    if not scons_home and 'SCONS_LIB_DIR' in os.environ:
+         scons_home = os.environ['SCONS_LIB_DIR']
+     if scons_home:
+         exec_script_main = "from os.path import join; import sys; sys.path = [ r'%s' ] + sys.path; import SCons.Script; SCons.Script.main()" % scons_home
+@@ -146,7 +146,7 @@
+         if len(path):
+             dict = hierarchy
+             for part in path[:-1]:
+-                if not dict.has_key(part):
++                if part not in dict:
+                     dict[part] = {}
+                 dict = dict[part]
+             dict[path[-1]] = file
+@@ -173,7 +173,7 @@
+         else:
+             self.dspabs = get_abspath()
+ 
+-        if not env.has_key('variant'):
++        if 'variant' not in env:
+             raise SCons.Errors.InternalError, \
+                   "You must specify a 'variant' argument (i.e. 'Debug' or " +\
+                   "'Release') to create an MSVSProject."
+@@ -182,7 +182,7 @@
+         elif SCons.Util.is_List(env['variant']):
+             variants = env['variant']
+ 
+-        if not env.has_key('buildtarget') or env['buildtarget'] == None:
++        if 'buildtarget' not in env or env['buildtarget'] == None:
+             buildtarget = ['']
+         elif SCons.Util.is_String(env['buildtarget']):
+             buildtarget = [env['buildtarget']]
+@@ -204,7 +204,7 @@
+             for _ in variants:
+                 buildtarget.append(bt)
+ 
+-        if not env.has_key('outdir') or env['outdir'] == None:
++        if 'outdir' not in env or env['outdir'] == None:
+             outdir = ['']
+         elif SCons.Util.is_String(env['outdir']):
+             outdir = [env['outdir']]
+@@ -226,7 +226,7 @@
+             for v in variants:
+                 outdir.append(s)
+ 
+-        if not env.has_key('runfile') or env['runfile'] == None:
++        if 'runfile' not in env or env['runfile'] == None:
+             runfile = buildtarget[-1:]
+         elif SCons.Util.is_String(env['runfile']):
+             runfile = [env['runfile']]
+@@ -254,7 +254,7 @@
+ 
+         self.env = env
+ 
+-        if self.env.has_key('name'):
++        if 'name' in self.env:
+             self.name = self.env['name']
+         else:
+             self.name = os.path.basename(SCons.Util.splitext(self.dspfile)[0])
+@@ -274,14 +274,14 @@
+         self.configs = {}
+ 
+         self.nokeep = 0
+-        if env.has_key('nokeep') and env['variant'] != 0:
++        if 'nokeep' in env and env['variant'] != 0:
+             self.nokeep = 1
+ 
+         if self.nokeep == 0 and os.path.exists(self.dspabs):
+             self.Parse()
+ 
+         for t in zip(sourcenames,self.srcargs):
+-            if self.env.has_key(t[1]):
++            if t[1] in self.env:
+                 if SCons.Util.is_List(self.env[t[1]]):
+                     for i in self.env[t[1]]:
+                         if not i in self.sources[t[0]]:
+@@ -384,7 +384,7 @@
+             else:
+                 self.file.write('\n!ELSEIF  "$(CFG)" == "%s - Win32 %s"\n\n' % (name, kind))
+ 
+-            env_has_buildtarget = self.env.has_key('MSVSBUILDTARGET')
++            env_has_buildtarget = 'MSVSBUILDTARGET' in self.env
+             if not env_has_buildtarget:
+                 self.env['MSVSBUILDTARGET'] = buildtarget
+ 
+@@ -659,7 +659,7 @@
+             runfile     = self.configs[kind].runfile
+             cmdargs = self.configs[kind].cmdargs
+ 
+-            env_has_buildtarget = self.env.has_key('MSVSBUILDTARGET')
++            env_has_buildtarget = 'MSVSBUILDTARGET' in self.env
+             if not env_has_buildtarget:
+                 self.env['MSVSBUILDTARGET'] = buildtarget
+ 
+@@ -845,7 +845,7 @@
+         self.dswfile = os.path.normpath(str(dswfile))
+         self.env = env
+ 
+-        if not env.has_key('projects'):
++        if 'projects' not in env:
+             raise SCons.Errors.UserError, \
+                 "You must specify a 'projects' argument to create an MSVSSolution."
+         projects = env['projects']
+@@ -858,7 +858,7 @@
+                 "You must specify at least one project to create an MSVSSolution."
+         self.dspfiles = list(map(str, projects))
+ 
+-        if self.env.has_key('name'):
++        if 'name' in self.env:
+             self.name = self.env['name']
+         else:
+             self.name = os.path.basename(SCons.Util.splitext(self.dswfile)[0])
+@@ -883,7 +883,7 @@
+         if self.version_num >= 8.0:
+             self.versionstr = '9.00'
+ 
+-        if env.has_key('slnguid') and env['slnguid']:
++        if 'slnguid' in env and env['slnguid']:
+             self.slnguid = env['slnguid']
+         else:
+             self.slnguid = _generateGUID(dswfile, self.name)
+@@ -891,7 +891,7 @@
+         self.configs = {}
+ 
+         self.nokeep = 0
+-        if env.has_key('nokeep') and env['variant'] != 0:
++        if 'nokeep' in env and env['variant'] != 0:
+             self.nokeep = 1
+ 
+         if self.nokeep == 0 and os.path.exists(self.dswfile):
+@@ -911,7 +911,7 @@
+             self.configs[variant] = config
+             print "Adding '" + self.name + ' - ' + config.variant + '|' + config.platform + "' to '" + str(dswfile) + "'"
+ 
+-        if not env.has_key('variant'):
++        if 'variant' not in env:
+             raise SCons.Errors.InternalError, \
+                   "You must specify a 'variant' argument (i.e. 'Debug' or " +\
+                   "'Release') to create an MSVS Solution File."
+@@ -977,7 +977,7 @@
+         self.file.write('Global\n')
+ 
+         env = self.env
+-        if env.has_key('MSVS_SCC_PROVIDER'):
++        if 'MSVS_SCC_PROVIDER' in env:
+             dspfile_base = os.path.basename(self.dspfile)
+             slnguid = self.slnguid
+             scc_provider = env.get('MSVS_SCC_PROVIDER', '')
+@@ -1121,7 +1121,7 @@
+     """Generates a Project file based on the version of MSVS that is being used"""
+ 
+     version_num = 6.0
+-    if env.has_key('MSVS_VERSION'):
++    if 'MSVS_VERSION' in env:
+         version_num, suite = msvs_parse_version(env['MSVS_VERSION'])
+     if version_num >= 7.0:
+         g = _GenerateV7DSP(dspfile, source, env)
+@@ -1134,7 +1134,7 @@
+     """Generates a Solution/Workspace file based on the version of MSVS that is being used"""
+ 
+     version_num = 6.0
+-    if env.has_key('MSVS_VERSION'):
++    if 'MSVS_VERSION' in env:
+         version_num, suite = msvs_parse_version(env['MSVS_VERSION'])
+     if version_num >= 7.0:
+         g = _GenerateV7DSW(dswfile, source, env)
+@@ -1210,7 +1210,7 @@
+         source = source + env.subst('$MSVSSCONSCOM', 1)
+         source = source + env.subst('$MSVSENCODING', 1)
+ 
+-        if env.has_key('buildtarget') and env['buildtarget'] != None:
++        if 'buildtarget' in env and env['buildtarget'] != None:
+             if SCons.Util.is_String(env['buildtarget']):
+                 source = source + ' "%s"' % env['buildtarget']
+             elif SCons.Util.is_List(env['buildtarget']):
+@@ -1226,7 +1226,7 @@
+                 except AttributeError: raise SCons.Errors.InternalError, \
+                     "buildtarget can be a string, a node, a list of strings or nodes, or None"
+ 
+-        if env.has_key('outdir') and env['outdir'] != None:
++        if 'outdir' in env and env['outdir'] != None:
+             if SCons.Util.is_String(env['outdir']):
+                 source = source + ' "%s"' % env['outdir']
+             elif SCons.Util.is_List(env['outdir']):
+@@ -1242,13 +1242,13 @@
+                 except AttributeError: raise SCons.Errors.InternalError, \
+                     "outdir can be a string, a node, a list of strings or nodes, or None"
+ 
+-        if env.has_key('name'):
++        if 'name' in env:
+             if SCons.Util.is_String(env['name']):
+                 source = source + ' "%s"' % env['name']
+             else:
+                 raise SCons.Errors.InternalError, "name must be a string"
+ 
+-        if env.has_key('variant'):
++        if 'variant' in env:
+             if SCons.Util.is_String(env['variant']):
+                 source = source + ' "%s"' % env['variant']
+             elif SCons.Util.is_List(env['variant']):
+@@ -1263,7 +1263,7 @@
+             raise SCons.Errors.InternalError, "variant must be specified"
+ 
+         for s in _DSPGenerator.srcargs:
+-            if env.has_key(s):
++            if s in env:
+                 if SCons.Util.is_String(env[s]):
+                     source = source + ' "%s' % env[s]
+                 elif SCons.Util.is_List(env[s]):
+@@ -1305,13 +1305,13 @@
+     if not source:
+         source = 'sln_inputs:'
+ 
+-        if env.has_key('name'):
++        if 'name' in env:
+             if SCons.Util.is_String(env['name']):
+                 source = source + ' "%s"' % env['name']
+             else:
+                 raise SCons.Errors.InternalError, "name must be a string"
+ 
+-        if env.has_key('variant'):
++        if 'variant' in env:
+             if SCons.Util.is_String(env['variant']):
+                 source = source + ' "%s"' % env['variant']
+             elif SCons.Util.is_List(env['variant']):
+@@ -1325,13 +1325,13 @@
+         else:
+             raise SCons.Errors.InternalError, "variant must be specified"
+ 
+-        if env.has_key('slnguid'):
++        if 'slnguid' in env:
+             if SCons.Util.is_String(env['slnguid']):
+                 source = source + ' "%s"' % env['slnguid']
+             else:
+                 raise SCons.Errors.InternalError, "slnguid must be a string"
+ 
+-        if env.has_key('projects'):
++        if 'projects' in env:
+             if SCons.Util.is_String(env['projects']):
+                 source = source + ' "%s"' % env['projects']
+             elif SCons.Util.is_List(env['projects']):
+@@ -1395,11 +1395,11 @@
+     # Set-up ms tools paths for default version
+     msvc_setup_env_once(env)
+ 
+-    if env.has_key('MSVS_VERSION'):
++    if 'MSVS_VERSION' in env:
+         version_num, suite = msvs_parse_version(env['MSVS_VERSION'])
+     else:
+         (version_num, suite) = (7.0, None) # guess at a default
+-    if not env.has_key('MSVS'):
++    if 'MSVS' not in env:
+         env['MSVS'] = {}
+     if (version_num < 7.0):
+         env['MSVS']['PROJECTSUFFIX']  = '.dsp'
+--- src/engine/SCons/Tool/msvsTests.py (original)
++++ src/engine/SCons/Tool/msvsTests.py (refactored)
+@@ -375,7 +375,7 @@
+         return self.dict[key]
+ 
+     def has_key(self,name):
+-        return self.dict.has_key(name)
++        return name in self.dict
+ 
+ class RegKey:
+     """key class for storing an 'open' registry key"""
+@@ -394,7 +394,7 @@
+         self.name = name
+ 
+     def value(self,val):
+-        if self.valdict.has_key(val):
++        if val in self.valdict:
+             return (self.valdict[val],1)
+         else:
+             raise SCons.Util.RegError
+@@ -433,7 +433,7 @@
+             keyname = name
+             subkeys = ""
+ 
+-        if not self.keydict.has_key(keyname):
++        if keyname not in self.keydict:
+             self.keydict[keyname] = RegNode(keyname)
+             self.keyarray.append(keyname)
+ 
+@@ -738,7 +738,7 @@
+             for k in ['VS71COMNTOOLS',
+                       'VS80COMNTOOLS',
+                       'VS90COMNTOOLS']:
+-                if os.environ.has_key(k):
++                if k in os.environ:
+                     del os.environ[k]
+ 
+             suite = unittest.makeSuite(test_class, 'test_')
+--- src/engine/SCons/Tool/textfile.py (original)
++++ src/engine/SCons/Tool/textfile.py (refactored)
+@@ -84,7 +84,7 @@
+                                          % repr(linesep), None)
+ 
+     # create a dictionary to use for the substitutions
+-    if not env.has_key('SUBST_DICT'):
++    if 'SUBST_DICT' not in env:
+         subs = None    # no substitutions
+     else:
+         d = env['SUBST_DICT']
+--- src/engine/SCons/Tool/MSCommon/common.py (original)
++++ src/engine/SCons/Tool/MSCommon/common.py (refactored)
+@@ -113,7 +113,7 @@
+             normenv[k] = copy.deepcopy(env[k]).encode('mbcs')
+ 
+         for k in keys:
+-            if os.environ.has_key(k):
++            if k in os.environ:
+                 normenv[k] = os.environ[k].encode('mbcs')
+ 
+     return normenv
+--- src/engine/SCons/Tool/MSCommon/sdk.py (original)
++++ src/engine/SCons/Tool/MSCommon/sdk.py (refactored)
+@@ -296,7 +296,7 @@
+     return val
+ 
+ def get_sdk_by_version(mssdk):
+-    if not SupportedSDKMap.has_key(mssdk):
++    if mssdk not in SupportedSDKMap:
+         msg = "SDK version %s is not supported" % repr(mssdk)
+         raise SCons.Errors.UserError, msg
+     get_installed_sdks()
+@@ -311,12 +311,12 @@
+ 
+ def mssdk_setup_env(env):
+     debug('mssdk_setup_env()')
+-    if env.has_key('MSSDK_DIR'):
++    if 'MSSDK_DIR' in env:
+         sdk_dir = env['MSSDK_DIR']
+         if sdk_dir is None:
+             return
+         sdk_dir = env.subst(sdk_dir)
+-    elif env.has_key('MSSDK_VERSION'):
++    elif 'MSSDK_VERSION' in env:
+         sdk_version = env['MSSDK_VERSION']
+         if sdk_version is None:
+             msg = "SDK version %s is not installed" % repr(mssdk)
+@@ -324,7 +324,7 @@
+         sdk_version = env.subst(sdk_version)
+         mssdk = get_sdk_by_version(sdk_version)
+         sdk_dir = mssdk.get_sdk_dir()
+-    elif env.has_key('MSVS_VERSION'):
++    elif 'MSVS_VERSION' in env:
+         msvs_version = env['MSVS_VERSION']
+         debug('Getting MSVS_VERSION from env:%s'%msvs_version)
+         if msvs_version is None:
+@@ -358,7 +358,7 @@
+     sdks = get_installed_sdks()
+     if version is None:
+         return len(sdks) > 0
+-    return sdks.has_key(version)
++    return version in sdks
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Tool/MSCommon/vs.py (original)
++++ src/engine/SCons/Tool/MSCommon/vs.py (refactored)
+@@ -384,7 +384,7 @@
+     global InstalledVSMap
+     global SupportedVSMap
+ 
+-    if not SupportedVSMap.has_key(msvs):
++    if msvs not in SupportedVSMap:
+         msg = "Visual Studio version %s is not supported" % repr(msvs)
+         raise SCons.Errors.UserError, msg
+     get_installed_visual_studios()
+@@ -413,7 +413,7 @@
+     version: str
+         the default version.
+     """
+-    if not env.has_key('MSVS') or not SCons.Util.is_Dict(env['MSVS']):
++    if 'MSVS' not in env or not SCons.Util.is_Dict(env['MSVS']):
+         # TODO(1.5):
+         #versions = [vs.version for vs in get_installed_visual_studios()]
+         versions = [vs.version for vs in get_installed_visual_studios()]
+@@ -421,7 +421,7 @@
+     else:
+         versions = env['MSVS'].get('VERSIONS', [])
+ 
+-    if not env.has_key('MSVS_VERSION'):
++    if 'MSVS_VERSION' not in env:
+         if versions:
+             env['MSVS_VERSION'] = versions[0] #use highest version by default
+         else:
+--- src/engine/SCons/Tool/packaging/__init__.py (original)
++++ src/engine/SCons/Tool/packaging/__init__.py (refactored)
+@@ -106,9 +106,9 @@
+         kw['PACKAGETYPE'] = GetOption('package_type')
+ 
+     if kw['PACKAGETYPE'] == None:
+-        if env['BUILDERS'].has_key('Tar'):
++        if 'Tar' in env['BUILDERS']:
+             kw['PACKAGETYPE']='targz'
+-        elif env['BUILDERS'].has_key('Zip'):
++        elif 'Zip' in env['BUILDERS']:
+             kw['PACKAGETYPE']='zip'
+         else:
+             raise UserError, "No type for Package() given"
+@@ -140,7 +140,7 @@
+             default_target = default_name%kw
+             target.extend( [default_target]*size_diff )
+ 
+-        if not kw.has_key('PACKAGEROOT'):
++        if 'PACKAGEROOT' not in kw:
+             kw['PACKAGEROOT'] = default_name%kw
+ 
+     except KeyError, e:
+@@ -174,7 +174,7 @@
+         args.remove('target')
+         args.remove('source')
+         # now remove any args for which we have a value in kw.
+-        args=[x for x in args if not kw.has_key(x)]
++        args=[x for x in args if x not in kw]
+ 
+         if len(args)==0:
+             raise # must be a different error, so reraise
+--- src/engine/SCons/Tool/packaging/ipk.py (original)
++++ src/engine/SCons/Tool/packaging/ipk.py (refactored)
+@@ -58,7 +58,7 @@
+     buildarchitecture = os.uname()[4]
+     buildarchitecture = archmap.get(buildarchitecture, buildarchitecture)
+ 
+-    if kw.has_key('ARCHITECTURE'):
++    if 'ARCHITECTURE' in kw:
+         buildarchitecture = kw['ARCHITECTURE']
+ 
+     # setup the kw to contain the mandatory arguments to this fucntion.
+@@ -125,7 +125,7 @@
+ 
+     control_file=open_file('control', target)
+ 
+-    if not env.has_key('X_IPK_DESCRIPTION'):
++    if 'X_IPK_DESCRIPTION' not in env:
+         env['X_IPK_DESCRIPTION']="%s\n %s"%(env['SUMMARY'],
+                                             env['DESCRIPTION'].replace('\n', '\n '))
+ 
+@@ -173,7 +173,7 @@
+         f.close()
+ 
+     # call a user specified function
+-    if env.has_key('CHANGE_SPECFILE'):
++    if 'CHANGE_SPECFILE' in env:
+         content += env['CHANGE_SPECFILE'](target)
+ 
+     return 0
+--- src/engine/SCons/Tool/packaging/msi.py (original)
++++ src/engine/SCons/Tool/packaging/msi.py (refactored)
+@@ -73,7 +73,7 @@
+         return id_set[id][s]
+     except KeyError:
+         # no we did not so initialize with the id
+-        if not id_set.has_key(id): id_set[id] = { s : id }
++        if id not in id_set: id_set[id] = { s : id }
+         # there is a collision, generate an id which is unique by appending
+         # the collision number
+         else: id_set[id][s] = id + str(len(id_set[id]))
+@@ -138,7 +138,7 @@
+             feature = [ feature ]
+ 
+         for f in feature:
+-            if not dict.has_key( f ):
++            if f not in dict:
+                 dict[ f ] = [ file ]
+             else:
+                 dict[ f ].append( file )
+@@ -215,7 +215,7 @@
+         file.write( doc.toprettyxml() )
+ 
+         # call a user specified function
+-        if env.has_key('CHANGE_SPECFILE'):
++        if 'CHANGE_SPECFILE' in env:
+             env['CHANGE_SPECFILE'](target, source)
+ 
+     except KeyError, e:
+@@ -467,7 +467,7 @@
+     Product.childNodes.append( Package )
+ 
+     # set "mandatory" default values
+-    if not spec.has_key('X_MSI_LANGUAGE'):
++    if 'X_MSI_LANGUAGE' not in spec:
+         spec['X_MSI_LANGUAGE'] = '1033' # select english
+ 
+     # mandatory sections, will throw a KeyError if the tag is not available
+@@ -478,10 +478,10 @@
+     Package.attributes['Description']  = escape( spec['SUMMARY'] )
+ 
+     # now the optional tags, for which we avoid the KeyErrror exception
+-    if spec.has_key( 'DESCRIPTION' ):
++    if 'DESCRIPTION' in spec:
+         Package.attributes['Comments'] = escape( spec['DESCRIPTION'] )
+ 
+-    if spec.has_key( 'X_MSI_UPGRADE_CODE' ):
++    if 'X_MSI_UPGRADE_CODE' in spec:
+         Package.attributes['X_MSI_UPGRADE_CODE'] = escape( spec['X_MSI_UPGRADE_CODE'] )
+ 
+     # We hardcode the media tag as our current model cannot handle it.
+--- src/engine/SCons/Tool/packaging/rpm.py (original)
++++ src/engine/SCons/Tool/packaging/rpm.py (refactored)
+@@ -65,7 +65,7 @@
+         buildarchitecture = os.uname()[4]
+         buildarchitecture = archmap.get(buildarchitecture, buildarchitecture)
+ 
+-        if kw.has_key('ARCHITECTURE'):
++        if 'ARCHITECTURE' in kw:
+             buildarchitecture = kw['ARCHITECTURE']
+ 
+         fmt = '%s-%s-%s.%s.rpm'
+@@ -81,7 +81,7 @@
+     del kw['source'], kw['target'], kw['env']
+ 
+     # if no "SOURCE_URL" tag is given add a default one.
+-    if not kw.has_key('SOURCE_URL'):
++    if 'SOURCE_URL' not in kw:
+         #kw['SOURCE_URL']=(str(target[0])+".tar.gz").replace('.rpm', '')
+         kw['SOURCE_URL']=(str(target[0])+".tar.gz").replace('.rpm', '')
+ 
+@@ -150,7 +150,7 @@
+         file.close()
+ 
+         # call a user specified function
+-        if env.has_key('CHANGE_SPECFILE'):
++        if 'CHANGE_SPECFILE' in env:
+             env['CHANGE_SPECFILE'](target, source)
+ 
+     except KeyError, e:
+@@ -188,16 +188,16 @@
+ 
+     # Default prep, build, install and clean rules
+     # TODO: optimize those build steps, to not compile the project a second time
+-    if not spec.has_key('X_RPM_PREP'):
++    if 'X_RPM_PREP' not in spec:
+         spec['X_RPM_PREP'] = '[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf "$RPM_BUILD_ROOT"' + '\n%setup -q'
+ 
+-    if not spec.has_key('X_RPM_BUILD'):
++    if 'X_RPM_BUILD' not in spec:
+         spec['X_RPM_BUILD'] = 'mkdir "$RPM_BUILD_ROOT"'
+ 
+-    if not spec.has_key('X_RPM_INSTALL'):
++    if 'X_RPM_INSTALL' not in spec:
+         spec['X_RPM_INSTALL'] = 'scons --install-sandbox="$RPM_BUILD_ROOT" "$RPM_BUILD_ROOT"'
+ 
+-    if not spec.has_key('X_RPM_CLEAN'):
++    if 'X_RPM_CLEAN' not in spec:
+         spec['X_RPM_CLEAN'] = '[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf "$RPM_BUILD_ROOT"'
+ 
+     str = str + SimpleTagCompiler(optional_sections, mandatory=0).compile( spec )
+@@ -254,7 +254,7 @@
+ #    if not s.has_key('x_rpm_BuildRequires'):
+ #        s['x_rpm_BuildRequires'] = 'scons'
+ 
+-    if not spec.has_key('X_RPM_BUILDROOT'):
++    if 'X_RPM_BUILDROOT' not in spec:
+         spec['X_RPM_BUILDROOT'] = '%{_tmppath}/%{name}-%{version}-%{release}'
+ 
+     str = str + SimpleTagCompiler(optional_header_fields, mandatory=0).compile( spec )
+@@ -268,7 +268,7 @@
+     """
+     str  = '%files\n'
+ 
+-    if not spec.has_key('X_RPM_DEFATTR'):
++    if 'X_RPM_DEFATTR' not in spec:
+         spec['X_RPM_DEFATTR'] = '(-,root,root)'
+ 
+     str = str + '%%defattr %s\n' % spec['X_RPM_DEFATTR']
+--- src/engine/SCons/Variables/VariablesTests.py (original)
++++ src/engine/SCons/Variables/VariablesTests.py (refactored)
+@@ -44,7 +44,7 @@
+     def __contains__(self, key):
+         return self.dict.__contains__(key)
+     def has_key(self, key):
+-        return self.dict.has_key(key)
++        return key in self.dict
+ 
+ 
+ def check(key, value, env):
+@@ -255,7 +255,7 @@
+ 
+         env = Environment()
+         opts.Update(env, {})
+-        assert not env.has_key('ANSWER')
++        assert 'ANSWER' not in env
+ 
+         # Test that a default value of None is all right.
+         test = TestSCons.TestSCons()
+@@ -269,7 +269,7 @@
+ 
+         env = Environment()
+         opts.Update(env, {})
+-        assert not env.has_key('ANSWER')
++        assert 'ANSWER' not in env
+ 
+     def test_args(self):
+         """Test updating an Environment with arguments overridden"""
+@@ -529,12 +529,12 @@
+         env = Environment()
+         opts.Update(env, {'ANSWER' : 'answer'})
+         
+-        assert env.has_key('ANSWER')
++        assert 'ANSWER' in env
+         
+         env = Environment()
+         opts.Update(env, {'ANSWERALIAS' : 'answer'})
+         
+-        assert env.has_key('ANSWER') and not env.has_key('ANSWERALIAS')
++        assert 'ANSWER' in env and 'ANSWERALIAS' not in env
+         
+         # test alias as a list
+         opts = SCons.Variables.Variables()
+@@ -547,12 +547,12 @@
+         env = Environment()
+         opts.Update(env, {'ANSWER' : 'answer'})
+         
+-        assert env.has_key('ANSWER')
++        assert 'ANSWER' in env
+         
+         env = Environment()
+         opts.Update(env, {'ANSWERALIAS' : 'answer'})
+         
+-        assert env.has_key('ANSWER') and not env.has_key('ANSWERALIAS')
++        assert 'ANSWER' in env and 'ANSWERALIAS' not in env
+ 
+ 
+ 
+--- src/engine/SCons/Variables/__init__.py (original)
++++ src/engine/SCons/Variables/__init__.py (refactored)
+@@ -203,7 +203,7 @@
+ 
+         # Call the convert functions:
+         for option in self.options:
+-            if option.converter and values.has_key(option.key):
++            if option.converter and option.key in values:
+                 value = env.subst('${%s}'%option.key)
+                 try:
+                     try:
+@@ -216,7 +216,7 @@
+ 
+         # Finally validate the values:
+         for option in self.options:
+-            if option.validator and values.has_key(option.key):
++            if option.validator and option.key in values:
+                 option.validator(option.key, env.subst('${%s}'%option.key), env)
+ 
+     def UnknownVariables(self):
+@@ -290,7 +290,7 @@
+             options = self.options
+ 
+         def format(opt, self=self, env=env):
+-            if env.has_key(opt.key):
++            if opt.key in env:
+                 actual = env.subst('${%s}' % opt.key)
+             else:
+                 actual = None
+--- src/script/scons.py (original)
++++ src/script/scons.py (refactored)
+@@ -76,7 +76,7 @@
+ 
+ libs = []
+ 
+-if os.environ.has_key("SCONS_LIB_DIR"):
++if "SCONS_LIB_DIR" in os.environ:
+     libs.append(os.environ["SCONS_LIB_DIR"])
+ 
+ local_version = 'scons-local-' + __version__
+--- src/script/sconsign.py (original)
++++ src/script/sconsign.py (refactored)
+@@ -65,7 +65,7 @@
+ 
+ libs = []
+ 
+-if os.environ.has_key("SCONS_LIB_DIR"):
++if "SCONS_LIB_DIR" in os.environ:
+     libs.append(os.environ["SCONS_LIB_DIR"])
+ 
+ local_version = 'scons-local-' + __version__
+--- QMTest/TestCmd.py (original)
++++ QMTest/TestCmd.py (refactored)
+@@ -879,7 +879,7 @@
+                 #self.diff_function = difflib.unified_diff
+         self._dirlist = []
+         self._preserve = {'pass_test': 0, 'fail_test': 0, 'no_result': 0}
+-        if os.environ.has_key('PRESERVE') and not os.environ['PRESERVE'] is '':
++        if 'PRESERVE' in os.environ and not os.environ['PRESERVE'] is '':
+             self._preserve['pass_test'] = os.environ['PRESERVE']
+             self._preserve['fail_test'] = os.environ['PRESERVE']
+             self._preserve['no_result'] = os.environ['PRESERVE']
+--- QMTest/TestRuntest.py (original)
++++ QMTest/TestRuntest.py (refactored)
+@@ -107,14 +107,14 @@
+         appears in a normal workspace.
+         """
+         set_workpath_runtest = None
+-        if not kw.has_key('program'):
++        if 'program' not in kw:
+             kw['program'] = 'runtest.py'
+             set_workpath_runtest = 1
+-        if not kw.has_key('interpreter'):
++        if 'interpreter' not in kw:
+             kw['interpreter'] = [python, '-tt']
+-        if not kw.has_key('match'):
++        if 'match' not in kw:
+             kw['match'] = match_exact
+-        if not kw.has_key('workdir'):
++        if 'workdir' not in kw:
+             kw['workdir'] = ''
+ 
+         try:
+--- QMTest/TestSCons.py (original)
++++ QMTest/TestSCons.py (refactored)
+@@ -234,7 +234,7 @@
+             pass
+         else:
+             os.chdir(script_dir)
+-        if not kw.has_key('program'):
++        if 'program' not in kw:
+             kw['program'] = os.environ.get('SCONS')
+             if not kw['program']:
+                 if os.path.exists('scons'):
+@@ -243,11 +243,11 @@
+                     kw['program'] = 'scons.py'
+             elif not os.path.isabs(kw['program']):
+                 kw['program'] = os.path.join(self.orig_cwd, kw['program'])
+-        if not kw.has_key('interpreter') and not os.environ.get('SCONS_EXEC'):
++        if 'interpreter' not in kw and not os.environ.get('SCONS_EXEC'):
+             kw['interpreter'] = [python, '-tt']
+-        if not kw.has_key('match'):
++        if 'match' not in kw:
+             kw['match'] = match_exact
+-        if not kw.has_key('workdir'):
++        if 'workdir' not in kw:
+             kw['workdir'] = ''
+ 
+         # Term causing test failures due to bogus readline init
+@@ -965,7 +965,7 @@
+         use standard input without forcing every .start() call in the
+         individual tests to do so explicitly.
+         """
+-        if not kw.has_key('stdin'):
++        if 'stdin' not in kw:
+             kw['stdin'] = True
+         return TestCommon.start(self, *args, **kw)
+ 
+@@ -1056,7 +1056,7 @@
+ 
+         self.calibrate = os.environ.get('TIMESCONS_CALIBRATE', '0') != '0'
+ 
+-        if not kw.has_key('verbose') and not self.calibrate:
++        if 'verbose' not in kw and not self.calibrate:
+             kw['verbose'] = True
+ 
+         # TODO(1.5)
+@@ -1088,7 +1088,7 @@
+         The elapsed time to execute each build is printed after
+         it has finished.
+         """
+-        if not kw.has_key('options') and self.variables:
++        if 'options' not in kw and self.variables:
+             options = []
+             for variable, value in self.variables.items():
+                 options.append('%s=%s' % (variable, value))
+--- QMTest/TestSConsMSVS.py (original)
++++ QMTest/TestSConsMSVS.py (refactored)
+@@ -619,7 +619,7 @@
+         if project_guid is None:
+             project_guid = "{E5466E26-0003-F18B-8F8A-BCD76C86388D}"
+ 
+-        if os.environ.has_key('SCONS_LIB_DIR'):
++        if 'SCONS_LIB_DIR' in os.environ:
+             exec_script_main = "from os.path import join; import sys; sys.path = [ r'%s' ] + sys.path; import SCons.Script; SCons.Script.main()" % os.environ['SCONS_LIB_DIR']
+         else:
+             exec_script_main = "from os.path import join; import sys; sys.path = [ join(sys.prefix, 'Lib', 'site-packages', 'scons-%s'), join(sys.prefix, 'scons-%s'), join(sys.prefix, 'Lib', 'site-packages', 'scons'), join(sys.prefix, 'scons') ] + sys.path; import SCons.Script; SCons.Script.main()" % (self.scons_version, self.scons_version)
+--- QMTest/TestSCons_time.py (original)
++++ QMTest/TestSCons_time.py (refactored)
+@@ -167,7 +167,7 @@
+             pass
+         else:
+             os.chdir(script_dir)
+-        if not kw.has_key('program'):
++        if 'program' not in kw:
+             p = os.environ.get('SCONS_TIME')
+             if not p:
+                 p = 'scons-time'
+@@ -175,13 +175,13 @@
+                     p = 'scons-time.py'
+             kw['program'] = p
+ 
+-        if not kw.has_key('interpreter'):
++        if 'interpreter' not in kw:
+             kw['interpreter'] = [python, '-tt']
+ 
+-        if not kw.has_key('match'):
++        if 'match' not in kw:
+             kw['match'] = match_exact
+ 
+-        if not kw.has_key('workdir'):
++        if 'workdir' not in kw:
+             kw['workdir'] = ''
+ 
+         TestCommon.__init__(self, **kw)
+--- QMTest/TestSConsign.py (original)
++++ QMTest/TestSConsign.py (refactored)
+@@ -53,7 +53,7 @@
+             'interpreter' : python,     # imported from TestSCons
+         }
+ 
+-        if not kw.has_key('program'):
++        if 'program' not in kw:
+             kw['program'] = os.environ.get('SCONS')
+             if not kw['program']:
+                 if os.path.exists('scons'):
+--- QMTest/scons_tdb.py (original)
++++ QMTest/scons_tdb.py (refactored)
+@@ -97,7 +97,7 @@
+         # Do not record computed fields.
+         if field.IsComputed():
+             continue
+-        if e.__dict__.has_key(name):
++        if name in e.__dict__:
+             explicit_arguments[name] = e.__dict__[name]
+ 
+     return explicit_arguments
+--- bench/env.__setitem__.py (original)
++++ bench/env.__setitem__.py (refactored)
+@@ -173,7 +173,7 @@
+ class env_special_set_has_key(Environment):
+     """_special_set.get():  use _special_set.has_key() instead"""
+     def __setitem__(self, key, value):
+-        if self._special_set.has_key(key):
++        if key in self._special_set:
+             self._special_set[key](self, key, value)
+         else:
+             if not SCons.Environment.is_valid_construction_var(key):
+@@ -231,7 +231,7 @@
+         if special:
+             special(self, key, value)
+         else:
+-            if not self._dict.has_key(key) \
++            if key not in self._dict \
+                 and not SCons.Environment.is_valid_construction_var(key):
+                     raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
+             self._dict[key] = value
+@@ -242,7 +242,7 @@
+         if key in self._special_set_keys:
+             self._special_set[key](self, key, value)
+         else:
+-            if not self._dict.has_key(key) \
++            if key not in self._dict \
+                and not global_valid_var.match(key):
+                     raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
+             self._dict[key] = value
+@@ -250,10 +250,10 @@
+ class env_Best_has_key(Environment):
+     """Best __setitem__(), with has_key"""
+     def __setitem__(self, key, value):
+-        if self._special_set.has_key(key):
+-            self._special_set[key](self, key, value)
+-        else:
+-            if not self._dict.has_key(key) \
++        if key in self._special_set:
++            self._special_set[key](self, key, value)
++        else:
++            if key not in self._dict \
+                and not global_valid_var.match(key):
+                     raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
+             self._dict[key] = value
+@@ -264,7 +264,7 @@
+         if key in ['BUILDERS', 'SCANNERS', 'TARGET', 'TARGETS', 'SOURCE', 'SOURCES']:
+             self._special_set[key](self, key, value)
+         else:
+-            if not self._dict.has_key(key) \
++            if key not in self._dict \
+                and not global_valid_var.match(key):
+                     raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
+             self._dict[key] = value
+@@ -277,7 +277,7 @@
+     class env_isalnum(Environment):
+         """Greg's Folly: isalnum instead of probe"""
+         def __setitem__(self, key, value):
+-            if self._special_set.has_key(key):
++            if key in self._special_set:
+                 self._special_set[key](self, key, value)
+             else:
+                 if not key.isalnum() and not global_valid_var.match(key):
+--- bench/lvars-gvars.py (original)
++++ bench/lvars-gvars.py (refactored)
+@@ -19,7 +19,7 @@
+ def Func2(var, gvars, lvars):
+     """lvars has_key(), gvars try:-except:"""
+     for i in IterationList:
+-        if lvars.has_key(var):
++        if var in lvars:
+             x = lvars[var]
+         else:
+             try:
+@@ -30,9 +30,9 @@
+ def Func3(var, gvars, lvars):
+     """lvars has_key(), gvars has_key()"""
+     for i in IterationList:
+-        if lvars.has_key(var):
++        if var in lvars:
+             x = lvars[var]
+-        elif gvars.has_key(var):
++        elif var in gvars:
+             x = gvars[var]
+         else:
+             x = ''
