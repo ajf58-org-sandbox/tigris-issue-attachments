@@ -1,0 +1,59 @@
+diff -r dba711236823 src/engine/SCons/Node/FS.py
+--- a/src/engine/SCons/Node/FS.py	Sat Apr 09 19:04:42 2016 -0400
++++ b/src/engine/SCons/Node/FS.py	Wed Sep 28 19:35:05 2016 -0500
+@@ -2935,7 +2935,7 @@
+         return self.get_build_env().get_CacheDir().retrieve(self)
+ 
+     def visited(self):
+-        if self.exists() and self.executor is not None:
++        if self.exists():
+             self.get_build_env().get_CacheDir().push_if_forced(self)
+ 
+         ninfo = self.get_ninfo()
+@@ -2991,7 +2991,7 @@
+             self.get_contents_sig()
+             self.get_build_env()
+             # Now purge unneeded stuff to free memory...
+-            self.executor = None
++            self.reset_executor()
+             self._memo.pop('rfile', None)
+             self.prerequisites = None
+             # Cleanup lists, but only if they're empty
+diff -r dba711236823 src/engine/SCons/Node/__init__.py
+--- a/src/engine/SCons/Node/__init__.py	Sat Apr 09 19:04:42 2016 -0400
++++ b/src/engine/SCons/Node/__init__.py	Wed Sep 28 19:35:05 2016 -0500
+@@ -650,8 +650,7 @@
+         except AttributeError:
+             pass
+         else:
+-            if executor is not None:
+-                executor.cleanup()
++            executor.cleanup()
+ 
+     def reset_executor(self):
+         "Remove cached executor; forces recompute when needed."
+diff -r dba711236823 src/engine/SCons/Taskmaster.py
+--- a/src/engine/SCons/Taskmaster.py	Sat Apr 09 19:04:42 2016 -0400
++++ b/src/engine/SCons/Taskmaster.py	Wed Sep 28 19:35:05 2016 -0500
+@@ -186,8 +186,6 @@
+         # or implicit dependencies exists, and also initialize the
+         # .sconsign info.
+         executor = self.targets[0].get_executor()
+-        if executor is None:
+-            return
+         executor.prepare()
+         for t in executor.get_action_targets():
+             if print_prepare:
+@@ -940,11 +938,7 @@
+         if node is None:
+             return None
+ 
+-        executor = node.get_executor()
+-        if executor is None:
+-            return None
+-        
+-        tlist = executor.get_all_targets()
++        tlist = node.get_executor().get_all_targets()
+ 
+         task = self.tasker(self, tlist, node in self.original_top, node)
+         try:
