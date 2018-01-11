@@ -1,0 +1,74 @@
+Index: includes/templates.php
+===================================================================
+--- includes/templates.php	(revision 4591)
++++ includes/templates.php	(working copy)
+@@ -72,14 +72,14 @@
+     <ul class="submenuitems">
+     <li>Stable (<?echo $stablerelease;?>)</li>
+ 	<ul class="submenuitems">
+-	<li><a href="/doc/<?echo $stablerelease;?>/HTML/scons-user/book1.html">User's Guide</a></li>
++	<li><a href="/doc/<?echo $stablerelease;?>/HTML/scons-user/index.html">User's Guide</a></li>
+ 	<li><a href="/doc/<?echo $stablerelease;?>/HTML/scons-man.html">Man page</a></li>
+ 	</ul>
+     </ul>
+     <ul class="submenuitems">
+     <li>Latest (<?echo $latestrelease;?>)</li>
+ 	<ul class="submenuitems">
+-	<li><a href="/doc/<?echo $latestrelease;?>/HTML/scons-user/book1.html">User's Guide</a></li>
++	<li><a href="/doc/<?echo $latestrelease;?>/HTML/scons-user/index.html">User's Guide</a></li>
+ 	<li><a href="/doc/<?echo $latestrelease;?>/HTML/scons-man.html">Man page</a></li>
+ 	<li><a href="/doc/<?echo $latestrelease;?>/HTML/scons-api/index.html">API</a></li>
+ 	</ul>
+Index: includes/versions.php
+===================================================================
+--- includes/versions.php	(revision 4591)
++++ includes/versions.php	(working copy)
+@@ -38,16 +38,9 @@
+     "1.2.0.d20091224",
+     "1.2.0.d20090919",
+     "1.2.0.d20090223",
+-    "1.2.0.d20090113",
+     "1.2.0",
+-    "1.1.0.d20081207",
+-    "1.1.0.d20081125",
+-    "1.1.0.d20081104",
+     "1.1.0",
+-    "1.0.1.d20081001",
+-    "1.0.1.d20080915",
+     "1.0.1",
+-    "1.0.0.d20080826",
+     "1.0.0",
+     "0.98.5",
+     "0.98.4",
+@@ -55,9 +48,6 @@
+     "0.98.2",
+     "0.98.1",
+     "0.98.0",
+-    "0.97.0d20071212",
+-    "0.97.0d20070918",
+-    "0.97.0d20070809",
+     "0.97",
+     "0.96.96",
+     "0.96.95",
+Index: documentation.php
+===================================================================
+--- documentation.php	(revision 4591)
++++ documentation.php	(working copy)
+@@ -60,7 +60,7 @@
+ 
+ <ul>
+ <li><a href="doc/production/HTML/scons-user.html">HTML (single page)</a></li>
+-<li><a href="doc/production/HTML/scons-user/book1.html">HTML (multiple pages)</a></li>
++<li><a href="doc/production/HTML/scons-user/index.html">HTML (multiple pages)</a></li>
+ <li><a href="doc/production/PDF/scons-user.pdf">PDF</a></li>
+ <li><a href="doc/production/PS/scons-user.ps">PostScript</a></li>
+ <li><a href="doc/production/TEXT/scons-user.txt">Plain text</a></li>
+@@ -105,7 +105,7 @@
+ during alpha development.
+ 
+ <ul>
+-<li><a href="doc/production/HTML/scons-design/book1.html">HTML</a></li>
++<li><a href="doc/production/HTML/scons-design/index.html">HTML</a></li>
+ <li><a href="doc/production/PDF/scons-design.pdf">PDF</a></li>
+ <li><a href="doc/production/PS/scons-design.ps">PostScript</a></li>
+ </ul>
