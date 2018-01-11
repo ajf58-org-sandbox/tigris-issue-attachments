@@ -1,0 +1,291 @@
+Index: test/Libs/LoadableModule_params.py
+===================================================================
+--- test/Libs/LoadableModule_params.py	(revision 0)
++++ test/Libs/LoadableModule_params.py	(revision 0)
+@@ -0,0 +1,97 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""Test parameters to LoadableModule (LDMODULE* variables).
++"""
++import os
++import string
++import sys
++
++import TestSCons
++
++on_win = sys.platform.startswith('win')
++
++test = TestSCons.TestSCons()
++
++def _test_ixes():
++    """Test setting prefix/suffix."""
++    test.write('SConstruct', """
++import os
++env = Environment(ENV=os.environ)
++env.LoadableModule(target='foo', source='foo.c', LDMODULESUFFIX='.ldmod',
++    LDMODULEPREFIX='')
++""")
++
++    test.write('foo.c', r"""
++void foo() {}
++""")
++
++    test.run(arguments='.')
++    test.fail_test(not os.path.exists(test.workpath('foo.ldmod')))
++
++def _test_flags():
++    """Test setting flags."""
++    test.write('ldmod', """
++import sys
++f = file('ldmod.result', 'wb')
++f.write('%d' % ('-ldmodflag' in sys.argv))
++""")
++    test.write('foo.c', '')
++    test.write('SConstruct', """
++import os
++env = Environment(ENV=os.environ)
++env.LoadableModule(target='foo', source='foo.c', LDMODULE=r'python %s',
++    LDMODULEFLAGS=['-ldmodflag'])
++""" % test.workpath('ldmod'))
++
++    test.run(arguments='.')
++    test.must_match('ldmod.result', '1')
++
++def _test_ldmodulecom():
++    """Test setting LDMODULECOM."""
++    test.write('ldmod', """
++import sys
++f = file(sys.argv[1], 'wb')
++f.write(str(sys.argv[2:]))
++""")
++    test.write('foo1.c', '')
++    test.write('foo2.c', '')
++    test.write('SConstruct', """
++import os
++env = Environment(ENV=os.environ, LDMODULECOM=r'python %s $TARGET $SOURCES',
++    LDMODULEPREFIX='', LDMODULESUFFIX='.ldmod')
++env.LoadableModule(target='foo', source=['foo1.c', 'foo2.c'])
++""" % test.workpath('ldmod'))
++    test.run()
++
++    test.must_match('foo.ldmod', str(['%s%s%s' % (TestSCons.shobj_prefix,
++        x, TestSCons.shobj_suffix) for x in ('foo1', 'foo2')]))
++
++_test_ixes()
++_test_flags()
++_test_ldmodulecom()
++
++test.pass_test()
+Index: src/engine/SCons/Tool/link.py
+===================================================================
+--- src/engine/SCons/Tool/link.py	(revision 3835)
++++ src/engine/SCons/Tool/link.py	(working copy)
+@@ -99,10 +99,13 @@
+     # setting them the same means that LoadableModule works everywhere.
+     SCons.Tool.createLoadableModuleBuilder(env)
+     env['LDMODULE'] = '$SHLINK'
++    # don't set up the emitter, cause AppendUnique will generate a list
++    # starting with None :-(
++    env.Append(LDMODULEEMITTER='$SHLIBEMITTER')
+     env['LDMODULEPREFIX'] = '$SHLIBPREFIX' 
+     env['LDMODULESUFFIX'] = '$SHLIBSUFFIX' 
+     env['LDMODULEFLAGS'] = '$SHLINKFLAGS'
+-    env['LDMODULECOM'] = '$SHLINKCOM'
++    env['LDMODULECOM'] = '$LDMODULE -o $TARGET $LDMODULEFLAGS $SOURCES $_LIBDIRFLAGS $_LIBFLAGS'
+ 
+ 
+ 
+Index: src/engine/SCons/Tool/__init__.py
+===================================================================
+--- src/engine/SCons/Tool/__init__.py	(revision 3835)
++++ src/engine/SCons/Tool/__init__.py	(working copy)
+@@ -272,7 +272,7 @@
+         action_list = [ SCons.Defaults.SharedCheck,
+                         SCons.Defaults.LdModuleLinkAction ]
+         ld_module = SCons.Builder.Builder(action = action_list,
+-                                          emitter = "$SHLIBEMITTER",
++                                          emitter = "$LDMODULEEMITTER",
+                                           prefix = '$LDMODULEPREFIX',
+                                           suffix = '$LDMODULESUFFIX',
+                                           target_scanner = ProgramScanner,
+Index: src/engine/SCons/Tool/mslink.py
+===================================================================
+--- src/engine/SCons/Tool/mslink.py	(revision 3835)
++++ src/engine/SCons/Tool/mslink.py	(working copy)
+@@ -50,9 +50,9 @@
+     except (AttributeError, IndexError):
+         return None
+ 
+-def windowsShlinkTargets(target, source, env, for_signature):
++def _dllTargets(target, source, env, for_signature, paramtp):
+     listCmd = []
+-    dll = env.FindIxes(target, 'SHLIBPREFIX', 'SHLIBSUFFIX')
++    dll = env.FindIxes(target, '%sPREFIX' % paramtp, '%sSUFFIX' % paramtp)
+     if dll: listCmd.append("/out:%s"%dll.get_string(for_signature))
+ 
+     implib = env.FindIxes(target, 'LIBPREFIX', 'LIBSUFFIX')
+@@ -60,7 +60,7 @@
+ 
+     return listCmd
+ 
+-def windowsShlinkSources(target, source, env, for_signature):
++def _dllSources(target, source, env, for_signature, paramtp):
+     listCmd = []
+ 
+     deffile = env.FindIxes(source, "WINDOWSDEFPREFIX", "WINDOWSDEFSUFFIX")
+@@ -73,17 +73,32 @@
+             listCmd.append(src)
+     return listCmd
+ 
+-def windowsLibEmitter(target, source, env):
++def windowsShlinkTargets(target, source, env, for_signature):
++    return _dllTargets(target, source, env, for_signature, 'SHLIB')
++
++def windowsShlinkSources(target, source, env, for_signature):
++    return _dllSources(target, source, env, for_signature, 'SHLIB')
++
++def _windowsLdmodTargets(target, source, env, for_signature):
++    """Get targets for loadable modules."""
++    return _dllTargets(target, source, env, for_signature, 'LDMODULE')
++
++def _windowsLdmodSources(target, source, env, for_signature):
++    """Get sources for loadable modules."""
++    return _dllSources(target, source, env, for_signature, 'LDMODULE')
++
++def _dllEmitter(target, source, env, paramtp):
++    """Common implementation of dll emitter."""
+     SCons.Tool.msvc.validate_vars(env)
+ 
+     extratargets = []
+     extrasources = []
+ 
+-    dll = env.FindIxes(target, "SHLIBPREFIX", "SHLIBSUFFIX")
++    dll = env.FindIxes(target, '%sPREFIX' % paramtp, '%sSUFFIX' % paramtp)
+     no_import_lib = env.get('no_import_lib', 0)
+ 
+     if not dll:
+-        raise SCons.Errors.UserError, "A shared library should have exactly one target with the suffix: %s" % env.subst("$SHLIBSUFFIX")
++        raise SCons.Errors.UserError, 'A shared library should have exactly one target with the suffix: %s' % env.subst('$%sSUFFIX' % paramtp)
+ 
+     insert_def = env.subst("$WINDOWS_INSERT_DEF")
+     if not insert_def in ['', '0', 0] and \
+@@ -92,7 +107,7 @@
+         # append a def file to the list of sources
+         extrasources.append(
+             env.ReplaceIxes(dll,
+-                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            '%sPREFIX' % paramtp, '%sSUFFIX' % paramtp,
+                             "WINDOWSDEFPREFIX", "WINDOWSDEFSUFFIX"))
+ 
+     version_num, suite = SCons.Tool.msvs.msvs_parse_version(env.get('MSVS_VERSION', '6.0'))
+@@ -100,7 +115,7 @@
+         # MSVC 8 automatically generates .manifest files that must be installed
+         extratargets.append(
+             env.ReplaceIxes(dll,
+-                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            '%sPREFIX' % paramtp, '%sSUFFIX' % paramtp,
+                             "WINDOWSSHLIBMANIFESTPREFIX", "WINDOWSSHLIBMANIFESTSUFFIX"))
+ 
+     if env.has_key('PDB') and env['PDB']:
+@@ -113,16 +128,27 @@
+         # Append an import library to the list of targets.
+         extratargets.append(
+             env.ReplaceIxes(dll,
+-                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            '%sPREFIX' % paramtp, '%sSUFFIX' % paramtp,
+                             "LIBPREFIX", "LIBSUFFIX"))
+         # and .exp file is created if there are exports from a DLL
+         extratargets.append(
+             env.ReplaceIxes(dll,
+-                            "SHLIBPREFIX", "SHLIBSUFFIX",
++                            '%sPREFIX' % paramtp, '%sSUFFIX' % paramtp,
+                             "WINDOWSEXPPREFIX", "WINDOWSEXPSUFFIX"))
+ 
+     return (target+extratargets, source+extrasources)
+ 
++def windowsLibEmitter(target, source, env):
++    return _dllEmitter(target, source, env, 'SHLIB')
++
++def ldmodEmitter(target, source, env):
++    """Emitter for loadable modules.
++    
++    Loadable modules are identical to shared libraries on Windows, but building
++    them is subject to different parameters (LDMODULE*).
++    """
++    return _dllEmitter(target, source, env, 'LDMODULE')
++
+ def prog_emitter(target, source, env):
+     SCons.Tool.msvc.validate_vars(env)
+ 
+@@ -160,7 +186,9 @@
+ regServerAction = SCons.Action.Action("$REGSVRCOM", "$REGSVRCOMSTR")
+ regServerCheck = SCons.Action.Action(RegServerFunc, None)
+ shlibLinkAction = SCons.Action.Action('${TEMPFILE("$SHLINK $SHLINKFLAGS $_SHLINK_TARGETS $( $_LIBDIRFLAGS $) $_LIBFLAGS $_PDB $_SHLINK_SOURCES")}')
+-compositeLinkAction = shlibLinkAction + regServerCheck
++compositeShLinkAction = shlibLinkAction + regServerCheck
++ldmodLinkAction = SCons.Action.Action('${TEMPFILE("$LDMODULE $LDMODULEFLAGS $_LDMODULE_TARGETS $( $_LIBDIRFLAGS $) $_LIBFLAGS $_PDB $_LDMODULE_SOURCES")}')
++compositeLdmodAction = ldmodLinkAction + regServerCheck
+ 
+ def generate(env):
+     """Add Builders and construction variables for ar to an Environment."""
+@@ -171,7 +199,7 @@
+     env['SHLINKFLAGS'] = SCons.Util.CLVar('$LINKFLAGS /dll')
+     env['_SHLINK_TARGETS'] = windowsShlinkTargets
+     env['_SHLINK_SOURCES'] = windowsShlinkSources
+-    env['SHLINKCOM']   =  compositeLinkAction
++    env['SHLINKCOM']   =  compositeShLinkAction
+     env.Append(SHLIBEMITTER = [windowsLibEmitter])
+     env['LINK']        = 'link'
+     env['LINKFLAGS']   = SCons.Util.CLVar('/nologo')
+@@ -221,19 +249,19 @@
+     except (SCons.Util.RegError, SCons.Errors.InternalError):
+         pass
+ 
+-    # For most platforms, a loadable module is the same as a shared
+-    # library.  Platforms which are different can override these, but
+-    # setting them the same means that LoadableModule works everywhere.
++    # Loadable modules are on Windows the same as shared libraries, but they
++    # are subject to different build parameters (LDMODULE* variables).
++    # Therefore LDMODULE* variables correspond as much as possible to
++    # SHLINK*/SHLIB* ones.
+     SCons.Tool.createLoadableModuleBuilder(env)
+     env['LDMODULE'] = '$SHLINK'
+     env['LDMODULEPREFIX'] = '$SHLIBPREFIX'
+     env['LDMODULESUFFIX'] = '$SHLIBSUFFIX'
+     env['LDMODULEFLAGS'] = '$SHLINKFLAGS'
+-    # We can't use '$SHLINKCOM' here because that will stringify the
+-    # action list on expansion, and will then try to execute expanded
+-    # strings, with the upshot that it would try to execute RegServerFunc
+-    # as a command.
+-    env['LDMODULECOM'] = compositeLinkAction
++    env['_LDMODULE_TARGETS'] = _windowsLdmodTargets
++    env['_LDMODULE_SOURCES'] = _windowsLdmodSources
++    env['LDMODULEEMITTER'] = [ldmodEmitter]
++    env['LDMODULECOM'] = compositeLdmodAction
+ 
+ def exists(env):
+     platform = env.get('PLATFORM', '')
