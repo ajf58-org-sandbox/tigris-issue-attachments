@@ -1,0 +1,54 @@
+Description: Add fortran03 support; tested with gfortran
+Author: Alastair McKinstry <mckinstry@debian.org>
+Forwarded: no
+Last-Updated: 2010-05-29
+
+Index: scons-1.3.0/engine/SCons/Tool/FortranCommon.py
+===================================================================
+--- scons-1.3.0.orig/engine/SCons/Tool/FortranCommon.py	2010-05-28 15:54:24.000000000 +0000
++++ scons-1.3.0/engine/SCons/Tool/FortranCommon.py	2010-05-28 15:55:55.000000000 +0000
+@@ -232,6 +232,22 @@
+     DialectAddToEnv(env, "F95", F95Suffixes, F95PPSuffixes,
+                     support_module = 1)
+ 
++def add_f03_to_env(env):
++    """Add Builders and construction variables for f03 to an Environment."""
++    try:
++        F03Suffixes = env['F03FILESUFFIXES']
++    except KeyError:
++        F03Suffixes = ['.f03']
++
++    #print "Adding %s to f95 suffixes" % F95Suffixes
++    try:
++        F03PPSuffixes = env['F03PPFILESUFFIXES']
++    except KeyError:
++        F03PPSuffixes = []
++
++    DialectAddToEnv(env, "F03", F03Suffixes, F03PPSuffixes,
++                    support_module = 1)
++
+ def add_all_to_env(env):
+     """Add builders and construction variables for all supported fortran
+     dialects."""
+@@ -239,6 +255,7 @@
+     add_f77_to_env(env)
+     add_f90_to_env(env)
+     add_f95_to_env(env)
++    add_f03_to_env(env)
+ 
+ # Local Variables:
+ # tab-width:4
+Index: scons-1.3.0/engine/SCons/Tool/gfortran.py
+===================================================================
+--- scons-1.3.0.orig/engine/SCons/Tool/gfortran.py	2010-05-28 15:53:05.000000000 +0000
++++ scons-1.3.0/engine/SCons/Tool/gfortran.py	2010-05-28 15:53:28.000000000 +0000
+@@ -43,7 +43,7 @@
+     Environment."""
+     fortran.generate(env)
+ 
+-    for dialect in ['F77', 'F90', 'FORTRAN', 'F95']:
++    for dialect in ['F77', 'F90', 'FORTRAN', 'F95', 'F03']:
+         env['%s' % dialect] = 'gfortran'
+         env['SH%s' % dialect] = '$%s' % dialect
+         if env['PLATFORM'] in ['cygwin', 'win32']:
+
