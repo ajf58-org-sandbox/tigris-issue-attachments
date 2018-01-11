@@ -1,0 +1,13 @@
+Index: src/engine/SCons/Tool/msvc.py
+===================================================================
+--- src/engine/SCons/Tool/msvc.py	(revision 3803)
++++ src/engine/SCons/Tool/msvc.py	(working copy)
+@@ -221,7 +221,7 @@
+                             property_name = property.attributes.get('name')
+                             if property_name is None:
+                                 continue
+-                            var_name = environment_var_map.get(property_name)
++                            var_name = environment_var_map.get(property_name.value)
+                             if var_name:
+                                 data = property.childNodes[0].data
+                                 value_list = string.split(data, '|')
