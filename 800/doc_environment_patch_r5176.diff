@@ -1,0 +1,57 @@
+Index: src/engine/SCons/Environment.xml
+===================================================================
+--- src/engine/SCons/Environment.xml	(revision 5176)
++++ src/engine/SCons/Environment.xml	(working copy)
+@@ -3132,27 +3132,42 @@
+ <varname>program</varname>,
+ returning the full path name to the program
+ if it is found,
+-and returning None if not.
++and returning <literal>None</literal> if not.
+ Searches the specified
+-<varname>path</varname>,
++<varname>path</varname> or
+ the value of the calling environment's PATH
+-(<literal>env['ENV']['PATH']</literal>),
+-or the user's current external PATH
+-(<literal>os.environ['PATH']</literal>)
+-by default.
++(<literal>env['ENV']['PATH']</literal>). 
++If the given path is <literal>None</literal> (the default value) and
++the <literal>env['ENV']['PATH']</literal> key does not exist,
++the user's current external PATH
++(<literal>os.environ['PATH']</literal>) is used as fallback.
++
+ On Windows systems, searches for executable
+ programs with any of the file extensions
+ listed in the specified
+-<varname>pathext</varname>,
++<varname>pathext</varname> or
+ the calling environment's PATHEXT
+-(<literal>env['ENV']['PATHEXT']</literal>)
+-or the user's current PATHEXT
++(<literal>env['ENV']['PATHEXT']</literal>).
++Like above, the user's current external PATHEXT
+ (<literal>os.environ['PATHEXT']</literal>)
+-by default.
++gets used, when <varname>pathext</varname> is <literal>None</literal>
++(default) and the key <literal>env['ENV']['PATHEXT']</literal> does not exist.
+ Will not select any
+ path name or names
+ in the specified
+ <varname>reject</varname>
+ list, if any.
++
++<note>
++<para>
++If you rather would like to search
++the user's current external PATH
++(<literal>os.environ['PATH']</literal>)
++by default, consider to use the function <literal>SCons.Util.WhereIs</literal> instead.
++When doing so, regard that the latter routine does not expand environment variables automatically
++(no implicit <literal>env.subst</literal> for its arguments).
++</para>
++</note>
++
+ </summary>
+ </scons_function>
