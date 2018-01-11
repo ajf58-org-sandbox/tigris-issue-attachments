@@ -1,0 +1,2497 @@
+Index: bench/is_types.py
+===================================================================
+--- bench/is_types.py	(revision 4708)
++++ bench/is_types.py	(working copy)
+@@ -29,11 +29,11 @@
+         def __complex__(self): return complex(self.data)
+         def __hash__(self): return hash(self.data)
+ 
+-        def __cmp__(self, string):
+-            if isinstance(string, UserString):
+-                return cmp(self.data, string.data)
++        def __cmp__(self, s):
++            if isinstance(s, UserString):
++                return cmp(self.data, s.data)
+             else:
+-                return cmp(self.data, string)
++                return cmp(self.data, s)
+         def __contains__(self, char):
+             return char in self.data
+ 
+Index: test/DVIPS/DVIPSFLAGS.py
+===================================================================
+--- test/DVIPS/DVIPSFLAGS.py	(revision 4708)
++++ test/DVIPS/DVIPSFLAGS.py	(working copy)
+@@ -129,9 +129,8 @@
+ if dvips:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+-cmd = string.join(sys.argv[1:], " ")
++cmd = " ".join(sys.argv[1:])
+ open('%s', 'ab').write("%%s\\n" %% cmd)
+ os.system(cmd)
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+Index: test/DVIPS/DVIPS.py
+===================================================================
+--- test/DVIPS/DVIPS.py	(revision 4708)
++++ test/DVIPS/DVIPS.py	(working copy)
+@@ -122,9 +122,8 @@
+ if dvips:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+-cmd = string.join(sys.argv[1:], " ")
++cmd = " ".join(sys.argv[1:])
+ open('%s', 'ab').write("%%s\\n" %% cmd)
+ os.system(cmd)
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+Index: test/TAR/TARFLAGS.py
+===================================================================
+--- test/TAR/TARFLAGS.py	(revision 4708)
++++ test/TAR/TARFLAGS.py	(working copy)
+@@ -39,7 +39,6 @@
+ import getopt
+ import os
+ import os.path
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'cf:x', [])
+ opt_string = ''
+@@ -95,10 +94,9 @@
+ if tar:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TAR/TAR.py
+===================================================================
+--- test/TAR/TAR.py	(revision 4708)
++++ test/TAR/TAR.py	(working copy)
+@@ -88,10 +88,9 @@
+ if tar:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/DVIPDF/DVIPDFFLAGS.py
+===================================================================
+--- test/DVIPDF/DVIPDFFLAGS.py	(revision 4708)
++++ test/DVIPDF/DVIPDFFLAGS.py	(working copy)
+@@ -114,9 +114,8 @@
+ if dvipdf and tex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+-cmd = string.join(sys.argv[1:], " ")
++cmd = " ".join(sys.argv[1:])
+ open('%s', 'ab').write("%%s\\n" %% cmd)
+ os.system(cmd)
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+Index: test/DVIPDF/DVIPDF.py
+===================================================================
+--- test/DVIPDF/DVIPDF.py	(revision 4708)
++++ test/DVIPDF/DVIPDF.py	(working copy)
+@@ -110,9 +110,8 @@
+ if dvipdf and tex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+-cmd = string.join(sys.argv[1:], " ")
++cmd = " ".join(sys.argv[1:])
+ open('%s', 'ab').write("%%s\\n" %% cmd)
+ os.system(cmd)
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+Index: test/Rpcgen/RPCGENXDRFLAGS.py
+===================================================================
+--- test/Rpcgen/RPCGENXDRFLAGS.py	(revision 4708)
++++ test/Rpcgen/RPCGENXDRFLAGS.py	(working copy)
+@@ -35,15 +35,14 @@
+ 
+ test.write('myrpcgen.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'chlmo:x', [])
+ for opt, arg in cmd_opts:
+     if opt == '-o': output = open(arg, 'wb')
+-output.write(string.join(sys.argv) + "\\n")
++output.write(" ".join(sys.argv) + "\\n")
+ for a in args:
+     contents = open(a, 'rb').read()
+-    output.write(string.replace(contents, 'RPCGEN', 'myrpcgen.py'))
++    output.write(contents.replace('RPCGEN', 'myrpcgen.py'))
+ output.close()
+ sys.exit(0)
+ """)
+Index: test/Rpcgen/RPCGENCLIENTFLAGS.py
+===================================================================
+--- test/Rpcgen/RPCGENCLIENTFLAGS.py	(revision 4708)
++++ test/Rpcgen/RPCGENCLIENTFLAGS.py	(working copy)
+@@ -35,15 +35,14 @@
+ 
+ test.write('myrpcgen.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'chlmo:x', [])
+ for opt, arg in cmd_opts:
+     if opt == '-o': output = open(arg, 'wb')
+-output.write(string.join(sys.argv) + "\\n")
++output.write(" ".join(sys.argv) + "\\n")
+ for a in args:
+     contents = open(a, 'rb').read()
+-    output.write(string.replace(contents, 'RPCGEN', 'myrpcgen.py'))
++    output.write(contents.replace('RPCGEN', 'myrpcgen.py'))
+ output.close()
+ sys.exit(0)
+ """)
+Index: test/Rpcgen/RPCGENFLAGS.py
+===================================================================
+--- test/Rpcgen/RPCGENFLAGS.py	(revision 4708)
++++ test/Rpcgen/RPCGENFLAGS.py	(working copy)
+@@ -35,15 +35,14 @@
+ 
+ test.write('myrpcgen.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'chlmo:x', [])
+ for opt, arg in cmd_opts:
+     if opt == '-o': output = open(arg, 'wb')
+-output.write(string.join(sys.argv) + "\\n")
++output.write(" ".join(sys.argv) + "\\n")
+ for a in args:
+     contents = open(a, 'rb').read()
+-    output.write(string.replace(contents, 'RPCGEN', 'myrpcgen.py'))
++    output.write(contents.replace('RPCGEN', 'myrpcgen.py'))
+ output.close()
+ sys.exit(0)
+ """)
+Index: test/Rpcgen/RPCGENSERVICEFLAGS.py
+===================================================================
+--- test/Rpcgen/RPCGENSERVICEFLAGS.py	(revision 4708)
++++ test/Rpcgen/RPCGENSERVICEFLAGS.py	(working copy)
+@@ -35,15 +35,14 @@
+ 
+ test.write('myrpcgen.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'chlmo:x', [])
+ for opt, arg in cmd_opts:
+     if opt == '-o': output = open(arg, 'wb')
+-output.write(string.join(sys.argv) + "\\n")
++output.write(" ".join(sys.argv) + "\\n")
+ for a in args:
+     contents = open(a, 'rb').read()
+-    output.write(string.replace(contents, 'RPCGEN', 'myrpcgen.py'))
++    output.write(contents.replace('RPCGEN', 'myrpcgen.py'))
+ output.close()
+ sys.exit(0)
+ """)
+Index: test/Rpcgen/RPCGEN.py
+===================================================================
+--- test/Rpcgen/RPCGEN.py	(revision 4708)
++++ test/Rpcgen/RPCGEN.py	(working copy)
+@@ -37,15 +37,14 @@
+ 
+ test.write('myrpcgen.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'chlmo:', [])
+ for opt, arg in cmd_opts:
+     if opt == '-o': output = open(arg, 'wb')
+-output.write(string.join(sys.argv) + "\\n")
++output.write(" ".join(sys.argv) + "\\n")
+ for a in args:
+     contents = open(a, 'rb').read()
+-    output.write(string.replace(contents, 'RPCGEN', 'myrpcgen.py'))
++    output.write(contents.replace('RPCGEN', 'myrpcgen.py'))
+ output.close()
+ sys.exit(0)
+ """)
+Index: test/Rpcgen/RPCGENHEADERFLAGS.py
+===================================================================
+--- test/Rpcgen/RPCGENHEADERFLAGS.py	(revision 4708)
++++ test/Rpcgen/RPCGENHEADERFLAGS.py	(working copy)
+@@ -35,15 +35,14 @@
+ 
+ test.write('myrpcgen.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'chlmo:x', [])
+ for opt, arg in cmd_opts:
+     if opt == '-o': output = open(arg, 'wb')
+-output.write(string.join(sys.argv) + "\\n")
++output.write(" ".join(sys.argv) + "\\n")
+ for a in args:
+     contents = open(a, 'rb').read()
+-    output.write(string.replace(contents, 'RPCGEN', 'myrpcgen.py'))
++    output.write(contents.replace('RPCGEN', 'myrpcgen.py'))
+ output.close()
+ sys.exit(0)
+ """)
+Index: test/SPAWN.py
+===================================================================
+--- test/SPAWN.py	(revision 4708)
++++ test/SPAWN.py	(working copy)
+@@ -44,15 +44,14 @@
+ 
+ test.write('SConstruct', """
+ import os
+-import string
+ import sys
+ def my_spawn1(sh, escape, cmd, args, env):
+-    s = string.join(args + ['extra1.txt'])
++    s = " ".join(args + ['extra1.txt'])
+     if sys.platform in ['win32']:
+         s = '"' + s + '"'
+     os.system(s)
+ def my_spawn2(sh, escape, cmd, args, env):
+-    s = string.join(args + ['extra2.txt'])
++    s = " ".join(args + ['extra2.txt'])
+     if sys.platform in ['win32']:
+         s = '"' + s + '"'
+     os.system(s)
+Index: test/YACC/YACCHFILESUFFIX.py
+===================================================================
+--- test/YACC/YACCHFILESUFFIX.py	(revision 4708)
++++ test/YACC/YACCHFILESUFFIX.py	(working copy)
+@@ -40,7 +40,6 @@
+ test.write('myyacc.py', """\
+ import getopt
+ import os.path
+-import string
+ import sys
+ opts, args = getopt.getopt(sys.argv[1:], 'do:')
+ for o, a in opts:
+@@ -52,7 +51,7 @@
+         outfile.write(l)
+ outfile.close()
+ base, ext = os.path.splitext(args[0])
+-open(base+'.hsuffix', 'wb').write(string.join(sys.argv)+'\\n')
++open(base+'.hsuffix', 'wb').write(" ".join(sys.argv)+'\\n')
+ sys.exit(0)
+ """)
+ 
+Index: test/YACC/YACCFLAGS.py
+===================================================================
+--- test/YACC/YACCFLAGS.py	(revision 4708)
++++ test/YACC/YACCFLAGS.py	(working copy)
+@@ -47,7 +47,6 @@
+ 
+ test.write('myyacc.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'o:I:x', [])
+ output = None
+@@ -59,8 +58,8 @@
+     else: opt_string = opt_string + ' ' + opt
+ for a in args:
+     contents = open(a, 'rb').read()
+-    contents = string.replace(contents, 'YACCFLAGS', opt_string)
+-    contents = string.replace(contents, 'I_ARGS', i_arguments)
++    contents = contents.replace('YACCFLAGS', opt_string)
++    contents = contents.replace('I_ARGS', i_arguments)
+     output.write(contents)
+ output.close()
+ sys.exit(0)
+Index: test/YACC/YACCHXXFILESUFFIX.py
+===================================================================
+--- test/YACC/YACCHXXFILESUFFIX.py	(revision 4708)
++++ test/YACC/YACCHXXFILESUFFIX.py	(working copy)
+@@ -40,7 +40,6 @@
+ test.write('myyacc.py', """\
+ import getopt
+ import os.path
+-import string
+ import sys
+ opts, args = getopt.getopt(sys.argv[1:], 'do:')
+ for o, a in opts:
+@@ -52,7 +51,7 @@
+         outfile.write(l)
+ outfile.close()
+ base, ext = os.path.splitext(args[0])
+-open(base+'.hxxsuffix', 'wb').write(string.join(sys.argv)+'\\n')
++open(base+'.hxxsuffix', 'wb').write(" ".join(sys.argv)+'\\n')
+ sys.exit(0)
+ """)
+ 
+Index: test/YACC/live.py
+===================================================================
+--- test/YACC/live.py	(revision 4708)
++++ test/YACC/live.py	(working copy)
+@@ -44,10 +44,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/YACC/YACC.py
+===================================================================
+--- test/YACC/YACC.py	(revision 4708)
++++ test/YACC/YACC.py	(working copy)
+@@ -45,7 +45,6 @@
+ 
+ test.write('myyacc.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'o:', [])
+ output = None
+@@ -55,7 +54,7 @@
+     else: opt_string = opt_string + ' ' + opt
+ for a in args:
+     contents = open(a, 'rb').read()
+-    output.write(string.replace(contents, 'YACC', 'myyacc.py'))
++    output.write(contents.replace('YACC', 'myyacc.py'))
+ output.close()
+ sys.exit(0)
+ """)
+Index: test/YACC/YACCVCGFILESUFFIX.py
+===================================================================
+--- test/YACC/YACCVCGFILESUFFIX.py	(revision 4708)
++++ test/YACC/YACCVCGFILESUFFIX.py	(working copy)
+@@ -39,7 +39,6 @@
+ test.write('myyacc.py', """\
+ import getopt
+ import os.path
+-import string
+ import sys
+ vcg = None
+ opts, args = getopt.getopt(sys.argv[1:], 'go:')
+@@ -55,7 +54,7 @@
+ outfile.close()
+ if vcg:
+     base, ext = os.path.splitext(args[0])
+-    open(base+'.vcgsuffix', 'wb').write(string.join(sys.argv)+'\\n')
++    open(base+'.vcgsuffix', 'wb').write(" ".join(sys.argv)+'\\n')
+ sys.exit(0)
+ """)
+ 
+Index: test/M4/M4.py
+===================================================================
+--- test/M4/M4.py	(revision 4708)
++++ test/M4/M4.py	(working copy)
+@@ -40,10 +40,9 @@
+ 
+ 
+ test.write('mym4.py', """
+-import string
+ import sys
+ contents = sys.stdin.read()
+-sys.stdout.write(string.replace(contents, 'M4', 'mym4.py'))
++sys.stdout.write(contents.replace('M4', 'mym4.py'))
+ sys.exit(0)
+ """)
+ 
+@@ -71,10 +70,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/srcchange.py
+===================================================================
+--- test/srcchange.py	(revision 4708)
++++ test/srcchange.py	(working copy)
+@@ -44,18 +44,16 @@
+ 
+ test.write('getrevision', """
+ #!/usr/bin/env python
+-import string
+-print string.strip(open('revnum.in','rb').read())
++print open('revnum.in','rb').read().strip()
+ """)
+ 
+ test.write('SConstruct', """
+ import re
+-import string
+ 
+ def subrevision(target, source ,env):
+     orig = target[0].get_text_contents()
+     new = re.sub('\$REV.*?\$',
+-                 '$REV: %%s$'%%string.strip(source[0].get_text_contents()),
++                 '$REV: %%s$'%%source[0].get_text_contents().strip(),
+                  target[0].get_text_contents())
+     outf = open(str(target[0]),'wb')
+     outf.write(new)
+Index: test/SWIG/live.py
+===================================================================
+--- test/SWIG/live.py	(revision 4708)
++++ test/SWIG/live.py	(working copy)
+@@ -58,10 +58,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """\
+Index: test/implicit/IMPLICIT_COMMAND_DEPENDENCIES.py
+===================================================================
+--- test/implicit/IMPLICIT_COMMAND_DEPENDENCIES.py	(revision 4708)
++++ test/implicit/IMPLICIT_COMMAND_DEPENDENCIES.py	(working copy)
+@@ -45,11 +45,10 @@
+ open(sys.argv[1], 'w').write('''\
+ #!/usr/bin/env %(python)s
+ import os
+-import string
+ import sys
+ fp = open(sys.argv[1], 'wb')
+ args = [os.path.split(sys.argv[0])[1]] + sys.argv[1:]
+-fp.write(string.join(args) + '\\\\n' + '%(extra)s')
++fp.write(" ".join(args) + '\\\\n' + '%(extra)s')
+ for infile in sys.argv[2:]:
+     fp.write(open(infile, 'rb').read())
+ fp.close()
+Index: test/Java/JAVAH.py
+===================================================================
+--- test/Java/JAVAH.py	(revision 4708)
++++ test/Java/JAVAH.py	(working copy)
+@@ -105,10 +105,9 @@
+ 
+ test.write("wrapper.py", """\
+ import os
+-import string
+ import sys
+-open('%s', 'ab').write("wrapper.py %%s\\n" %% string.join(sys.argv[1:]))
+-os.system(string.join(sys.argv[1:], " "))
++open('%s', 'ab').write("wrapper.py %%s\\n" %% " ".join(sys.argv[1:]))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/Java/RMIC.py
+===================================================================
+--- test/Java/RMIC.py	(revision 4708)
++++ test/Java/RMIC.py	(working copy)
+@@ -97,14 +97,12 @@
+ 
+ test.write("wrapper.py", """\
+ import os
+-import string
+ import sys
+-open('%s', 'ab').write("wrapper.py %%s\\n" %% string.join(sys.argv[1:]))
+-os.system(string.join(sys.argv[1:], " "))
++open('%s', 'ab').write("wrapper.py %%s\\n" %% " ".join(sys.argv[1:]))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+-import string
+ foo = Environment(tools = ['javac', 'rmic'],
+                   JAVAC = r'%(where_javac)s',
+                   RMIC = r'%(where_rmic)s')
+@@ -120,7 +118,7 @@
+ # XXX This is kind of a Python brute-force way to do what Ant
+ # does with its "excludes" attribute.  We should probably find
+ # a similar friendlier way to do this.
+-bar_classes = filter(lambda c: string.find(str(c), 'Hello') == -1, bar_classes)
++bar_classes = filter(lambda c: str(c).find('Hello') == -1, bar_classes)
+ bar.RMIC(target = Dir('outdir2'), source = bar_classes)
+ """ % locals() )
+ 
+Index: test/Java/JAR.py
+===================================================================
+--- test/Java/JAR.py	(revision 4708)
++++ test/Java/JAR.py	(working copy)
+@@ -89,9 +89,8 @@
+ 
+ test.write('myjar2.py', r"""
+ import sys
+-import string
+ f=open(sys.argv[2], 'wb')
+-f.write(string.join(sys.argv[1:]))
++f.write(" ".join(sys.argv[1:]))
+ f.write("\n")
+ f.close()
+ sys.exit(0)
+@@ -128,10 +127,9 @@
+ 
+ test.write("wrapper.py", """\
+ import os
+-import string
+ import sys
+-open('%s', 'ab').write("wrapper.py %%s\\n" %% string.join(sys.argv[1:]))
+-os.system(string.join(sys.argv[1:], " "))
++open('%s', 'ab').write("wrapper.py %%s\\n" %% " ".join(sys.argv[1:]))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/SHELL.py
+===================================================================
+--- test/SHELL.py	(revision 4708)
++++ test/SHELL.py	(working copy)
+@@ -48,7 +48,6 @@
+ test.write(my_shell, """\
+ #!%(python)s
+ import os
+-import string
+ import sys
+ cmd = sys.argv[2]
+ def stripquote(s):
+@@ -56,7 +55,7 @@
+        s[0] == "'" and s[-1] == "'":
+         s = s[1:-1]
+     return s
+-args = string.split(stripquote(sys.argv[2]))
++args = stripquote(sys.argv[2]).split()
+ args = map(stripquote, args)
+ ofp = open(args[2], 'wb')
+ for f in args[3:] + ['extra.txt']:
+Index: test/Actions/addpost-link.py
+===================================================================
+--- test/Actions/addpost-link.py	(revision 4708)
++++ test/Actions/addpost-link.py	(working copy)
+@@ -39,9 +39,8 @@
+ test = TestSCons.TestSCons()
+ 
+ test.write('strip.py', """\
+-import string
+ import sys
+-print "strip.py: %s" % string.join(sys.argv[1:])
++print "strip.py: %s" % " ".join(sys.argv[1:])
+ """)
+ 
+ test.write('SConstruct', """\
+Index: test/Actions/actions.py
+===================================================================
+--- test/Actions/actions.py	(revision 4708)
++++ test/Actions/actions.py	(working copy)
+@@ -67,10 +67,9 @@
+ 
+ test.write('SConstruct', """
+ import os
+-import string
+ def func(env, target, source):
+-    cmd = r'%(_python_)s build.py %%s 3 %%s' %% (string.join(map(str, target)),
+-                                       string.join(map(str, source)))
++    cmd = r'%(_python_)s build.py %%s 3 %%s' %% (' '.join(map(str, target)),
++                                       ' '.join(map(str, source)))
+     print cmd
+     return os.system(cmd)
+ B = Builder(action = func)
+@@ -87,7 +86,6 @@
+ test.write('SConstruct', """
+ import os
+ assert not globals().has_key('string')
+-import string
+ class bld:
+     def __init__(self):
+         self.cmd = r'%(_python_)s build.py %%s 4 %%s'
+@@ -96,8 +94,8 @@
+         print cmd
+         return os.system(cmd)
+     def get_contents(self, env, target, source):
+-        return self.cmd %% (string.join(map(str, target)),
+-                            string.join(map(str, source)))
++        return self.cmd %% (' '.join(map(str, target)),
++                            ' '.join(map(str, source)))
+ B = Builder(action = bld())
+ env = Environment(BUILDERS = { 'B' : B })
+ env.B(target = 'foo.out', source = 'foo.in')
+Index: test/Win32/bad-drive.py
+===================================================================
+--- test/Win32/bad-drive.py	(revision 4708)
++++ test/Win32/bad-drive.py	(working copy)
+@@ -31,8 +31,8 @@
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import os
+-import string
+ import sys
++from string import uppercase
+ 
+ import TestSCons
+ 
+@@ -43,8 +43,8 @@
+     test.skip_test(msg)
+ 
+ bad_drive = None
+-for i in range(len(string.uppercase)-1, -1, -1):
+-    d = string.uppercase[i]
++for i in range(len(uppercase)-1, -1, -1):
++    d = uppercase[i]
+     if not os.path.isdir(d + ':' + os.sep):
+         bad_drive = d + ':'
+         break
+Index: test/Ghostscript/GS.py
+===================================================================
+--- test/Ghostscript/GS.py	(revision 4708)
++++ test/Ghostscript/GS.py	(working copy)
+@@ -76,9 +76,8 @@
+ 
+     test.write("wrapper.py", """\
+ import os
+-import string
+ import sys
+-cmd = string.join(sys.argv[1:], " ")
++cmd = " ".join(sys.argv[1:])
+ open('%s', 'ab').write("%%s\\n" %% cmd)
+ os.system(cmd)
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+Index: test/Ghostscript/GSFLAGS.py
+===================================================================
+--- test/Ghostscript/GSFLAGS.py	(revision 4708)
++++ test/Ghostscript/GSFLAGS.py	(working copy)
+@@ -84,9 +84,8 @@
+ if gs:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+-cmd = string.join(sys.argv[1:], " ")
++cmd = " ".join(sys.argv[1:])
+ open('%s', 'ab').write("%%s\\n" %% cmd)
+ os.system(cmd)
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+Index: test/Value.py
+===================================================================
+--- test/Value.py	(revision 4708)
++++ test/Value.py	(working copy)
+@@ -73,9 +73,8 @@
+ 
+ test.write('put.py', """\
+ import os
+-import string
+ import sys
+-open(sys.argv[-1],'wb').write(string.join(sys.argv[1:-2]))
++open(sys.argv[-1],'wb').write(" ".join(sys.argv[1:-2]))
+ """)
+ 
+ # Run all of the tests with both types of source signature
+Index: test/Variables/Variables.py
+===================================================================
+--- test/Variables/Variables.py	(revision 4708)
++++ test/Variables/Variables.py	(working copy)
+@@ -30,18 +30,15 @@
+ test = TestSCons.TestSCons()
+ 
+ test.write('SConstruct', """
+-import string
+ env = Environment()
+ print env['CC']
+-print string.join(env['CCFLAGS'])
++print " ".join(env['CCFLAGS'])
+ Default(env.Alias('dummy', None))
+ """)
+ test.run()
+-cc, ccflags = string.split(test.stdout(), '\n')[1:3]
++cc, ccflags = test.stdout().split('\n')[1:3]
+ 
+ test.write('SConstruct', """
+-import string
+-
+ # test validator.  Change a key and add a new one to the environment
+ def validator(key, value, environ):
+     environ[key] = "v"
+@@ -106,7 +103,7 @@
+ print env['RELEASE_BUILD']
+ print env['DEBUG_BUILD']
+ print env['CC']
+-print string.join(env['CCFLAGS'])
++print " ".join(env['CCFLAGS'])
+ print env['VALIDATE']
+ print env['valid_key']
+ 
+Index: test/LEX/LEX.py
+===================================================================
+--- test/LEX/LEX.py	(revision 4708)
++++ test/LEX/LEX.py	(working copy)
+@@ -37,12 +37,11 @@
+ 
+ test.write('mylex.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 't', [])
+ for a in args:
+     contents = open(a, 'rb').read()
+-    sys.stdout.write(string.replace(contents, 'LEX', 'mylex.py'))
++    sys.stdout.write(contents.replace('LEX', 'mylex.py'))
+ sys.exit(0)
+ """)
+ 
+Index: test/LEX/live.py
+===================================================================
+--- test/LEX/live.py	(revision 4708)
++++ test/LEX/live.py	(working copy)
+@@ -45,10 +45,9 @@
+ 
+ 
+ test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/LEX/LEXFLAGS.py
+===================================================================
+--- test/LEX/LEXFLAGS.py	(revision 4708)
++++ test/LEX/LEXFLAGS.py	(working copy)
+@@ -39,7 +39,6 @@
+ 
+ test.write('mylex.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'I:tx', [])
+ opt_string = ''
+@@ -49,8 +48,8 @@
+     else: opt_string = opt_string + ' ' + opt
+ for a in args:
+     contents = open(a, 'rb').read()
+-    contents = string.replace(contents, 'LEXFLAGS', opt_string)
+-    contents = string.replace(contents, 'I_ARGS', i_arguments)
++    contents = contents.replace('LEXFLAGS', opt_string)
++    contents = contents.replace('I_ARGS', i_arguments)
+     sys.stdout.write(contents)
+ sys.exit(0)
+ """)
+Index: test/TEX/LATEXFLAGS.py
+===================================================================
+--- test/TEX/LATEXFLAGS.py	(revision 4708)
++++ test/TEX/LATEXFLAGS.py	(working copy)
+@@ -82,10 +82,9 @@
+ if latex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TEX/TEX.py
+===================================================================
+--- test/TEX/TEX.py	(revision 4708)
++++ test/TEX/TEX.py	(working copy)
+@@ -86,10 +86,9 @@
+ if tex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TEX/TEXFLAGS.py
+===================================================================
+--- test/TEX/TEXFLAGS.py	(revision 4708)
++++ test/TEX/TEXFLAGS.py	(working copy)
+@@ -75,10 +75,9 @@
+ if tex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TEX/LATEX.py
+===================================================================
+--- test/TEX/LATEX.py	(revision 4708)
++++ test/TEX/LATEX.py	(working copy)
+@@ -99,10 +99,9 @@
+ if latex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TEX/PDFLATEXFLAGS.py
+===================================================================
+--- test/TEX/PDFLATEXFLAGS.py	(revision 4708)
++++ test/TEX/PDFLATEXFLAGS.py	(working copy)
+@@ -82,10 +82,9 @@
+ if pdflatex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TEX/PDFTEX.py
+===================================================================
+--- test/TEX/PDFTEX.py	(revision 4708)
++++ test/TEX/PDFTEX.py	(working copy)
+@@ -86,10 +86,9 @@
+ if pdftex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TEX/PDFLATEX.py
+===================================================================
+--- test/TEX/PDFLATEX.py	(revision 4708)
++++ test/TEX/PDFLATEX.py	(working copy)
+@@ -99,10 +99,9 @@
+ if pdflatex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/TEX/PDFTEXFLAGS.py
+===================================================================
+--- test/TEX/PDFTEXFLAGS.py	(revision 4708)
++++ test/TEX/PDFTEXFLAGS.py	(working copy)
+@@ -75,10 +75,9 @@
+ if pdftex:
+ 
+     test.write("wrapper.py", """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Deprecated/Options/Options.py
+===================================================================
+--- test/Deprecated/Options/Options.py	(revision 4708)
++++ test/Deprecated/Options/Options.py	(working copy)
+@@ -30,18 +30,15 @@
+ test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+ 
+ test.write('SConstruct', """
+-import string
+ env = Environment()
+ print env['CC']
+-print string.join(env['CCFLAGS'])
++print " ".join(env['CCFLAGS'])
+ Default(env.Alias('dummy', None))
+ """)
+ test.run()
+ cc, ccflags = string.split(test.stdout(), '\n')[1:3]
+ 
+ test.write('SConstruct', """
+-import string
+-
+ # test validator.  Change a key and add a new one to the environment
+ def validator(key, value, environ):
+     environ[key] = "v"
+@@ -106,7 +103,7 @@
+ print env['RELEASE_BUILD']
+ print env['DEBUG_BUILD']
+ print env['CC']
+-print string.join(env['CCFLAGS'])
++print " ".join(env['CCFLAGS'])
+ print env['VALIDATE']
+ print env['valid_key']
+ 
+Index: test/ToolSurrogate.py
+===================================================================
+--- test/ToolSurrogate.py	(revision 4708)
++++ test/ToolSurrogate.py	(working copy)
+@@ -34,7 +34,6 @@
+ test = TestSCons.TestSCons()
+ 
+ test.write('SConstruct', """\
+-import string
+ class Curry:
+     def __init__(self, fun, *args, **kwargs):
+         self.fun = fun
+@@ -53,8 +52,8 @@
+ def Str(target, source, env, cmd=""):
+     result = []
+     for cmd in env.subst_list(cmd, target=target, source=source):
+-        result.append(string.join(map(str, cmd)))
+-    return string.join(result, '\\n')
++        result.append(" ".join(map(str, cmd)))
++    return '\\n'.join(result)
+ 
+ class ToolSurrogate:
+     def __init__(self, tool, variable, func):
+Index: test/long-lines/signature.py
+===================================================================
+--- test/long-lines/signature.py	(revision 4708)
++++ test/long-lines/signature.py	(working copy)
+@@ -39,11 +39,10 @@
+ 
+ test.write(build_py, """\
+ #!/usr/bin/env python
+-import string
+ import sys
+ if sys.argv[1][0] == '@':
+     args = open(sys.argv[1][1:], 'rb').read()
+-    args = string.split(args)
++    args = args.split()
+ else:
+     args = sys.argv[1:]
+ fp = open(args[0], 'wb')
+Index: test/MSVC/batch.py
+===================================================================
+--- test/MSVC/batch.py	(revision 4708)
++++ test/MSVC/batch.py	(working copy)
+@@ -40,7 +40,6 @@
+ 
+ test.write('fake_cl.py', """\
+ import os
+-import string
+ import sys
+ input_files = sys.argv[2:]
+ if sys.argv[1][-1] in (os.sep, '\\\\'):
+@@ -56,17 +55,16 @@
+ # Delay writing the .log output until here so any trailing slash or
+ # backslash has been stripped, and the output comparisons later in this
+ # script don't have to account for the difference.
+-open('fake_cl.log', 'ab').write(string.join(sys.argv[1:]) + '\\n')
++open('fake_cl.log', 'ab').write(" ".join(sys.argv[1:]) + '\\n')
+ for infile in input_files:
+     if dir:
+-        outfile = os.path.join(dir, string.replace(infile, '.c', '.obj'))
++        outfile = os.path.join(dir, infile.replace('.c', '.obj'))
+     else:
+         outfile = output
+     open(outfile, 'wb').write(open(infile, 'rb').read())
+ """)
+ 
+ test.write('fake_link.py', """\
+-import string
+ import sys
+ ofp = open(sys.argv[1], 'wb')
+ for infile in sys.argv[2:]:
+Index: test/Repository/RMIC.py
+===================================================================
+--- test/Repository/RMIC.py	(revision 4708)
++++ test/Repository/RMIC.py	(working copy)
+@@ -60,13 +60,12 @@
+ 
+ #
+ test.write(['rep1', 'SConstruct'], """
+-import string
+ env = Environment(tools = ['javac', 'rmic'],
+                   JAVAC = r'%s',
+                   RMIC = r'%s')
+ classes = env.Java(target = 'classes', source = 'src')
+ # Brute-force removal of the "Hello" class.
+-classes = filter(lambda c: string.find(str(c), 'Hello') == -1, classes)
++classes = filter(lambda c: str(c).find('Hello') == -1, classes)
+ env.RMIC(target = 'outdir', source = classes)
+ """ % (javac, rmic))
+ 
+@@ -329,13 +328,12 @@
+ 
+ #
+ test.write(['work3', 'SConstruct'], """
+-import string
+ env = Environment(tools = ['javac', 'rmic'],
+                   JAVAC = r'%s',
+                   RMIC = r'%s')
+ classes = env.Java(target = 'classes', source = 'src')
+ # Brute-force removal of the "Hello" class.
+-classes = filter(lambda c: string.find(str(c), 'Hello') == -1, classes)
++classes = filter(lambda c: str(c).find('Hello') == -1, classes)
+ rmi_classes = env.RMIC(target = 'outdir', source = classes)
+ Local(rmi_classes)
+ """ % (javac, rmic))
+Index: test/Repository/M4.py
+===================================================================
+--- test/Repository/M4.py	(revision 4708)
++++ test/Repository/M4.py	(working copy)
+@@ -39,10 +39,9 @@
+ test.subdir('work', 'repository', ['repository', 'src'])
+ 
+ test.write('mym4.py', """
+-import string
+ import sys
+ contents = sys.stdin.read()
+-sys.stdout.write(string.replace(contents, 'M4', 'mym4.py'))
++sys.stdout.write(contents.replace('M4', 'mym4.py'))
+ sys.exit(0)
+ """)
+ 
+Index: test/Repository/LIBPATH.py
+===================================================================
+--- test/Repository/LIBPATH.py	(revision 4708)
++++ test/Repository/LIBPATH.py	(working copy)
+@@ -40,7 +40,6 @@
+ workpath_work = test.workpath('work')
+ 
+ test.write(['work', 'SConstruct'], r"""
+-import string
+ env_zzz = Environment(LIBPATH = ['.', 'zzz'])
+ env_yyy = Environment(LIBPATH = ['yyy', '.'])
+ aaa_exe = env_zzz.Program('aaa', 'aaa.c')
+@@ -49,7 +48,7 @@
+     pre = env.subst('$LIBDIRPREFIX')
+     suf = env.subst('$LIBDIRSUFFIX')
+     f = open(str(target[0]), 'wb')
+-    for arg in string.split(env.subst('$_LIBDIRFLAGS', target=target)):
++    for arg in env.subst('$_LIBDIRFLAGS', target=target).split():
+         if arg[:len(pre)] == pre:
+             arg = arg[len(pre):]
+         if arg[-len(suf):] == suf:
+Index: test/Configure/config-h.py
+===================================================================
+--- test/Configure/config-h.py	(revision 4708)
++++ test/Configure/config-h.py	(working copy)
+@@ -157,7 +157,7 @@
+ expected_build_str = "scons: `.' is up to date.\n"
+ expected_stdout = test.wrap_stdout(build_str=expected_build_str,
+                                    read_str=expected_read_str)
+-#expected_stdout = string.replace(expected_stdout, "\n", os.linesep)
++#expected_stdout = expected_stdout.replace("\n", os.linesep)
+ 
+ test.run(stdout=expected_stdout)    
+ 
+Index: test/ESCAPE.py
+===================================================================
+--- test/ESCAPE.py	(revision 4708)
++++ test/ESCAPE.py	(working copy)
+@@ -43,13 +43,12 @@
+ """)
+ 
+ test.write('SConstruct', """\
+-import string
+ # We still need to run this through the original ESCAPE function,
+ # because that's set up to work in tandem with the existing SHELL,
+ # which we're not replacing.
+ orig_escape = Environment()['ESCAPE']
+ def my_escape(s):
+-    s = string.replace(s, 'file.in', 'file.xxx')
++    s = s.replace('file.in', 'file.xxx')
+     return orig_escape(s)
+ env = Environment(ESCAPE = my_escape)
+ env.Command('file.out', 'file.in', '%(_python_)s cat.py $TARGET $SOURCES')
+Index: test/LINK/SHLINK.py
+===================================================================
+--- test/LINK/SHLINK.py	(revision 4708)
++++ test/LINK/SHLINK.py	(working copy)
+@@ -37,10 +37,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/LINK/LINKFLAGS.py
+===================================================================
+--- test/LINK/LINKFLAGS.py	(revision 4708)
++++ test/LINK/LINKFLAGS.py	(working copy)
+@@ -36,11 +36,10 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+ args = filter(lambda s: s != 'fake_link_flag', sys.argv[1:])
+-os.system(string.join(args, " "))
++os.system(" ".join(args))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/LINK/LINK.py
+===================================================================
+--- test/LINK/LINK.py	(revision 4708)
++++ test/LINK/LINK.py	(working copy)
+@@ -36,10 +36,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/LINK/SHLINKFLAGS.py
+===================================================================
+--- test/LINK/SHLINKFLAGS.py	(revision 4708)
++++ test/LINK/SHLINKFLAGS.py	(working copy)
+@@ -37,11 +37,10 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+ args = filter(lambda s: s != 'fake_shlink_flag', sys.argv[1:])
+-os.system(string.join(args, " "))
++os.system(" ".join(args))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/CXX/SHCXX.py
+===================================================================
+--- test/CXX/SHCXX.py	(revision 4708)
++++ test/CXX/SHCXX.py	(working copy)
+@@ -35,10 +35,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/CXX/CXX.py
+===================================================================
+--- test/CXX/CXX.py	(revision 4708)
++++ test/CXX/CXX.py	(working copy)
+@@ -39,7 +39,6 @@
+ if sys.platform == 'win32':
+ 
+     test.write('mylink.py', r"""
+-import string
+ import sys
+ args = sys.argv[1:]
+ while args:
+@@ -47,7 +46,7 @@
+     if a[0] != '/':
+         break
+     args = args[1:]
+-    if string.lower(a[:5]) == '/out:': out = a[5:]
++    if a[:5].lower() == '/out:': out = a[5:]
+ infile = open(args[0], 'rb')
+ outfile = open(out, 'wb')
+ for l in infile.readlines():
+@@ -179,10 +178,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/CXX/CXXFILESUFFIX.py
+===================================================================
+--- test/CXX/CXXFILESUFFIX.py	(revision 4708)
++++ test/CXX/CXXFILESUFFIX.py	(working copy)
+@@ -34,12 +34,11 @@
+ 
+ test.write('mylex.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 't', [])
+ for a in args:
+     contents = open(a, 'rb').read()
+-    sys.stdout.write(string.replace(contents, 'LEX', 'mylex.py'))
++    sys.stdout.write(contents.replace('LEX', 'mylex.py'))
+ sys.exit(0)
+ """)
+ 
+Index: test/AR/ARFLAGS.py
+===================================================================
+--- test/AR/ARFLAGS.py	(revision 4708)
++++ test/AR/ARFLAGS.py	(working copy)
+@@ -36,10 +36,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/AR/AR.py
+===================================================================
+--- test/AR/AR.py	(revision 4708)
++++ test/AR/AR.py	(working copy)
+@@ -36,10 +36,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/AS/ml.py
+===================================================================
+--- test/AS/ml.py	(revision 4708)
++++ test/AS/ml.py	(working copy)
+@@ -48,10 +48,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/AS/nasm.py
+===================================================================
+--- test/AS/nasm.py	(revision 4708)
++++ test/AS/nasm.py	(working copy)
+@@ -77,10 +77,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/AS/ASPPFLAGS.py
+===================================================================
+--- test/AS/ASPPFLAGS.py	(revision 4708)
++++ test/AS/ASPPFLAGS.py	(working copy)
+@@ -41,7 +41,6 @@
+     o_c = ' -x'
+ 
+     test.write('mylink.py', r"""
+-import string
+ import sys
+ args = sys.argv[1:]
+ while args:
+@@ -49,7 +48,7 @@
+     if a[0] != '/':
+         break
+     args = args[1:]
+-    if string.lower(a[:5]) == '/out:': out = a[5:]
++    if a[:5].lower() == '/out:': out = a[5:]
+ infile = open(args[0], 'rb')
+ outfile = open(out, 'wb')
+ for l in infile.readlines():
+Index: test/AS/ASFLAGS.py
+===================================================================
+--- test/AS/ASFLAGS.py	(revision 4708)
++++ test/AS/ASFLAGS.py	(working copy)
+@@ -41,7 +41,6 @@
+     o_c = ' -x'
+ 
+     test.write('mylink.py', r"""
+-import string
+ import sys
+ args = sys.argv[1:]
+ while args:
+@@ -49,7 +48,7 @@
+     if a[0] != '/':
+         break
+     args = args[1:]
+-    if string.lower(a[:5]) == '/out:': out = a[5:]
++    if a[:5].lower() == '/out:': out = a[5:]
+ infile = open(args[0], 'rb')
+ outfile = open(out, 'wb')
+ for l in infile.readlines():
+Index: test/AS/as-live.py
+===================================================================
+--- test/AS/as-live.py	(revision 4708)
++++ test/AS/as-live.py	(working copy)
+@@ -52,10 +52,9 @@
+ 
+ test.write("wrapper.py", """\
+ import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py: %%s\\n" %% sys.argv[-1])
+-cmd = string.join(sys.argv[1:])
++cmd = " ".join(sys.argv[1:])
+ os.system(cmd)
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+Index: test/AS/AS.py
+===================================================================
+--- test/AS/AS.py	(revision 4708)
++++ test/AS/AS.py	(working copy)
+@@ -43,7 +43,6 @@
+ if sys.platform == 'win32':
+ 
+     test.write('mylink.py', r"""
+-import string
+ import sys
+ args = sys.argv[1:]
+ while args:
+@@ -51,7 +50,7 @@
+     if a[0] != '/':
+         break
+     args = args[1:]
+-    if string.lower(a[:5]) == '/out:': out = a[5:]
++    if a[:5].lower() == '/out:': out = a[5:]
+ infile = open(args[0], 'rb')
+ outfile = open(out, 'wb')
+ for l in infile.readlines():
+Index: test/AS/ASPP.py
+===================================================================
+--- test/AS/ASPP.py	(revision 4708)
++++ test/AS/ASPP.py	(working copy)
+@@ -38,7 +38,6 @@
+ if sys.platform == 'win32':
+ 
+     test.write('mylink.py', r"""
+-import string
+ import sys
+ args = sys.argv[1:]
+ while args:
+@@ -46,7 +45,7 @@
+     if a[0] != '/':
+         break
+     args = args[1:]
+-    if string.lower(a[:5]) == '/out:': out = a[5:]
++    if a[:5].lower() == '/out:': out = a[5:]
+ infile = open(args[0], 'rb')
+ outfile = open(out, 'wb')
+ for l in infile.readlines():
+Index: test/Scanner/Scanner.py
+===================================================================
+--- test/Scanner/Scanner.py	(revision 4708)
++++ test/Scanner/Scanner.py	(working copy)
+@@ -113,11 +113,9 @@
+ # Test specifying a source scanner for a Builder that gets
+ # automatically applied to targets generated from that Builder
+ 
+-import string
+-
+ def blork(env, target, source):
+     open(str(target[0]), 'wb').write(
+-        string.replace(source[0].get_text_contents(), 'getfile', 'MISSEDME'))
++        source[0].get_text_contents().replace('getfile', 'MISSEDME'))
+ 
+ kbld = Builder(action=r'%(_python_)s build.py $SOURCES $TARGET',
+                src_suffix='.lork',
+Index: test/Scanner/no-Dir-node.py
+===================================================================
+--- test/Scanner/no-Dir-node.py	(revision 4708)
++++ test/Scanner/no-Dir-node.py	(working copy)
+@@ -52,9 +52,8 @@
+ 
+ test.write('build.py', r"""
+ import os.path
+-import string
+ import sys
+-path = string.split(sys.argv[1])
++path = sys.argv[1].split()
+ input = open(sys.argv[2], 'rb')
+ output = open(sys.argv[3], 'wb')
+ 
+Index: test/Scanner/generated.py
+===================================================================
+--- test/Scanner/generated.py	(revision 4708)
++++ test/Scanner/generated.py	(working copy)
+@@ -84,7 +84,6 @@
+ 
+ test.write('Mylib.py', """\
+ import os
+-import string
+ import re
+ 
+ def Subdirs(env, dirlist):
+@@ -92,10 +91,10 @@
+         env.SConscript(file, "env")
+ 
+ def _subconf_list(dirlist):
+-    return map(lambda x: os.path.join(x, "SConscript"), string.split(dirlist))
++    return map(lambda x: os.path.join(x, "SConscript"), dirlist.split())
+ 
+ def StaticLibMergeMembers(local_env, libname, hackpath, files):
+-    for file in string.split(files):
++    for file in files.split():
+         # QQQ Fix limits in grok'ed regexp
+         tmp = re.sub(".c$", ".o", file)
+         objname = re.sub(".cpp", ".o", tmp)
+@@ -121,22 +120,22 @@
+     return [["ar", "cq"] + target + srclist, ["ranlib"] + target]
+ 
+ def StaticLibrary(env, target, source):
+-    env.StaticLibrary(target, string.split(source))
++    env.StaticLibrary(target, source.split())
+ 
+ def SharedLibrary(env, target, source):
+-    env.SharedLibrary(target, string.split(source))
++    env.SharedLibrary(target, source.split())
+ 
+ def ExportHeader(env, headers):
+-    env.Install(dir = env["EXPORT_INCLUDE"], source = string.split(headers))
++    env.Install(dir = env["EXPORT_INCLUDE"], source = headers.split())
+ 
+ def ExportLib(env, libs):
+-    env.Install(dir = env["EXPORT_LIB"], source = string.split(libs))
++    env.Install(dir = env["EXPORT_LIB"], source = libs.split())
+ 
+ def InstallBin(env, bins):
+-    env.Install(dir = env["INSTALL_BIN"], source = string.split(bins))
++    env.Install(dir = env["INSTALL_BIN"], source = bins.split())
+ 
+ def Program(env, target, source):
+-    env.Program(target, string.split(source))
++    env.Program(target, source.split())
+ 
+ def AddCFlags(env, str):
+     env.Append(CPPFLAGS = " " + str)
+@@ -146,13 +145,13 @@
+ #    AddCFlags(env, str)
+ 
+ def AddIncludeDirs(env, str):
+-    env.Append(CPPPATH = string.split(str))
++    env.Append(CPPPATH = str.split())
+ 
+ def AddLibs(env, str):
+-    env.Append(LIBS = string.split(str))
++    env.Append(LIBS = str.split())
+ 
+ def AddLibDirs(env, str):
+-    env.Append(LIBPATH = string.split(str))
++    env.Append(LIBPATH = str.split())
+ 
+ """)
+ 
+@@ -189,7 +188,6 @@
+ 
+ test.write(['src', 'lib_geng', 'SConscript'], """\
+ # --- Begin SConscript boilerplate ---
+-import string
+ import sys
+ import Mylib
+ Import("env")
+@@ -233,8 +231,8 @@
+         except SCons.Errors.UserError:
+              pass
+ todict["CFLAGS"] = fromdict["CPPFLAGS"] + " " + \
+-    string.join(map(lambda x: "-I" + x, env["CPPPATH"])) + " " + \
+-    string.join(map(lambda x: "-L" + x, env["LIBPATH"])) 
++    ' '.join(["-I" + x for x in env["CPPPATH"]]) + " " + \
++    ' '.join(["-L" + x for x in env["LIBPATH"]])
+ todict["CXXFLAGS"] = todict["CFLAGS"]
+ 
+ generated_hdrs = "libg_gx.h libg_gy.h libg_gz.h"
+@@ -243,7 +241,7 @@
+ exported_hdrs = static_hdrs
+ lib_name = "g"
+ lib_fullname = env.subst("${LIBPREFIX}g${LIBSUFFIX}")
+-lib_srcs = string.split("libg_1.c libg_2.c libg_3.c")
++lib_srcs = "libg_1.c libg_2.c libg_3.c".split()
+ import re
+ lib_objs = map(lambda x: re.sub("\.c$", ".o", x), lib_srcs)
+ 
+@@ -275,11 +273,11 @@
+ #
+ # SCons bug??
+ 
+-env.Command(string.split(generated_hdrs),
++env.Command(generated_hdrs.split(),
+             ["MAKE-HEADER.py"],
+             cmd_generated)
+ recurse_env.Command([lib_fullname] + lib_objs,
+-                    lib_srcs + string.split(generated_hdrs + " " + static_hdrs),
++                    lib_srcs + (generated_hdrs + " " + static_hdrs).split(),
+                     cmd_justlib) 
+ """)
+ 
+Index: test/Scanner/FindPathDirs.py
+===================================================================
+--- test/Scanner/FindPathDirs.py	(revision 4708)
++++ test/Scanner/FindPathDirs.py	(working copy)
+@@ -39,9 +39,8 @@
+ 
+ test.write('build.py', r"""
+ import os.path
+-import string
+ import sys
+-path = string.split(sys.argv[1])
++path = sys.argv[1].split()
+ input = open(sys.argv[2], 'rb')
+ output = open(sys.argv[3], 'wb')
+ 
+Index: test/Parallel/ref_count.py
+===================================================================
+--- test/Parallel/ref_count.py	(revision 4708)
++++ test/Parallel/ref_count.py	(working copy)
+@@ -59,7 +59,6 @@
+ test = TestSCons.TestSCons()
+ 
+ test.write('build.py', """\
+-import string
+ import sys
+ import time
+ args = sys.argv[1:]
+@@ -78,7 +77,7 @@
+     contents = contents + open(ifile, 'rb').read()
+ for ofile in outputs:
+     ofp = open(ofile, 'wb')
+-    ofp.write('%s:  building from %s\\n' % (ofile, string.join(args)))
++    ofp.write('%s:  building from %s\\n' % (ofile, " ".join(args)))
+     ofp.write(contents)
+     ofp.close()
+ """)
+Index: test/CFILESUFFIX.py
+===================================================================
+--- test/CFILESUFFIX.py	(revision 4708)
++++ test/CFILESUFFIX.py	(working copy)
+@@ -38,12 +38,11 @@
+ 
+ test.write('mylex.py', """
+ import getopt
+-import string
+ import sys
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 't', [])
+ for a in args:
+     contents = open(a, 'rb').read()
+-    sys.stdout.write(string.replace(contents, 'LEX', 'mylex.py'))
++    sys.stdout.write(contents.replace('LEX', 'mylex.py'))
+ sys.exit(0)
+ """)
+ 
+Index: test/RANLIB/RANLIBFLAGS.py
+===================================================================
+--- test/RANLIB/RANLIBFLAGS.py	(revision 4708)
++++ test/RANLIB/RANLIBFLAGS.py	(working copy)
+@@ -41,10 +41,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/RANLIB/RANLIB.py
+===================================================================
+--- test/RANLIB/RANLIB.py	(revision 4708)
++++ test/RANLIB/RANLIB.py	(working copy)
+@@ -42,10 +42,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/Fortran/SHF90.py
+===================================================================
+--- test/Fortran/SHF90.py	(revision 4708)
++++ test/Fortran/SHF90.py	(working copy)
+@@ -100,10 +100,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/F90.py
+===================================================================
+--- test/Fortran/F90.py	(revision 4708)
++++ test/Fortran/F90.py	(working copy)
+@@ -100,10 +100,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/FORTRANMODDIR.py
+===================================================================
+--- test/Fortran/FORTRANMODDIR.py	(revision 4708)
++++ test/Fortran/FORTRANMODDIR.py	(working copy)
+@@ -36,12 +36,11 @@
+ test.write('myfortran.py', r"""
+ import os.path
+ import re
+-import string
+ import sys
+ mod_regex = "(?im)^\\s*MODULE\\s+(?!PROCEDURE)(\\w+)"
+ contents = open(sys.argv[2]).read()
+ modules = re.findall(mod_regex, contents)
+-modules = map(lambda m: os.path.join(sys.argv[1], string.lower(m)+'.mod'), modules)
++modules = map(lambda m: os.path.join(sys.argv[1], m.lower()+'.mod'), modules)
+ for t in sys.argv[3:] + modules:
+     open(t, 'wb').write('myfortran.py wrote %s\n' % os.path.split(t)[1])
+ sys.exit(0)
+Index: test/Fortran/F90FLAGS.py
+===================================================================
+--- test/Fortran/F90FLAGS.py	(revision 4708)
++++ test/Fortran/F90FLAGS.py	(working copy)
+@@ -107,10 +107,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/USE-MODULE.py
+===================================================================
+--- test/Fortran/USE-MODULE.py	(revision 4708)
++++ test/Fortran/USE-MODULE.py	(working copy)
+@@ -36,12 +36,11 @@
+ test.write('myfortran.py', r"""
+ import os.path
+ import re
+-import string
+ import sys
+ mod_regex = "(?im)^\\s*MODULE\\s+(?!PROCEDURE)(\\w+)"
+ contents = open(sys.argv[1]).read()
+ modules = re.findall(mod_regex, contents)
+-modules = map(lambda m: string.lower(m)+'.mod', modules)
++modules = map(lambda m: m.lower()+'.mod', modules)
+ for t in sys.argv[2:] + modules:
+     open(t, 'wb').write('myfortran.py wrote %s\n' % os.path.split(t)[1])
+ sys.exit(0)
+Index: test/Fortran/F95FLAGS.py
+===================================================================
+--- test/Fortran/F95FLAGS.py	(revision 4708)
++++ test/Fortran/F95FLAGS.py	(working copy)
+@@ -109,10 +109,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/F77FLAGS.py
+===================================================================
+--- test/Fortran/F77FLAGS.py	(revision 4708)
++++ test/Fortran/F77FLAGS.py	(working copy)
+@@ -81,10 +81,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/FORTRANFLAGS.py
+===================================================================
+--- test/Fortran/FORTRANFLAGS.py	(revision 4708)
++++ test/Fortran/FORTRANFLAGS.py	(working copy)
+@@ -99,10 +99,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/common.py
+===================================================================
+--- test/Fortran/common.py	(revision 4708)
++++ test/Fortran/common.py	(working copy)
+@@ -34,7 +34,6 @@
+     non-compiled) tests."""
+     if sys.platform == 'win32':
+         t.write('mylink.py', r"""
+-import string
+ import sys
+ args = sys.argv[1:]
+ while args:
+@@ -42,7 +41,7 @@
+     if a[0] != '/':
+         break
+     args = args[1:]
+-    if string.lower(a[:5]) == '/out:': out = a[5:]
++    if a[:5].lower() == '/out:': out = a[5:]
+ infile = open(args[0], 'rb')
+ outfile = open(out, 'wb')
+ for l in infile.readlines():
+Index: test/Fortran/SHF77.py
+===================================================================
+--- test/Fortran/SHF77.py	(revision 4708)
++++ test/Fortran/SHF77.py	(working copy)
+@@ -98,10 +98,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/SHF95.py
+===================================================================
+--- test/Fortran/SHF95.py	(revision 4708)
++++ test/Fortran/SHF95.py	(working copy)
+@@ -99,10 +99,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/F77.py
+===================================================================
+--- test/Fortran/F77.py	(revision 4708)
++++ test/Fortran/F77.py	(working copy)
+@@ -100,10 +100,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/F95.py
+===================================================================
+--- test/Fortran/F95.py	(revision 4708)
++++ test/Fortran/F95.py	(working copy)
+@@ -102,10 +102,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/SHFORTRAN.py
+===================================================================
+--- test/Fortran/SHFORTRAN.py	(revision 4708)
++++ test/Fortran/SHFORTRAN.py	(working copy)
+@@ -93,10 +93,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/SHF90FLAGS.py
+===================================================================
+--- test/Fortran/SHF90FLAGS.py	(revision 4708)
++++ test/Fortran/SHF90FLAGS.py	(working copy)
+@@ -103,10 +103,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/SHF95FLAGS.py
+===================================================================
+--- test/Fortran/SHF95FLAGS.py	(revision 4708)
++++ test/Fortran/SHF95FLAGS.py	(working copy)
+@@ -107,10 +107,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/FORTRAN.py
+===================================================================
+--- test/Fortran/FORTRAN.py	(revision 4708)
++++ test/Fortran/FORTRAN.py	(working copy)
+@@ -95,10 +95,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/SHF77FLAGS.py
+===================================================================
+--- test/Fortran/SHF77FLAGS.py	(revision 4708)
++++ test/Fortran/SHF77FLAGS.py	(working copy)
+@@ -79,10 +79,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/Fortran/SHFORTRANFLAGS.py
+===================================================================
+--- test/Fortran/SHFORTRANFLAGS.py	(revision 4708)
++++ test/Fortran/SHFORTRANFLAGS.py	(working copy)
+@@ -95,10 +95,9 @@
+ 
+     test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+     test.write('SConstruct', """
+Index: test/sconsign/script/no-SConsignFile.py
+===================================================================
+--- test/sconsign/script/no-SConsignFile.py	(revision 4708)
++++ test/sconsign/script/no-SConsignFile.py	(working copy)
+@@ -52,10 +52,9 @@
+ test.write(fake_cc_py, r"""#!/usr/bin/env python
+ import os
+ import re
+-import string
+ import sys
+ 
+-path = string.split(sys.argv[1])
++path = sys.argv[1].split()
+ output = open(sys.argv[2], 'wb')
+ input = open(sys.argv[3], 'rb')
+ 
+Index: test/sconsign/script/SConsignFile.py
+===================================================================
+--- test/sconsign/script/SConsignFile.py	(revision 4708)
++++ test/sconsign/script/SConsignFile.py	(working copy)
+@@ -44,10 +44,9 @@
+ test.write(fake_cc_py, r"""#!/usr/bin/env python
+ import os
+ import re
+-import string
+ import sys
+ 
+-path = string.split(sys.argv[1])
++path = sys.argv[1].split()
+ output = open(sys.argv[2], 'wb')
+ input = open(sys.argv[3], 'rb')
+ 
+Index: test/sconsign/script/Signatures.py
+===================================================================
+--- test/sconsign/script/Signatures.py	(revision 4708)
++++ test/sconsign/script/Signatures.py	(working copy)
+@@ -63,10 +63,9 @@
+ test.write(fake_cc_py, r"""#!/usr/bin/env python
+ import os
+ import re
+-import string
+ import sys
+ 
+-path = string.split(sys.argv[1])
++path = sys.argv[1].split()
+ output = open(sys.argv[2], 'wb')
+ input = open(sys.argv[3], 'rb')
+ 
+Index: test/CC/SHCC.py
+===================================================================
+--- test/CC/SHCC.py	(revision 4708)
++++ test/CC/SHCC.py	(working copy)
+@@ -35,10 +35,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/CC/CC.py
+===================================================================
+--- test/CC/CC.py	(revision 4708)
++++ test/CC/CC.py	(working copy)
+@@ -39,7 +39,6 @@
+ if sys.platform == 'win32':
+ 
+     test.write('mylink.py', r"""
+-import string
+ import sys
+ args = sys.argv[1:]
+ while args:
+@@ -47,7 +46,7 @@
+     if a[0] != '/':
+         break
+     args = args[1:]
+-    if string.lower(a[:5]) == '/out:': out = a[5:]
++    if a[:5].lower() == '/out:': out = a[5:]
+ infile = open(args[0], 'rb')
+ outfile = open(out, 'wb')
+ for l in infile.readlines():
+@@ -149,10 +148,9 @@
+ 
+ test.write("wrapper.py",
+ """import os
+-import string
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-os.system(string.join(sys.argv[1:], " "))
++os.system(" ".join(sys.argv[1:]))
+ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
+ 
+ test.write('SConstruct', """
+Index: test/GetBuildFailures/serial.py
+===================================================================
+--- test/GetBuildFailures/serial.py	(revision 4708)
++++ test/GetBuildFailures/serial.py	(working copy)
+@@ -89,14 +89,13 @@
+ 
+ def print_build_failures():
+     from SCons.Script import GetBuildFailures
+-    import string
+     bf_list = GetBuildFailures()
+     bf_list.sort(lambda a,b: cmp(str(a.node), str(b.node)))
+     for bf in bf_list:
+         assert( isinstance(bf, SCons.Errors.BuildError) )
+         print "BF: %%s failed (%%s):  %%s" %% (bf.node, bf.status, bf.errstr)
+         if bf.command:
+-            print "BF:    %%s" %% string.join(Flatten(bf.command))
++            print "BF:    %%s" %% " ".join(Flatten(bf.command))
+ 
+ try:
+     import atexit
+Index: test/builder-wrappers.py
+===================================================================
+--- test/builder-wrappers.py	(revision 4708)
++++ test/builder-wrappers.py	(working copy)
+@@ -35,7 +35,6 @@
+ 
+ test.write('SConstruct', """
+ import os.path
+-import string
+ def cat(target, source, env):
+     fp = open(str(target[0]), 'wb')
+     for s in map(str, source):
+@@ -43,7 +42,7 @@
+ Cat = Builder(action=cat)
+ def Wrapper(env, target, source):
+     if not target:
+-        target = [string.replace(str(source[0]), '.in', '.wout')]
++        target = [str(source[0]).replace('.in', '.wout')]
+     t1 = 't1-'+str(target[0])
+     source = 's-'+str(source[0])
+     env.Cat(t1, source)
+Index: src/engine/SCons/Scanner/ProgTests.py
+===================================================================
+--- src/engine/SCons/Scanner/ProgTests.py	(revision 4708)
++++ src/engine/SCons/Scanner/ProgTests.py	(working copy)
+@@ -239,7 +239,7 @@
+                 def runTest(self):
+                     env = DummyEnvironment(LIBPATH=[test.workpath("d1/d2"),
+                                                     test.workpath("d1")],
+-                                           LIBS=string.split(u'l2 l3'))
++                                           LIBS=u'l2 l3'.split())
+                     s = SCons.Scanner.Prog.ProgramScanner()
+                     path = s.path(env)
+                     deps = s(DummyNode('dummy'), env, path)
+Index: src/engine/SCons/Script/SConsOptions.py
+===================================================================
+--- src/engine/SCons/Script/SConsOptions.py	(revision 4708)
++++ src/engine/SCons/Script/SConsOptions.py	(working copy)
+@@ -57,7 +57,8 @@
+     if not SCons.Util.is_List(value):
+         value = string.split(value, ',')
+     result = []
+-    for v in map(string.lower, value):
++    for v in value:
++        v = string.lower(v)
+         if v == 'all':
+             result = diskcheck_all
+         elif v == 'none':
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+--- src/engine/SCons/EnvironmentTests.py	(revision 4708)
++++ src/engine/SCons/EnvironmentTests.py	(working copy)
+@@ -1124,7 +1124,7 @@
+         assert s == [s1, s1, None, s3, s3], s
+ 
+         # Verify behavior of case-insensitive suffix matches on Windows.
+-        uc_suffixes = map(string.upper, suffixes)
++        uc_suffixes = [string.upper(_) for _ in suffixes]
+ 
+         env = Environment(SCANNERS = [s1, s2, s3],
+                           PLATFORM = 'linux')
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 4708)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -59,11 +59,11 @@
+     # My ActivePython 2.0.1 doesn't set os.altsep!  What gives?
+     _altsep = '/'
+ if _altsep:
+-    def rightmost_separator(path, sep, _altsep=_altsep):
+-        rfind = string.rfind
+-        return max(rfind(path, sep), rfind(path, _altsep))
++    def rightmost_separator(path, sep):
++        return max(string.rfind(path, sep), string.rfind(path, _altsep))
+ else:
+-    rightmost_separator = string.rfind
++    def rightmost_separator(path, sep):
++        return string.rfind(path, sep)
+ 
+ # First two from the Python Cookbook, just for completeness.
+ # (Yeah, yeah, YAGNI...)
+@@ -543,7 +543,7 @@
+             return str(s)
+ 
+     def to_String_for_subst(s, 
+-                            isinstance=isinstance, join=string.join, str=str, to_String=to_String,
++                            isinstance=isinstance, str=str, to_String=to_String,
+                             BaseStringTypes=BaseStringTypes, SequenceTypes=SequenceTypes,
+                             UserString=UserString):
+                             
+@@ -554,7 +554,7 @@
+             l = []
+             for e in s:
+                 l.append(to_String_for_subst(e))
+-            return join( s )
++            return string.join( s )
+         elif isinstance(s, UserString):
+             # s.data can only be either a unicode or a regular
+             # string. Please see the UserString initializer.
+Index: src/engine/SCons/Tool/FortranCommon.py
+===================================================================
+--- src/engine/SCons/Tool/FortranCommon.py	(revision 4708)
++++ src/engine/SCons/Tool/FortranCommon.py	(working copy)
+@@ -92,7 +92,7 @@
+     assert len(suffixes) > 0
+     s = suffixes[0]
+     sup = string.upper(s)
+-    upper_suffixes = map(string.upper, suffixes)
++    upper_suffixes = [string.upper(_) for _ in suffixes]
+     if SCons.Util.case_sensitive_suffixes(s, sup):
+         ppsuffixes.extend(upper_suffixes)
+     else:
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+--- src/engine/SCons/Tool/msvs.py	(revision 4708)
++++ src/engine/SCons/Tool/msvs.py	(working copy)
+@@ -57,19 +57,6 @@
+ # DSP/DSW/SLN/VCPROJ files.
+ ##############################################################################
+ 
+-def _hexdigest(s):
+-    """Return a string as a string of hex characters.
+-    """
+-    # NOTE:  This routine is a method in the Python 2.0 interface
+-    # of the native md5 module, but we want SCons to operate all
+-    # the way back to at least Python 1.5.2, which doesn't have it.
+-    h = string.hexdigits
+-    r = ''
+-    for c in s:
+-        i = ord(c)
+-        r = r + h[(i >> 4) & 0xF] + h[i & 0xF]
+-    return r
+-
+ def xmlify(s):
+     s = string.replace(s, "&", "&amp;") # do this first
+     s = string.replace(s, "'", "&apos;")
+@@ -88,9 +75,7 @@
+     # the generated file has a consistent GUID even if we generate
+     # it on a non-Windows platform.
+     m.update(ntpath.normpath(str(slnfile)) + str(name))
+-    # TODO(1.5)
+-    #solution = m.hexdigest().upper()
+-    solution = string.upper(_hexdigest(m.digest()))
++    solution = m.hexdigest().upper()
+     # convert most of the signature to GUID form (discard the rest)
+     solution = "{" + solution[:8] + "-" + solution[8:12] + "-" + solution[12:16] + "-" + solution[16:20] + "-" + solution[20:32] + "}"
+     return solution
+Index: src/engine/SCons/Tool/javac.py
+===================================================================
+--- src/engine/SCons/Tool/javac.py	(revision 4708)
++++ src/engine/SCons/Tool/javac.py	(working copy)
+@@ -157,7 +157,7 @@
+             path = path + [ env[self.default] ]
+         if path:
+             return [self.opt, string.join(path, os.pathsep)]
+-            #return self.opt + " " + string.join(path, os.pathsep)
++            #return self.opt + " " + os.pathsep.join(path)
+         else:
+             return []
+             #return ""
+Index: runtest.py
+===================================================================
+--- runtest.py	(revision 4708)
++++ runtest.py	(working copy)
+@@ -490,7 +490,7 @@
+     #                sd = d
+     #                scons = f
+     #    spe = map(lambda x: os.path.join(x, 'src', 'engine'), spe)
+-    #    ld = string.join(spe, os.pathsep)
++    #    ld = os.pathsep.join(spe)
+ 
+     if not baseline or baseline == '.':
+         base = cwd
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 4708)
++++ doc/man/scons.1	(working copy)
+@@ -1841,9 +1841,7 @@
+ that split a single string
+ into a list, separated on
+ strings of white-space characters.
+-(These are similar to the
+-string.split() method
+-from the standard Python library,
++(These are similar to the split() member function of Python strings
+ but work even if the input isn't a string.)
+ 
+ Like all Python arguments,
+@@ -1862,7 +1860,7 @@
+ env.Program(source =  ['bar.c', 'foo.c'], target = 'bar')
+ env.Program(target = 'bar', Split('bar.c foo.c'))
+ env.Program(target = 'bar', env.Split('bar.c foo.c'))
+-env.Program('bar', source = string.split('bar.c foo.c'))
++env.Program('bar', source = 'bar.c foo.c'.split())
+ .EE
+ 
+ Target and source file names
+Index: doc/user/tasks.xml
+===================================================================
+--- doc/user/tasks.xml	(revision 4708)
++++ doc/user/tasks.xml	(working copy)
+@@ -74,9 +74,8 @@
+ <simpara>or in Python 1.5.2:</simpara>
+ 
+ <programlisting>
+-import string
+-if string.find(filename, old_prefix) == 0:
+-    filename = string.replace(filename, old_prefix, new_prefix)      
++if filename.find(old_prefix) == 0:
++    filename = filename.replace(old_prefix, new_prefix)      
+ </programlisting>
+ </example>
+ 
+Index: doc/user/tasks.in
+===================================================================
+--- doc/user/tasks.in	(revision 4708)
++++ doc/user/tasks.in	(working copy)
+@@ -74,9 +74,8 @@
+ <simpara>or in Python 1.5.2:</simpara>
+ 
+ <programlisting>
+-import string
+-if string.find(filename, old_prefix) == 0:
+-    filename = string.replace(filename, old_prefix, new_prefix)      
++if filename.find(old_prefix) == 0:
++    filename = filename.replace(old_prefix, new_prefix)      
+ </programlisting>
+ </example>
+ 
+Index: doc/user/less-simple.xml
+===================================================================
+--- doc/user/less-simple.xml	(revision 4708)
++++ doc/user/less-simple.xml	(working copy)
+@@ -360,7 +360,7 @@
+     you'll have realized that this is similar to the
+     <function>split()</function> method
+     in the Python standard <function>string</function> module.
+-    Unlike the <function>string.split()</function> method,
++    Unlike the <function>split()</function> member function of strings,
+     however, the &Split; function
+     does not require a string as input
+     and will wrap up a single non-string object in a list,
+Index: doc/user/less-simple.in
+===================================================================
+--- doc/user/less-simple.in	(revision 4708)
++++ doc/user/less-simple.in	(working copy)
+@@ -371,7 +371,7 @@
+     you'll have realized that this is similar to the
+     <function>split()</function> method
+     in the Python standard <function>string</function> module.
+-    Unlike the <function>string.split()</function> method,
++    Unlike the <function>split()</function> member function of strings,
+     however, the &Split; function
+     does not require a string as input
+     and will wrap up a single non-string object in a list,
+Index: SConstruct
+===================================================================
+--- SConstruct	(revision 4708)
++++ SConstruct	(working copy)
+@@ -910,21 +910,9 @@
+         env.Command(ebuild, os.path.join('gentoo', 'scons.ebuild.in'), SCons_revision)
+         def Digestify(target, source, env):
+             import md5
+-            def hexdigest(s):
+-                """Return a signature as a string of hex characters.
+-                """
+-                # NOTE:  This routine is a method in the Python 2.0 interface
+-                # of the native md5 module, but we want SCons to operate all
+-                # the way back to at least Python 1.5.2, which doesn't have it.
+-                h = string.hexdigits
+-                r = ''
+-                for c in s:
+-                    i = ord(c)
+-                    r = r + h[(i >> 4) & 0xF] + h[i & 0xF]
+-                return r
+             src = source[0].rfile()
+             contents = open(str(src)).read()
+-            sig = hexdigest(md5.new(contents).digest())
++            sig = md5.new(contents).hexdigest()
+             bytes = os.stat(str(src))[6]
+             open(str(target[0]), 'w').write("MD5 %s %s %d\n" % (sig,
+                                                                 src.name,
+Index: bin/memoicmp.py
+===================================================================
+--- bin/memoicmp.py	(revision 4708)
++++ bin/memoicmp.py	(working copy)
+@@ -1,21 +1,24 @@
+ #!/usr/bin/env python
+ #
+-# A script to compare the --debug=memoizer output found int
++# A script to compare the --debug=memoizer output found in
+ # two different files.
+ 
+-import sys,string
++import sys
+ 
+ def memoize_output(fname):
+-        mout = {}
+-        lines=filter(lambda words:
+-                     len(words) == 5 and
+-                     words[1] == 'hits' and words[3] == 'misses',
+-                     map(string.split, open(fname,'r').readlines()))
+-        for line in lines:
+-                mout[line[-1]] = ( int(line[0]), int(line[2]) )
+-        return mout
++    mout = {}
++    #lines=filter(lambda words:
++    #             len(words) == 5 and
++    #             words[1] == 'hits' and words[3] == 'misses',
++    #             map(string.split, open(fname,'r').readlines()))
++    #for line in lines:
++    #    mout[line[-1]] = ( int(line[0]), int(line[2]) )
++    for line in open(fname,'r').readlines():
++        words = line.split()
++        if len(words) == 5 and words[1] == 'hits' and words[3] == 'misses':
++            mout[words[-1]] = ( int(words[0]), int(words[2]) )
++    return mout
+ 
+-        
+ def memoize_cmp(filea, fileb):
+         ma = memoize_output(filea)
+         mb = memoize_output(fileb)
+Index: bin/sfsum
+===================================================================
+--- bin/sfsum	(revision 4708)
++++ bin/sfsum	(working copy)
+@@ -25,7 +25,6 @@
+ 
+ import xml.sax
+ import xml.sax.saxutils
+-import string
+ import sys
+ 
+ SFName = {
+@@ -51,7 +50,7 @@
+ def nws(text):
+     """Normalize white space.  This will become important if/when
+     we enhance this to search for arbitrary fields."""
+-    return string.join(string.split(text), ' ')
++    return ' '.join(text.split())
+ 
+ class ClassifyArtifacts(xml.sax.saxutils.DefaultHandler):
+     """
+Index: bin/scons-doc.py
+===================================================================
+--- bin/scons-doc.py	(revision 4708)
++++ bin/scons-doc.py	(working copy)
+@@ -185,7 +185,6 @@
+ Stdin = """\
+ import os
+ import re
+-import string
+ import SCons.Action
+ import SCons.Defaults
+ import SCons.Node.FS
+Index: bin/sconsexamples.py
+===================================================================
+--- bin/sconsexamples.py	(revision 4708)
++++ bin/sconsexamples.py	(working copy)
+@@ -156,7 +156,6 @@
+ # command output.
+ 
+ Stdin = """\
+-import string
+ import SCons.Defaults
+ 
+ platform = '%s'
+@@ -179,8 +178,8 @@
+ def Str(target, source, env, cmd=""):
+     result = []
+     for cmd in env.subst_list(cmd, target=target, source=source):
+-        result.append(string.join(map(str, cmd)))
+-    return string.join(result, '\\n')
++        result.append(" ".join(map(str, cmd)))
++    return '\\n'.join(result)
+ 
+ class ToolSurrogate:
+     def __init__(self, tool, variable, func):
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 4708)
++++ QMTest/TestSCons.py	(working copy)
+@@ -673,7 +673,6 @@
+         self.write([dir, 'bin', 'mymoc.py'], """\
+ import getopt
+ import sys
+-import string
+ import re
+ # -w and -z are fake options used in test/QT/QTFLAGS.py
+ cmd_opts, args = getopt.getopt(sys.argv[1:], 'io:wz', [])
+@@ -687,11 +686,11 @@
+ output.write("/* mymoc.py%s */\\n" % opt_string)
+ for a in args:
+     contents = open(a, 'rb').read()
+-    a = string.replace(a, '\\\\', '\\\\\\\\')
++    a = a.replace('\\\\', '\\\\\\\\')
+     subst = r'{ my_qt_symbol( "' + a + '\\\\n" ); }'
+     if impl:
+         contents = re.sub( r'#include.*', '', contents )
+-    output.write(string.replace(contents, 'Q_OBJECT', subst))
++    output.write(contents.replace('Q_OBJECT', subst))
+ output.close()
+ sys.exit(0)
+ """)
+@@ -700,7 +699,6 @@
+ import os.path
+ import re
+ import sys
+-import string
+ output_arg = 0
+ impl_arg = 0
+ impl = None
