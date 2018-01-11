@@ -1,0 +1,66 @@
+--- dmd.py	2009-08-23 20:40:34.000000000 +0200
++++ /home/funto/projets/scons_ldc/scons/bootstrap/src/engine/SCons/Tool/dmd.py	2009-08-23 20:38:22.000000000 +0200
+@@ -6,6 +6,9 @@
+ Coded by Andy Friesen (andy@ikagames.com)
+ 15 November 2003
+
++[LDC support for Linux added by Lionel Fuentes (funto66 [nospam] [at] gmail.com)
++23 August 2009]
++
+ There are a number of problems with this script at this point in time.
+ The one that irritates me the most is the Windows linker setup.  The D
+ linker doesn't have a way to add lib paths on the commandline, as far
+@@ -14,7 +17,7 @@
+ blah.lib from the directory where SConstruct resides.
+
+ Compiler variables:
+-    DC - The name of the D compiler to use.  Defaults to dmd or gdmd,
++    DC - The name of the D compiler to use.  Defaults to dmd, gdmd or ldmd,
+     whichever is found.
+     DPATH - List of paths to search for import modules.
+     DVERSIONS - List of version tags to enable when compiling.
+@@ -22,7 +25,7 @@
+
+ Linker related variables:
+     LIBS - List of library files to link in.
+-    DLINK - Name of the linker to use.  Defaults to dmd or gdmd.
++    DLINK - Name of the linker to use.  Defaults to dmd, gdmd or ldc.
+     DLINKFLAGS - List of linker flags.
+
+ Lib tool variables:
+@@ -94,7 +97,7 @@
+     static_obj.add_emitter('.d', SCons.Defaults.StaticObjectEmitter)
+     shared_obj.add_emitter('.d', SCons.Defaults.SharedObjectEmitter)
+
+-    dc = env.Detect(['dmd', 'gdmd'])
++    dc = env.Detect(['dmd', 'gdmd', 'ldmd'])
+     env['DC'] = dc
+     env['DCOM'] = '$DC $_DINCFLAGS $_DVERFLAGS $_DDEBUGFLAGS $_DFLAGS -c -of$TARGET $SOURCES'
+     env['_DINCFLAGS'] = '$( ${_concat(DINCPREFIX, DPATH, DINCSUFFIX, __env__, RDirs, TARGET, SOURCE)}  $)'
+@@ -200,11 +203,16 @@
+                         libs = env['LIBS']
+                     except KeyError:
+                         libs = []
+-                    if 'phobos' not in libs and 'gphobos' not in libs:
++                    if 'phobos' not in libs and 'gphobos' and 'tango-base-ldc' not in libs:
+                         if dc is 'dmd':
+                             env.Append(LIBS = ['phobos'])
+                         elif dc is 'gdmd':
+                             env.Append(LIBS = ['gphobos'])
++                        # Phobos is officially not supported by LDC. We link with Tango instead...
++                        elif dc is 'ldmd':
++                            env.Append(LIBS=['tango-user-ldc'])
++                            env.Append(LIBS=['tango-base-ldc'])
++                            env.Append(LIBS=['dl'])
+                     if 'pthread' not in libs:
+                         env.Append(LIBS = ['pthread'])
+                     if 'm' not in libs:
+@@ -215,7 +223,7 @@
+         env['LINKCOM'] = '$SMART_LINKCOM '
+
+ def exists(env):
+-    return env.Detect(['dmd', 'gdmd'])
++    return env.Detect(['dmd', 'gdmd', 'ldmd'])
+
+ # Local Variables:
+ # tab-width:4
