@@ -1,0 +1,3019 @@
+Index: test/MinGW/RCCOMSTR.py
+===================================================================
+--- test/MinGW/RCCOMSTR.py	(revision 4710)
++++ test/MinGW/RCCOMSTR.py	(working copy)
+@@ -44,7 +44,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*rc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*rc*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/MinGW/RCCOM.py
+===================================================================
+--- test/MinGW/RCCOM.py	(revision 4710)
++++ test/MinGW/RCCOM.py	(working copy)
+@@ -44,7 +44,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*rc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*rc*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/AddOption/help.py
+===================================================================
+--- test/AddOption/help.py	(revision 4710)
++++ test/AddOption/help.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -55,7 +56,7 @@
+ 
+ test.run(arguments = '-h')
+ lines = test.stdout().split('\n')
+-missing = filter(lambda e, l=lines: not e in l, expected_lines)
++missing = filter(lambda e: e not in lines, expected_lines)
+ 
+ if missing:
+     print "====== STDOUT:"
+@@ -68,7 +69,7 @@
+ 
+ test.run(arguments = '-h')
+ lines = test.stdout().split('\n')
+-unexpected = filter(lambda e, l=lines: e in l, expected_lines)
++unexpected = filter(lambda e: e in lines, expected_lines)
+ 
+ if unexpected:
+     print "====== STDOUT:"
+Index: test/DVIPS/PSCOMSTR.py
+===================================================================
+--- test/DVIPS/PSCOMSTR.py	(revision 4710)
++++ test/DVIPS/PSCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*ps*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*ps*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/DVIPS/PSCOM.py
+===================================================================
+--- test/DVIPS/PSCOM.py	(revision 4710)
++++ test/DVIPS/PSCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*ps*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*ps*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TAR/TARCOMSTR.py
+===================================================================
+--- test/TAR/TARCOMSTR.py	(revision 4710)
++++ test/TAR/TARCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*tar*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*tar*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TAR/TARCOM.py
+===================================================================
+--- test/TAR/TARCOM.py	(revision 4710)
++++ test/TAR/TARCOM.py	(working copy)
+@@ -40,7 +40,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*tar*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*tar*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/custom-concat.py
+===================================================================
+--- test/custom-concat.py	(revision 4710)
++++ test/custom-concat.py	(working copy)
+@@ -37,7 +37,7 @@
+ def my_concat1(pref, list, suff, env, f=None):
+     if f:
+         list = f(list)
+-    list = map(lambda x, p=pref, s=suff: 'my'+p+x+s+'1', list)
++    list = map(lambda x: 'my'+pref+x+suff+'1', list)
+     return list
+ myflags = '${_stripixes(MYPREFIX, LIST, MYSUFFIX, STRIPPREFIX, STRIPSUFFIX, __env__)}'
+ env1 = Environment(MYFLAGS=myflags, _concat = my_concat1,
+Index: test/DVIPDF/DVIPDFCOM.py
+===================================================================
+--- test/DVIPDF/DVIPDFCOM.py	(revision 4710)
++++ test/DVIPDF/DVIPDFCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*pdf*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*pdf*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/DVIPDF/DVIPDFCOMSTR.py
+===================================================================
+--- test/DVIPDF/DVIPDFCOMSTR.py	(revision 4710)
++++ test/DVIPDF/DVIPDFCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*pdf*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*pdf*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/YACC/YACCHFILESUFFIX.py
+===================================================================
+--- test/YACC/YACCHFILESUFFIX.py	(revision 4710)
++++ test/YACC/YACCHFILESUFFIX.py	(working copy)
+@@ -47,7 +47,7 @@
+         outfile = open(a, 'wb')
+ for f in args:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*yacc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*yacc*/\\n']:
+         outfile.write(l)
+ outfile.close()
+ base, ext = os.path.splitext(args[0])
+Index: test/YACC/YACCHXXFILESUFFIX.py
+===================================================================
+--- test/YACC/YACCHXXFILESUFFIX.py	(revision 4710)
++++ test/YACC/YACCHXXFILESUFFIX.py	(working copy)
+@@ -47,7 +47,7 @@
+         outfile = open(a, 'wb')
+ for f in args:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*yacc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*yacc*/\\n']:
+         outfile.write(l)
+ outfile.close()
+ base, ext = os.path.splitext(args[0])
+Index: test/YACC/YACCCOM.py
+===================================================================
+--- test/YACC/YACCCOM.py	(revision 4710)
++++ test/YACC/YACCCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*yacc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*yacc*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/YACC/YACCVCGFILESUFFIX.py
+===================================================================
+--- test/YACC/YACCVCGFILESUFFIX.py	(revision 4710)
++++ test/YACC/YACCVCGFILESUFFIX.py	(working copy)
+@@ -49,7 +49,7 @@
+         outfile = open(a, 'wb')
+ for f in args:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*yacc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*yacc*/\\n']:
+         outfile.write(l)
+ outfile.close()
+ if vcg:
+Index: test/YACC/YACCCOMSTR.py
+===================================================================
+--- test/YACC/YACCCOMSTR.py	(revision 4710)
++++ test/YACC/YACCCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*yacc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*yacc*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/M4/M4COMSTR.py
+===================================================================
+--- test/M4/M4COMSTR.py	(revision 4710)
++++ test/M4/M4COMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*m4*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*m4*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/M4/M4COM.py
+===================================================================
+--- test/M4/M4COM.py	(revision 4710)
++++ test/M4/M4COM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*m4*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*m4*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/SWIG/SWIGCOMSTR.py
+===================================================================
+--- test/SWIG/SWIGCOMSTR.py	(revision 4710)
++++ test/SWIG/SWIGCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*swig*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*swig*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/SWIG/SWIGCOM.py
+===================================================================
+--- test/SWIG/SWIGCOM.py	(revision 4710)
++++ test/SWIG/SWIGCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*swig*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*swig*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/JAVAHCOM.py
+===================================================================
+--- test/Java/JAVAHCOM.py	(revision 4710)
++++ test/Java/JAVAHCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*javah*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*javah*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/RMICCOM.py
+===================================================================
+--- test/Java/RMICCOM.py	(revision 4710)
++++ test/Java/RMICCOM.py	(working copy)
+@@ -51,7 +51,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*rmic*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*rmic*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/RMIC.py
+===================================================================
+--- test/Java/RMIC.py	(revision 4710)
++++ test/Java/RMIC.py	(working copy)
+@@ -117,7 +117,7 @@
+ # XXX This is kind of a Python brute-force way to do what Ant
+ # does with its "excludes" attribute.  We should probably find
+ # a similar friendlier way to do this.
+-bar_classes = filter(lambda c: str(c).find('Hello') == -1, bar_classes)
++bar_classes = [c for c in bar_classes if str(c).find('Hello') == -1]
+ bar.RMIC(target = Dir('outdir2'), source = bar_classes)
+ """ % locals() )
+ 
+Index: test/Java/JARCOMSTR.py
+===================================================================
+--- test/Java/JARCOMSTR.py	(revision 4710)
++++ test/Java/JARCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*jar*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*jar*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/JARCOM.py
+===================================================================
+--- test/Java/JARCOM.py	(revision 4710)
++++ test/Java/JARCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*jar*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*jar*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/JAVACCOMSTR.py
+===================================================================
+--- test/Java/JAVACCOMSTR.py	(revision 4710)
++++ test/Java/JAVACCOMSTR.py	(working copy)
+@@ -46,7 +46,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*javac*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*javac*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/JAVAHCOMSTR.py
+===================================================================
+--- test/Java/JAVAHCOMSTR.py	(revision 4710)
++++ test/Java/JAVAHCOMSTR.py	(working copy)
+@@ -52,7 +52,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*javah*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*javah*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/Java-1.4.py
+===================================================================
+--- test/Java/Java-1.4.py	(revision 4710)
++++ test/Java/Java-1.4.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/Java/RMICCOMSTR.py
+===================================================================
+--- test/Java/RMICCOMSTR.py	(revision 4710)
++++ test/Java/RMICCOMSTR.py	(working copy)
+@@ -52,7 +52,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*rmic*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*rmic*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/Java-1.5.py
+===================================================================
+--- test/Java/Java-1.5.py	(revision 4710)
++++ test/Java/Java-1.5.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/Java/JAVACCOM.py
+===================================================================
+--- test/Java/JAVACCOM.py	(revision 4710)
++++ test/Java/JAVACCOM.py	(working copy)
+@@ -43,7 +43,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*javac*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*javac*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Java/Java-1.6.py
+===================================================================
+--- test/Java/Java-1.6.py	(revision 4710)
++++ test/Java/Java-1.6.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/Ghostscript/GSCOM.py
+===================================================================
+--- test/Ghostscript/GSCOM.py	(revision 4710)
++++ test/Ghostscript/GSCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*gs*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*gs*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Ghostscript/GSCOMSTR.py
+===================================================================
+--- test/Ghostscript/GSCOMSTR.py	(revision 4710)
++++ test/Ghostscript/GSCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*gs*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*gs*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/VariantDir/VariantDir.py
+===================================================================
+--- test/VariantDir/VariantDir.py	(revision 4710)
++++ test/VariantDir/VariantDir.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -229,8 +230,7 @@
+         return 1
+     stderrlines = filter(lambda l: l, err.split('\n'))
+     msg = "warning: tempnam() possibly used unsafely"
+-    stderrlines = filter(lambda l, msg=msg: l.find(msg) == -1,
+-                         stderrlines)
++    stderrlines = filter(lambda l: l.find(msg) == -1, stderrlines)
+     return len(stderrlines) == 0
+ 
+ test.run(chdir='work1', arguments = '. ../build', stderr=None)
+Index: test/LEX/LEXCOMSTR.py
+===================================================================
+--- test/LEX/LEXCOMSTR.py	(revision 4710)
++++ test/LEX/LEXCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*lex*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*lex*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/LEX/LEXCOM.py
+===================================================================
+--- test/LEX/LEXCOM.py	(revision 4710)
++++ test/LEX/LEXCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*lex*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*lex*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/TEXCOM.py
+===================================================================
+--- test/TEX/TEXCOM.py	(revision 4710)
++++ test/TEX/TEXCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*tex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*tex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/PDFLATEXCOMSTR.py
+===================================================================
+--- test/TEX/PDFLATEXCOMSTR.py	(revision 4710)
++++ test/TEX/PDFLATEXCOMSTR.py	(working copy)
+@@ -43,7 +43,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*latex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*latex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/TEX.py
+===================================================================
+--- test/TEX/TEX.py	(revision 4710)
++++ test/TEX/TEX.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/TEX/PDFLATEXCOM.py
+===================================================================
+--- test/TEX/PDFLATEXCOM.py	(revision 4710)
++++ test/TEX/PDFLATEXCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*latex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*latex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/TEXCOMSTR.py
+===================================================================
+--- test/TEX/TEXCOMSTR.py	(revision 4710)
++++ test/TEX/TEXCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*tex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*tex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/PDFTEXCOM.py
+===================================================================
+--- test/TEX/PDFTEXCOM.py	(revision 4710)
++++ test/TEX/PDFTEXCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*tex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*tex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/LATEXCOMSTR.py
+===================================================================
+--- test/TEX/LATEXCOMSTR.py	(revision 4710)
++++ test/TEX/LATEXCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*latex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*latex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/LATEXCOM.py
+===================================================================
+--- test/TEX/LATEXCOM.py	(revision 4710)
++++ test/TEX/LATEXCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*latex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*latex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/TEX/PDFTEXCOMSTR.py
+===================================================================
+--- test/TEX/PDFTEXCOMSTR.py	(revision 4710)
++++ test/TEX/PDFTEXCOMSTR.py	(working copy)
+@@ -43,7 +43,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*tex*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*tex*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Deprecated/BuildDir.py
+===================================================================
+--- test/Deprecated/BuildDir.py	(revision 4710)
++++ test/Deprecated/BuildDir.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -191,8 +192,7 @@
+         return 1
+     stderrlines = filter(lambda l: l, err.split('\n'))
+     msg = "warning: tempnam() possibly used unsafely"
+-    stderrlines = filter(lambda l, msg=msg: l.find(msg) == -1,
+-                         stderrlines)
++    stderrlines = filter(lambda l: l.find(msg) == -1, stderrlines)
+     return len(stderrlines) == 0
+ 
+ test.run(chdir='work1', arguments = '. ../build', stderr=None)
+Index: test/ZIP/ZIPCOMSTR.py
+===================================================================
+--- test/ZIP/ZIPCOMSTR.py	(revision 4710)
++++ test/ZIP/ZIPCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*zip*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*zip*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/ZIP/ZIPCOM.py
+===================================================================
+--- test/ZIP/ZIPCOM.py	(revision 4710)
++++ test/ZIP/ZIPCOM.py	(working copy)
+@@ -40,7 +40,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*zip*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*zip*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/option/profile.py
+===================================================================
+--- test/option/profile.py	(revision 4710)
++++ test/option/profile.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -96,7 +97,7 @@
+ 
+ expect = 'Memory before reading SConscript files'
+ lines = test.stdout().split('\n')
+-memory_lines = filter(lambda l, e=expect: l.find(e) != -1, lines)
++memory_lines = filter(lambda l: l.find(expect) != -1, lines)
+ 
+ test.fail_test(len(memory_lines) != 1)
+ 
+Index: test/option/debug-count.py
+===================================================================
+--- test/option/debug-count.py	(revision 4710)
++++ test/option/debug-count.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/option/help-options.py
+===================================================================
+--- test/option/help-options.py	(revision 4710)
++++ test/option/help-options.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/MSVC/PCHCOM.py
+===================================================================
+--- test/MSVC/PCHCOM.py	(revision 4710)
++++ test/MSVC/PCHCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*pch*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*pch*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/MSVC/RCCOMSTR.py
+===================================================================
+--- test/MSVC/RCCOMSTR.py	(revision 4710)
++++ test/MSVC/RCCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*rc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*rc*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/MSVC/PCHCOMSTR.py
+===================================================================
+--- test/MSVC/PCHCOMSTR.py	(revision 4710)
++++ test/MSVC/PCHCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*pch*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*pch*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/MSVC/RCCOM.py
+===================================================================
+--- test/MSVC/RCCOM.py	(revision 4710)
++++ test/MSVC/RCCOM.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*rc*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*rc*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/IDL/MIDLCOMSTR.py
+===================================================================
+--- test/IDL/MIDLCOMSTR.py	(revision 4710)
++++ test/IDL/MIDLCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*midl*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*midl*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/IDL/MIDLCOM.py
+===================================================================
+--- test/IDL/MIDLCOM.py	(revision 4710)
++++ test/IDL/MIDLCOM.py	(working copy)
+@@ -45,7 +45,7 @@
+ out_c = open(base + '_i.c', 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*midl*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*midl*/\\n']:
+         out_tlb.write(l)
+         out_h.write(l)
+         out_c.write(l)
+Index: test/Repository/RMIC.py
+===================================================================
+--- test/Repository/RMIC.py	(revision 4710)
++++ test/Repository/RMIC.py	(working copy)
+@@ -65,7 +65,7 @@
+                   RMIC = r'%s')
+ classes = env.Java(target = 'classes', source = 'src')
+ # Brute-force removal of the "Hello" class.
+-classes = filter(lambda c: str(c).find('Hello') == -1, classes)
++classes = [c for c in classes if str(c).find('Hello') == -1]
+ env.RMIC(target = 'outdir', source = classes)
+ """ % (javac, rmic))
+ 
+@@ -333,7 +333,7 @@
+                   RMIC = r'%s')
+ classes = env.Java(target = 'classes', source = 'src')
+ # Brute-force removal of the "Hello" class.
+-classes = filter(lambda c: str(c).find('Hello') == -1, classes)
++classes = [c for c in classes if str(c).find('Hello') == -1]
+ rmi_classes = env.RMIC(target = 'outdir', source = classes)
+ Local(rmi_classes)
+ """ % (javac, rmic))
+Index: test/LINK/LINKFLAGS.py
+===================================================================
+--- test/LINK/LINKFLAGS.py	(revision 4710)
++++ test/LINK/LINKFLAGS.py	(working copy)
+@@ -37,7 +37,7 @@
+ """import os
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-args = filter(lambda s: s != 'fake_link_flag', sys.argv[1:])
++args = [s for s in sys.argv[1:] if s != 'fake_link_flag']
+ os.system(" ".join(args))
+ """ % test.workpath('wrapper.out').replace('\\', '\\\\'))
+ 
+Index: test/LINK/LINKCOM.py
+===================================================================
+--- test/LINK/LINKCOM.py	(revision 4710)
++++ test/LINK/LINKCOM.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*link*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*link*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/LINK/SHLINKCOMSTR.py
+===================================================================
+--- test/LINK/SHLINKCOMSTR.py	(revision 4710)
++++ test/LINK/SHLINKCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*cc*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*cc*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ 
+@@ -52,7 +52,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*link*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*link*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/LINK/LINKCOMSTR.py
+===================================================================
+--- test/LINK/LINKCOMSTR.py	(revision 4710)
++++ test/LINK/LINKCOMSTR.py	(working copy)
+@@ -43,7 +43,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*link*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*link*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/LINK/SHLINKFLAGS.py
+===================================================================
+--- test/LINK/SHLINKFLAGS.py	(revision 4710)
++++ test/LINK/SHLINKFLAGS.py	(working copy)
+@@ -38,7 +38,7 @@
+ """import os
+ import sys
+ open('%s', 'wb').write("wrapper.py\\n")
+-args = filter(lambda s: s != 'fake_shlink_flag', sys.argv[1:])
++args = [s for s in sys.argv[1:] if s != 'fake_shlink_flag']
+ os.system(" ".join(args))
+ """ % test.workpath('wrapper.out').replace('\\', '\\\\'))
+ 
+Index: test/LINK/SHLINKCOM.py
+===================================================================
+--- test/LINK/SHLINKCOM.py	(revision 4710)
++++ test/LINK/SHLINKCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*cc*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*cc*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ 
+@@ -51,7 +51,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*link*/\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*link*/\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CXX/CXXCOMSTR.py
+===================================================================
+--- test/CXX/CXXCOMSTR.py	(revision 4710)
++++ test/CXX/CXXCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*c++*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*c++*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CXX/SHCXXCOM.py
+===================================================================
+--- test/CXX/SHCXXCOM.py	(revision 4710)
++++ test/CXX/SHCXXCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l[:7] != '/*c++*/', infile.readlines()):
++for l in [l for l in infile.readlines() if l[:7] != '/*c++*/']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CXX/CXXCOM.py
+===================================================================
+--- test/CXX/CXXCOM.py	(revision 4710)
++++ test/CXX/CXXCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l[:7] != '/*c++*/', infile.readlines()):
++for l in [l for l in infile.readlines() if l[:7] != '/*c++*/']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CXX/SHCXXCOMSTR.py
+===================================================================
+--- test/CXX/SHCXXCOMSTR.py	(revision 4710)
++++ test/CXX/SHCXXCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l != '/*c++*/\n', infile.readlines()):
++for l in [l for l in infile.readlines() if l != '/*c++*/\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/AR/ARCOMSTR.py
+===================================================================
+--- test/AR/ARCOMSTR.py	(revision 4710)
++++ test/AR/ARCOMSTR.py	(working copy)
+@@ -42,7 +42,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*ar*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*ar*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/AR/ARCOM.py
+===================================================================
+--- test/AR/ARCOM.py	(revision 4710)
++++ test/AR/ARCOM.py	(working copy)
+@@ -41,7 +41,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*ar*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*ar*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/AS/ASPPCOMSTR.py
+===================================================================
+--- test/AS/ASPPCOMSTR.py	(revision 4710)
++++ test/AS/ASPPCOMSTR.py	(working copy)
+@@ -41,7 +41,7 @@
+ import sys
+ infile = open(sys.argv[2], 'rb')
+ outfile = open(sys.argv[1], 'wb')
+-for l in filter(lambda l: l != "#as\n", infile.readlines()):
++for l in [l for l in infile.readlines() if l != "#as\n"]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/AS/ASCOMSTR.py
+===================================================================
+--- test/AS/ASCOMSTR.py	(revision 4710)
++++ test/AS/ASCOMSTR.py	(working copy)
+@@ -43,7 +43,7 @@
+ import sys
+ infile = open(sys.argv[2], 'rb')
+ outfile = open(sys.argv[1], 'wb')
+-for l in filter(lambda l: l != "#as\n", infile.readlines()):
++for l in [l for l in infile.readlines() if l != "#as\n"]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/AS/ASCOM.py
+===================================================================
+--- test/AS/ASCOM.py	(revision 4710)
++++ test/AS/ASCOM.py	(working copy)
+@@ -42,7 +42,7 @@
+ import sys
+ infile = open(sys.argv[2], 'rb')
+ outfile = open(sys.argv[1], 'wb')
+-for l in filter(lambda l: l != "#as\n", infile.readlines()):
++for l in [l for l in infile.readlines() if l != "#as\n"]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/AS/ASPPCOM.py
+===================================================================
+--- test/AS/ASPPCOM.py	(revision 4710)
++++ test/AS/ASPPCOM.py	(working copy)
+@@ -40,7 +40,7 @@
+ import sys
+ infile = open(sys.argv[2], 'rb')
+ outfile = open(sys.argv[1], 'wb')
+-for l in filter(lambda l: l != "#as\n", infile.readlines()):
++for l in [l for l in infile.readlines() if l != "#as\n"]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/scons-time/help/all-subcommands.py
+===================================================================
+--- test/scons-time/help/all-subcommands.py	(revision 4710)
++++ test/scons-time/help/all-subcommands.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/QT/copied-env.py
+===================================================================
+--- test/QT/copied-env.py	(revision 4710)
++++ test/QT/copied-env.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: test/QT/Tool.py
+===================================================================
+--- test/QT/Tool.py	(revision 4710)
++++ test/QT/Tool.py	(working copy)
+@@ -125,10 +125,8 @@
+   return 0
+ 
+ def AttemptLinkWithVariables(context, variables, code, extension, prefix):
+-  return DoWithVariables(variables,
+-                         prefix,
+-                         lambda c=context, code=code, e=extension:
+-                                c.TryLink(code, e))
++  return DoWithVariables(variables, prefix,
++                         lambda: context.TryLink(code, extension))
+ 
+ env = Environment(CPPPATH=['.'], LIBPATH=['.'], LIBS=[])
+ 
+Index: test/RANLIB/RANLIBCOMSTR.py
+===================================================================
+--- test/RANLIB/RANLIBCOMSTR.py	(revision 4710)
++++ test/RANLIB/RANLIBCOMSTR.py	(working copy)
+@@ -47,7 +47,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*ar*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*ar*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+@@ -56,7 +56,7 @@
+ import sys
+ lines = open(sys.argv[1], 'rb').readlines()
+ outfile = open(sys.argv[1], 'wb')
+-for l in filter(lambda l: l != '/*ranlib*/\\n', lines):
++for l in [l for l in lines if l != '/*ranlib*/\\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/RANLIB/RANLIBCOM.py
+===================================================================
+--- test/RANLIB/RANLIBCOM.py	(revision 4710)
++++ test/RANLIB/RANLIBCOM.py	(working copy)
+@@ -46,7 +46,7 @@
+ outfile = open(sys.argv[1], 'wb')
+ for f in sys.argv[2:]:
+     infile = open(f, 'rb')
+-    for l in filter(lambda l: l != '/*ar*/\\n', infile.readlines()):
++    for l in [l for l in infile.readlines() if l != '/*ar*/\\n']:
+         outfile.write(l)
+ sys.exit(0)
+ """)
+@@ -55,7 +55,7 @@
+ import sys
+ lines = open(sys.argv[1], 'rb').readlines()
+ outfile = open(sys.argv[1], 'wb')
+-for l in filter(lambda l: l != '/*ranlib*/\\n', lines):
++for l in [l for l in lines if l != '/*ranlib*/\\n']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/F95COMSTR.py
+===================================================================
+--- test/Fortran/F95COMSTR.py	(revision 4710)
++++ test/Fortran/F95COMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/F77COMSTR.py
+===================================================================
+--- test/Fortran/F77COMSTR.py	(revision 4710)
++++ test/Fortran/F77COMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/SHFORTRANCOMSTR.py
+===================================================================
+--- test/Fortran/SHFORTRANCOMSTR.py	(revision 4710)
++++ test/Fortran/SHFORTRANCOMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/FORTRANCOMSTR.py
+===================================================================
+--- test/Fortran/FORTRANCOMSTR.py	(revision 4710)
++++ test/Fortran/FORTRANCOMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/SHF90COMSTR.py
+===================================================================
+--- test/Fortran/SHF90COMSTR.py	(revision 4710)
++++ test/Fortran/SHF90COMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/F90COMSTR.py
+===================================================================
+--- test/Fortran/F90COMSTR.py	(revision 4710)
++++ test/Fortran/F90COMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/SHF77COMSTR.py
+===================================================================
+--- test/Fortran/SHF77COMSTR.py	(revision 4710)
++++ test/Fortran/SHF77COMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/Fortran/SHF95COMSTR.py
+===================================================================
+--- test/Fortran/SHF95COMSTR.py	(revision 4710)
++++ test/Fortran/SHF95COMSTR.py	(working copy)
+@@ -37,7 +37,7 @@
+ fline = '#'+sys.argv[1]+'\n'
+ outfile = open(sys.argv[2], 'wb')
+ infile = open(sys.argv[3], 'rb')
+-for l in filter(lambda l, fl=fline: l != fl, infile.readlines()):
++for l in [l for l in infile.readlines() if l != fline]:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CC/SHCCCOMSTR.py
+===================================================================
+--- test/CC/SHCCCOMSTR.py	(revision 4710)
++++ test/CC/SHCCCOMSTR.py	(working copy)
+@@ -44,7 +44,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l[:6] != '/*cc*/', infile.readlines()):
++for l in [l for l in infile.readlines() if l[:6] != '/*cc*/']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CC/CCCOMSTR.py
+===================================================================
+--- test/CC/CCCOMSTR.py	(revision 4710)
++++ test/CC/CCCOMSTR.py	(working copy)
+@@ -44,7 +44,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l[:6] != '/*cc*/', infile.readlines()):
++for l in [l for l in infile.readlines() if l[:6] != '/*cc*/']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CC/SHCCCOM.py
+===================================================================
+--- test/CC/SHCCCOM.py	(revision 4710)
++++ test/CC/SHCCCOM.py	(working copy)
+@@ -42,7 +42,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l[:6] != '/*cc*/', infile.readlines()):
++for l in [l for l in infile.readlines() if l[:6] != '/*cc*/']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: test/CC/CCCOM.py
+===================================================================
+--- test/CC/CCCOM.py	(revision 4710)
++++ test/CC/CCCOM.py	(working copy)
+@@ -43,7 +43,7 @@
+ import sys
+ outfile = open(sys.argv[1], 'wb')
+ infile = open(sys.argv[2], 'rb')
+-for l in filter(lambda l: l[:6] != '/*cc*/', infile.readlines()):
++for l in [l for l in infile.readlines() if l[:6] != '/*cc*/']:
+     outfile.write(l)
+ sys.exit(0)
+ """)
+Index: bench/timeit.py
+===================================================================
+--- bench/timeit.py	(revision 4710)
++++ bench/timeit.py	(working copy)
+@@ -277,7 +277,7 @@
+         return 1
+     best = min(r)
+     if verbose:
+-        print "raw times:", ' '.join(map(lambda x, p=precision: "%.*g" % (p, x), r))
++        print "raw times:", ' '.join(map(lambda x: "%.*g" % (precision, x), r))
+     print "%d loops," % number,
+     usec = best * 1e6 / number
+     if usec < 1000:
+Index: bench/bench.py
+===================================================================
+--- bench/bench.py	(revision 4712)
++++ bench/bench.py	(working copy)
+@@ -23,6 +23,7 @@
+ #
+ # This will allow (as much as possible) us to time just the code itself,
+ # not Python function call overhead.
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ import getopt
+ import sys
+@@ -95,7 +96,7 @@
+ except NameError:
+     function_names = filter(lambda x: x[:4] == FunctionPrefix, locals().keys())
+     function_names.sort()
+-    l = map(lambda f, l=locals(): l[f], function_names)
++    l = map(lambda f: locals()[f], function_names)
+     FunctionList = filter(lambda f: type(f) == types.FunctionType, l)
+ 
+ IterationList = [None] * Iterations
+Index: src/test_strings.py
+===================================================================
+--- src/test_strings.py	(revision 4712)
++++ src/test_strings.py	(working copy)
+@@ -86,8 +86,7 @@
+             return os.path.isfile(path)
+ 
+     def visit(self, result, dirname, names):
+-        make_path_tuple = lambda n, d=dirname: (n, os.path.join(d, n))
+-        for name, path in map(make_path_tuple, names):
++        for name, path in map(lambda n: (n, os.path.join(dirname, n)), names):
+             if self.remove_this(name, path):
+                 names.remove(name)
+             elif self.search_this(path):
+Index: src/test_setup.py
+===================================================================
+--- src/test_setup.py	(revision 4712)
++++ src/test_setup.py	(working copy)
+@@ -108,9 +108,9 @@
+             self.version_lib = os.path.join(self.lib_dir, scons_version)
+             self.man_dir = os.path.join(self.prefix, 'man', 'man1')
+ 
+-        self.prepend_bin_dir = lambda p, d=self.bin_dir: os.path.join(d, p)
+-        self.prepend_bat_dir = lambda p, d=self.bat_dir: os.path.join(d, p)
+-        self.prepend_man_dir = lambda p, d=self.man_dir: os.path.join(d, p)
++        self.prepend_bin_dir = lambda p: os.path.join(self.bin_dir, p)
++        self.prepend_bat_dir = lambda p: os.path.join(self.bat_dir, p)
++        self.prepend_man_dir = lambda p: os.path.join(self.man_dir, p)
+ 
+     def run(self, *args, **kw):
+         kw['chdir'] = scons_version
+@@ -130,8 +130,7 @@
+         return 'Installed SCons library modules into %s' % lib
+ 
+     def lib_paths(self, lib_dir):
+-        prepend_lib_dir = lambda p, d=lib_dir: os.path.join(d, 'SCons', p)
+-        return map(prepend_lib_dir, self._lib_modules)
++        return map(lambda p: os.path.join(lib_dir, 'SCons', p), self._lib_modules)
+ 
+     def scripts_line(self):
+         return 'Installed SCons scripts into %s' % self.bin_dir
+Index: src/setup.py
+===================================================================
+--- src/setup.py	(revision 4712)
++++ src/setup.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/test_aegistests.py
+===================================================================
+--- src/test_aegistests.py	(revision 4710)
++++ src/test_aegistests.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/test_pychecker.py
+===================================================================
+--- src/test_pychecker.py	(revision 4710)
++++ src/test_pychecker.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/script/scons-time.py
+===================================================================
+--- src/script/scons-time.py	(revision 4710)
++++ src/script/scons-time.py	(working copy)
+@@ -30,8 +30,8 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
+-
+ from __future__ import nested_scopes
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -576,7 +576,7 @@
+         and returns the next run number after the largest it finds.
+         """
+         x = re.compile(re.escape(prefix) + '-([0-9]+).*')
+-        matches = map(lambda e, x=x: x.match(e), os.listdir(dir))
++        matches = map(lambda e: x.match(e), os.listdir(dir))
+         matches = filter(None, matches)
+         if not matches:
+             return 0
+@@ -963,7 +963,7 @@
+ 
+         if self.chdir:
+             os.chdir(self.chdir)
+-            logfile_path = lambda x, c=self.chdir: os.path.join(c, x)
++            logfile_path = lambda x: os.path.join(self.chdir, x)
+ 
+         if not args:
+ 
+@@ -1083,7 +1083,7 @@
+ 
+         if self.chdir:
+             os.chdir(self.chdir)
+-            logfile_path = lambda x, c=self.chdir: os.path.join(c, x)
++            logfile_path = lambda x: os.path.join(self.chdir, x)
+ 
+         if not args:
+ 
+@@ -1461,7 +1461,7 @@
+ 
+         if self.chdir:
+             os.chdir(self.chdir)
+-            logfile_path = lambda x, c=self.chdir: os.path.join(c, x)
++            logfile_path = lambda x: os.path.join(self.chdir, x)
+ 
+         if not args:
+ 
+Index: src/script/sconsign.py
+===================================================================
+--- src/script/sconsign.py	(revision 4710)
++++ src/script/sconsign.py	(working copy)
+@@ -23,6 +23,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -283,10 +284,9 @@
+         field_list = ninfo.field_list
+     except AttributeError:
+         field_list = []
+-    f = lambda x, ni=ninfo, v=Verbose: field(x, ni, v)
+     if '\n' in name:
+         name = repr(name)
+-    outlist = [name+':'] + filter(None, map(f, field_list))
++    outlist = [name+':'] + filter(None, map(lambda x: field(x, ninfo, Verbose), field_list))
+     if Verbose:
+         sep = '\n    ' + prefix
+     else:
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 4713)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -32,6 +32,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -1914,8 +1915,7 @@
+         names.remove('.')
+         names.remove('..')
+         func(arg, self, names)
+-        select_dirs = lambda n, e=entries: isinstance(e[n], Dir)
+-        for dirname in filter(select_dirs, names):
++        for dirname in filter(lambda n: isinstance(entries[n], Dir), names):
+             entries[dirname].walk(func, arg)
+ 
+     def glob(self, pathname, ondisk=True, source=False, strings=False):
+@@ -1963,7 +1963,7 @@
+         for dir in list:
+             r = dir._glob1(basename, ondisk, source, strings)
+             if strings:
+-                r = map(lambda x, d=str(dir): os.path.join(d, x), r)
++                r = map(lambda x: os.path.join(str(dir), x), r)
+             result.extend(r)
+         result.sort(lambda a, b: cmp(str(a), str(b)))
+         return result
+@@ -1991,7 +1991,7 @@
+             # case) on case-insensitive systems like Windows.
+             #node_names = [ v.name for k, v in dir.entries.items() if k not in ('.', '..') ]
+             entry_names = filter(lambda n: n not in ('.', '..'), dir.entries.keys())
+-            node_names = map(lambda n, e=dir.entries: e[n].name, entry_names)
++            node_names = map(lambda n: dir.entries[n].name, entry_names)
+             names.extend(node_names)
+             if not strings:
+                 # Make sure the working directory (self) actually has
+@@ -2037,7 +2037,7 @@
+             return names
+ 
+         #return [ self.entries[_my_normcase(n)] for n in names ]
+-        return map(lambda n, e=self.entries:  e[_my_normcase(n)], names)
++        return map(lambda n:  self.entries[_my_normcase(n)], names)
+ 
+ class RootDir(Dir):
+     """A class for the root directory of a file system.
+@@ -2287,7 +2287,7 @@
+         directory of this file."""
+         # TODO(1.5)
+         # return [self.Dir(p) for p in pathlist]
+-        return map(lambda p, s=self: s.Dir(p), pathlist)
++        return map(lambda p: self.Dir(p), pathlist)
+ 
+     def File(self, name):
+         """Create a file node named 'name' relative to
+@@ -3116,8 +3116,8 @@
+         if verbose and not callable(verbose):
+             if not SCons.Util.is_String(verbose):
+                 verbose = "find_file"
+-            verbose = '  %s: ' % verbose
+-            verbose = lambda s, v=verbose: sys.stdout.write(v + s)
++            _verbose = '  %s: ' % verbose
++            verbose = lambda s: sys.stdout.write(_verbose + s)
+ 
+         filedir, filename = os.path.split(filename)
+         if filedir:
+Index: src/engine/SCons/Node/NodeTests.py
+===================================================================
+--- src/engine/SCons/Node/NodeTests.py	(revision 4712)
++++ src/engine/SCons/Node/NodeTests.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Node/FSTests.py
+===================================================================
+--- src/engine/SCons/Node/FSTests.py	(revision 4712)
++++ src/engine/SCons/Node/FSTests.py	(working copy)
+@@ -39,13 +39,6 @@
+ 
+ built_it = None
+ 
+-# This will be built-in in 2.3.  For now fake it.
+-try :
+-    True , False
+-except NameError :
+-    True = 1 ; False = 0
+-
+-
+ scanner_count = 0
+ 
+ class Scanner:
+@@ -2537,7 +2530,7 @@
+         ]
+ 
+         rep = self.fs.Dir('#').getRepositories()
+-        r = map(lambda x, np=os.path.normpath: np(str(x)), rep)
++        r = map(lambda x: os.path.normpath(str(x)), rep)
+         assert r == expect, r
+ 
+     def test_get_all_rdirs(self):
+@@ -2559,7 +2552,7 @@
+         ]
+ 
+         rep = self.fs.Dir('#').get_all_rdirs()
+-        r = map(lambda x, np=os.path.normpath: np(str(x)), rep)
++        r = map(lambda x: os.path.normpath(str(x)), rep)
+         assert r == expect, r
+ 
+     def test_rentry(self):
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 4712)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -41,6 +41,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -547,7 +548,7 @@
+         deps = []
+         while nodes:
+             n = nodes.pop(0)
+-            d = filter(lambda x, seen=seen: not seen.has_key(x),
++            d = filter(lambda x: not seen.has_key(x),
+                        n.get_found_includes(env, scanner, path))
+             if d:
+                 deps.extend(d)
+@@ -1214,11 +1215,11 @@
+ 
+         lines = []
+ 
+-        removed = filter(lambda x, nk=new_bkids: not x in nk, old_bkids)
++        removed = filter(lambda x: not x in new_bkids, old_bkids)
+         if removed:
+             removed = map(stringify, removed)
+             fmt = "`%s' is no longer a dependency\n"
+-            lines.extend(map(lambda s, fmt=fmt: fmt % s, removed))
++            lines.extend(map(lambda s: fmt % s, removed))
+ 
+         for k in new_bkids:
+             if not k in old_bkids:
+Index: src/engine/SCons/Executor.py
+===================================================================
+--- src/engine/SCons/Executor.py	(revision 4712)
++++ src/engine/SCons/Executor.py	(working copy)
+@@ -27,6 +27,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -371,7 +372,7 @@
+         # TODO(batch):  extend to multiple batches
+         assert (len(self.batches) == 1)
+         # TODO(batch):  remove duplicates?
+-        sources = filter(lambda x, s=self.batches[0].sources: x not in s, sources)
++        sources = filter(lambda x: x not in self.batches[0].sources, sources)
+         self.batches[0].sources.extend(sources)
+ 
+     def get_sources(self):
+@@ -405,9 +406,7 @@
+ 
+     def my_str(self):
+         env = self.get_build_env()
+-        get = lambda action, t=self.get_all_targets(), s=self.get_all_sources(), e=env: \
+-                     action.genstring(t, s, e)
+-        return "\n".join(map(get, self.get_action_list()))
++        return "\n".join(map(lambda action: action.genstring(self.get_all_targets(), self.get_all_sources(), env), self.get_action_list()))
+ 
+ 
+     def __str__(self):
+@@ -416,7 +415,7 @@
+     def nullify(self):
+         self.cleanup()
+         self.do_execute = self.do_nothing
+-        self.my_str     = lambda S=self: ''
++        self.my_str     = lambda: ''
+ 
+     memoizer_counters.append(SCons.Memoize.CountValue('get_contents'))
+ 
+@@ -430,9 +429,7 @@
+         except KeyError:
+             pass
+         env = self.get_build_env()
+-        get = lambda action, t=self.get_all_targets(), s=self.get_all_sources(), e=env: \
+-                     action.get_contents(t, s, e)
+-        result = "".join(map(get, self.get_action_list()))
++        result = "".join(map(lambda action: action.get_contents(self.get_all_targets(), self.get_all_sources(), env), self.get_action_list()))
+         self._memo['get_contents'] = result
+         return result
+ 
+@@ -520,7 +517,7 @@
+             idict = {}
+             for i in ignore:
+                 idict[i] = 1
+-            sourcelist = filter(lambda s, i=idict: not i.has_key(s), sourcelist)
++            sourcelist = filter(lambda s: not idict.has_key(s), sourcelist)
+ 
+         memo_dict[key] = sourcelist
+ 
+Index: src/engine/SCons/Subst.py
+===================================================================
+--- src/engine/SCons/Subst.py	(revision 4710)
++++ src/engine/SCons/Subst.py	(working copy)
+@@ -26,6 +26,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -618,9 +619,9 @@
+             self.gvars = gvars
+ 
+             if self.mode == SUBST_RAW:
+-                self.add_strip = lambda x, s=self: s.append(x)
++                self.add_strip = lambda x: self.append(x)
+             else:
+-                self.add_strip = lambda x, s=self: None
++                self.add_strip = lambda x: None
+             self.in_strip = None
+             self.next_line()
+ 
+Index: src/engine/SCons/Scanner/ProgTests.py
+===================================================================
+--- src/engine/SCons/Scanner/ProgTests.py	(revision 4710)
++++ src/engine/SCons/Scanner/ProgTests.py	(working copy)
+@@ -56,7 +56,7 @@
+         elif len(args) == 1:
+             return self._dict[args[0]]
+         else:
+-            return map(lambda x, s=self: s._dict[x], args)
++            return map(lambda x: self._dict[x], args)
+ 
+     def has_key(self, key):
+         return self.Dictionary().has_key(key)
+Index: src/engine/SCons/Scanner/Fortran.py
+===================================================================
+--- src/engine/SCons/Scanner/Fortran.py	(revision 4712)
++++ src/engine/SCons/Scanner/Fortran.py	(working copy)
+@@ -26,6 +26,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -93,12 +94,12 @@
+             d = {}
+             for m in defmodules:
+                 d[m] = 1
+-            modules = filter(lambda m, d=d: not d.has_key(m), modules)
++            modules = filter(lambda m: not d.has_key(m), modules)
+             #modules = self.undefinedModules(modules, defmodules)
+ 
+             # Convert module name to a .mod filename
+             suffix = env.subst('$FORTRANMODSUFFIX')
+-            modules = map(lambda x, s=suffix: x.lower() + s, modules)
++            modules = map(lambda x: x.lower() + suffix, modules)
+             # Remove unique items from the list
+             mods_and_includes = SCons.Util.unique(includes+modules)
+             node.includes = mods_and_includes
+Index: src/engine/SCons/Scanner/ScannerTests.py
+===================================================================
+--- src/engine/SCons/Scanner/ScannerTests.py	(revision 4710)
++++ src/engine/SCons/Scanner/ScannerTests.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Scanner/LaTeX.py
+===================================================================
+--- src/engine/SCons/Scanner/LaTeX.py	(revision 4712)
++++ src/engine/SCons/Scanner/LaTeX.py	(working copy)
+@@ -252,10 +252,10 @@
+             base, ext = os.path.splitext( filename )
+             if ext == "":
+                 #TODO(1.5) return [filename + e for e in self.graphics_extensions]
+-                #return map(lambda e, f=filename: f+e, self.graphics_extensions + TexGraphics)
++                #return map(lambda e: filename+e, self.graphics_extensions + TexGraphics)
+                 # use the line above to find dependency for PDF builder when only .eps figure is present
+                 # Since it will be found if the user tell scons how to make the pdf figure leave it out for now.
+-                return map(lambda e, f=filename: f+e, self.graphics_extensions)
++                return map(lambda e: filename+e, self.graphics_extensions)
+         return [filename]
+ 
+     def sort_key(self, include):
+Index: src/engine/SCons/Scanner/Dir.py
+===================================================================
+--- src/engine/SCons/Scanner/Dir.py	(revision 4712)
++++ src/engine/SCons/Scanner/Dir.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -102,7 +103,7 @@
+         return []
+     entry_list = filter(do_not_scan, entries.keys())
+     entry_list.sort()
+-    return map(lambda n, e=entries: e[n], entry_list)
++    return map(lambda n: entries[n], entry_list)
+ 
+ # Local Variables:
+ # tab-width:4
+Index: src/engine/SCons/Script/Interactive.py
+===================================================================
+--- src/engine/SCons/Script/Interactive.py	(revision 4710)
++++ src/engine/SCons/Script/Interactive.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Script/SConsOptions.py
+===================================================================
+--- src/engine/SCons/Script/SConsOptions.py	(revision 4712)
++++ src/engine/SCons/Script/SConsOptions.py	(working copy)
+@@ -197,7 +197,7 @@
+             if self.nargs in (1, '?'):
+                 return self.check_value(opt, value)
+             else:
+-                return tuple(map(lambda v, o=opt, s=self: s.check_value(o, v), value))
++                return tuple(map(lambda v: self.check_value(opt, v), value))
+ 
+     def process(self, opt, value, values, parser):
+ 
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 4712)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -33,6 +33,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Script/SConscript.py
+===================================================================
+--- src/engine/SCons/Script/SConscript.py	(revision 4713)
++++ src/engine/SCons/Script/SConscript.py	(working copy)
+@@ -27,6 +27,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -399,7 +400,7 @@
+ 
+             name = kw.get('name', 'SConscript')
+ 
+-            files = map(lambda n, name = name: os.path.join(n, name), dirs)
++            files = map(lambda n: os.path.join(n, name), dirs)
+ 
+         elif len(ls) == 1:
+ 
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+--- src/engine/SCons/Taskmaster.py	(revision 4710)
++++ src/engine/SCons/Taskmaster.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __doc__ = """
+ Generic Taskmaster module for the SCons build engine.
+Index: src/engine/SCons/compat/builtins.py
+===================================================================
+--- src/engine/SCons/compat/builtins.py	(revision 4710)
++++ src/engine/SCons/compat/builtins.py	(working copy)
+@@ -158,7 +158,7 @@
+         """
+         result = []
+         for i in xrange(min(map(len, lists))):
+-            result.append(tuple(map(lambda l, i=i: l[i], lists)))
++            result.append(tuple(map(lambda l: l[i], lists)))
+         return result
+     __builtin__.zip = zip
+ 
+Index: src/engine/SCons/compat/_scons_optparse.py
+===================================================================
+--- src/engine/SCons/compat/_scons_optparse.py	(revision 4710)
++++ src/engine/SCons/compat/_scons_optparse.py	(working copy)
+@@ -799,7 +799,7 @@
+             if self.nargs == 1:
+                 return self.check_value(opt, value)
+             else:
+-                return tuple(map(lambda v, o=opt, s=self: s.check_value(o, v), value))
++                return tuple(map(lambda v: self.check_value(opt, v), value))
+ 
+     def process(self, opt, value, values, parser):
+ 
+@@ -1700,7 +1700,7 @@
+         return s
+     else:
+         # Isolate all words with s as a prefix.
+-        possibilities = filter(lambda w, s=s: w[:len(s)] == s, wordmap.keys())
++        possibilities = filter(lambda w: w[:len(s)] == s, wordmap.keys())
+         # No exact match, so there had better be just one possibility.
+         if len(possibilities) == 1:
+             return possibilities[0]
+Index: src/engine/SCons/JobTests.py
+===================================================================
+--- src/engine/SCons/JobTests.py	(revision 4710)
++++ src/engine/SCons/JobTests.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Platform/posix.py
+===================================================================
+--- src/engine/SCons/Platform/posix.py	(revision 4710)
++++ src/engine/SCons/Platform/posix.py	(working copy)
+@@ -92,7 +92,7 @@
+     s = ' '.join(args)
+     if env:
+         l = ['env', '-'] + \
+-            map(lambda t, e=escape: e(t[0])+'='+e(t[1]), env.items()) + \
++            map(lambda t: escape(t[0])+'='+escape(t[1]), env.items()) + \
+             [sh, '-c', escape(s)]
+         s = ' '.join(l)
+     return s
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 4712)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -31,6 +31,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -606,8 +607,7 @@
+         Removes the specified function's MethodWrapper from the
+         added_methods list, so we don't re-bind it when making a clone.
+         """
+-        is_not_func = lambda dm, f=function: not dm.method is f
+-        self.added_methods = filter(is_not_func, self.added_methods)
++        self.added_methods = filter(lambda dm: not dm.method is function, self.added_methods)
+ 
+     def Override(self, overrides):
+         """
+@@ -1267,9 +1267,9 @@
+                 if not SCons.Util.is_List(dk):
+                     dk = [dk]
+                 if delete_existing:
+-                    dk = filter(lambda x, val=val: x not in val, dk)
++                    dk = filter(lambda x: x not in val, dk)
+                 else:
+-                    val = filter(lambda x, dk=dk: x not in dk, val)
++                    val = filter(lambda x: x not in dk, val)
+                 self._dict[key] = dk + val
+             else:
+                 dk = self._dict[key]
+@@ -1277,14 +1277,14 @@
+                     # By elimination, val is not a list.  Since dk is a
+                     # list, wrap val in a list first.
+                     if delete_existing:
+-                        dk = filter(lambda x, val=val: x not in val, dk)
++                        dk = filter(lambda x: x not in val, dk)
+                         self._dict[key] = dk + [val]
+                     else:
+                         if not val in dk:
+                             self._dict[key] = dk + [val]
+                 else:
+                     if delete_existing:
+-                        dk = filter(lambda x, val=val: x not in val, dk)
++                        dk = filter(lambda x: x not in val, dk)
+                     self._dict[key] = dk + val
+         self.scanner_map_delete(kw)
+ 
+@@ -1412,7 +1412,7 @@
+     def Dictionary(self, *args):
+         if not args:
+             return self._dict
+-        dlist = map(lambda x, s=self: s._dict[x], args)
++        dlist = map(lambda x: self._dict[x], args)
+         if len(dlist) == 1:
+             dlist = dlist[0]
+         return dlist
+@@ -1623,9 +1623,9 @@
+                 if not SCons.Util.is_List(dk):
+                     dk = [dk]
+                 if delete_existing:
+-                    dk = filter(lambda x, val=val: x not in val, dk)
++                    dk = filter(lambda x: x not in val, dk)
+                 else:
+-                    val = filter(lambda x, dk=dk: x not in dk, val)
++                    val = filter(lambda x: x not in dk, val)
+                 self._dict[key] = val + dk
+             else:
+                 dk = self._dict[key]
+@@ -1633,14 +1633,14 @@
+                     # By elimination, val is not a list.  Since dk is a
+                     # list, wrap val in a list first.
+                     if delete_existing:
+-                        dk = filter(lambda x, val=val: x not in val, dk)
++                        dk = filter(lambda x: x not in val, dk)
+                         self._dict[key] = [val] + dk
+                     else:
+                         if not val in dk:
+                             self._dict[key] = [val] + dk
+                 else:
+                     if delete_existing:
+-                        dk = filter(lambda x, val=val: x not in val, dk)
++                        dk = filter(lambda x: x not in val, dk)
+                     self._dict[key] = val + dk
+         self.scanner_map_delete(kw)
+ 
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 4715)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -898,7 +898,7 @@
+ 
+ def CheckType(context, type_name, includes = "", language = None):
+     res = SCons.Conftest.CheckType(context, type_name,
+-                                        header = includes, language = language)
++                                   header = includes, language = language)
+     context.did_show_result = 1
+     return not res
+ 
+Index: src/engine/SCons/Action.py
+===================================================================
+--- src/engine/SCons/Action.py	(revision 4715)
++++ src/engine/SCons/Action.py	(working copy)
+@@ -96,6 +96,7 @@
+ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -1105,8 +1106,7 @@
+         self.targets = '$TARGETS'
+ 
+     def genstring(self, target, source, env):
+-        return '\n'.join(map(lambda a, t=target, s=source, e=env:
+-                                  a.genstring(t, s, e),
++        return '\n'.join(map(lambda a: a.genstring(target, source, env),
+                                self.list))
+ 
+     def __str__(self):
+@@ -1114,15 +1114,14 @@
+ 
+     def presub_lines(self, env):
+         return SCons.Util.flatten_sequence(
+-            map(lambda a, env=env: a.presub_lines(env), self.list))
++            map(lambda a: a.presub_lines(env), self.list))
+ 
+     def get_presig(self, target, source, env):
+         """Return the signature contents of this action list.
+ 
+         Simple concatenation of the signatures of the elements.
+         """
+-        return "".join(map(lambda x, t=target, s=source, e=env:
+-                                      x.get_contents(t, s, e),
++        return "".join(map(lambda x: x.get_contents(target, source, env),
+                                self.list))
+ 
+     def __call__(self, target, source, env, exitstatfunc=_null, presub=_null,
+@@ -1199,8 +1198,7 @@
+         return self.parent.convert(s)
+ 
+     def subst_args(self, target, source, env):
+-        return map(lambda x, self=self, t=target, s=source, e=env:
+-                          self.subst(x, t, s, e),
++        return map(lambda x: self.subst(x, target, source, env),
+                    self.args)
+ 
+     def subst_kw(self, target, source, env):
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 4712)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -126,13 +126,11 @@
+         return iter(self.data)
+ 
+     def __call__(self, *args, **kwargs):
+-        result = map(lambda x, args=args, kwargs=kwargs: x(*args,
+-                                                               **kwargs),
+-                     self.data)
++        result = map(lambda x: x(*args, **kwargs), self.data)
+         return self.__class__(result)
+ 
+     def __getattr__(self, name):
+-        result = map(lambda x, n=name: getattr(x, n), self.data)
++        result = map(lambda x: getattr(x, name), self.data)
+         return self.__class__(result)
+ 
+ 
+Index: src/engine/SCons/Variables/EnumVariable.py
+===================================================================
+--- src/engine/SCons/Variables/EnumVariable.py	(revision 4710)
++++ src/engine/SCons/Variables/EnumVariable.py	(working copy)
+@@ -82,21 +82,18 @@
+     help = '%s (%s)' % (help, '|'.join(allowed_values))
+     # define validator
+     if ignorecase >= 1:
+-        validator = lambda key, val, env, vals=allowed_values: \
+-                    _validator(key, val.lower(), env, vals)
++        validator = lambda key, val, env: \
++                    _validator(key, val.lower(), env, allowed_values)
+     else:
+-        validator = lambda key, val, env, vals=allowed_values: \
+-                    _validator(key, val, env, vals)
++        validator = lambda key, val, env: \
++                    _validator(key, val, env, allowed_values)
+     # define converter
+     if ignorecase == 2:
+-        converter = lambda val, map=map: \
+-                    map.get(val.lower(), val).lower()
++        converter = lambda val: map.get(val.lower(), val).lower()
+     elif ignorecase == 1:
+-        converter = lambda val, map=map: \
+-                    map.get(val.lower(), val)
++        converter = lambda val: map.get(val.lower(), val)
+     else:
+-        converter = lambda val, map=map: \
+-                    map.get(val, val)
++        converter = lambda val: map.get(val, val)
+     return (key, help, default, validator, converter)
+ 
+ # Local Variables:
+Index: src/engine/SCons/Variables/__init__.py
+===================================================================
+--- src/engine/SCons/Variables/__init__.py	(revision 4712)
++++ src/engine/SCons/Variables/__init__.py	(working copy)
+@@ -26,6 +26,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -284,7 +285,7 @@
+ 
+         if sort:
+             options = self.options[:]
+-            options.sort(lambda x,y,func=sort: func(x.key,y.key))
++            options.sort(lambda x,y: sort(x.key,y.key))
+         else:
+             options = self.options
+ 
+@@ -303,7 +304,7 @@
+ 
+     def FormatVariableHelpText(self, env, key, help, default, actual, aliases=[]):
+         # Don't display the key name itself as an alias.
+-        aliases = filter(lambda a, k=key: a != k, aliases)
++        aliases = filter(lambda a: a != key, aliases)
+         if len(aliases)==0:
+             return self.format % (key, help, default, actual)
+         else:
+Index: src/engine/SCons/Variables/ListVariable.py
+===================================================================
+--- src/engine/SCons/Variables/ListVariable.py	(revision 4710)
++++ src/engine/SCons/Variables/ListVariable.py	(working copy)
+@@ -46,6 +46,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -97,8 +98,8 @@
+         val = allowedElems
+     else:
+         val = filter(None, val.split(','))
+-        val = map(lambda v, m=mapdict: m.get(v, v), val)
+-        notAllowed = filter(lambda v, aE=allowedElems: not v in aE, val)
++        val = map(lambda v: mapdict.get(v, v), val)
++        notAllowed = filter(lambda v: not v in allowedElems, val)
+         if notAllowed:
+             raise ValueError("Invalid value(s) for option: %s" %
+                              ','.join(notAllowed))
+@@ -128,7 +129,7 @@
+         (help, '(all|none|comma-separated list of names)', names_str))
+     return (key, help, default,
+             None, #_validator,
+-            lambda val, elems=names, m=map: _converter(val, elems, m))
++            lambda val: _converter(val, names, map))
+ 
+ # Local Variables:
+ # tab-width:4
+Index: src/engine/SCons/Variables/PackageVariable.py
+===================================================================
+--- src/engine/SCons/Variables/PackageVariable.py	(revision 4710)
++++ src/engine/SCons/Variables/PackageVariable.py	(working copy)
+@@ -96,7 +96,7 @@
+     help = '\n    '.join(
+         (help, '( yes | no | /path/to/%s )' % key))
+     return (key, help, default,
+-            lambda k, v, e, f=searchfunc: _validator(k,v,e,f),
++            lambda k, v, e: _validator(k,v,e,searchfunc),
+             _converter)
+ 
+ # Local Variables:
+Index: src/engine/SCons/cpp.py
+===================================================================
+--- src/engine/SCons/cpp.py	(revision 4712)
++++ src/engine/SCons/cpp.py	(working copy)
+@@ -90,7 +90,7 @@
+ override = {
+     'if'                        : 'if(?!def)',
+ }
+-l = map(lambda x, o=override: o.get(x, x), Table.keys())
++l = map(lambda x: override.get(x, x), Table.keys())
+ 
+ 
+ # Turn the list of expressions into one big honkin' regular expression
+@@ -125,7 +125,7 @@
+     '\r'        : '',
+ }
+ 
+-CPP_to_Python_Ops_Sub = lambda m, d=CPP_to_Python_Ops_Dict: d[m.group(0)]
++CPP_to_Python_Ops_Sub = lambda m: CPP_to_Python_Ops_Dict[m.group(0)]
+ 
+ # We have to sort the keys by length so that longer expressions
+ # come *before* shorter expressions--in particular, "!=" must
+@@ -291,8 +291,7 @@
+         global CPP_Expression, Table
+         contents = line_continuations.sub('', contents)
+         cpp_tuples = CPP_Expression.findall(contents)
+-        return  map(lambda m, t=Table:
+-                           (m[0],) + t[m[0]].match(m[1]).groups(),
++        return  map(lambda m: (m[0],) + Table[m[0]].match(m[1]).groups(),
+                     cpp_tuples)
+ 
+     def __call__(self, file):
+Index: src/engine/SCons/Tool/__init__.py
+===================================================================
+--- src/engine/SCons/Tool/__init__.py	(revision 4712)
++++ src/engine/SCons/Tool/__init__.py	(working copy)
+@@ -35,6 +35,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Tool/MSCommon/netframework.py
+===================================================================
+--- src/engine/SCons/Tool/MSCommon/netframework.py	(revision 4710)
++++ src/engine/SCons/Tool/MSCommon/netframework.py	(working copy)
+@@ -20,6 +20,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -57,7 +58,7 @@
+         contents = os.listdir(froot)
+ 
+         l = re.compile('v[0-9]+.*')
+-        versions = filter(lambda e, l=l: l.match(e), contents)
++        versions = filter(lambda e: l.match(e), contents)
+ 
+         def versrt(a,b):
+             # since version numbers aren't really floats...
+Index: src/engine/SCons/Tool/swig.py
+===================================================================
+--- src/engine/SCons/Tool/swig.py	(revision 4710)
++++ src/engine/SCons/Tool/swig.py	(working copy)
+@@ -101,12 +101,11 @@
+             # .py files should be generated in SWIGOUTDIR if specified,
+             # otherwise in the same directory as the target
+             if outdir:
+-                python_files = map(lambda j, o=outdir, e=env:
+-                                   e.fs.File(os.path.join(o, j)),
++                python_files = map(lambda j:
++                                   env.fs.File(os.path.join(outdir, j)),
+                                    python_files)
+             else:
+-                python_files = map(lambda m, d=target[0].dir:
+-                                   d.File(m), python_files)
++                python_files = map(lambda m: target[0].dir.File(m), python_files)
+             target.extend(python_files)
+         if "-java" in flags:
+             if mnames is None:
+@@ -117,7 +116,7 @@
+             java_files = SCons.Util.flatten(java_files)
+             outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
+             if outdir:
+-                 java_files = map(lambda j, o=outdir: os.path.join(o, j), java_files)
++                 java_files = map(lambda j: os.path.join(outdir, j), java_files)
+             java_files = map(env.fs.File, java_files)
+             for jf in java_files:
+                 t_from_s = lambda t, p, s, x: t.dir
+Index: src/engine/SCons/Tool/FortranCommon.py
+===================================================================
+--- src/engine/SCons/Tool/FortranCommon.py	(revision 4710)
++++ src/engine/SCons/Tool/FortranCommon.py	(working copy)
+@@ -72,7 +72,7 @@
+     # Convert module name to a .mod filename
+     suffix = env.subst('$FORTRANMODSUFFIX', target=target, source=source)
+     moddir = env.subst('$FORTRANMODDIR', target=target, source=source)
+-    modules = map(lambda x, s=suffix: x.lower() + s, modules)
++    modules = map(lambda x: x.lower() + suffix, modules)
+     for m in modules:
+        target.append(env.fs.File(m, moddir))
+     return (target, source)
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+--- src/engine/SCons/Tool/msvs.py	(revision 4710)
++++ src/engine/SCons/Tool/msvs.py	(working copy)
+@@ -30,6 +30,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -739,7 +740,7 @@
+         # TODO(1.5)
+         #cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+         cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+-        cats = filter(lambda k, s=self: s.sources[k], cats)
++        cats = filter(lambda k: self.sources[k], cats)
+         for kind in cats:
+             if len(cats) > 1:
+                 self.file.write('\t\t<Filter\n'
+@@ -758,7 +759,7 @@
+                 cp = os.path.dirname( os.path.commonprefix(s) )
+                 if cp and s[0][len(cp)] == os.sep:
+                     # +1 because the filename starts after the separator
+-                    sources = map(lambda s, l=len(cp)+1: s[l:], sources)
++                    sources = map(lambda s: s[len(cp)+1:], sources)
+                     commonprefix = cp
+             elif len(sources) == 1:
+                 commonprefix = os.path.dirname( sources[0] )
+Index: src/engine/SCons/Tool/dvipdf.py
+===================================================================
+--- src/engine/SCons/Tool/dvipdf.py	(revision 4710)
++++ src/engine/SCons/Tool/dvipdf.py	(working copy)
+@@ -30,6 +30,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Tool/javac.py
+===================================================================
+--- src/engine/SCons/Tool/javac.py	(revision 4712)
++++ src/engine/SCons/Tool/javac.py	(working copy)
+@@ -30,6 +30,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -66,20 +67,20 @@
+ 
+     slist = []
+     js = _my_normcase(java_suffix)
+-    find_java = lambda n, js=js, ljs=len(js): _my_normcase(n[-ljs:]) == js
+     for entry in source:
+         entry = entry.rentry().disambiguate()
+         if isinstance(entry, SCons.Node.FS.File):
+             slist.append(entry)
+         elif isinstance(entry, SCons.Node.FS.Dir):
+             result = SCons.Util.OrderedDict()
+-            def visit(arg, dirname, names, fj=find_java, dirnode=entry.rdir()):
+-                java_files = filter(fj, names)
++            def visit(arg, dirname, names, dirnode=entry.rdir()):
++                java_files = filter(lambda n: _my_normcase(n[-len(js):]) == js,
++                                    names)
+                 # The on-disk entries come back in arbitrary order.  Sort
+                 # them so our target and source lists are determinate.
+                 java_files.sort()
+                 mydir = dirnode.Dir(dirname)
+-                java_paths = map(lambda f, d=mydir: d.File(f), java_files)
++                java_paths = map(lambda f: mydir.File(f), java_files)
+                 for jp in java_paths:
+                      arg[jp] = True
+ 
+Index: src/engine/SCons/Tool/packaging/msi.py
+===================================================================
+--- src/engine/SCons/Tool/packaging/msi.py	(revision 4712)
++++ src/engine/SCons/Tool/packaging/msi.py	(working copy)
+@@ -25,6 +25,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: src/engine/SCons/Tool/packaging/rpm.py
+===================================================================
+--- src/engine/SCons/Tool/packaging/rpm.py	(revision 4713)
++++ src/engine/SCons/Tool/packaging/rpm.py	(working copy)
+@@ -25,6 +25,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -101,7 +102,7 @@
+ 
+     # filter out the target we are building the source list for.
+     #sources = [s for s in sources if not (s in target)]
+-    sources = filter(lambda s, t=target: not (s in t), sources)
++    sources = filter(lambda s: s not in target, sources)
+ 
+     # find the .spec file for rpm and add it since it is not necessarily found
+     # by the FindSourceFiles function.
+@@ -336,7 +337,7 @@
+ 
+         str = ""
+         #domestic = [ (k,v) for k,v in replacements if not is_international(k) ]
+-        domestic = filter(lambda t, i=is_international: not i(t[0]), replacements)
++        domestic = filter(lambda t: not is_international(t[0]), replacements)
+         for key, replacement in domestic:
+             try:
+                 str = str + replacement % values[key]
+@@ -345,12 +346,12 @@
+                     raise e
+ 
+         #international = [ (k,v) for k,v in replacements if is_international(k) ]
+-        international = filter(lambda t, i=is_international: i(t[0]), replacements)
++        international = filter(lambda t: is_international(t[0]), replacements)
+         for key, replacement in international:
+             try:
+                 #int_values_for_key = [ (get_country_code(k),v) for k,v in values.items() if strip_country_code(k) == key ]
+-                x = filter(lambda t,key=key,s=strip_country_code: s(t[0]) == key, values.items())
+-                int_values_for_key = map(lambda t,g=get_country_code: (g(t[0]),t[1]), x)
++                x = filter(lambda t: strip_country_code(t[0]) == key, values.items())
++                int_values_for_key = map(lambda t: (get_country_code(t[0]),t[1]), x)
+                 for v in int_values_for_key:
+                     str = str + replacement % v
+             except KeyError, e:
+Index: src/engine/SCons/Tool/packaging/__init__.py
+===================================================================
+--- src/engine/SCons/Tool/packaging/__init__.py	(revision 4713)
++++ src/engine/SCons/Tool/packaging/__init__.py	(working copy)
+@@ -25,6 +25,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -174,7 +175,7 @@
+         args.remove('source')
+         # now remove any args for which we have a value in kw.
+         #args=[x for x in args if not kw.has_key(x)]
+-        args=filter(lambda x, kw=kw: not kw.has_key(x), args)
++        args=filter(lambda x: not kw.has_key(x), args)
+ 
+         if len(args)==0:
+             raise # must be a different error, so reraise
+@@ -236,7 +237,7 @@
+     """
+     #pattrs = [x for x in dir(f1) if not hasattr(f2, x) and\
+     #                                x.startswith('PACKAGING_')]
+-    copyit = lambda x, f2=f2: not hasattr(f2, x) and x[:10] == 'PACKAGING_'
++    copyit = lambda x: not hasattr(f2, x) and x[:10] == 'PACKAGING_'
+     pattrs = filter(copyit, dir(f1))
+     for attr in pattrs:
+         setattr(f2, attr, getattr(f1, attr))
+Index: src/engine/SCons/Tool/filesystem.py
+===================================================================
+--- src/engine/SCons/Tool/filesystem.py	(revision 4710)
++++ src/engine/SCons/Tool/filesystem.py	(working copy)
+@@ -44,7 +44,7 @@
+     n_target = []
+ 
+     for t in target:
+-        n_target = n_target + map( lambda s, t=t: t.File( str( s ) ), source )
++        n_target = n_target + map( lambda s: t.File( str( s ) ), source )
+ 
+     return (n_target, source)
+ 
+Index: src/engine/SCons/Builder.py
+===================================================================
+--- src/engine/SCons/Builder.py	(revision 4712)
++++ src/engine/SCons/Builder.py	(working copy)
+@@ -97,6 +97,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -120,7 +121,7 @@
+ 
+ def match_splitext(path, suffixes = []):
+     if suffixes:
+-        matchsuf = filter(lambda S,path=path: path[-len(S):] == S,
++        matchsuf = filter(lambda S: path[-len(S):] == S,
+                           suffixes)
+         if matchsuf:
+             suf = max(map(None, map(len, matchsuf), matchsuf))[1]
+@@ -493,7 +494,7 @@
+             except IndexError:
+                 tlist = []
+             else:
+-                splitext = lambda S,self=self,env=env: self.splitext(S,env)
++                splitext = lambda S: self.splitext(S,env)
+                 tlist = [ t_from_s(pre, suf, splitext) ]
+         else:
+             target = self._adjustixes(target, pre, suf, self.ensure_suffix)
+@@ -658,9 +659,7 @@
+             src_suffix = []
+         elif not SCons.Util.is_List(src_suffix):
+             src_suffix = [ src_suffix ]
+-        adjust = lambda suf, s=self: \
+-                        callable(suf) and suf or s.adjust_suffix(suf)
+-        self.src_suffix = map(adjust, src_suffix)
++        self.src_suffix = map(lambda suf: callable(suf) and suf or self.adjust_suffix(suf), src_suffix)
+ 
+     def get_src_suffix(self, env):
+         """Get the first src_suffix in the list of src_suffixes."""
+@@ -723,7 +722,7 @@
+         lengths = list(set(map(len, src_suffixes)))
+ 
+         def match_src_suffix(name, src_suffixes=src_suffixes, lengths=lengths):
+-            node_suffixes = map(lambda l, n=name: n[-l:], lengths)
++            node_suffixes = map(lambda l: name[-l:], lengths)
+             for suf in src_suffixes:
+                 if suf in node_suffixes:
+                     return suf
+@@ -749,8 +748,7 @@
+                     # target, then filter out any sources that this
+                     # Builder isn't capable of building.
+                     if len(tlist) > 1:
+-                        mss = lambda t, m=match_src_suffix: m(t.name)
+-                        tlist = filter(mss, tlist)
++                        tlist = filter(lambda t: match_src_suffix(t.name), tlist)
+                     result.extend(tlist)
+             else:
+                 result.append(s)
+@@ -819,7 +817,7 @@
+                 return memo_dict[memo_key]
+             except KeyError:
+                 pass
+-        suffixes = map(lambda x, s=self, e=env: e.subst(x), self.src_suffix)
++        suffixes = map(lambda x: env.subst(x), self.src_suffix)
+         memo_dict[memo_key] = suffixes
+         return suffixes
+ 
+Index: src/test_interrupts.py
+===================================================================
+--- src/test_interrupts.py	(revision 4710)
++++ src/test_interrupts.py	(working copy)
+@@ -21,6 +21,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+Index: runtest.py
+===================================================================
+--- runtest.py	(revision 4710)
++++ runtest.py	(working copy)
+@@ -84,11 +84,11 @@
+ # you can find the appropriate code in the 0.04 version of this script,
+ # rather than reinventing that wheel.)
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ import getopt
+ import glob
+ import os
+-import os.path
+ import re
+ import stat
+ import sys
+@@ -594,7 +594,7 @@
+             exclude = exclude.split('#' , 1)[0]
+             exclude = exclude.strip()
+             if not exclude: continue
+-            tests = filter(lambda n, ex = exclude: n != ex, tests)
++            tests = filter(lambda n: n != exclude, tests)
+     for n in tests:
+         tdict[os.path.join(dirname, n)] = 1
+ 
+Index: doc/SConscript
+===================================================================
+--- doc/SConscript	(revision 4712)
++++ doc/SConscript	(working copy)
+@@ -24,6 +24,7 @@
+ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ import os.path
+ import re
+@@ -476,7 +477,7 @@
+     sources = filter(lambda x: x.find('Options') == -1, sources)
+ 
+     e = os.path.join(build, '..', 'scons', 'engine')
+-    sources = map(lambda x, e=e: os.path.join(e, x), sources)
++    sources = map(lambda x: os.path.join(e, x), sources)
+ 
+     epydoc_commands = [
+         Delete('$OUTDIR'),
+@@ -518,8 +519,7 @@
+ # for easy distribution to the web site.
+ #
+ if tar_deps:
+-    tar_list = ' '.join(map(lambda x, b=build+'/': x.replace(b, ''),
+-                           tar_list))
++    tar_list = ' '.join(map(lambda x: x.replace(build+'/', ''), tar_list))
+     t = env.Command(dist_doc_tar_gz, tar_deps,
+                 "tar cf${TAR_HFLAG} - -C %s %s | gzip > $TARGET" % (build, tar_list))
+     AddPostAction(dist_doc_tar_gz, Chmod(dist_doc_tar_gz, 0644))
+Index: SConstruct
+===================================================================
+--- SConstruct	(revision 4712)
++++ SConstruct	(working copy)
+@@ -3,6 +3,7 @@
+ #
+ # See the README file for an overview of how SCons is built and tested.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ # When this gets changed, you must also change the copyright_years string
+ # in QMTest/TestSCons.py so the test scripts look for the right string.
+@@ -768,7 +769,7 @@
+             MANIFEST_in_list.append(MANIFEST_in)
+             files = map(lambda x: x[:-1], open(MANIFEST_in).readlines())
+             raw_files.extend(files)
+-            src_files.extend(map(lambda x, s=ssubdir: os.path.join(s, x), files))
++            src_files.extend(map(lambda x: os.path.join(subdir, x), files))
+             for f in files:
+                 r = os.path.join(sp['rpm_dir'], f)
+                 rpm_files.append(r)
+@@ -777,7 +778,7 @@
+             for f in sp.get('extra_rpm_files', []):
+                 r = os.path.join(sp['rpm_dir'], f)
+                 rpm_files.append(r)
+-            files = map(lambda x, i=isubdir: os.path.join(i, x), files)
++            files = map(lambda x: os.path.join(isubdir, x), files)
+             dst_files.extend(files)
+             for k, f in sp['filemap'].items():
+                 if f:
+@@ -831,7 +832,7 @@
+     #
+     # Now go through and arrange to create whatever packages we can.
+     #
+-    build_src_files = map(lambda x, b=build: os.path.join(b, x), src_files)
++    build_src_files = map(lambda x: os.path.join(build, x), src_files)
+     Local(*build_src_files)
+ 
+     distutils_formats = []
+@@ -869,8 +870,8 @@
+         # but that gives heartburn to Cygwin's tar, so work around it
+         # with separate zcat-tar-rm commands.
+         #
+-        unpack_tar_gz_files = map(lambda x, u=unpack_tar_gz_dir, pv=pkg_version:
+-                                         os.path.join(u, pv, x),
++        unpack_tar_gz_files = map(lambda x: os.path.join(unpack_tar_gz_dir,
++                                                         pkg_version, x),
+                                   src_files)
+         env.Command(unpack_tar_gz_files, dist_tar_gz, [
+                     Delete(os.path.join(unpack_tar_gz_dir, pkg_version)),
+@@ -892,7 +893,7 @@
+         # like this because we put a preamble in it that will chdir()
+         # to the directory in which setup.py exists.
+         #
+-        dfiles = map(lambda x, d=test_tar_gz_dir: os.path.join(d, x), dst_files)
++        dfiles = map(lambda x: os.path.join(test_tar_gz_dir, x), dst_files)
+         env.Command(dfiles, unpack_tar_gz_files, [
+             Delete(os.path.join(unpack_tar_gz_dir, pkg_version, 'build')),
+             Delete("$TEST_TAR_GZ_DIR"),
+@@ -938,8 +939,8 @@
+         # Unpack the zip archive created by the distutils into
+         # build/unpack-zip/scons-{version}.
+         #
+-        unpack_zip_files = map(lambda x, u=unpack_zip_dir, pv=pkg_version:
+-                                      os.path.join(u, pv, x),
++        unpack_zip_files = map(lambda x: os.path.join(unpack_zip_dir,
++                                                      pkg_version, x),
+                                src_files)
+ 
+         env.Command(unpack_zip_files, dist_zip, [
+@@ -960,7 +961,7 @@
+         # like this because we put a preamble in it that will chdir()
+         # to the directory in which setup.py exists.
+         #
+-        dfiles = map(lambda x, d=test_zip_dir: os.path.join(d, x), dst_files)
++        dfiles = map(lambda x: os.path.join(test_zip_dir, x), dst_files)
+         env.Command(dfiles, unpack_zip_files, [
+             Delete(os.path.join(unpack_zip_dir, pkg_version, 'build')),
+             Delete("$TEST_ZIP_DIR"),
+@@ -1023,7 +1024,7 @@
+         AddPostAction(dist_noarch_rpm, Chmod(dist_noarch_rpm, 0644))
+         AddPostAction(dist_src_rpm, Chmod(dist_src_rpm, 0644))
+ 
+-        dfiles = map(lambda x, d=test_rpm_dir: os.path.join(d, 'usr', x),
++        dfiles = map(lambda x: os.path.join(test_rpm_dir, 'usr', x),
+                      dst_files)
+         env.Command(dfiles,
+                     dist_noarch_rpm,
+@@ -1047,7 +1048,7 @@
+             if s[:len(old)] == old:
+                 s = new + s[len(old):]
+             return os.path.join('usr', s)
+-        dfiles = map(lambda x, t=test_deb_dir: os.path.join(t, x),
++        dfiles = map(lambda x: os.path.join(test_deb_dir, x),
+                      map(xxx, dst_files))
+         env.Command(dfiles,
+                     deb,
+@@ -1105,10 +1106,10 @@
+         commands.append(Move(local_script + '.py', local_script))
+ 
+     rf = filter(lambda x: not x in scripts, raw_files)
+-    rf = map(lambda x, slv=s_l_v: os.path.join(slv, x), rf)
++    rf = map(lambda x: os.path.join(s_l_v, x), rf)
+     for script in scripts:
+         rf.append("%s.py" % script)
+-    local_targets = map(lambda x, s=build_dir_local: os.path.join(s, x), rf)
++    local_targets = map(lambda x: os.path.join(build_dir_local, x), rf)
+ 
+     env.Command(local_targets, build_src_files, commands)
+ 
+@@ -1127,8 +1128,7 @@
+                     local_targets,
+                     "cd %s && tar czf $( ${TARGET.abspath} $) *" % build_dir_local)
+ 
+-        unpack_targets = map(lambda x, d=test_local_tar_gz_dir:
+-                                    os.path.join(d, x),
++        unpack_targets = map(lambda x: os.path.join(test_local_tar_gz_dir, x),
+                              rf)
+         commands = [Delete(test_local_tar_gz_dir),
+                     Mkdir(test_local_tar_gz_dir),
+@@ -1140,9 +1140,7 @@
+         env.Command(dist_local_zip, local_targets, zipit,
+                     CD = build_dir_local, PSV = '.')
+ 
+-        unpack_targets = map(lambda x, d=test_local_zip_dir:
+-                                    os.path.join(d, x),
+-                             rf)
++        unpack_targets = map(lambda x: os.path.join(test_local_zip_dir, x), rf)
+         commands = [Delete(test_local_zip_dir),
+                     Mkdir(test_local_zip_dir),
+                     unzipit]
+@@ -1215,7 +1213,7 @@
+     ]
+ 
+     for p in remove_patterns:
+-        sfiles = filter(lambda s, p=p: not fnmatch.fnmatch(s, p), sfiles)
++        sfiles = filter(lambda s: not fnmatch.fnmatch(s, p), sfiles)
+ 
+     if sfiles:
+         ps = "%s-src" % project
+@@ -1232,7 +1230,7 @@
+         for file in sfiles:
+             env.SCons_revision(os.path.join(b_ps, file), file)
+ 
+-        b_ps_files = map(lambda x, d=b_ps: os.path.join(d, x), sfiles)
++        b_ps_files = map(lambda x: os.path.join(b_ps, x), sfiles)
+         cmds = [
+             Delete(b_psv),
+             Copy(b_psv, b_ps),
+@@ -1251,8 +1249,8 @@
+             #
+             # Unpack the archive into build/unpack/scons-{version}.
+             #
+-            unpack_tar_gz_files = map(lambda x, u=unpack_tar_gz_dir, psv=psv:
+-                                             os.path.join(u, psv, x),
++            unpack_tar_gz_files = map(lambda x: os.path.join(unpack_tar_gz_dir,
++                                                             psv, x),
+                                       sfiles)
+ 
+             #
+@@ -1282,7 +1280,7 @@
+             # like this because we put a preamble in it that will chdir()
+             # to the directory in which setup.py exists.
+             #
+-            dfiles = map(lambda x, d=test_src_tar_gz_dir: os.path.join(d, x),
++            dfiles = map(lambda x: os.path.join(test_src_tar_gz_dir, x),
+                             dst_files)
+             scons_lib_dir = os.path.join(unpack_tar_gz_dir, psv, 'src', 'engine')
+             ENV = env.Dictionary('ENV').copy()
+@@ -1316,8 +1314,8 @@
+             #
+             # Unpack the archive into build/unpack/scons-{version}.
+             #
+-            unpack_zip_files = map(lambda x, u=unpack_zip_dir, psv=psv:
+-                                             os.path.join(u, psv, x),
++            unpack_zip_files = map(lambda x: os.path.join(unpack_zip_dir,
++                                                          psv, x),
+                                       sfiles)
+ 
+             env.Command(unpack_zip_files, src_zip, [
+@@ -1338,8 +1336,7 @@
+             # like this because we put a preamble in it that will chdir()
+             # to the directory in which setup.py exists.
+             #
+-            dfiles = map(lambda x, d=test_src_zip_dir: os.path.join(d, x),
+-                            dst_files)
++            dfiles = map(lambda x: os.path.join(test_src_zip_dir, x), dst_files)
+             scons_lib_dir = os.path.join(unpack_zip_dir, psv, 'src', 'engine')
+             ENV = env.Dictionary('ENV').copy()
+             ENV['SCONS_LIB_DIR'] = scons_lib_dir
+Index: bin/SConsDoc.py
+===================================================================
+--- bin/SConsDoc.py	(revision 4710)
++++ bin/SConsDoc.py	(working copy)
+@@ -2,6 +2,7 @@
+ #
+ # Module for handling SCons documentation processing.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __doc__ = """
+ This module parses home-brew XML files that document various things
+Index: bin/scons-doc.py
+===================================================================
+--- bin/scons-doc.py	(revision 4712)
++++ bin/scons-doc.py	(working copy)
+@@ -88,6 +88,7 @@
+ # Error output gets passed through to your error output so you
+ # can see if there are any problems executing the command.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ import optparse
+ import os
+@@ -324,7 +325,7 @@
+ 
+ def find_class_files(arg, dirname, names):
+     class_files = filter(lambda n: n[-6:] == '.class', names)
+-    paths = map(lambda n, d=dirname: os.path.join(d, n), class_files)
++    paths = map(lambda n: os.path.join(dirname, n), class_files)
+     arg.extend(paths)
+ 
+ def JarCom(target, source, env):
+@@ -380,7 +381,7 @@
+ toollist = ToolList[platform]
+ filter_tools = string.split('%(tools)s')
+ if filter_tools:
+-    toollist = filter(lambda x, ft=filter_tools: x[0] in ft, toollist)
++    toollist = filter(lambda x: x[0] in filter_tools, toollist)
+ 
+ toollist = map(lambda t: ToolSurrogate(*t), toollist)
+ 
+@@ -661,7 +662,7 @@
+         if not fattrs:
+             self.error("no <scons_example_file> name attribute found")
+         fname = fattrs[0][1]
+-        f = filter(lambda f, fname=fname: f.name == fname, e.files)
++        f = filter(lambda f: f.name == fname, e.files)
+         if not f:
+             self.error("example '%s' does not have a file named '%s'" % (exname, fname))
+         self.f = f[0]
+@@ -717,7 +718,7 @@
+             i = 0
+             while lines[0][i] == ' ':
+                 i = i + 1
+-            lines = map(lambda l, i=i: l[i:], lines)
++            lines = map(lambda l: l[i:], lines)
+             path = f.name.replace('__ROOT__', t.rootpath)
+             if not os.path.isabs(path):
+                 path = t.workpath('WORK', path)
+Index: bin/linecount.py
+===================================================================
+--- bin/linecount.py	(revision 4710)
++++ bin/linecount.py	(working copy)
+@@ -22,6 +22,7 @@
+ # non-comment lines.  The last figure (non-comment) lines is the most
+ # interesting one for most purposes.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -85,7 +86,7 @@
+     try: names.remove('.svn')
+     except ValueError: pass
+     names = filter(arg, names)
+-    arg.extend(map(lambda n, d=dirname: os.path.join(d, n), names))
++    arg.extend(map(lambda n: os.path.join(dirname, n), names))
+ 
+ os.path.walk('src', t, src_Tests_py_tests)
+ os.path.walk('src', t, src_test_tests)
+Index: bin/sconsexamples.py
+===================================================================
+--- bin/sconsexamples.py	(revision 4712)
++++ bin/sconsexamples.py	(working copy)
+@@ -67,6 +67,7 @@
+ # Error output gets passed through to your error output so you
+ # can see if there are any problems executing the command.
+ #
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ import os
+ import os.path
+@@ -360,7 +361,7 @@
+         if not fattrs:
+             self.error("no <scons_example_file> name attribute found")
+         fname = fattrs[0][1]
+-        f = filter(lambda f, fname=fname: f.name == fname, e.files)
++        f = filter(lambda f: f.name == fname, e.files)
+         if not f:
+             self.error("example '%s' does not have a file named '%s'" % (exname, fname))
+         self.f = f[0]
+@@ -410,7 +411,7 @@
+             i = 0
+             while lines[0][i] == ' ':
+                 i = i + 1
+-            lines = map(lambda l, i=i: l[i:], lines)
++            lines = map(lambda l: l[i:], lines)
+             path = f.name.replace('__ROOT__', t.workpath('ROOT'))
+             dir, name = os.path.split(f.name)
+             if dir:
+Index: QMTest/TestCommon.py
+===================================================================
+--- QMTest/TestCommon.py	(revision 4713)
++++ QMTest/TestCommon.py	(working copy)
+@@ -87,6 +87,7 @@
+ # PARTICULAR PURPOSE.  THE CODE PROVIDED HEREUNDER IS ON AN "AS IS" BASIS,
+ # AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
+ # SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __author__ = "Steven Knight <knight at baldmt dot com>"
+ __revision__ = "TestCommon.py 0.37.D001 2010/01/11 16:55:50 knight"
+@@ -228,7 +229,7 @@
+         """
+         files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+         existing, missing = separate_files(files)
+-        unwritable = filter(lambda x, iw=is_writable: not iw(x), existing)
++        unwritable = filter(lambda x: not is_writable(x), existing)
+         if missing:
+             print "Missing files: `%s'" % "', `".join(missing)
+         if unwritable:
+Index: QMTest/scons_tdb.py
+===================================================================
+--- QMTest/scons_tdb.py	(revision 4710)
++++ QMTest/scons_tdb.py	(working copy)
+@@ -29,6 +29,7 @@
+ 
+ Thanks to Stefan Seefeld for the initial code.
+ """
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ ########################################################################
+ # Imports
+Index: QMTest/unittest.py
+===================================================================
+--- QMTest/unittest.py	(revision 4712)
++++ QMTest/unittest.py	(working copy)
+@@ -28,6 +28,7 @@
+ AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
+ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ """
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __author__ = "Steve Purcell (stephen_purcell@yahoo.com)"
+ __version__ = "$ Revision: 1.23 $"[11:-2]
+@@ -338,7 +339,7 @@
+        and its base classes that start with the given prefix. This is used
+        by makeSuite().
+     """
+-    testFnNames = filter(lambda n,p=prefix: n[:len(p)] == p,
++    testFnNames = filter(lambda n: n[:len(prefix)] == prefix,
+                          dir(testCaseClass))
+     for baseclass in testCaseClass.__bases__:
+         testFnNames = testFnNames + \
+Index: QMTest/TestCmd.py
+===================================================================
+--- QMTest/TestCmd.py	(revision 4712)
++++ QMTest/TestCmd.py	(working copy)
+@@ -213,6 +213,7 @@
+ # PARTICULAR PURPOSE.  THE CODE PROVIDED HEREUNDER IS ON AN "AS IS" BASIS,
+ # AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
+ # SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __author__ = "Steven Knight <knight at baldmt dot com>"
+ __revision__ = "TestCmd.py 0.37.D001 2010/01/11 16:55:50 knight"
+@@ -307,14 +308,14 @@
+     def zip(*lists):
+         result = []
+         for i in xrange(min(map(len, lists))):
+-            result.append(tuple(map(lambda l, i=i: l[i], lists)))
++            result.append(tuple(map(lambda l: l[i], lists)))
+         return result
+ 
+ class Collector:
+     def __init__(self, top):
+         self.entries = [top]
+     def __call__(self, arg, dirname, names):
+-        pathjoin = lambda n, d=dirname: os.path.join(d, n)
++        pathjoin = lambda n: os.path.join(dirname, n)
+         self.entries.extend(map(pathjoin, names))
+ 
+ def _caller(tblist, skip):
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 4713)
++++ QMTest/TestSCons.py	(working copy)
+@@ -13,6 +13,7 @@
+ """
+ 
+ # __COPYRIGHT__
++from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+@@ -29,7 +30,7 @@
+     def zip(*lists):
+         result = []
+         for i in xrange(len(lists[0])):
+-            result.append(tuple(map(lambda l, i=i: l[i], lists)))
++            result.append(tuple(map(lambda l: l[i], lists)))
+         return result
+     __builtin__.zip = zip
+ 
