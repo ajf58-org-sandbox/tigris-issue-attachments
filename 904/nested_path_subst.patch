@@ -1,0 +1,90 @@
+diff -r 0da1edff14b9 src/engine/SCons/EnvironmentTests.py
+--- a/src/engine/SCons/EnvironmentTests.py	Tue Oct 02 17:39:45 2012 -0400
++++ b/src/engine/SCons/EnvironmentTests.py	Fri Oct 05 16:08:02 2012 -0700
+@@ -1440,6 +1440,21 @@
+         x = s("${_concat(PRE, LIST, SUF, __env__)}")
+         assert x == 'preasuf prebsuf', x
+ 
++    def test_concat_nested(self):
++        "Test _concat() on a nested substitution strings."
++        e = self.TestEnvironment(PRE='pre', SUF='suf',
++                                 L1=['a', 'b'],
++                                 L2=['c', 'd'],
++                                 L3=['$L2'])
++        x = e.subst('$( ${_concat(PRE, L1, SUF, __env__)} $)')
++        assert x == 'preasuf prebsuf', x
++        e.AppendUnique(L1 = ['$L2'])
++        x = e.subst('$( ${_concat(PRE, L1, SUF, __env__)} $)')
++        assert x == 'preasuf prebsuf precsuf predsuf', x
++        e.AppendUnique(L1 = ['$L3'])
++        x = e.subst('$( ${_concat(PRE, L1, SUF, __env__)} $)')
++        assert x == 'preasuf prebsuf precsuf predsuf precsuf predsuf', x
++
+     def test_gvars(self):
+         """Test the Environment gvars() method"""
+         env = self.TestEnvironment(XXX = 'x', YYY = 'y', ZZZ = 'z')
+diff -r 0da1edff14b9 src/engine/SCons/PathList.py
+--- a/src/engine/SCons/PathList.py	Tue Oct 02 17:39:45 2012 -0400
++++ b/src/engine/SCons/PathList.py	Fri Oct 05 16:08:02 2012 -0700
+@@ -131,7 +131,7 @@
+                 value = env.subst(value, target=target, source=source,
+                                   conv=node_conv)
+                 if SCons.Util.is_Sequence(value):
+-                    result.extend(value)
++                    result.extend(SCons.Util.flatten(value))
+                     continue
+                     
+             elif type == TYPE_OBJECT:
+diff -r 0da1edff14b9 src/engine/SCons/PathListTests.py
+--- a/src/engine/SCons/PathListTests.py	Tue Oct 02 17:39:45 2012 -0400
++++ b/src/engine/SCons/PathListTests.py	Fri Oct 05 16:08:02 2012 -0700
+@@ -48,6 +48,8 @@
+                 return s
+ 
+         self.env = FakeEnvironment(AAA = 'aaa', NULL = '')
++        from SCons.Environment import Environment
++        self.env = Environment(AAA = 'aaa', NULL = '')
+ 
+     def test_node(self):
+         """Test the subst_path() method on a Node
+@@ -120,6 +122,40 @@
+ 
+         assert result == ('aaa',), result
+ 
++    def test_list_of_lists(self):
++        """Test the subst_path() method on substitution of nested lists.
++        """
++        pl = SCons.PathList.PathList((['$AAA', '$AAA'], '$NULL'))
++        result = pl.subst_path(self.env, 'y', 'z')
++        assert result == ('aaa', 'aaa'), result
++
++    def test_subst_nested(self):
++        """Test the subst_path() method on nested substitution of strings.
++        """
++        self.env.Append(L1 = ['a', 'b'],
++                        L2 = ['c', 'd'],
++                        L3 = ['$L2'])
++        pl = SCons.PathList.PathList(['$L1'])
++        result = pl.subst_path(self.env, 'y', 'z')
++        assert result == ('a', 'b'), result
++        self.env.Append(L1 = ['$L2'])
++        pl = SCons.PathList.PathList(['$L1'])
++        result = pl.subst_path(self.env, 'y', 'z')
++        assert result == ('a', 'b', 'c', 'd'), result
++        self.env.Append(L1 = ['$L3'])
++        pl = SCons.PathList.PathList(['$L1'])
++        result = pl.subst_path(self.env, 'y', 'z')
++        assert result == ('a', 'b', 'c', 'd', 'c', 'd'), result
++
++    def test_another_env(self):
++        """Test the subst_path does lazy evaluation.
++        """
++        pl = SCons.PathList.PathList(('$AAA', '$NULL'))
++        result = pl.subst_path(self.env, 'y', 'z')
++        assert result == ('aaa',), result
++        e = self.env.Clone(AAA = 'bbb')
++        result = pl.subst_path(e, 'y', 'z')
++        assert result == ('bbb',), result
+ 
+ class PathListCacheTestCase(unittest.TestCase):
+ 
