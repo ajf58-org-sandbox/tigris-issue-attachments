@@ -1,0 +1,414 @@
+RefactoringTool: Files that were modified:
+RefactoringTool: src/engine/SCons/Action.py
+RefactoringTool: src/engine/SCons/ActionTests.py
+RefactoringTool: src/engine/SCons/Builder.py
+RefactoringTool: src/engine/SCons/BuilderTests.py
+RefactoringTool: src/engine/SCons/Environment.py
+RefactoringTool: src/engine/SCons/EnvironmentTests.py
+RefactoringTool: src/engine/SCons/Util.py
+RefactoringTool: src/engine/SCons/dblite.py
+RefactoringTool: src/engine/SCons/Node/FS.py
+RefactoringTool: src/engine/SCons/Scanner/Dir.py
+RefactoringTool: src/engine/SCons/Scanner/LaTeX.py
+RefactoringTool: src/engine/SCons/Scanner/ScannerTests.py
+RefactoringTool: src/engine/SCons/Scanner/__init__.py
+RefactoringTool: src/engine/SCons/Script/SConsOptions.py
+RefactoringTool: src/engine/SCons/Tool/intelc.py
+RefactoringTool: src/engine/SCons/Tool/javac.py
+RefactoringTool: src/engine/SCons/Tool/textfile.py
+RefactoringTool: src/engine/SCons/Tool/packaging/rpm.py
+RefactoringTool: src/engine/SCons/Variables/VariablesTests.py
+RefactoringTool: src/engine/SCons/compat/_scons_sets.py
+RefactoringTool: test/LoadableModule.py
+RefactoringTool: test/scons-time/help/all-subcommands.py
+RefactoringTool: QMTest/scons_tdb.py
+RefactoringTool: bin/SConsDoc.py
+RefactoringTool: bench/env.__setitem__.py
+--- src/engine/SCons/Action.py (original)
++++ src/engine/SCons/Action.py (refactored)
+@@ -1150,7 +1150,7 @@
+         for act in self.list:
+             for var in act.get_varlist(target, source, env, executor):
+                 result[var] = True
+-        return result.keys()
++        return list(result.keys())
+ 
+ class ActionCaller:
+     """A class for delaying calling an Action function with specific
+--- src/engine/SCons/ActionTests.py (original)
++++ src/engine/SCons/ActionTests.py (refactored)
+@@ -152,7 +152,7 @@
+     def get(self, key, value=None):
+         return self.d.get(key, value)
+     def items(self):
+-        return self.d.items()
++        return list(self.d.items())
+     def Dictionary(self):
+         return self.d
+     def Clone(self, **kw):
+--- src/engine/SCons/Builder.py (original)
++++ src/engine/SCons/Builder.py (refactored)
+@@ -138,7 +138,7 @@
+         self.source_ext_match = source_ext_match
+ 
+     def src_suffixes(self):
+-        return self.keys()
++        return list(self.keys())
+ 
+     def add_action(self, suffix, action):
+         """Add a suffix-action pair to the mapping.
+@@ -173,7 +173,7 @@
+             raise UserError("Ambiguous suffixes after environment substitution: %s == %s == %s" % (e.args[0], e.args[1], e.args[2]))
+         if ret is None:
+             raise UserError("While building `%s' from `%s': Don't know how to build from a source file with suffix `%s'.  Expected a suffix in this list: %s." % \
+-                            (repr(list(map(str, target))), repr(list(map(str, source))), ext, repr(self.keys())))
++                            (repr(list(map(str, target))), repr(list(map(str, source))), ext, repr(list(self.keys()))))
+         return ret
+ 
+ class CallableSelector(SCons.Util.Selector):
+@@ -440,8 +440,8 @@
+         name (if there is one) or the name of the class (by default)."""
+ 
+         try:
+-            index = env['BUILDERS'].values().index(self)
+-            return env['BUILDERS'].keys()[index]
++            index = list(env['BUILDERS'].values()).index(self)
++            return list(env['BUILDERS'].keys())[index]
+         except (AttributeError, KeyError, TypeError, ValueError):
+             try:
+                 return self.name
+--- src/engine/SCons/BuilderTests.py (original)
++++ src/engine/SCons/BuilderTests.py (refactored)
+@@ -124,7 +124,7 @@
+     def has_key(self, item):
+         return item in self.d
+     def keys(self):
+-        return self.d.keys()
++        return list(self.d.keys())
+     def get(self, key, value=None):
+         return self.d.get(key, value)
+     def Override(self, overrides):
+@@ -135,7 +135,7 @@
+     def _update(self, dict):
+         self.d.update(dict)
+     def items(self):
+-        return self.d.items()
++        return list(self.d.items())
+     def sig_dict(self):
+         d = {}
+         for k,v in self.items(): d[k] = v
+--- src/engine/SCons/Environment.py (original)
++++ src/engine/SCons/Environment.py (refactored)
+@@ -395,7 +395,7 @@
+         # Freeze the keys of self._special_set in a list for use by
+         # methods that need to check.  (Empirically, list scanning has
+         # gotten better than dict.has_key() in Python 2.5.)
+-        self._special_set_keys = self._special_set.keys()
++        self._special_set_keys = list(self._special_set.keys())
+ 
+     def __cmp__(self, other):
+         return cmp(self._dict, other._dict)
+@@ -446,7 +446,7 @@
+         return self._dict.__contains__(key)
+ 
+     def items(self):
+-        return self._dict.items()
++        return list(self._dict.items())
+ 
+     def arg2nodes(self, args, node_factory=_null, lookup_list=_null, **kw):
+         if node_factory is _null:
+@@ -984,9 +984,9 @@
+             variables = kw['options']
+             del kw['options']
+         self.Replace(**kw)
+-        keys = kw.keys()
++        keys = list(kw.keys())
+         if variables:
+-            keys = keys + variables.keys()
++            keys = keys + list(variables.keys())
+             variables.Update(self)
+ 
+         save = {}
+@@ -2250,7 +2250,7 @@
+         return d
+     def items(self):
+         """Emulates the items() method of dictionaries."""
+-        return self.Dictionary().items()
++        return list(self.Dictionary().items())
+ 
+     # Overridden private construction environment methods.
+     def _update(self, dict):
+--- src/engine/SCons/EnvironmentTests.py (original)
++++ src/engine/SCons/EnvironmentTests.py (refactored)
+@@ -40,7 +40,7 @@
+     s1 = "env1 = {\n"
+     s2 = "env2 = {\n"
+     d = {}
+-    for k in env1._dict.keys() + env2._dict.keys():
++    for k in list(env1._dict.keys()) + list(env2._dict.keys()):
+         d[k] = None
+     for k in sorted(d.keys()):
+         if k in env1:
+@@ -60,7 +60,7 @@
+     s1 = "d1 = {\n"
+     s2 = "d2 = {\n"
+     d = {}
+-    for k in d1.keys() + d2.keys():
++    for k in list(d1.keys()) + list(d2.keys()):
+         d[k] = None
+     for k in sorted(d.keys()):
+         if k in d1:
+@@ -250,7 +250,7 @@
+         """Test the SubstitutionEnvironment items() method
+         """
+         env = SubstitutionEnvironment(XXX = 'x', YYY = 'y')
+-        items = env.items()
++        items = list(env.items())
+         assert items == [('XXX','x'), ('YYY','y')], items
+ 
+     def test_arg2nodes(self):
+--- src/engine/SCons/Util.py (original)
++++ src/engine/SCons/Util.py (refactored)
+@@ -1085,7 +1085,7 @@
+         return dict
+ 
+     def items(self):
+-        return list(zip(self._keys, self.values()))
++        return list(zip(self._keys, list(self.values())))
+ 
+     def keys(self):
+         return self._keys[:]
+@@ -1212,7 +1212,7 @@
+     except TypeError:
+         pass    # move on to the next method
+     else:
+-        return u.keys()
++        return list(u.keys())
+     del u
+ 
+     # We can't hash all the elements.  Second fastest is to sort,
+--- src/engine/SCons/dblite.py (original)
++++ src/engine/SCons/dblite.py (refactored)
+@@ -151,7 +151,7 @@
+     self._needs_sync = 0001
+ 
+   def keys(self):
+-    return self._dict.keys()
++    return list(self._dict.keys())
+ 
+   def has_key(self, key):
+     return key in self._dict
+--- src/engine/SCons/Node/FS.py (original)
++++ src/engine/SCons/Node/FS.py (refactored)
+@@ -1905,7 +1905,7 @@
+         in any way (or ignored, passing None is common).
+         """
+         entries = self.entries
+-        names = entries.keys()
++        names = list(entries.keys())
+         names.remove('.')
+         names.remove('..')
+         func(arg, self, names)
+--- src/engine/SCons/Scanner/Dir.py (original)
++++ src/engine/SCons/Scanner/Dir.py (refactored)
+@@ -101,7 +101,7 @@
+         # mixed Node types (Dirs and Files, for example) has a Dir as
+         # the first entry.
+         return []
+-    entry_list = sorted(filter(do_not_scan, entries.keys()))
++    entry_list = sorted(filter(do_not_scan, list(entries.keys())))
+     return [entries[n] for n in entry_list]
+ 
+ # Local Variables:
+--- src/engine/SCons/Scanner/LaTeX.py (original)
++++ src/engine/SCons/Scanner/LaTeX.py (refactored)
+@@ -164,7 +164,7 @@
+                      'bibliographystyle': 'BSTINPUTS',
+                      'usepackage': 'TEXINPUTS',
+                      'lstinputlisting': 'TEXINPUTS'}
+-    env_variables = SCons.Util.unique(keyword_paths.values())
++    env_variables = SCons.Util.unique(list(keyword_paths.values()))
+ 
+     def __init__(self, name, suffixes, graphics_extensions, *args, **kw):
+ 
+--- src/engine/SCons/Scanner/ScannerTests.py (original)
++++ src/engine/SCons/Scanner/ScannerTests.py (refactored)
+@@ -244,7 +244,7 @@
+         dict = {}
+         dict[s] = 777
+         i = hash(id(s))
+-        h = hash(dict.keys()[0])
++        h = hash(list(dict.keys())[0])
+         self.failUnless(h == i,
+                         "hash Scanner base class expected %s, got %s" % (i, h))
+ 
+--- src/engine/SCons/Scanner/__init__.py (original)
++++ src/engine/SCons/Scanner/__init__.py (refactored)
+@@ -170,7 +170,7 @@
+ 
+         if skeys is _null:
+             if SCons.Util.is_Dict(function):
+-                skeys = function.keys()
++                skeys = list(function.keys())
+             else:
+                 skeys = []
+         self.skeys = skeys
+@@ -281,7 +281,7 @@
+     def __init__(self, dict, *args, **kw):
+         Base.__init__(self, None, *args, **kw)
+         self.dict = dict
+-        self.skeys = dict.keys()
++        self.skeys = list(dict.keys())
+ 
+     def __call__(self, node, env, path = ()):
+         return self.select(node)(node, env, path)
+--- src/engine/SCons/Script/SConsOptions.py (original)
++++ src/engine/SCons/Script/SConsOptions.py (refactored)
+@@ -604,7 +604,7 @@
+     debug_options = ["count", "explain", "findlibs",
+                      "includes", "memoizer", "memory", "objects",
+                      "pdb", "presub", "stacktrace",
+-                     "time"] + deprecated_debug_options.keys()
++                     "time"] + list(deprecated_debug_options.keys())
+ 
+     def opt_debug(option, opt, value, parser,
+                   debug_options=debug_options,
+--- src/engine/SCons/Tool/intelc.py (original)
++++ src/engine/SCons/Tool/intelc.py (refactored)
+@@ -69,7 +69,7 @@
+     u = {}
+     for x in s:
+         u[x] = 1
+-    return u.keys()
++    return list(u.keys())
+ 
+ def linux_ver_normalize(vstr):
+     """Normalize a Linux compiler version number.
+@@ -118,7 +118,7 @@
+         abi = valid_abis[abi]
+     except KeyError:
+         raise SCons.Errors.UserError("Intel compiler: Invalid ABI %s, valid values are %s"% \
+-              (abi, valid_abis.keys()))
++              (abi, list(valid_abis.keys())))
+     return abi
+ 
+ def vercmp(a, b):
+--- src/engine/SCons/Tool/javac.py (original)
++++ src/engine/SCons/Tool/javac.py (refactored)
+@@ -85,7 +85,7 @@
+                find_java_files(result, dirpath, filenames)
+             entry.walk(find_java_files, result)
+ 
+-            slist.extend(result.keys())
++            slist.extend(list(result.keys()))
+         else:
+             raise SCons.Errors.UserError("Java source must be File or Dir, not '%s'" % entry.__class__)
+ 
+--- src/engine/SCons/Tool/textfile.py (original)
++++ src/engine/SCons/Tool/textfile.py (refactored)
+@@ -89,7 +89,7 @@
+     else:
+         d = env['SUBST_DICT']
+         if is_Dict(d):
+-            d = d.items()
++            d = list(d.items())
+         elif is_Sequence(d):
+             pass
+         else:
+--- src/engine/SCons/Tool/packaging/rpm.py (original)
++++ src/engine/SCons/Tool/packaging/rpm.py (refactored)
+@@ -333,7 +333,7 @@
+         def strip_country_code(tag):
+             return tag[:-2]
+ 
+-        replacements = self.tagset.items()
++        replacements = list(self.tagset.items())
+ 
+         str = ""
+         #domestic = [ (k,v) for k,v in replacements if not is_international(k) ]
+--- src/engine/SCons/Variables/VariablesTests.py (original)
++++ src/engine/SCons/Variables/VariablesTests.py (refactored)
+@@ -70,7 +70,7 @@
+                  "42",
+                  check,
+                  lambda x: int(x) + 12)
+-        keys = opts.keys()
++        keys = list(opts.keys())
+         assert keys == ['VAR1', 'VAR2'], keys
+ 
+     def test_Add(self):
+--- src/engine/SCons/compat/_scons_sets.py (original)
++++ src/engine/SCons/compat/_scons_sets.py (refactored)
+@@ -90,7 +90,7 @@
+     __str__ = __repr__
+ 
+     def _repr(self, sort_them=False):
+-        elements = self._data.keys()
++        elements = list(self._data.keys())
+         if sort_them:
+             elements.sort()
+         return '%s(%r)' % (self.__class__.__name__, elements)
+--- test/LoadableModule.py (original)
++++ test/LoadableModule.py (refactored)
+@@ -45,7 +45,7 @@
+     'freebsd4' : no_dl_lib,
+     'linux2' : use_dl_lib,
+ }
+-platforms_with_dlopen = dlopen_line.keys()
++platforms_with_dlopen = list(dlopen_line.keys())
+ 
+ test.write('SConstruct', """
+ env = Environment()
+--- test/scons-time/help/all-subcommands.py (original)
++++ test/scons-time/help/all-subcommands.py (refactored)
+@@ -45,7 +45,7 @@
+ except: pass
+ 
+ # Extract all subcommands from the the do_*() functions.
+-functions = globals['SConsTimer'].__dict__.keys()
++functions = list(globals['SConsTimer'].__dict__.keys())
+ do_funcs = [x for x in functions if x[:3] == 'do_']
+ 
+ subcommands = [x[3:] for x in do_funcs]
+--- QMTest/scons_tdb.py (original)
++++ QMTest/scons_tdb.py (refactored)
+@@ -494,7 +494,7 @@
+             dirs = [d for d in dircache.listdir(path)
+                     if os.path.isdir(os.path.join(path, d))]
+         else:
+-            dirs = self.is_a_test.keys()
++            dirs = list(self.is_a_test.keys())
+ 
+         dirs.sort()
+         return dirs
+@@ -524,7 +524,7 @@
+                        for d in dircache.listdir(path)
+                        if os.path.isdir(os.path.join(path, d))]
+             else:
+-                ids = self.is_a_test.keys()
++                ids = list(self.is_a_test.keys())
+ 
+         if scan_subdirs:
+             for d in dircache.listdir(path):
+--- bin/SConsDoc.py (original)
++++ bin/SConsDoc.py (refactored)
+@@ -218,7 +218,7 @@
+     def __init__(self):
+         self._start_dispatch = {}
+         self._end_dispatch = {}
+-        keys = self.__class__.__dict__.keys()
++        keys = list(self.__class__.__dict__.keys())
+         start_tag_method_names = [k for k in keys if k[:6] == 'start_']
+         end_tag_method_names = [k for k in keys if k[:4] == 'end_']
+         for method_name in start_tag_method_names:
+--- bench/env.__setitem__.py (original)
++++ bench/env.__setitem__.py (refactored)
+@@ -102,7 +102,7 @@
+         'SOURCE'   : None,
+         'SOURCES'  : None,
+     }
+-    _special_set_keys = _special_set.keys()
++    _special_set_keys = list(_special_set.keys())
+     _valid_var = re.compile(r'[_a-zA-Z]\w*$')
+     def __init__(self, **kw):
+         self._dict = kw
