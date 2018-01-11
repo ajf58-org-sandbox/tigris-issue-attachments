@@ -1,0 +1,3510 @@
+RefactoringTool: Files that were modified:
+RefactoringTool: SConstruct
+RefactoringTool: doc/SConscript
+RefactoringTool: timings/hundred/SConstruct
+RefactoringTool: bootstrap.py
+RefactoringTool: runtest.py
+RefactoringTool: src/test_setup.py
+RefactoringTool: src/test_strings.py
+RefactoringTool: src/engine/SCons/Action.py
+RefactoringTool: src/engine/SCons/ActionTests.py
+RefactoringTool: src/engine/SCons/Builder.py
+RefactoringTool: src/engine/SCons/BuilderTests.py
+RefactoringTool: src/engine/SCons/CacheDirTests.py
+RefactoringTool: src/engine/SCons/Debug.py
+RefactoringTool: src/engine/SCons/Defaults.py
+RefactoringTool: src/engine/SCons/DefaultsTests.py
+RefactoringTool: src/engine/SCons/Environment.py
+RefactoringTool: src/engine/SCons/EnvironmentTests.py
+RefactoringTool: src/engine/SCons/Executor.py
+RefactoringTool: src/engine/SCons/ExecutorTests.py
+RefactoringTool: src/engine/SCons/MemoizeTests.py
+RefactoringTool: src/engine/SCons/PathListTests.py
+RefactoringTool: src/engine/SCons/SConsignTests.py
+RefactoringTool: src/engine/SCons/Subst.py
+RefactoringTool: src/engine/SCons/SubstTests.py
+RefactoringTool: src/engine/SCons/Taskmaster.py
+RefactoringTool: src/engine/SCons/TaskmasterTests.py
+RefactoringTool: src/engine/SCons/Util.py
+RefactoringTool: src/engine/SCons/UtilTests.py
+RefactoringTool: src/engine/SCons/cpp.py
+RefactoringTool: src/engine/SCons/cppTests.py
+RefactoringTool: src/engine/SCons/Node/Alias.py
+RefactoringTool: src/engine/SCons/Node/AliasTests.py
+RefactoringTool: src/engine/SCons/Node/FS.py
+RefactoringTool: src/engine/SCons/Node/FSTests.py
+RefactoringTool: src/engine/SCons/Node/NodeTests.py
+RefactoringTool: src/engine/SCons/Node/PythonTests.py
+RefactoringTool: src/engine/SCons/Node/__init__.py
+RefactoringTool: src/engine/SCons/Platform/__init__.py
+RefactoringTool: src/engine/SCons/Platform/posix.py
+RefactoringTool: src/engine/SCons/Scanner/CTests.py
+RefactoringTool: src/engine/SCons/Scanner/Dir.py
+RefactoringTool: src/engine/SCons/Scanner/DirTests.py
+RefactoringTool: src/engine/SCons/Scanner/Fortran.py
+RefactoringTool: src/engine/SCons/Scanner/FortranTests.py
+RefactoringTool: src/engine/SCons/Scanner/IDLTests.py
+RefactoringTool: src/engine/SCons/Scanner/LaTeX.py
+RefactoringTool: src/engine/SCons/Scanner/LaTeXTests.py
+RefactoringTool: src/engine/SCons/Scanner/ProgTests.py
+RefactoringTool: src/engine/SCons/Scanner/RCTests.py
+RefactoringTool: src/engine/SCons/Scanner/ScannerTests.py
+RefactoringTool: src/engine/SCons/Scanner/__init__.py
+RefactoringTool: src/engine/SCons/Script/Interactive.py
+RefactoringTool: src/engine/SCons/Script/Main.py
+RefactoringTool: src/engine/SCons/Script/MainTests.py
+RefactoringTool: src/engine/SCons/Script/SConsOptions.py
+RefactoringTool: src/engine/SCons/Script/SConscript.py
+RefactoringTool: src/engine/SCons/Tool/FortranCommon.py
+RefactoringTool: src/engine/SCons/Tool/JavaCommonTests.py
+RefactoringTool: src/engine/SCons/Tool/PharLapCommon.py
+RefactoringTool: src/engine/SCons/Tool/filesystem.py
+RefactoringTool: src/engine/SCons/Tool/install.py
+RefactoringTool: src/engine/SCons/Tool/javac.py
+RefactoringTool: src/engine/SCons/Tool/msvs.py
+RefactoringTool: src/engine/SCons/Tool/swig.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/common.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/vs.py
+RefactoringTool: src/engine/SCons/Tool/packaging/__init__.py
+RefactoringTool: src/engine/SCons/Tool/packaging/rpm.py
+RefactoringTool: src/engine/SCons/Variables/ListVariable.py
+RefactoringTool: src/engine/SCons/Variables/VariablesTests.py
+RefactoringTool: src/engine/SCons/Variables/__init__.py
+RefactoringTool: src/script/scons-time.py
+RefactoringTool: src/script/scons.py
+RefactoringTool: src/script/sconsign.py
+RefactoringTool: test/option-j.py
+RefactoringTool: test/textfile.py
+RefactoringTool: test/Perforce/Perforce.py
+RefactoringTool: test/ZIP/ZIP.py
+RefactoringTool: test/option/debug-time.py
+RefactoringTool: test/option/help-options.py
+RefactoringTool: test/scons-time/help/all-subcommands.py
+RefactoringTool: QMTest/TestCmd.py
+RefactoringTool: QMTest/TestCommon.py
+RefactoringTool: QMTest/TestSCons.py
+RefactoringTool: QMTest/scons_tdb.py
+RefactoringTool: QMTest/unittest.py
+RefactoringTool: bin/linecount.py
+RefactoringTool: bin/objcounts.py
+RefactoringTool: bin/scons-diff.py
+RefactoringTool: bin/scons-doc.py
+RefactoringTool: bin/scons-proc.py
+RefactoringTool: bin/sconsexamples.py
+RefactoringTool: bench/bench.py
+RefactoringTool: bench/timeit.py
+--- SConstruct (original)
++++ SConstruct (refactored)
+@@ -747,8 +747,7 @@
+     # destination files.
+     #
+     manifest_in = File(os.path.join(src, 'MANIFEST.in')).rstr()
+-    src_files = map(lambda x: x[:-1],
+-                    open(manifest_in).readlines())
++    src_files = [x[:-1] for x in open(manifest_in).readlines()]
+     raw_files = src_files[:]
+     dst_files = src_files[:]
+     rpm_files = []
+@@ -767,9 +766,9 @@
+             isubdir = p['subinst_dirs'][sp['pkg']]
+             MANIFEST_in = File(os.path.join(src, ssubdir, 'MANIFEST.in')).rstr()
+             MANIFEST_in_list.append(MANIFEST_in)
+-            files = map(lambda x: x[:-1], open(MANIFEST_in).readlines())
++            files = [x[:-1] for x in open(MANIFEST_in).readlines()]
+             raw_files.extend(files)
+-            src_files.extend(map(lambda x: os.path.join(subdir, x), files))
++            src_files.extend([os.path.join(subdir, x) for x in files])
+             for f in files:
+                 r = os.path.join(sp['rpm_dir'], f)
+                 rpm_files.append(r)
+@@ -778,7 +777,7 @@
+             for f in sp.get('extra_rpm_files', []):
+                 r = os.path.join(sp['rpm_dir'], f)
+                 rpm_files.append(r)
+-            files = map(lambda x: os.path.join(isubdir, x), files)
++            files = [os.path.join(isubdir, x) for x in files]
+             dst_files.extend(files)
+             for k, f in sp['filemap'].items():
+                 if f:
+@@ -832,7 +831,7 @@
+     #
+     # Now go through and arrange to create whatever packages we can.
+     #
+-    build_src_files = map(lambda x: os.path.join(build, x), src_files)
++    build_src_files = [os.path.join(build, x) for x in src_files]
+     Local(*build_src_files)
+ 
+     distutils_formats = []
+@@ -870,9 +869,8 @@
+         # but that gives heartburn to Cygwin's tar, so work around it
+         # with separate zcat-tar-rm commands.
+         #
+-        unpack_tar_gz_files = map(lambda x: os.path.join(unpack_tar_gz_dir,
+-                                                         pkg_version, x),
+-                                  src_files)
++        unpack_tar_gz_files = [os.path.join(unpack_tar_gz_dir,
++                                                         pkg_version, x) for x in src_files]
+         env.Command(unpack_tar_gz_files, dist_tar_gz, [
+                     Delete(os.path.join(unpack_tar_gz_dir, pkg_version)),
+                     "$ZCAT $SOURCES > .temp",
+@@ -893,7 +891,7 @@
+         # like this because we put a preamble in it that will chdir()
+         # to the directory in which setup.py exists.
+         #
+-        dfiles = map(lambda x: os.path.join(test_tar_gz_dir, x), dst_files)
++        dfiles = [os.path.join(test_tar_gz_dir, x) for x in dst_files]
+         env.Command(dfiles, unpack_tar_gz_files, [
+             Delete(os.path.join(unpack_tar_gz_dir, pkg_version, 'build')),
+             Delete("$TEST_TAR_GZ_DIR"),
+@@ -939,9 +937,8 @@
+         # Unpack the zip archive created by the distutils into
+         # build/unpack-zip/scons-{version}.
+         #
+-        unpack_zip_files = map(lambda x: os.path.join(unpack_zip_dir,
+-                                                      pkg_version, x),
+-                               src_files)
++        unpack_zip_files = [os.path.join(unpack_zip_dir,
++                                                      pkg_version, x) for x in src_files]
+ 
+         env.Command(unpack_zip_files, dist_zip, [
+             Delete(os.path.join(unpack_zip_dir, pkg_version)),
+@@ -961,7 +958,7 @@
+         # like this because we put a preamble in it that will chdir()
+         # to the directory in which setup.py exists.
+         #
+-        dfiles = map(lambda x: os.path.join(test_zip_dir, x), dst_files)
++        dfiles = [os.path.join(test_zip_dir, x) for x in dst_files]
+         env.Command(dfiles, unpack_zip_files, [
+             Delete(os.path.join(unpack_zip_dir, pkg_version, 'build')),
+             Delete("$TEST_ZIP_DIR"),
+@@ -1024,8 +1021,7 @@
+         AddPostAction(dist_noarch_rpm, Chmod(dist_noarch_rpm, 0644))
+         AddPostAction(dist_src_rpm, Chmod(dist_src_rpm, 0644))
+ 
+-        dfiles = map(lambda x: os.path.join(test_rpm_dir, 'usr', x),
+-                     dst_files)
++        dfiles = [os.path.join(test_rpm_dir, 'usr', x) for x in dst_files]
+         env.Command(dfiles,
+                     dist_noarch_rpm,
+                     "$RPM2CPIO $SOURCES | (cd $TEST_RPM_DIR && cpio -id)")
+@@ -1105,10 +1101,10 @@
+         commands.append(Move(local_script + '.py', local_script))
+ 
+     rf = [x for x in raw_files if not x in scripts]
+-    rf = map(lambda x: os.path.join(s_l_v, x), rf)
++    rf = [os.path.join(s_l_v, x) for x in rf]
+     for script in scripts:
+         rf.append("%s.py" % script)
+-    local_targets = map(lambda x: os.path.join(build_dir_local, x), rf)
++    local_targets = [os.path.join(build_dir_local, x) for x in rf]
+ 
+     env.Command(local_targets, build_src_files, commands)
+ 
+@@ -1127,8 +1123,7 @@
+                     local_targets,
+                     "cd %s && tar czf $( ${TARGET.abspath} $) *" % build_dir_local)
+ 
+-        unpack_targets = map(lambda x: os.path.join(test_local_tar_gz_dir, x),
+-                             rf)
++        unpack_targets = [os.path.join(test_local_tar_gz_dir, x) for x in rf]
+         commands = [Delete(test_local_tar_gz_dir),
+                     Mkdir(test_local_tar_gz_dir),
+                     "cd %s && tar xzf $( ${SOURCE.abspath} $)" % test_local_tar_gz_dir]
+@@ -1139,7 +1134,7 @@
+         env.Command(dist_local_zip, local_targets, zipit,
+                     CD = build_dir_local, PSV = '.')
+ 
+-        unpack_targets = map(lambda x: os.path.join(test_local_zip_dir, x), rf)
++        unpack_targets = [os.path.join(test_local_zip_dir, x) for x in rf]
+         commands = [Delete(test_local_zip_dir),
+                     Mkdir(test_local_zip_dir),
+                     unzipit]
+@@ -1193,10 +1188,10 @@
+ sfiles = None
+ if hg_status_lines:
+     slines = [l for l in hg_status_lines if l[0] in 'ACM']
+-    sfiles = map(lambda l: l.split()[-1], slines)
++    sfiles = [l.split()[-1] for l in slines]
+ elif svn_status_lines:
+     slines = [l for l in svn_status_lines if l[0] in ' MA']
+-    sentries = map(lambda l: l.split()[-1], slines)
++    sentries = [l.split()[-1] for l in slines]
+     sfiles = list(filter(os.path.isfile, sentries))
+ else:
+    "Not building in a Mercurial or Subversion tree; skipping building src package."
+@@ -1229,7 +1224,7 @@
+         for file in sfiles:
+             env.SCons_revision(os.path.join(b_ps, file), file)
+ 
+-        b_ps_files = map(lambda x: os.path.join(b_ps, x), sfiles)
++        b_ps_files = [os.path.join(b_ps, x) for x in sfiles]
+         cmds = [
+             Delete(b_psv),
+             Copy(b_psv, b_ps),
+@@ -1248,9 +1243,8 @@
+             #
+             # Unpack the archive into build/unpack/scons-{version}.
+             #
+-            unpack_tar_gz_files = map(lambda x: os.path.join(unpack_tar_gz_dir,
+-                                                             psv, x),
+-                                      sfiles)
++            unpack_tar_gz_files = [os.path.join(unpack_tar_gz_dir,
++                                                             psv, x) for x in sfiles]
+ 
+             #
+             # We'd like to replace the last three lines with the following:
+@@ -1279,8 +1273,7 @@
+             # like this because we put a preamble in it that will chdir()
+             # to the directory in which setup.py exists.
+             #
+-            dfiles = map(lambda x: os.path.join(test_src_tar_gz_dir, x),
+-                            dst_files)
++            dfiles = [os.path.join(test_src_tar_gz_dir, x) for x in dst_files]
+             scons_lib_dir = os.path.join(unpack_tar_gz_dir, psv, 'src', 'engine')
+             ENV = env.Dictionary('ENV').copy()
+             ENV['SCONS_LIB_DIR'] = scons_lib_dir
+@@ -1313,9 +1306,8 @@
+             #
+             # Unpack the archive into build/unpack/scons-{version}.
+             #
+-            unpack_zip_files = map(lambda x: os.path.join(unpack_zip_dir,
+-                                                          psv, x),
+-                                      sfiles)
++            unpack_zip_files = [os.path.join(unpack_zip_dir,
++                                                          psv, x) for x in sfiles]
+ 
+             env.Command(unpack_zip_files, src_zip, [
+                 Delete(os.path.join(unpack_zip_dir, psv)),
+@@ -1335,7 +1327,7 @@
+             # like this because we put a preamble in it that will chdir()
+             # to the directory in which setup.py exists.
+             #
+-            dfiles = map(lambda x: os.path.join(test_src_zip_dir, x), dst_files)
++            dfiles = [os.path.join(test_src_zip_dir, x) for x in dst_files]
+             scons_lib_dir = os.path.join(unpack_zip_dir, psv, 'src', 'engine')
+             ENV = env.Dictionary('ENV').copy()
+             ENV['SCONS_LIB_DIR'] = scons_lib_dir
+--- doc/SConscript (original)
++++ doc/SConscript (refactored)
+@@ -119,8 +119,8 @@
+ #manifest_in = File('#src/engine/MANIFEST.in').rstr()
+ 
+ manifest_xml_in = File('#src/engine/MANIFEST-xml.in').rstr()
+-scons_doc_files = map(chop, open(manifest_xml_in).readlines())
+-scons_doc_files = map(lambda x: File('#src/engine/'+x).rstr(), scons_doc_files)
++scons_doc_files = list(map(chop, open(manifest_xml_in).readlines()))
++scons_doc_files = [File('#src/engine/'+x).rstr() for x in scons_doc_files]
+ 
+ if not jw:
+     print "jw not found, skipping building User Guide."
+@@ -240,7 +240,7 @@
+     # get included by the document XML files in the subdirectories.
+     #
+     manifest = File('MANIFEST').rstr()
+-    src_files = map(lambda x: x[:-1], open(manifest).readlines())
++    src_files = [x[:-1] for x in open(manifest).readlines()]
+     for s in src_files:
+         base, ext = os.path.splitext(s)
+         if ext in ['.fig', '.jpg']:
+@@ -255,8 +255,7 @@
+     #
+     for doc in docs.keys():
+         manifest = File(os.path.join(doc, 'MANIFEST')).rstr()
+-        src_files = map(lambda x: x[:-1],
+-                        open(manifest).readlines())
++        src_files = [x[:-1] for x in open(manifest).readlines()]
+         build_doc = docs[doc].get('scons-doc') and int(ARGUMENTS.get('BUILDDOC', 0))
+         for s in src_files:
+             doc_s = os.path.join(doc, s)
+@@ -408,8 +407,7 @@
+ 
+ man_i_files = ['builders.man', 'tools.man', 'variables.man']
+ 
+-man_intermediate_files = map(lambda x: os.path.join(build, 'man', x),
+-                             man_i_files)
++man_intermediate_files = [os.path.join(build, 'man', x) for x in man_i_files]
+ 
+ cmd = "$PYTHON $SCONS_PROC_PY --man -b ${TARGETS[0]} -t ${TARGETS[1]} -v ${TARGETS[2]} $( $SOURCES $)"
+ man_intermediate_files = env.Command(man_intermediate_files,
+@@ -469,7 +467,7 @@
+     # the SConstruct file.
+     e = os.path.join('#src', 'engine')
+     manifest_in = File(os.path.join(e, 'MANIFEST.in')).rstr()
+-    sources = map(lambda x: x[:-1], open(manifest_in).readlines())
++    sources = [x[:-1] for x in open(manifest_in).readlines()]
+     sources = [x for x in sources if x.find('Optik') == -1]
+     sources = [x for x in sources if x.find('Platform') == -1]
+     sources = [x for x in sources if x.find('Tool') == -1]
+@@ -477,7 +475,7 @@
+     sources = [x for x in sources if x.find('Options') == -1]
+ 
+     e = os.path.join(build, '..', 'scons', 'engine')
+-    sources = map(lambda x: os.path.join(e, x), sources)
++    sources = [os.path.join(e, x) for x in sources]
+ 
+     epydoc_commands = [
+         Delete('$OUTDIR'),
+@@ -519,7 +517,7 @@
+ # for easy distribution to the web site.
+ #
+ if tar_deps:
+-    tar_list = ' '.join(map(lambda x: x.replace(build+'/', ''), tar_list))
++    tar_list = ' '.join([x.replace(build+'/', '') for x in tar_list])
+     t = env.Command(dist_doc_tar_gz, tar_deps,
+                 "tar cf${TAR_HFLAG} - -C %s %s | gzip > $TARGET" % (build, tar_list))
+     AddPostAction(dist_doc_tar_gz, Chmod(dist_doc_tar_gz, 0644))
+--- timings/hundred/SConstruct (original)
++++ timings/hundred/SConstruct (refactored)
+@@ -27,8 +27,8 @@
+     for t, s in zip(target, source):
+         open(str(t),  'wb').write(open(str(s), 'rb').read())
+ 
+-source_list = map(lambda t: 'source_%04d' % t, xrange(target_count))
+-target_list = map(lambda t: 'target_%04d' % t, xrange(target_count))
++source_list = ['source_%04d' % t for t in xrange(target_count)]
++target_list = ['target_%04d' % t for t in xrange(target_count)]
+ 
+ env = Environment()
+ 
+--- bootstrap.py (original)
++++ bootstrap.py (refactored)
+@@ -177,8 +177,7 @@
+ src_engine = os.path.join('src', 'engine')
+ MANIFEST_in = find(os.path.join(src_engine, 'MANIFEST.in'))
+ 
+-files = [ scons_py ] + map(lambda x: os.path.join(src_engine, x[:-1]),
+-                           open(MANIFEST_in).readlines())
++files = [ scons_py ] + [os.path.join(src_engine, x[:-1]) for x in open(MANIFEST_in).readlines()]
+ 
+ for file in files:
+     src = find(file)
+--- runtest.py (original)
++++ runtest.py (refactored)
+@@ -333,7 +333,7 @@
+ else:
+     def spawn_it(command_args):
+         command = command_args[0]
+-        command_args = map(escape, command_args)
++        command_args = list(map(escape, command_args))
+         return os.spawnv(os.P_WAIT, command, command_args)
+ 
+ class Base:
+@@ -627,7 +627,7 @@
+ elif testlistfile:
+     tests = open(testlistfile, 'r').readlines()
+     tests = [x for x in tests if x[0] != '#']
+-    tests = map(lambda x: x[:-1], tests)
++    tests = [x[:-1] for x in tests]
+ elif all and not qmtest:
+     # Find all of the SCons functional tests in the local directory
+     # tree.  This is anything under the 'src' subdirectory that ends
+@@ -700,7 +700,7 @@
+         qmtest_args.append(rs)
+ 
+     if format == '--aegis':
+-        tests = map(lambda x: x.replace(cwd+os.sep, ''), tests)
++        tests = [x.replace(cwd+os.sep, '') for x in tests]
+     else:
+         os.environ['SCONS'] = os.path.join(cwd, 'src', 'script', 'scons.py')
+ 
+@@ -718,7 +718,7 @@
+ #except OSError:
+ #    pass
+ 
+-tests = map(Test, tests)
++tests = list(map(Test, tests))
+ 
+ class Unbuffered:
+     def __init__(self, file):
+@@ -787,21 +787,21 @@
+             sys.stdout.write("\nPassed the following test:\n")
+         else:
+             sys.stdout.write("\nPassed the following %d tests:\n" % len(passed))
+-        paths = map(lambda x: x.path, passed)
++        paths = [x.path for x in passed]
+         sys.stdout.write("\t" + "\n\t".join(paths) + "\n")
+     if fail:
+         if len(fail) == 1:
+             sys.stdout.write("\nFailed the following test:\n")
+         else:
+             sys.stdout.write("\nFailed the following %d tests:\n" % len(fail))
+-        paths = map(lambda x: x.path, fail)
++        paths = [x.path for x in fail]
+         sys.stdout.write("\t" + "\n\t".join(paths) + "\n")
+     if no_result:
+         if len(no_result) == 1:
+             sys.stdout.write("\nNO RESULT from the following test:\n")
+         else:
+             sys.stdout.write("\nNO RESULT from the following %d tests:\n" % len(no_result))
+-        paths = map(lambda x: x.path, no_result)
++        paths = [x.path for x in no_result]
+         sys.stdout.write("\t" + "\n\t".join(paths) + "\n")
+ 
+ if outputfile:
+--- src/test_setup.py (original)
++++ src/test_setup.py (refactored)
+@@ -130,28 +130,28 @@
+         return 'Installed SCons library modules into %s' % lib
+ 
+     def lib_paths(self, lib_dir):
+-        return map(lambda p: os.path.join(lib_dir, 'SCons', p), self._lib_modules)
++        return [os.path.join(lib_dir, 'SCons', p) for p in self._lib_modules]
+ 
+     def scripts_line(self):
+         return 'Installed SCons scripts into %s' % self.bin_dir
+ 
+     def base_script_paths(self):
+         scripts = self._base_scripts
+-        return map(self.prepend_bin_dir, scripts)
++        return list(map(self.prepend_bin_dir, scripts))
+ 
+     def version_script_paths(self):
+         scripts = self._version_scripts
+-        return map(self.prepend_bin_dir, scripts)
++        return list(map(self.prepend_bin_dir, scripts))
+ 
+     def bat_script_paths(self):
+         scripts = self._bat_scripts + self._bat_version_scripts
+-        return map(self.prepend_bat_dir, scripts)
++        return list(map(self.prepend_bat_dir, scripts))
+ 
+     def man_page_line(self):
+         return 'Installed SCons man pages into %s' % self.man_dir
+ 
+     def man_page_paths(self):
+-        return map(self.prepend_man_dir, self._man_pages)
++        return list(map(self.prepend_man_dir, self._man_pages))
+ 
+ 
+     def must_have_installed(self, paths):
+--- src/test_strings.py (original)
++++ src/test_strings.py (refactored)
+@@ -86,7 +86,7 @@
+             return os.path.isfile(path)
+ 
+     def visit(self, result, dirname, names):
+-        for name, path in map(lambda n: (n, os.path.join(dirname, n)), names):
++        for name, path in [(n, os.path.join(dirname, n)) for n in names]:
+             if self.remove_this(name, path):
+                 names.remove(name)
+             elif self.search_this(path):
+--- src/engine/SCons/Action.py (original)
++++ src/engine/SCons/Action.py (refactored)
+@@ -284,7 +284,7 @@
+ 
+     #xxx = [_object_contents(x.cell_contents) for x in closure]
+     try:
+-        xxx = map(lambda x: _object_contents(x.cell_contents), closure)
++        xxx = [_object_contents(x.cell_contents) for x in closure]
+     except AttributeError:
+         xxx = []
+     contents.append(',(' + ','.join(xxx) + ')')
+@@ -782,7 +782,7 @@
+         if executor:
+             target = executor.get_all_targets()
+             source = executor.get_all_sources()
+-        cmd_list, ignore, silent = self.process(target, map(rfile, source), env, executor)
++        cmd_list, ignore, silent = self.process(target, list(map(rfile, source)), env, executor)
+ 
+         # Use len() to filter out any "command" that's zero-length.
+         for cmd_line in filter(len, cmd_list):
+@@ -885,7 +885,7 @@
+                  show=_null, execute=_null, chdir=_null, executor=None):
+         act = self._generate(target, source, env, 0, executor)
+         if act is None:
+-            raise UserError("While building `%s': Cannot deduce file extension from source files: %s" % (repr(map(str, target)), repr(map(str, source))))
++            raise UserError("While building `%s': Cannot deduce file extension from source files: %s" % (repr(list(map(str, target))), repr(list(map(str, source)))))
+         return act(target, source, env, exitstatfunc, presub,
+                    show, execute, chdir, executor)
+ 
+@@ -1043,7 +1043,7 @@
+             if executor:
+                 target = executor.get_all_targets()
+                 source = executor.get_all_sources()
+-            rsources = map(rfile, source)
++            rsources = list(map(rfile, source))
+             try:
+                 result = self.execfunction(target=target, source=rsources, env=env)
+             except KeyboardInterrupt, e:
+@@ -1099,30 +1099,28 @@
+             if isinstance(x, ActionBase):
+                 return x
+             return Action(x)
+-        self.list = map(list_of_actions, actionlist)
++        self.list = list(map(list_of_actions, actionlist))
+         # our children will have had any varlist
+         # applied; we don't need to do it again
+         self.varlist = ()
+         self.targets = '$TARGETS'
+ 
+     def genstring(self, target, source, env):
+-        return '\n'.join(map(lambda a: a.genstring(target, source, env),
+-                               self.list))
++        return '\n'.join([a.genstring(target, source, env) for a in self.list])
+ 
+     def __str__(self):
+         return '\n'.join(map(str, self.list))
+ 
+     def presub_lines(self, env):
+         return SCons.Util.flatten_sequence(
+-            map(lambda a: a.presub_lines(env), self.list))
++            [a.presub_lines(env) for a in self.list])
+ 
+     def get_presig(self, target, source, env):
+         """Return the signature contents of this action list.
+ 
+         Simple concatenation of the signatures of the elements.
+         """
+-        return "".join(map(lambda x: x.get_contents(target, source, env),
+-                               self.list))
++        return "".join([x.get_contents(target, source, env) for x in self.list])
+ 
+     def __call__(self, target, source, env, exitstatfunc=_null, presub=_null,
+                  show=_null, execute=_null, chdir=_null, executor=None):
+@@ -1198,8 +1196,7 @@
+         return self.parent.convert(s)
+ 
+     def subst_args(self, target, source, env):
+-        return map(lambda x: self.subst(x, target, source, env),
+-                   self.args)
++        return [self.subst(x, target, source, env) for x in self.args]
+ 
+     def subst_kw(self, target, source, env):
+         kw = {}
+--- src/engine/SCons/ActionTests.py (original)
++++ src/engine/SCons/ActionTests.py (refactored)
+@@ -751,8 +751,7 @@
+         sum = act1 + act2
+         assert isinstance(sum, SCons.Action.ListAction), str(sum)
+         assert len(sum.list) == 3, len(sum.list)
+-        assert map(lambda x: isinstance(x, SCons.Action.ActionBase),
+-                   sum.list) == [ 1, 1, 1 ]
++        assert [isinstance(x, SCons.Action.ActionBase) for x in sum.list] == [ 1, 1, 1 ]
+ 
+         sum = act1 + act1
+         assert isinstance(sum, SCons.Action.ListAction), str(sum)
+@@ -1049,7 +1048,7 @@
+         cmd3 = r'%s %s %s ${TARGETS}' % (_python_, act_py, outfile)
+ 
+         act = SCons.Action.CommandAction(cmd3)
+-        r = act(map(DummyNode, ['aaa', 'bbb']), [], env.Clone())
++        r = act(list(map(DummyNode, ['aaa', 'bbb'])), [], env.Clone())
+         assert r == 0
+         c = test.read(outfile, 'r')
+         assert c == "act.py: 'aaa' 'bbb'\n", c
+@@ -1331,8 +1330,8 @@
+         # that scheme, then all of the '__t1__' and '__s6__' file names
+         # in the asserts below would change to 't1' and 's6' and the
+         # like.
+-        t = map(DummyNode, ['t1', 't2', 't3', 't4', 't5', 't6'])
+-        s = map(DummyNode, ['s1', 's2', 's3', 's4', 's5', 's6'])
++        t = list(map(DummyNode, ['t1', 't2', 't3', 't4', 't5', 't6']))
++        s = list(map(DummyNode, ['s1', 's2', 's3', 's4', 's5', 's6']))
+         env = Environment()
+ 
+         a = SCons.Action.CommandAction(["$TARGET"])
+@@ -1527,7 +1526,7 @@
+         def f_local(target, source, env, for_signature, LocalFunc=LocalFunc):
+             return SCons.Action.Action(LocalFunc, varlist=['XYZ'])
+ 
+-        matches_foo = map(lambda x: x + "foo", func_matches)
++        matches_foo = [x + "foo" for x in func_matches]
+ 
+         a = self.factory(f_global)
+         c = a.get_contents(target=[], source=[], env=env)
+@@ -1675,7 +1674,7 @@
+         c = a.get_contents(target=[], source=[], env=Environment())
+         assert c in func_matches, repr(c)
+ 
+-        matches_foo = map(lambda x: x + "foo", func_matches)
++        matches_foo = [x + "foo" for x in func_matches]
+ 
+         a = factory(GlobalFunc, varlist=['XYZ'])
+         c = a.get_contents(target=[], source=[], env=Environment())
+@@ -1891,7 +1890,7 @@
+         c = a.get_contents(target=[], source=[], env=env)
+         assert c in func_matches, repr(c)
+ 
+-        matches_foo = map(lambda x: x + "foo", func_matches)
++        matches_foo = [x + "foo" for x in func_matches]
+ 
+         env = Environment(FOO = factory(GlobalFunc, varlist=['XYZ']))
+         c = a.get_contents(target=[], source=[], env=env)
+@@ -2095,7 +2094,7 @@
+                  ActionCompareTestCase ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Builder.py (original)
++++ src/engine/SCons/Builder.py (refactored)
+@@ -123,7 +123,7 @@
+     if suffixes:
+         matchsuf = [S for S in suffixes if path[-len(S):] == S]
+         if matchsuf:
+-            suf = max(map(None, map(len, matchsuf), matchsuf))[1]
++            suf = max(list(map(None, list(map(len, matchsuf)), matchsuf)))[1]
+             return [path[:-len(suf)], path[-len(suf):]]
+     return SCons.Util.splitext(path)
+ 
+@@ -156,14 +156,14 @@
+             for src in map(str, source):
+                 my_ext = match_splitext(src, suffixes)[1]
+                 if ext and my_ext != ext:
+-                    raise UserError("While building `%s' from `%s': Cannot build multiple sources with different extensions: %s, %s" % (repr(map(str, target)), src, ext, my_ext))
++                    raise UserError("While building `%s' from `%s': Cannot build multiple sources with different extensions: %s, %s" % (repr(list(map(str, target))), src, ext, my_ext))
+                 ext = my_ext
+         else:
+             ext = match_splitext(str(source[0]), self.src_suffixes())[1]
+ 
+         if not ext:
+             #return ext
+-            raise UserError("While building `%s': Cannot deduce file extension from source files: %s" % (repr(map(str, target)), repr(map(str, source))))
++            raise UserError("While building `%s': Cannot deduce file extension from source files: %s" % (repr(list(map(str, target))), repr(list(map(str, source)))))
+ 
+         try:
+             ret = SCons.Util.Selector.__call__(self, env, source, ext)
+@@ -171,7 +171,7 @@
+             raise UserError("Ambiguous suffixes after environment substitution: %s == %s == %s" % (e[0], e[1], e[2]))
+         if ret is None:
+             raise UserError("While building `%s' from `%s': Don't know how to build from a source file with suffix `%s'.  Expected a suffix in this list: %s." % \
+-                            (repr(map(str, target)), repr(map(str, source)), ext, repr(self.keys())))
++                            (repr(list(map(str, target))), repr(list(map(str, source))), ext, repr(self.keys())))
+         return ret
+ 
+ class CallableSelector(SCons.Util.Selector):
+@@ -308,15 +308,15 @@
+                     raise UserError, msg
+                 # TODO(batch):  list constructed each time!
+                 if t.get_executor().get_all_targets() != tlist:
+-                    msg = "Two different target lists have a target in common: %s  (from %s and from %s)" % (t, map(str, t.get_executor().get_all_targets()), map(str, tlist))
++                    msg = "Two different target lists have a target in common: %s  (from %s and from %s)" % (t, list(map(str, t.get_executor().get_all_targets())), list(map(str, tlist)))
+                     raise UserError, msg
+             elif t.sources != slist:
+-                msg = "Multiple ways to build the same target were specified for: %s  (from %s and from %s)" % (t, map(str, t.sources), map(str, slist))
++                msg = "Multiple ways to build the same target were specified for: %s  (from %s and from %s)" % (t, list(map(str, t.sources)), list(map(str, slist)))
+                 raise UserError, msg
+ 
+     if builder.single_source:
+         if len(slist) > 1:
+-            raise UserError, "More than one source given for single-source builder: targets=%s sources=%s" % (map(str,tlist), map(str,slist))
++            raise UserError, "More than one source given for single-source builder: targets=%s sources=%s" % (list(map(str,tlist)), list(map(str,slist)))
+ 
+ class EmitterProxy:
+     """This is a callable class that can act as a
+@@ -574,7 +574,7 @@
+             if not self.action:
+                 fmt = "Builder %s must have an action to build %s."
+                 raise UserError, fmt % (self.get_name(env or self.env),
+-                                        map(str,tlist))
++                                        list(map(str,tlist)))
+             key = self.action.batch_key(env or self.env, tlist, slist)
+             if key:
+                 try:
+@@ -619,7 +619,7 @@
+                     return f
+                 if not SCons.Util.is_List(source):
+                     source = [source]
+-                source = map(prependDirIfRelative, source)
++                source = list(map(prependDirIfRelative, source))
+                 del kw['srcdir']
+             if self.overrides:
+                 env_kw = self.overrides.copy()
+@@ -658,7 +658,7 @@
+             src_suffix = []
+         elif not SCons.Util.is_List(src_suffix):
+             src_suffix = [ src_suffix ]
+-        self.src_suffix = map(lambda suf: callable(suf) and suf or self.adjust_suffix(suf), src_suffix)
++        self.src_suffix = [callable(suf) and suf or self.adjust_suffix(suf) for suf in src_suffix]
+ 
+     def get_src_suffix(self, env):
+         """Get the first src_suffix in the list of src_suffixes."""
+@@ -721,7 +721,7 @@
+         lengths = list(set(map(len, src_suffixes)))
+ 
+         def match_src_suffix(name, src_suffixes=src_suffixes, lengths=lengths):
+-            node_suffixes = map(lambda l: name[-l:], lengths)
++            node_suffixes = [name[-l:] for l in lengths]
+             for suf in src_suffixes:
+                 if suf in node_suffixes:
+                     return suf
+@@ -816,7 +816,7 @@
+                 return memo_dict[memo_key]
+             except KeyError:
+                 pass
+-        suffixes = map(lambda x: env.subst(x), self.src_suffix)
++        suffixes = [env.subst(x) for x in self.src_suffix]
+         memo_dict[memo_key] = suffixes
+         return suffixes
+ 
+--- src/engine/SCons/BuilderTests.py (original)
++++ src/engine/SCons/BuilderTests.py (refactored)
+@@ -255,7 +255,7 @@
+             l.extend(ul)
+         except TypeError:
+             def mystr(l):
+-                return str(map(str, l))
++                return str(list(map(str, l)))
+         else:
+             mystr = str
+ 
+@@ -264,14 +264,14 @@
+         tlist = builder(env, target = [nnn1, nnn2], source = [])
+         s = mystr(tlist)
+         assert s == "['nnn1', 'nnn2']", s
+-        l = map(str, tlist)
++        l = list(map(str, tlist))
+         assert l == ['nnn1', 'nnn2'], l
+ 
+         tlist = builder(env, target = 'n3', source = 'n4')
+         s = mystr(tlist)
+         assert s == "['n3']", s
+         target = tlist[0]
+-        l = map(str, tlist)
++        l = list(map(str, tlist))
+         assert l == ['n3'], l
+         assert target.name == 'n3'
+         assert target.sources[0].name == 'n4'
+@@ -279,7 +279,7 @@
+         tlist = builder(env, target = 'n4 n5', source = ['n6 n7'])
+         s = mystr(tlist)
+         assert s == "['n4 n5']", s
+-        l = map(str, tlist)
++        l = list(map(str, tlist))
+         assert l == ['n4 n5'], l
+         target = tlist[0]
+         assert target.name == 'n4 n5'
+@@ -288,7 +288,7 @@
+         tlist = builder(env, target = ['n8 n9'], source = 'n10 n11')
+         s = mystr(tlist)
+         assert s == "['n8 n9']", s
+-        l = map(str, tlist)
++        l = list(map(str, tlist))
+         assert l == ['n8 n9'], l
+         target = tlist[0]
+         assert target.name == 'n8 n9'
+@@ -618,7 +618,7 @@
+                                    src_suffix='.obj',
+                                    suffix='.exe')
+         tgt = b2(env, target=None, source=['foo$OBJSUFFIX'])
+-        s = map(str, tgt[0].sources)
++        s = list(map(str, tgt[0].sources))
+         assert s == ['foo.obj'], s
+ 
+     def test_suffix(self):
+@@ -715,10 +715,10 @@
+             # support anyway, don't bother trying to test for it.
+             pass
+         else:
+-            s = map(str, tgts)
++            s = list(map(str, tgts))
+             expect = [test.workpath('2.out'), test.workpath('3.out')]
+-            expect = map(os.path.normcase, expect)
+-            assert map(os.path.normcase, s) == expect, s
++            expect = list(map(os.path.normcase, expect))
++            assert list(map(os.path.normcase, s)) == expect, s
+         for t in tgts: t.prepare()
+         tgts[0].build()
+         tgts[1].build()
+@@ -744,7 +744,7 @@
+             for t in target:
+                 open(str(t), 'w').write("function2\n")
+             for t in tlist:
+-                if not t in map(str, target):
++                if not t in list(map(str, target)):
+                     open(t, 'w').write("function2\n")
+             return 1
+ 
+@@ -773,7 +773,7 @@
+             for t in target:
+                 open(str(t), 'w').write("function3\n")
+             for t in tlist:
+-                if not t in map(str, target):
++                if not t in list(map(str, target)):
+                     open(t, 'w').write("function3\n")
+             return 1
+ 
+@@ -811,17 +811,17 @@
+         tgt = builder2(env, target='baz', source=sources)[0]
+         s = str(tgt)
+         assert s == 'baz', s
+-        s = map(str, tgt.sources)
++        s = list(map(str, tgt.sources))
+         assert s == ['test.foo', 'test2.foo', 'test3.txt', 'test4.foo'], s
+-        s = map(str, tgt.sources[0].sources)
++        s = list(map(str, tgt.sources[0].sources))
+         assert s == ['test.bar'], s
+ 
+         tgt = builder2(env, None, 'aaa.bar')[0]
+         s = str(tgt)
+         assert s == 'aaa', s
+-        s = map(str, tgt.sources)
++        s = list(map(str, tgt.sources))
+         assert s == ['aaa.foo'], s
+-        s = map(str, tgt.sources[0].sources)
++        s = list(map(str, tgt.sources[0].sources))
+         assert s == ['aaa.bar'], s
+ 
+         builder3 = SCons.Builder.Builder(action='bld3')
+@@ -841,11 +841,11 @@
+         tgt = builder6(env, 'test', 'test.i')[0]
+         s = str(tgt)
+         assert s == 'test.exe', s
+-        s = map(str, tgt.sources)
++        s = list(map(str, tgt.sources))
+         assert s == ['test_wrap.obj'], s
+-        s = map(str, tgt.sources[0].sources)
++        s = list(map(str, tgt.sources[0].sources))
+         assert s == ['test_wrap.c'], s
+-        s = map(str, tgt.sources[0].sources[0].sources)
++        s = list(map(str, tgt.sources[0].sources[0].sources))
+         assert s == ['test.i'], s
+ 
+     def test_target_scanner(self):
+@@ -1198,14 +1198,14 @@
+ 
+         tgt = builder(env, target='foo3', source='bar', foo=1)
+         assert len(tgt) == 2, len(tgt)
+-        assert 'foo3' in map(str, tgt), map(str, tgt)
+-        assert 'bar1' in map(str, tgt), map(str, tgt)
++        assert 'foo3' in list(map(str, tgt)), list(map(str, tgt))
++        assert 'bar1' in list(map(str, tgt)), list(map(str, tgt))
+ 
+         tgt = builder(env, target='foo4', source='bar', bar=1)[0]
+         assert str(tgt) == 'foo4', str(tgt)
+         assert len(tgt.sources) == 2, len(tgt.sources)
+-        assert 'baz' in map(str, tgt.sources), map(str, tgt.sources)
+-        assert 'bar' in map(str, tgt.sources), map(str, tgt.sources)
++        assert 'baz' in list(map(str, tgt.sources)), list(map(str, tgt.sources))
++        assert 'bar' in list(map(str, tgt.sources)), list(map(str, tgt.sources))
+ 
+         env2=Environment(FOO=emit)
+         builder2=SCons.Builder.Builder(action='foo',
+@@ -1226,14 +1226,14 @@
+ 
+         tgt = builder2(env2, target='foo6', source='bar', foo=2)
+         assert len(tgt) == 2, len(tgt)
+-        assert 'foo6' in map(str, tgt), map(str, tgt)
+-        assert 'bar2' in map(str, tgt), map(str, tgt)
++        assert 'foo6' in list(map(str, tgt)), list(map(str, tgt))
++        assert 'bar2' in list(map(str, tgt)), list(map(str, tgt))
+ 
+         tgt = builder2(env2, target='foo7', source='bar', bar=1)[0]
+         assert str(tgt) == 'foo7', str(tgt)
+         assert len(tgt.sources) == 2, len(tgt.sources)
+-        assert 'baz' in map(str, tgt.sources), map(str, tgt.sources)
+-        assert 'bar' in map(str, tgt.sources), map(str, tgt.sources)
++        assert 'baz' in list(map(str, tgt.sources)), list(map(str, tgt.sources))
++        assert 'bar' in list(map(str, tgt.sources)), list(map(str, tgt.sources))
+ 
+     def test_emitter_preserve_builder(self):
+         """Test an emitter not overwriting a newly-set builder"""
+@@ -1262,12 +1262,12 @@
+         env = Environment()
+ 
+         def emit4a(target, source, env):
+-            source = map(str, source)
+-            target = map(lambda x: 'emit4a-' + x[:-3], source)
++            source = list(map(str, source))
++            target = ['emit4a-' + x[:-3] for x in source]
+             return (target, source)
+         def emit4b(target, source, env):
+-            source = map(str, source)
+-            target = map(lambda x: 'emit4b-' + x[:-3], source)
++            source = list(map(str, source))
++            target = ['emit4b-' + x[:-3] for x in source]
+             return (target, source)
+ 
+         builder = SCons.Builder.Builder(action='foo',
+@@ -1283,8 +1283,8 @@
+         assert str(tgt) == 'ccc', str(tgt)
+ 
+         def emit4c(target, source, env):
+-            source = map(str, source)
+-            target = map(lambda x: 'emit4c-' + x[:-3], source)
++            source = list(map(str, source))
++            target = ['emit4c-' + x[:-3] for x in source]
+             return (target, source)
+ 
+         builder.add_emitter('.4c', emit4c)
+@@ -1296,29 +1296,29 @@
+         env = Environment()
+ 
+         def emit1a(target, source, env):
+-            source = map(str, source)
+-            target = target + map(lambda x: 'emit1a-' + x[:-2], source)
++            source = list(map(str, source))
++            target = target + ['emit1a-' + x[:-2] for x in source]
+             return (target, source)
+         def emit1b(target, source, env):
+-            source = map(str, source)
+-            target = target + map(lambda x: 'emit1b-' + x[:-2], source)
++            source = list(map(str, source))
++            target = target + ['emit1b-' + x[:-2] for x in source]
+             return (target, source)
+         builder1 = SCons.Builder.Builder(action='foo',
+                                          emitter=[emit1a, emit1b],
+                                          node_factory=MyNode)
+ 
+         tgts = builder1(env, target='target-1', source='aaa.1')
+-        tgts = map(str, tgts)
++        tgts = list(map(str, tgts))
+         assert tgts == ['target-1', 'emit1a-aaa', 'emit1b-aaa'], tgts
+ 
+         # Test a list of emitter functions through the environment.
+         def emit2a(target, source, env):
+-            source = map(str, source)
+-            target = target + map(lambda x: 'emit2a-' + x[:-2], source)
++            source = list(map(str, source))
++            target = target + ['emit2a-' + x[:-2] for x in source]
+             return (target, source)
+         def emit2b(target, source, env):
+-            source = map(str, source)
+-            target = target + map(lambda x: 'emit2b-' + x[:-2], source)
++            source = list(map(str, source))
++            target = target + ['emit2b-' + x[:-2] for x in source]
+             return (target, source)
+         builder2 = SCons.Builder.Builder(action='foo',
+                                          emitter='$EMITTERLIST',
+@@ -1327,7 +1327,7 @@
+         env = Environment(EMITTERLIST = [emit2a, emit2b])
+ 
+         tgts = builder2(env, target='target-2', source='aaa.2')
+-        tgts = map(str, tgts)
++        tgts = list(map(str, tgts))
+         assert tgts == ['target-2', 'emit2a-aaa', 'emit2b-aaa'], tgts
+ 
+     def test_emitter_TARGET_SOURCE(self):
+@@ -1345,8 +1345,8 @@
+ 
+         targets = builder(env, target = 'TTT', source ='SSS')
+         sources = targets[0].sources
+-        targets = map(str, targets)
+-        sources = map(str, sources)
++        targets = list(map(str, targets))
++        sources = list(map(str, sources))
+         assert targets == ['TTT', 'SSS.s1', 'TTT.t1'], targets
+         assert sources == ['SSS', 'TTT.t2', 'SSS.s2'], targets
+ 
+@@ -1358,53 +1358,53 @@
+ 
+         tgt = b(env, None, 'aaa')[0]
+         assert str(tgt) == 'aaa.o', str(tgt)
+-        assert len(tgt.sources) == 1, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'aaa', map(str, tgt.sources)
++        assert len(tgt.sources) == 1, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'aaa', list(map(str, tgt.sources))
+ 
+         tgt = b(env, None, 'bbb.c')[0]
+         assert str(tgt) == 'bbb.o', str(tgt)
+-        assert len(tgt.sources) == 1, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'bbb.c', map(str, tgt.sources)
++        assert len(tgt.sources) == 1, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'bbb.c', list(map(str, tgt.sources))
+ 
+         tgt = b(env, None, 'ccc.x.c')[0]
+         assert str(tgt) == 'ccc.x.o', str(tgt)
+-        assert len(tgt.sources) == 1, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'ccc.x.c', map(str, tgt.sources)
++        assert len(tgt.sources) == 1, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'ccc.x.c', list(map(str, tgt.sources))
+ 
+         tgt = b(env, None, ['d0.c', 'd1.c'])[0]
+         assert str(tgt) == 'd0.o', str(tgt)
+-        assert len(tgt.sources) == 2,  map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'd0.c', map(str, tgt.sources)
+-        assert str(tgt.sources[1]) == 'd1.c', map(str, tgt.sources)
++        assert len(tgt.sources) == 2,  list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'd0.c', list(map(str, tgt.sources))
++        assert str(tgt.sources[1]) == 'd1.c', list(map(str, tgt.sources))
+ 
+         tgt = b(env, target = None, source='eee')[0]
+         assert str(tgt) == 'eee.o', str(tgt)
+-        assert len(tgt.sources) == 1, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'eee', map(str, tgt.sources)
++        assert len(tgt.sources) == 1, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'eee', list(map(str, tgt.sources))
+ 
+         tgt = b(env, target = None, source='fff.c')[0]
+         assert str(tgt) == 'fff.o', str(tgt)
+-        assert len(tgt.sources) == 1, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'fff.c', map(str, tgt.sources)
++        assert len(tgt.sources) == 1, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'fff.c', list(map(str, tgt.sources))
+ 
+         tgt = b(env, target = None, source='ggg.x.c')[0]
+         assert str(tgt) == 'ggg.x.o', str(tgt)
+-        assert len(tgt.sources) == 1, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'ggg.x.c', map(str, tgt.sources)
++        assert len(tgt.sources) == 1, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'ggg.x.c', list(map(str, tgt.sources))
+ 
+         tgt = b(env, target = None, source=['h0.c', 'h1.c'])[0]
+         assert str(tgt) == 'h0.o', str(tgt)
+-        assert len(tgt.sources) == 2,  map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'h0.c', map(str, tgt.sources)
+-        assert str(tgt.sources[1]) == 'h1.c', map(str, tgt.sources)
++        assert len(tgt.sources) == 2,  list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'h0.c', list(map(str, tgt.sources))
++        assert str(tgt.sources[1]) == 'h1.c', list(map(str, tgt.sources))
+ 
+         w = b(env, target='i0.w', source=['i0.x'])[0]
+         y = b(env, target='i1.y', source=['i1.z'])[0]
+         tgt = b(env, None, source=[w, y])[0]
+         assert str(tgt) == 'i0.o', str(tgt)
+-        assert len(tgt.sources) == 2, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'i0.w', map(str, tgt.sources)
+-        assert str(tgt.sources[1]) == 'i1.y', map(str, tgt.sources)
++        assert len(tgt.sources) == 2, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'i0.w', list(map(str, tgt.sources))
++        assert str(tgt.sources[1]) == 'i1.y', list(map(str, tgt.sources))
+ 
+     def test_get_name(self):
+         """Test getting name of builder.
+@@ -1642,7 +1642,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/CacheDirTests.py (original)
++++ src/engine/SCons/CacheDirTests.py (refactored)
+@@ -286,7 +286,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Debug.py (original)
++++ src/engine/SCons/Debug.py (refactored)
+@@ -63,7 +63,7 @@
+ 
+ def fetchLoggedInstances(classes="*"):
+     classnames = string_to_classes(classes)
+-    return map(lambda cn: (cn, len(tracked_classes[cn])), classnames)
++    return [(cn, len(tracked_classes[cn])) for cn in classnames]
+   
+ def countLoggedInstances(classes, file=sys.stdout):
+     for classname in string_to_classes(classes):
+@@ -176,7 +176,7 @@
+ if os.sep != '/':
+    def platformize(t):
+        return (t[0].replace('/', os.sep), t[1])
+-   shorten_list = map(platformize, shorten_list)
++   shorten_list = list(map(platformize, shorten_list))
+    del platformize
+ 
+ def func_shorten(func_tuple):
+--- src/engine/SCons/Defaults.py (original)
++++ src/engine/SCons/Defaults.py (refactored)
+@@ -336,8 +336,8 @@
+         else:
+             c = _concat_ixes
+     
+-    stripprefixes = map(env.subst, SCons.Util.flatten(stripprefixes))
+-    stripsuffixes = map(env.subst, SCons.Util.flatten(stripsuffixes))
++    stripprefixes = list(map(env.subst, SCons.Util.flatten(stripprefixes)))
++    stripsuffixes = list(map(env.subst, SCons.Util.flatten(stripsuffixes)))
+ 
+     stripped = []
+     for l in SCons.PathList.PathList(itms).subst_path(env, None, None):
+--- src/engine/SCons/DefaultsTests.py (original)
++++ src/engine/SCons/DefaultsTests.py (refactored)
+@@ -82,7 +82,7 @@
+                ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Environment.py (original)
++++ src/engine/SCons/Environment.py (refactored)
+@@ -1412,7 +1412,7 @@
+     def Dictionary(self, *args):
+         if not args:
+             return self._dict
+-        dlist = map(lambda x: self._dict[x], args)
++        dlist = [self._dict[x] for x in args]
+         if len(dlist) == 1:
+             dlist = dlist[0]
+         return dlist
+@@ -1504,7 +1504,7 @@
+             else:
+                 tdlist.append((target.split(), depends.split()))
+         if only_one:
+-            targets = reduce(lambda x, y: x+y, map(lambda p: p[0], tdlist))
++            targets = reduce(lambda x, y: x+y, [p[0] for p in tdlist])
+             if len(targets) > 1:
+                 raise SCons.Errors.UserError, "More than one dependency target found in `%s':  %s" % (filename, targets)
+         for target, depends in tdlist:
+@@ -1698,7 +1698,7 @@
+             tool = self.subst(tool)
+             if toolpath is None:
+                 toolpath = self.get('toolpath', [])
+-            toolpath = map(self._find_toolpath_dir, toolpath)
++            toolpath = list(map(self._find_toolpath_dir, toolpath))
+             tool = SCons.Tool.Tool(tool, toolpath, **kw)
+         tool(self)
+ 
+@@ -1737,7 +1737,7 @@
+             if SCons.Util.is_String(a):
+                 a = self.subst(a)
+             return a
+-        nargs = map(subst_string, args)
++        nargs = list(map(subst_string, args))
+         nkw = self.subst_kw(kw)
+         return SCons.Action.Action(*nargs, **nkw)
+ 
+@@ -1745,7 +1745,7 @@
+         nodes = self.arg2nodes(files, self.fs.Entry)
+         action = SCons.Action.Action(action)
+         uniq = {}
+-        for executor in map(lambda n: n.get_executor(), nodes):
++        for executor in [n.get_executor() for n in nodes]:
+             uniq[executor] = 1
+         for executor in uniq.keys():
+             executor.add_pre_action(action)
+@@ -1755,7 +1755,7 @@
+         nodes = self.arg2nodes(files, self.fs.Entry)
+         action = SCons.Action.Action(action)
+         uniq = {}
+-        for executor in map(lambda n: n.get_executor(), nodes):
++        for executor in [n.get_executor() for n in nodes]:
+             uniq[executor] = 1
+         for executor in uniq.keys():
+             executor.add_post_action(action)
+@@ -1961,7 +1961,7 @@
+         return SCons.Util.flatten(sequence)
+ 
+     def GetBuildPath(self, files):
+-        result = map(str, self.arg2nodes(files, self.fs.Entry))
++        result = list(map(str, self.arg2nodes(files, self.fs.Entry)))
+         if SCons.Util.is_List(files):
+             return result
+         else:
+@@ -2089,7 +2089,7 @@
+               in the list are not split at spaces.
+         In all cases, the function returns a list of Nodes and strings."""
+         if SCons.Util.is_List(arg):
+-            return map(self.subst, arg)
++            return list(map(self.subst, arg))
+         elif SCons.Util.is_String(arg):
+             return self.subst(arg).split()
+         else:
+--- src/engine/SCons/EnvironmentTests.py (original)
++++ src/engine/SCons/EnvironmentTests.py (refactored)
+@@ -389,7 +389,7 @@
+                               DummyNode,
+                               target=targets,
+                               source=sources)
+-        names = map(lambda n: n.name, nodes)
++        names = [n.name for n in nodes]
+         assert names == ['t1-a', 's1-b', 't2-c', 's2-d'], names
+ 
+     def test_gvars(self):
+@@ -576,16 +576,16 @@
+         assert r == ['foo', 'xxx', 'bar'], r
+ 
+         r = env.subst_path(['$FOO', '$LIST', '$BAR'])
+-        assert map(str, r) == ['foo', 'one two', 'bar'], r
++        assert list(map(str, r)) == ['foo', 'one two', 'bar'], r
+ 
+         r = env.subst_path(['$FOO', '$TARGET', '$SOURCE', '$BAR'])
+         assert r == ['foo', '', '', 'bar'], r
+ 
+         r = env.subst_path(['$FOO', '$TARGET', '$BAR'], target=MyNode('ttt'))
+-        assert map(str, r) == ['foo', 'ttt', 'bar'], r
++        assert list(map(str, r)) == ['foo', 'ttt', 'bar'], r
+ 
+         r = env.subst_path(['$FOO', '$SOURCE', '$BAR'], source=MyNode('sss'))
+-        assert map(str, r) == ['foo', 'sss', 'bar'], r
++        assert list(map(str, r)) == ['foo', 'sss', 'bar'], r
+ 
+         n = MyObj()
+ 
+@@ -829,7 +829,7 @@
+         assert d['LIBPATH'] == ['/usr/fax',
+                                 'foo',
+                                 'C:\\Program Files\\ASCEND'], d['LIBPATH']
+-        LIBS = map(str, d['LIBS'])
++        LIBS = list(map(str, d['LIBS']))
+         assert LIBS == ['xxx', 'yyy', 'ascend'], (d['LIBS'], LIBS)
+         assert d['LINKFLAGS'] == ['-Wl,-link', '-pthread',
+                                   '-mno-cygwin', '-mwindows',
+@@ -1087,39 +1087,39 @@
+         env = Environment()
+         try: del env['SCANNERS']
+         except KeyError: pass
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [None, None, None, None, None], s
+ 
+         env = self.TestEnvironment(SCANNERS = [])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [None, None, None, None, None], s
+ 
+         env.Replace(SCANNERS = [s1])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [s1, s1, None, None, None], s
+ 
+         env.Append(SCANNERS = [s2])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [s1, s1, None, s2, None], s
+ 
+         env.AppendUnique(SCANNERS = [s3])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [s1, s1, None, s2, s3], s
+ 
+         env = env.Clone(SCANNERS = [s2])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [None, None, None, s2, None], s
+ 
+         env['SCANNERS'] = [s1]
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [s1, s1, None, None, None], s
+ 
+         env.PrependUnique(SCANNERS = [s2, s1])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [s1, s1, None, s2, None], s
+ 
+         env.Prepend(SCANNERS = [s3])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [s1, s1, None, s3, s3], s
+ 
+         # Verify behavior of case-insensitive suffix matches on Windows.
+@@ -1128,21 +1128,21 @@
+         env = Environment(SCANNERS = [s1, s2, s3],
+                           PLATFORM = 'linux')
+ 
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [s1, s1, None, s2, s3], s
+ 
+-        s = map(env.get_scanner, uc_suffixes)
++        s = list(map(env.get_scanner, uc_suffixes))
+         assert s == [None, None, None, None, None], s
+ 
+         env['PLATFORM'] = 'win32'
+ 
+-        s = map(env.get_scanner, uc_suffixes)
++        s = list(map(env.get_scanner, uc_suffixes))
+         assert s == [s1, s1, None, s2, s3], s
+ 
+         # Verify behavior for a scanner returning None (on Windows
+         # where we might try to perform case manipulation on None).
+         env.Replace(SCANNERS = [s4])
+-        s = map(env.get_scanner, suffixes)
++        s = list(map(env.get_scanner, suffixes))
+         assert s == [None, None, None, None, None], s
+ 
+     def test_ENV(self):
+@@ -1309,7 +1309,7 @@
+             if arg not in ('$(','$)','-I'):
+                 return np(str(arg))
+             return arg
+-        flags = map(normalize_if_path, flags)
++        flags = list(map(normalize_if_path, flags))
+         assert flags == expect, flags
+ 
+     def test_platform(self):
+@@ -2102,8 +2102,8 @@
+         del dlist[:]
+ 
+         env.ParseDepends('$SINGLE', only_one=1)
+-        t = map(str, tlist)
+-        d = map(str, dlist)
++        t = list(map(str, tlist))
++        d = list(map(str, dlist))
+         assert t == ['f0'], t
+         assert d == ['d1', 'd2', 'd3'], d
+ 
+@@ -2111,8 +2111,8 @@
+         del dlist[:]
+ 
+         env.ParseDepends(test.workpath('multiple'))
+-        t = map(str, tlist)
+-        d = map(str, dlist)
++        t = list(map(str, tlist))
++        d = list(map(str, dlist))
+         assert t == ['f1', 'f2', 'f3', 'f4', 'f5'], t
+         assert d == ['foo', 'bar', 'abc', 'def', 'ghi', 'jkl', 'mno'], d
+ 
+@@ -2630,37 +2630,37 @@
+ 
+         tgt = env.Alias('export_alias', [ 'asrc1', '$FOO' ])[0]
+         assert str(tgt) == 'export_alias', tgt
+-        assert len(tgt.sources) == 2, map(str, tgt.sources)
+-        assert str(tgt.sources[0]) == 'asrc1', map(str, tgt.sources)
+-        assert str(tgt.sources[1]) == 'kkk', map(str, tgt.sources)
++        assert len(tgt.sources) == 2, list(map(str, tgt.sources))
++        assert str(tgt.sources[0]) == 'asrc1', list(map(str, tgt.sources))
++        assert str(tgt.sources[1]) == 'kkk', list(map(str, tgt.sources))
+ 
+         n = env.Alias(tgt, source = ['$BAR', 'asrc4'])[0]
+         assert n is tgt, n
+-        assert len(tgt.sources) == 4, map(str, tgt.sources)
+-        assert str(tgt.sources[2]) == 'lll', map(str, tgt.sources)
+-        assert str(tgt.sources[3]) == 'asrc4', map(str, tgt.sources)
++        assert len(tgt.sources) == 4, list(map(str, tgt.sources))
++        assert str(tgt.sources[2]) == 'lll', list(map(str, tgt.sources))
++        assert str(tgt.sources[3]) == 'asrc4', list(map(str, tgt.sources))
+ 
+         n = env.Alias('$EA', 'asrc5')[0]
+         assert n is tgt, n
+-        assert len(tgt.sources) == 5, map(str, tgt.sources)
+-        assert str(tgt.sources[4]) == 'asrc5', map(str, tgt.sources)
++        assert len(tgt.sources) == 5, list(map(str, tgt.sources))
++        assert str(tgt.sources[4]) == 'asrc5', list(map(str, tgt.sources))
+ 
+         t1, t2 = env.Alias(['t1', 't2'], ['asrc6', 'asrc7'])
+         assert str(t1) == 't1', t1
+         assert str(t2) == 't2', t2
+-        assert len(t1.sources) == 2, map(str, t1.sources)
+-        assert str(t1.sources[0]) == 'asrc6', map(str, t1.sources)
+-        assert str(t1.sources[1]) == 'asrc7', map(str, t1.sources)
+-        assert len(t2.sources) == 2, map(str, t2.sources)
+-        assert str(t2.sources[0]) == 'asrc6', map(str, t2.sources)
+-        assert str(t2.sources[1]) == 'asrc7', map(str, t2.sources)
++        assert len(t1.sources) == 2, list(map(str, t1.sources))
++        assert str(t1.sources[0]) == 'asrc6', list(map(str, t1.sources))
++        assert str(t1.sources[1]) == 'asrc7', list(map(str, t1.sources))
++        assert len(t2.sources) == 2, list(map(str, t2.sources))
++        assert str(t2.sources[0]) == 'asrc6', list(map(str, t2.sources))
++        assert str(t2.sources[1]) == 'asrc7', list(map(str, t2.sources))
+ 
+         tgt = env.Alias('add', 's1')
+         tgt = env.Alias('add', 's2')[0]
+-        s = map(str, tgt.sources)
++        s = list(map(str, tgt.sources))
+         assert s == ['s1', 's2'], s
+         tgt = env.Alias(tgt, 's3')[0]
+-        s = map(str, tgt.sources)
++        s = list(map(str, tgt.sources))
+         assert s == ['s1', 's2', 's3'], s
+ 
+         tgt = env.Alias('act', None, "action1")[0]
+@@ -2763,20 +2763,20 @@
+         fff = env.arg2nodes('fff')[0]
+ 
+         t = env.Clean('foo', 'aaa')
+-        l = map(str, CT[foo])
++        l = list(map(str, CT[foo]))
+         assert l == ['aaa'], l
+ 
+         t = env.Clean(foo, ['$BAR', 'ccc'])
+-        l = map(str, CT[foo])
++        l = list(map(str, CT[foo]))
+         assert l == ['aaa', 'bbb', 'ccc'], l
+ 
+         eee = env.arg2nodes('eee')[0]
+ 
+         t = env.Clean('$FOO', 'ddd')
+-        l = map(str, CT[fff])
++        l = list(map(str, CT[fff]))
+         assert l == ['ddd'], l
+         t = env.Clean(fff, [eee, 'fff'])
+-        l = map(str, CT[fff])
++        l = list(map(str, CT[fff]))
+         assert l == ['ddd', 'eee', 'fff'], l
+ 
+     def test_Command(self):
+@@ -2787,25 +2787,25 @@
+         assert t.builder is not None
+         assert t.builder.action.__class__.__name__ == 'CommandAction'
+         assert t.builder.action.cmd_list == 'buildfoo $target $source'
+-        assert 'foo1.in' in map(lambda x: x.path, t.sources)
+-        assert 'foo2.in' in map(lambda x: x.path, t.sources)
++        assert 'foo1.in' in [x.path for x in t.sources]
++        assert 'foo2.in' in [x.path for x in t.sources]
+ 
+         sub = env.fs.Dir('sub')
+         t = env.Command(target='bar.out', source='sub',
+                         action='buildbar $target $source')[0]
+-        assert 'sub' in map(lambda x: x.path, t.sources)
++        assert 'sub' in [x.path for x in t.sources]
+ 
+         def testFunc(env, target, source):
+             assert str(target[0]) == 'foo.out'
+-            assert 'foo1.in' in map(str, source) and 'foo2.in' in map(str, source), map(str, source)
++            assert 'foo1.in' in list(map(str, source)) and 'foo2.in' in list(map(str, source)), list(map(str, source))
+             return 0
+         t = env.Command(target='foo.out', source=['foo1.in','foo2.in'],
+                         action=testFunc)[0]
+         assert t.builder is not None
+         assert t.builder.action.__class__.__name__ == 'FunctionAction'
+         t.build()
+-        assert 'foo1.in' in map(lambda x: x.path, t.sources)
+-        assert 'foo2.in' in map(lambda x: x.path, t.sources)
++        assert 'foo1.in' in [x.path for x in t.sources]
++        assert 'foo2.in' in [x.path for x in t.sources]
+ 
+         x = []
+         def test2(baz, x=x):
+@@ -2822,7 +2822,7 @@
+                         action = 'foo',
+                         X = 'xxx')[0]
+         assert str(t) == 'xxx.out', str(t)
+-        assert 'xxx.in' in map(lambda x: x.path, t.sources)
++        assert 'xxx.in' in [x.path for x in t.sources]
+ 
+         env = self.TestEnvironment(source_scanner = 'should_not_find_this')
+         t = env.Command(target='file.out', source='file.in',
+@@ -3975,7 +3975,7 @@
+                  EnvironmentVariableTestCase ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Executor.py (original)
++++ src/engine/SCons/Executor.py (refactored)
+@@ -161,10 +161,10 @@
+         ut = []
+         for b in self.batches:
+             if b.targets[0].is_up_to_date():
+-                us.extend(map(rfile, b.sources))
++                us.extend(list(map(rfile, b.sources)))
+                 ut.extend(b.targets)
+             else:
+-                cs.extend(map(rfile, b.sources))
++                cs.extend(list(map(rfile, b.sources)))
+                 ct.extend(b.targets)
+         self._changed_sources_list = SCons.Util.NodeList(cs)
+         self._changed_targets_list = SCons.Util.NodeList(ct)
+@@ -190,14 +190,14 @@
+         return rfile(self.batches[0].sources[0]).get_subst_proxy()
+ 
+     def _get_sources(self, *args, **kw):
+-        return SCons.Util.NodeList(map(lambda n: rfile(n).get_subst_proxy(), self.get_all_sources()))
++        return SCons.Util.NodeList([rfile(n).get_subst_proxy() for n in self.get_all_sources()])
+ 
+     def _get_target(self, *args, **kw):
+         #return SCons.Util.NodeList([self.batches[0].targets[0].get_subst_proxy()])
+         return self.batches[0].targets[0].get_subst_proxy()
+ 
+     def _get_targets(self, *args, **kw):
+-        return SCons.Util.NodeList(map(lambda n: n.get_subst_proxy(), self.get_all_targets()))
++        return SCons.Util.NodeList([n.get_subst_proxy() for n in self.get_all_targets()])
+ 
+     def _get_unchanged_sources(self, *args, **kw):
+         try:
+@@ -406,7 +406,7 @@
+ 
+     def my_str(self):
+         env = self.get_build_env()
+-        return "\n".join(map(lambda action: action.genstring(self.get_all_targets(), self.get_all_sources(), env), self.get_action_list()))
++        return "\n".join([action.genstring(self.get_all_targets(), self.get_all_sources(), env) for action in self.get_action_list()])
+ 
+ 
+     def __str__(self):
+@@ -429,7 +429,7 @@
+         except KeyError:
+             pass
+         env = self.get_build_env()
+-        result = "".join(map(lambda action: action.get_contents(self.get_all_targets(), self.get_all_sources(), env), self.get_action_list()))
++        result = "".join([action.get_contents(self.get_all_targets(), self.get_all_sources(), env) for action in self.get_action_list()])
+         self._memo['get_contents'] = result
+         return result
+ 
+--- src/engine/SCons/ExecutorTests.py (original)
++++ src/engine/SCons/ExecutorTests.py (refactored)
+@@ -49,7 +49,7 @@
+         for action in self.actions:
+             action(target, source, env, **kw)
+     def genstring(self, target, source, env):
+-        return ' '.join(['GENSTRING'] + map(str, self.actions) + target + source)
++        return ' '.join(['GENSTRING'] + list(map(str, self.actions)) + target + source)
+     def get_contents(self, target, source, env):
+         return ' '.join(self.actions + target + source)
+     def get_implicit_deps(self, target, source, env):
+@@ -183,8 +183,8 @@
+ 
+         class LocalScanner:
+             def path(self, env, dir, target, source):
+-                target = map(str, target)
+-                source = map(str, source)
++                target = list(map(str, target))
++                source = list(map(str, source))
+                 return "scanner: %s, %s, %s, %s" % (env['SCANNERVAL'], dir, target, source)
+         s = LocalScanner()
+ 
+@@ -439,13 +439,13 @@
+         x = SCons.Executor.Executor('b', env, [{}], [], [s1, s2, s3])
+ 
+         r = x.get_unignored_sources(None, [])
+-        assert r == [s1, s2, s3], map(str, r)
++        assert r == [s1, s2, s3], list(map(str, r))
+ 
+         r = x.get_unignored_sources(None, [s2])
+-        assert r == [s1, s3], map(str, r)
++        assert r == [s1, s3], list(map(str, r))
+ 
+         r = x.get_unignored_sources(None, [s1, s3])
+-        assert r == [s2], map(str, r)
++        assert r == [s2], list(map(str, r))
+ 
+ 
+ 
+@@ -454,7 +454,7 @@
+     tclasses = [ ExecutorTestCase ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/MemoizeTests.py (original)
++++ src/engine/SCons/MemoizeTests.py (refactored)
+@@ -187,7 +187,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/PathListTests.py (original)
++++ src/engine/SCons/PathListTests.py (refactored)
+@@ -159,7 +159,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/SConsignTests.py (original)
++++ src/engine/SCons/SConsignTests.py (refactored)
+@@ -386,7 +386,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Subst.py (original)
++++ src/engine/SCons/Subst.py (refactored)
+@@ -162,7 +162,7 @@
+             return obj
+         else:
+             return e(escape_func)
+-    return map(escape, mylist)
++    return list(map(escape, mylist))
+ 
+ class NLWrapper:
+     """A wrapper class that delays turning a list of sources or targets
+@@ -190,7 +190,7 @@
+             mylist = [mylist]
+         # The map(self.func) call is what actually turns
+         # a list into appropriate proxies.
+-        self.nodelist = SCons.Util.NodeList(map(self.func, mylist))
++        self.nodelist = SCons.Util.NodeList(list(map(self.func, mylist)))
+         self._create_nodelist = self._return_nodelist
+         return self.nodelist
+     _create_nodelist = _gen_nodelist
+@@ -478,7 +478,7 @@
+             elif is_Sequence(s):
+                 def func(l, conv=self.conv, substitute=self.substitute, lvars=lvars):
+                     return conv(substitute(l, lvars))
+-                return map(func, s)
++                return list(map(func, s))
+             elif callable(s):
+                 try:
+                     s = s(target=lvars['TARGETS'],
+--- src/engine/SCons/SubstTests.py (original)
++++ src/engine/SCons/SubstTests.py (refactored)
+@@ -797,7 +797,7 @@
+     def test_scons_subst_list(self):
+         """Test scons_subst_list():  basic substitution"""
+         def convert_lists(expect):
+-            return map(lambda l: map(cvt, l), expect)
++            return [list(map(cvt, l)) for l in expect]
+         return self.basic_comparisons(scons_subst_list, convert_lists)
+ 
+     subst_list_cases = [
+@@ -1180,11 +1180,11 @@
+         s1 = DummyNode('s1')
+         s2 = DummyNode('s2')
+         d = subst_dict(target=[t1, t2], source=[s1, s2])
+-        TARGETS = map(lambda x: str(x), d['TARGETS'])
++        TARGETS = [str(x) for x in d['TARGETS']]
+         TARGETS.sort()
+         assert TARGETS == ['t1', 't2'], d['TARGETS']
+         assert str(d['TARGET']) == 't1', d['TARGET']
+-        SOURCES = map(lambda x: str(x), d['SOURCES'])
++        SOURCES = [str(x) for x in d['SOURCES']]
+         SOURCES.sort()
+         assert SOURCES == ['s1', 's2'], d['SOURCES']
+         assert str(d['SOURCE']) == 's1', d['SOURCE']
+@@ -1209,10 +1209,10 @@
+         s4 = N('s4')
+         s5 = V('s5')
+         d = subst_dict(target=[t3, t4, t5], source=[s3, s4, s5])
+-        TARGETS = map(lambda x: str(x), d['TARGETS'])
++        TARGETS = [str(x) for x in d['TARGETS']]
+         TARGETS.sort()
+         assert TARGETS == ['t4', 'v-t3', 'v-t5'], TARGETS
+-        SOURCES = map(lambda x: str(x), d['SOURCES'])
++        SOURCES = [str(x) for x in d['SOURCES']]
+         SOURCES.sort()
+         assert SOURCES == ['s3', 'v-rstr-s4', 'v-s5'], SOURCES
+ 
+@@ -1230,7 +1230,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Taskmaster.py (original)
++++ src/engine/SCons/Taskmaster.py (refactored)
+@@ -1001,7 +1001,7 @@
+ 
+         # TODO(1.5)
+         #nclist = [ (n, find_cycle([n], set())) for n in self.pending_children ]
+-        nclist = map(lambda n: (n, find_cycle([n], set())), self.pending_children)
++        nclist = [(n, find_cycle([n], set())) for n in self.pending_children]
+ 
+         # TODO(1.5)
+         #genuine_cycles = [
+--- src/engine/SCons/TaskmasterTests.py (original)
++++ src/engine/SCons/TaskmasterTests.py (refactored)
+@@ -660,7 +660,7 @@
+         t = tm.next_task()
+         assert t.targets == [n1], t.targets
+         t.fail_stop()
+-        assert t.targets == [n3], map(str, t.targets)
++        assert t.targets == [n3], list(map(str, t.targets))
+         assert t.top == 1, t.top
+ 
+     def test_stop(self):
+--- src/engine/SCons/Util.py (original)
++++ src/engine/SCons/Util.py (refactored)
+@@ -126,11 +126,11 @@
+         return iter(self.data)
+ 
+     def __call__(self, *args, **kwargs):
+-        result = map(lambda x: x(*args, **kwargs), self.data)
++        result = [x(*args, **kwargs) for x in self.data]
+         return self.__class__(result)
+ 
+     def __getattr__(self, name):
+-        result = map(lambda x: getattr(x, name), self.data)
++        result = [getattr(x, name) for x in self.data]
+         return self.__class__(result)
+ 
+ 
+@@ -269,7 +269,7 @@
+ 
+     def MMM(m):
+         return ["  ","| "][m]
+-    margins = map(MMM, margin[:-1])
++    margins = list(map(MMM, margin[:-1]))
+ 
+     children = child_func(root)
+ 
+@@ -598,7 +598,7 @@
+ d[types.DictionaryType] = _semi_deepcopy_dict
+ 
+ def _semi_deepcopy_list(x):
+-    return map(semi_deepcopy, x)
++    return list(map(semi_deepcopy, x))
+ d[types.ListType] = _semi_deepcopy_list
+ 
+ def _semi_deepcopy_tuple(x):
+@@ -888,7 +888,7 @@
+         newpaths = newpath
+ 
+     if canonicalize:
+-        newpaths=map(canonicalize, newpaths)
++        newpaths=list(map(canonicalize, newpaths))
+ 
+     if not delete_existing:
+         # First uniquify the old paths, making sure to 
+@@ -969,7 +969,7 @@
+         newpaths = newpath
+ 
+     if canonicalize:
+-        newpaths=map(canonicalize, newpaths)
++        newpaths=list(map(canonicalize, newpaths))
+ 
+     if not delete_existing:
+         # add old paths to result, then
+@@ -1107,7 +1107,7 @@
+             self.__setitem__(key, val)
+ 
+     def values(self):
+-        return map(self.get, self._keys)
++        return list(map(self.get, self._keys))
+ 
+ class Selector(OrderedDict):
+     """A callable ordered dictionary that maps file suffixes to
+--- src/engine/SCons/UtilTests.py (original)
++++ src/engine/SCons/UtilTests.py (refactored)
+@@ -112,7 +112,7 @@
+ """
+ 
+         lines = expect.split('\n')[:-1]
+-        lines = map(lambda l: '[E BSPACN ]'+l, lines)
++        lines = ['[E BSPACN ]'+l for l in lines]
+         withtags = '\n'.join(lines) + '\n'
+ 
+         return foo, expect, withtags
+@@ -140,7 +140,7 @@
+             expect = expect.replace(']', '')
+ 
+         lines = expect.split('\n')[:-1]
+-        lines = map(lambda l: '[E BSPACN ]'+l, lines)
++        lines = ['[E BSPACN ]'+l for l in lines]
+         withtags = '\n'.join(lines) + '\n'
+ 
+         return blat_o, expect, withtags
+@@ -709,7 +709,7 @@
+     def test_collect(self):
+         """Test collecting a list of signatures into a new signature value
+         """
+-        s = map(MD5signature, ('111', '222', '333'))
++        s = list(map(MD5signature, ('111', '222', '333')))
+         
+         assert '698d51a19d8a121ce581499d7b701668' == MD5collect(s[0:1])
+         assert '8980c988edc2c78cc43ccb718c06efd5' == MD5collect(s[0:2])
+@@ -790,7 +790,7 @@
+                ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/cpp.py (original)
++++ src/engine/SCons/cpp.py (refactored)
+@@ -90,7 +90,7 @@
+ override = {
+     'if'                        : 'if(?!def)',
+ }
+-l = map(lambda x: override.get(x, x), Table.keys())
++l = [override.get(x, x) for x in Table.keys()]
+ 
+ 
+ # Turn the list of expressions into one big honkin' regular expression
+@@ -291,8 +291,7 @@
+         global CPP_Expression, Table
+         contents = line_continuations.sub('', contents)
+         cpp_tuples = CPP_Expression.findall(contents)
+-        return  map(lambda m: (m[0],) + Table[m[0]].match(m[1]).groups(),
+-                    cpp_tuples)
++        return  [(m[0],) + Table[m[0]].match(m[1]).groups() for m in cpp_tuples]
+ 
+     def __call__(self, file):
+         """
+--- src/engine/SCons/cppTests.py (original)
++++ src/engine/SCons/cppTests.py (refactored)
+@@ -703,7 +703,7 @@
+         except NameError:
+             pass
+         names.sort()
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Node/Alias.py (original)
++++ src/engine/SCons/Node/Alias.py (refactored)
+@@ -94,7 +94,7 @@
+     def get_contents(self):
+         """The contents of an alias is the concatenation
+         of the content signatures of all its sources."""
+-        childsigs = map(lambda n: n.get_csig(), self.children())
++        childsigs = [n.get_csig() for n in self.children()]
+         return ''.join(childsigs)
+ 
+     def sconsign(self):
+--- src/engine/SCons/Node/AliasTests.py (original)
++++ src/engine/SCons/Node/AliasTests.py (refactored)
+@@ -119,7 +119,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Node/FS.py (original)
++++ src/engine/SCons/Node/FS.py (refactored)
+@@ -459,7 +459,7 @@
+         dc.set(list)
+ 
+ def diskcheck_types():
+-    return map(lambda dc: dc.type, diskcheckers)
++    return [dc.type for dc in diskcheckers]
+ 
+ 
+ 
+@@ -753,7 +753,7 @@
+         try: i = path_elems.index(dir)
+         except ValueError: pass
+         else: path_elems = path_elems[i+1:]
+-        path_elems = map(lambda n: n.name, path_elems)
++        path_elems = [n.name for n in path_elems]
+         return os.sep.join(path_elems)
+ 
+     def set_src_builder(self, builder):
+@@ -1574,7 +1574,7 @@
+             i = self.path_elements.index(other) + 1
+ 
+             path_elems = ['..'] * (len(self.path_elements) - i) \
+-                         + map(lambda n: n.name, other.path_elements[i:])
++                         + [n.name for n in other.path_elements[i:]]
+              
+             result = os.sep.join(path_elems)
+ 
+@@ -1963,7 +1963,7 @@
+         for dir in list:
+             r = dir._glob1(basename, ondisk, source, strings)
+             if strings:
+-                r = map(lambda x: os.path.join(str(dir), x), r)
++                r = [os.path.join(str(dir), x) for x in r]
+             result.extend(r)
+         result.sort(lambda a, b: cmp(str(a), str(b)))
+         return result
+@@ -1991,7 +1991,7 @@
+             # case) on case-insensitive systems like Windows.
+             #node_names = [ v.name for k, v in dir.entries.items() if k not in ('.', '..') ]
+             entry_names = [n for n in dir.entries.keys() if n not in ('.', '..')]
+-            node_names = map(lambda n: dir.entries[n].name, entry_names)
++            node_names = [dir.entries[n].name for n in entry_names]
+             names.extend(node_names)
+             if not strings:
+                 # Make sure the working directory (self) actually has
+@@ -2037,7 +2037,7 @@
+             return names
+ 
+         #return [ self.entries[_my_normcase(n)] for n in names ]
+-        return map(lambda n:  self.entries[_my_normcase(n)], names)
++        return [self.entries[_my_normcase(n)] for n in names]
+ 
+ class RootDir(Dir):
+     """A class for the root directory of a file system.
+@@ -2207,7 +2207,7 @@
+             except AttributeError:
+                 pass
+             else:
+-                setattr(self, attr, map(node_to_str, val))
++                setattr(self, attr, list(map(node_to_str, val)))
+     def convert_from_sconsign(self, dir, name):
+         """
+         Converts a newly-read FileBuildInfo object for in-SCons use
+@@ -2287,7 +2287,7 @@
+         directory of this file."""
+         # TODO(1.5)
+         # return [self.Dir(p) for p in pathlist]
+-        return map(lambda p: self.Dir(p), pathlist)
++        return [self.Dir(p) for p in pathlist]
+ 
+     def File(self, name):
+         """Create a file node named 'name' relative to
+@@ -2602,7 +2602,7 @@
+         if scanner:
+             # result = [n.disambiguate() for n in scanner(self, env, path)]
+             result = scanner(self, env, path)
+-            result = map(lambda N: N.disambiguate(), result)
++            result = [N.disambiguate() for N in result]
+         else:
+             result = []
+ 
+@@ -3018,7 +3018,7 @@
+         children = self.children()
+         executor = self.get_executor()
+         # sigs = [n.get_cachedir_csig() for n in children]
+-        sigs = map(lambda n: n.get_cachedir_csig(), children)
++        sigs = [n.get_cachedir_csig() for n in children]
+         sigs.append(SCons.Util.MD5signature(executor.get_contents()))
+         sigs.append(self.path)
+         result = self.cachesig = SCons.Util.MD5collect(sigs)
+--- src/engine/SCons/Node/FSTests.py (original)
++++ src/engine/SCons/Node/FSTests.py (refactored)
+@@ -333,7 +333,7 @@
+ 
+         f11 = fs.File('src/file11')
+         t, m = f11.alter_targets()
+-        bdt = map(lambda n: n.path, t)
++        bdt = [n.path for n in t]
+         var1_file11 = os.path.normpath('build/var1/file11')
+         var2_file11 = os.path.normpath('build/var2/file11')
+         assert bdt == [var1_file11, var2_file11], bdt
+@@ -341,11 +341,11 @@
+         f12 = fs.File('src/file12')
+         f12.builder = 1
+         bdt, m = f12.alter_targets()
+-        assert bdt == [], map(lambda n: n.path, bdt)
++        assert bdt == [], [n.path for n in bdt]
+ 
+         d13 = fs.Dir('src/new_dir')
+         t, m = d13.alter_targets()
+-        bdt = map(lambda n: n.path, t)
++        bdt = [n.path for n in t]
+         var1_new_dir = os.path.normpath('build/var1/new_dir')
+         var2_new_dir = os.path.normpath('build/var2/new_dir')
+         assert bdt == [var1_new_dir, var2_new_dir], bdt
+@@ -1722,7 +1722,7 @@
+         fs.Dir(os.path.join('ddd', 'd1', 'f4'))
+         fs.Dir(os.path.join('ddd', 'd1', 'f5'))
+         dir.scan()
+-        kids = map(lambda x: x.path, dir.children(None))
++        kids = [x.path for x in dir.children(None)]
+         kids.sort()
+         assert kids == [os.path.join('ddd', 'd1'),
+                         os.path.join('ddd', 'f1'),
+@@ -1768,13 +1768,13 @@
+ 
+         fs.File(os.path.join('ddd', 'f1'))
+         dir.scan()
+-        kids = map(lambda x: x.path, dir.children())
++        kids = [x.path for x in dir.children()]
+         kids.sort()
+         assert kids == [os.path.join('ddd', 'f1')], kids
+ 
+         fs.File(os.path.join('ddd', 'f2'))
+         dir.scan()
+-        kids = map(lambda x: x.path, dir.children())
++        kids = [x.path for x in dir.children()]
+         kids.sort()
+         assert kids == [os.path.join('ddd', 'f1'),
+                         os.path.join('ddd', 'f2')], kids
+@@ -1810,8 +1810,8 @@
+         self.fs.VariantDir(sub2, src, duplicate=0)
+ 
+         def check(result, expect):
+-            result = map(str, result)
+-            expect = map(os.path.normpath, expect)
++            result = list(map(str, result))
++            expect = list(map(os.path.normpath, expect))
+             assert result == expect, result
+ 
+         s = src.srcdir_list()
+@@ -1914,8 +1914,8 @@
+         exists_e.exists = return_true
+ 
+         def check(result, expect):
+-            result = map(str, result)
+-            expect = map(os.path.normpath, expect)
++            result = list(map(str, result))
++            expect = list(map(os.path.normpath, expect))
+             assert result == expect, result
+ 
+         # First check from the source directory.
+@@ -2127,7 +2127,7 @@
+         d1 = self.fs.Dir('subdir/d1')
+         d2 = self.fs.Dir('subdir/d2')
+         dirs = fff.Dirs(['d1', 'd2'])
+-        assert dirs == [d1, d2], map(str, dirs)
++        assert dirs == [d1, d2], list(map(str, dirs))
+ 
+     def test_exists(self):
+         """Test the File.exists() method"""
+@@ -2261,16 +2261,16 @@
+                     result.append(n)
+                 fmt = lambda n: "%s %s" % (repr(n), repr(str(n)))
+             else:
+-                r = map(str, r)
++                r = list(map(str, r))
+                 r.sort()
+                 result = string_expect
+                 fmt = lambda n: n
+             if r != result:
+                 import pprint
+                 print "Glob(%s) expected:" % repr(input)
+-                pprint.pprint(map(fmt, result))
++                pprint.pprint(list(map(fmt, result)))
+                 print "Glob(%s) got:" % repr(input)
+-                pprint.pprint(map(fmt, r))
++                pprint.pprint(list(map(fmt, r)))
+                 self.fail()
+ 
+     def test_exact_match(self):
+@@ -2530,7 +2530,7 @@
+         ]
+ 
+         rep = self.fs.Dir('#').getRepositories()
+-        r = map(lambda x: os.path.normpath(str(x)), rep)
++        r = [os.path.normpath(str(x)) for x in rep]
+         assert r == expect, r
+ 
+     def test_get_all_rdirs(self):
+@@ -2552,7 +2552,7 @@
+         ]
+ 
+         rep = self.fs.Dir('#').get_all_rdirs()
+-        r = map(lambda x: os.path.normpath(str(x)), rep)
++        r = [os.path.normpath(str(x)) for x in rep]
+         assert r == expect, r
+ 
+     def test_rentry(self):
+@@ -2734,25 +2734,25 @@
+         rep3_sub_d1 = fs.Dir(test.workpath('rep3', 'sub', 'd1'))
+ 
+         r = fs.Top.Rfindalldirs((d1,))
+-        assert r == [d1], map(str, r)
++        assert r == [d1], list(map(str, r))
+ 
+         r = fs.Top.Rfindalldirs((d1, d2))
+-        assert r == [d1, d2], map(str, r)
++        assert r == [d1, d2], list(map(str, r))
+ 
+         r = fs.Top.Rfindalldirs(('d1',))
+-        assert r == [d1, rep1_d1, rep2_d1, rep3_d1], map(str, r)
++        assert r == [d1, rep1_d1, rep2_d1, rep3_d1], list(map(str, r))
+ 
+         r = fs.Top.Rfindalldirs(('#d1',))
+-        assert r == [d1, rep1_d1, rep2_d1, rep3_d1], map(str, r)
++        assert r == [d1, rep1_d1, rep2_d1, rep3_d1], list(map(str, r))
+ 
+         r = sub.Rfindalldirs(('d1',))
+-        assert r == [sub_d1, rep1_sub_d1, rep2_sub_d1, rep3_sub_d1], map(str, r)
++        assert r == [sub_d1, rep1_sub_d1, rep2_sub_d1, rep3_sub_d1], list(map(str, r))
+ 
+         r = sub.Rfindalldirs(('#d1',))
+-        assert r == [d1, rep1_d1, rep2_d1, rep3_d1], map(str, r)
++        assert r == [d1, rep1_d1, rep2_d1, rep3_d1], list(map(str, r))
+ 
+         r = fs.Top.Rfindalldirs(('d1', d2))
+-        assert r == [d1, rep1_d1, rep2_d1, rep3_d1, d2], map(str, r)
++        assert r == [d1, rep1_d1, rep2_d1, rep3_d1, d2], list(map(str, r))
+ 
+     def test_rexists(self):
+         """Test the Entry.rexists() method"""
+@@ -2884,10 +2884,10 @@
+         nodes.append(SCons.Node.FS.find_file('pseudo', paths))
+         nodes.append(SCons.Node.FS.find_file('same', paths))
+ 
+-        file_names = map(str, nodes)
+-        file_names = map(os.path.normpath, file_names)
++        file_names = list(map(str, nodes))
++        file_names = list(map(os.path.normpath, file_names))
+         expect = ['./foo', './bar/baz', './pseudo', './bar/same']
+-        expect = map(os.path.normpath, expect)
++        expect = list(map(os.path.normpath, expect))
+         assert file_names == expect, file_names
+ 
+         # Make sure we don't blow up if there's already a File in place
+@@ -3425,14 +3425,14 @@
+         fs1.VariantDir('d0', 'src', duplicate=0)
+         fs1.VariantDir('d1', 'src', duplicate=1)
+ 
+-        s = map(str, nodes)
+-        expect = map(os.path.normpath, ['src/f', 'd1/f', 'd0/b', 'd1/b'])
++        s = list(map(str, nodes))
++        expect = list(map(os.path.normpath, ['src/f', 'd1/f', 'd0/b', 'd1/b']))
+         assert s == expect, s
+ 
+         modify(nodes)
+ 
+-        s = map(str, nodes)
+-        expect = map(os.path.normpath, ['src/f', 'src/f', 'd0/b', 'd1/b'])
++        s = list(map(str, nodes))
++        expect = list(map(os.path.normpath, ['src/f', 'src/f', 'd0/b', 'd1/b']))
+         assert s == expect, s
+ 
+         SCons.Node.FS.save_strings(1)
+@@ -3441,14 +3441,14 @@
+         fs2.VariantDir('d0', 'src', duplicate=0)
+         fs2.VariantDir('d1', 'src', duplicate=1)
+ 
+-        s = map(str, nodes)
+-        expect = map(os.path.normpath, ['src/f', 'd1/f', 'd0/b', 'd1/b'])
++        s = list(map(str, nodes))
++        expect = list(map(os.path.normpath, ['src/f', 'd1/f', 'd0/b', 'd1/b']))
+         assert s == expect, s
+ 
+         modify(nodes)
+ 
+-        s = map(str, nodes)
+-        expect = map(os.path.normpath, ['src/f', 'd1/f', 'd0/b', 'd1/b'])
++        s = list(map(str, nodes))
++        expect = list(map(os.path.normpath, ['src/f', 'd1/f', 'd0/b', 'd1/b']))
+         assert s == expect, 'node str() not cached: %s'%s
+ 
+ 
+@@ -3501,7 +3501,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Node/NodeTests.py (original)
++++ src/engine/SCons/Node/NodeTests.py (refactored)
+@@ -889,24 +889,24 @@
+         d2.found_includes = [e, f]
+         f.found_includes = [g]
+         deps = node.get_implicit_deps(env, s, target)
+-        assert deps == [d1, d2, e, f, g], map(str, deps)
++        assert deps == [d1, d2, e, f, g], list(map(str, deps))
+ 
+         # Recursive scanning eliminates duplicates
+         e.found_includes = [f]
+         deps = node.get_implicit_deps(env, s, target)
+-        assert deps == [d1, d2, e, f, g], map(str, deps)
++        assert deps == [d1, d2, e, f, g], list(map(str, deps))
+ 
+         # Scanner method can select specific nodes to recurse
+         def no_fff(nodes):
+             return [n for n in nodes if str(n)[0] != 'f']
+         s.recurse_nodes = no_fff
+         deps = node.get_implicit_deps(env, s, target)
+-        assert deps == [d1, d2, e, f], map(str, deps)
++        assert deps == [d1, d2, e, f], list(map(str, deps))
+ 
+         # Scanner method can short-circuit recursing entirely
+         s.recurse_nodes = lambda nodes: []
+         deps = node.get_implicit_deps(env, s, target)
+-        assert deps == [d1, d2], map(str, deps)
++        assert deps == [d1, d2], list(map(str, deps))
+ 
+     def test_get_env_scanner(self):
+         """Test fetching the environment scanner for a Node
+@@ -1306,7 +1306,7 @@
+                  NodeListTestCase ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Node/PythonTests.py (original)
++++ src/engine/SCons/Node/PythonTests.py (refactored)
+@@ -119,7 +119,7 @@
+     ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Node/__init__.py (original)
++++ src/engine/SCons/Node/__init__.py (refactored)
+@@ -831,7 +831,7 @@
+         except TypeError, e:
+             e = e.args[0]
+             if SCons.Util.is_List(e):
+-                s = map(str, e)
++                s = list(map(str, e))
+             else:
+                 s = str(e)
+             raise SCons.Errors.UserError("attempted to add a non-Node dependency to %s:\n\t%s is a %s, not a Node" % (str(self), s, type(e)))
+@@ -848,7 +848,7 @@
+         except TypeError, e:
+             e = e.args[0]
+             if SCons.Util.is_List(e):
+-                s = map(str, e)
++                s = list(map(str, e))
+             else:
+                 s = str(e)
+             raise SCons.Errors.UserError("attempted to ignore a non-Node dependency of %s:\n\t%s is a %s, not a Node" % (str(self), s, type(e)))
+@@ -862,7 +862,7 @@
+         except TypeError, e:
+             e = e.args[0]
+             if SCons.Util.is_List(e):
+-                s = map(str, e)
++                s = list(map(str, e))
+             else:
+                 s = str(e)
+             raise SCons.Errors.UserError("attempted to add a non-Node as source of %s:\n\t%s is a %s, not a Node" % (str(self), s, type(e)))
+@@ -1216,9 +1216,9 @@
+ 
+         removed = [x for x in old_bkids if not x in new_bkids]
+         if removed:
+-            removed = map(stringify, removed)
++            removed = list(map(stringify, removed))
+             fmt = "`%s' is no longer a dependency\n"
+-            lines.extend(map(lambda s: fmt % s, removed))
++            lines.extend([fmt % s for s in removed])
+ 
+         for k in new_bkids:
+             if not k in old_bkids:
+@@ -1228,8 +1228,8 @@
+ 
+         if len(lines) == 0 and old_bkids != new_bkids:
+             lines.append("the dependency order changed:\n" +
+-                         "%sold: %s\n" % (' '*15, map(stringify, old_bkids)) +
+-                         "%snew: %s\n" % (' '*15, map(stringify, new_bkids)))
++                         "%sold: %s\n" % (' '*15, list(map(stringify, old_bkids))) +
++                         "%snew: %s\n" % (' '*15, list(map(stringify, new_bkids))))
+ 
+         if len(lines) == 0:
+             def fmt_with_title(title, strlines):
+@@ -1266,7 +1266,7 @@
+ else:
+     class NodeList(UserList.UserList):
+         def __str__(self):
+-            return str(map(str, self.data))
++            return str(list(map(str, self.data)))
+ 
+ def get_children(node, parent): return node.children()
+ def ignore_cycle(node, stack): pass
+--- src/engine/SCons/Platform/__init__.py (original)
++++ src/engine/SCons/Platform/__init__.py (refactored)
+@@ -197,7 +197,7 @@
+         if not prefix:
+             prefix = '@'
+ 
+-        args = map(SCons.Subst.quote_spaces, cmd[1:])
++        args = list(map(SCons.Subst.quote_spaces, cmd[1:]))
+         os.write(fd, " ".join(args) + "\n")
+         os.close(fd)
+         # XXX Using the SCons.Action.print_actions value directly
+--- src/engine/SCons/Platform/posix.py (original)
++++ src/engine/SCons/Platform/posix.py (refactored)
+@@ -92,7 +92,7 @@
+     s = ' '.join(args)
+     if env:
+         l = ['env', '-'] + \
+-            map(lambda t: escape(t[0])+'='+escape(t[1]), env.items()) + \
++            [escape(t[0])+'='+escape(t[1]) for t in env.items()] + \
+             [sh, '-c', escape(s)]
+         s = ' '.join(l)
+     return s
+--- src/engine/SCons/Scanner/CTests.py (original)
++++ src/engine/SCons/Scanner/CTests.py (refactored)
+@@ -192,7 +192,7 @@
+     def subst_path(self, path, target=None, source=None, conv=None):
+         if type(path) != type([]):
+             path = [path]
+-        return map(self.subst, path)
++        return list(map(self.subst, path))
+ 
+     def get_calculator(self):
+         return None
+@@ -213,8 +213,8 @@
+ 
+ def deps_match(self, deps, headers):
+     global my_normpath
+-    scanned = map(my_normpath, map(str, deps))
+-    expect = map(my_normpath, headers)
++    scanned = list(map(my_normpath, list(map(str, deps))))
++    expect = list(map(my_normpath, headers))
+     self.failUnless(scanned == expect, "expect %s != scanned %s" % (expect, scanned))
+ 
+ # define some tests:
+@@ -310,7 +310,7 @@
+         env.fs.chdir(env.Dir(''))
+         path = s.path(env, dir)
+         deps2 = s(env.File('#fa.cpp'), env, path)
+-        headers1 =  map(test.workpath, ['include/fa.h', 'include/fb.h'])
++        headers1 =  list(map(test.workpath, ['include/fa.h', 'include/fb.h']))
+         headers2 =  ['include/fa.h', 'include/fb.h']
+         deps_match(self, deps1, headers1)
+         deps_match(self, deps2, headers2)
+--- src/engine/SCons/Scanner/Dir.py (original)
++++ src/engine/SCons/Scanner/Dir.py (refactored)
+@@ -103,7 +103,7 @@
+         return []
+     entry_list = list(filter(do_not_scan, entries.keys()))
+     entry_list.sort()
+-    return map(lambda n: entries[n], entry_list)
++    return [entries[n] for n in entry_list]
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Scanner/DirTests.py (original)
++++ src/engine/SCons/Scanner/DirTests.py (refactored)
+@@ -90,7 +90,7 @@
+             os.path.join('dir', 'sub'),
+         ]
+         deps = s(env.Dir('dir'), env, ())
+-        sss = map(str, deps)
++        sss = list(map(str, deps))
+         assert sss == expect, sss
+ 
+         expect = [
+@@ -98,7 +98,7 @@
+             os.path.join('dir', 'sub', 'f4'),
+         ]
+         deps = s(env.Dir('dir/sub'), env, ())
+-        sss = map(str, deps)
++        sss = list(map(str, deps))
+         assert sss == expect, sss
+ 
+ class DirEntryScannerTestCase(DirScannerTestBase):
+@@ -108,16 +108,16 @@
+         s = SCons.Scanner.Dir.DirEntryScanner()
+ 
+         deps = s(env.Dir('dir'), env, ())
+-        sss = map(str, deps)
++        sss = list(map(str, deps))
+         assert sss == [], sss
+ 
+         deps = s(env.Dir('dir/sub'), env, ())
+-        sss = map(str, deps)
++        sss = list(map(str, deps))
+         assert sss == [], sss
+ 
+         # Make sure we don't blow up if handed a non-Dir node.
+         deps = s(env.File('dir/f1'), env, ())
+-        sss = map(str, deps)
++        sss = list(map(str, deps))
+         assert sss == [], sss
+ 
+ def suite():
+--- src/engine/SCons/Scanner/Fortran.py (original)
++++ src/engine/SCons/Scanner/Fortran.py (refactored)
+@@ -99,7 +99,7 @@
+ 
+             # Convert module name to a .mod filename
+             suffix = env.subst('$FORTRANMODSUFFIX')
+-            modules = map(lambda x: x.lower() + suffix, modules)
++            modules = [x.lower() + suffix for x in modules]
+             # Remove unique items from the list
+             mods_and_includes = SCons.Util.unique(includes+modules)
+             node.includes = mods_and_includes
+@@ -124,7 +124,7 @@
+                 nodes.append((sortkey, n))
+ 
+         nodes.sort()
+-        nodes = map(lambda pair: pair[1], nodes)
++        nodes = [pair[1] for pair in nodes]
+         return nodes
+ 
+ def FortranScan(path_variable="FORTRANPATH"):
+--- src/engine/SCons/Scanner/FortranTests.py (original)
++++ src/engine/SCons/Scanner/FortranTests.py (refactored)
+@@ -240,7 +240,7 @@
+     def subst_path(self, path, target=None, source=None, conv=None):
+         if type(path) != type([]):
+             path = [path]
+-        return map(self.subst, path)
++        return list(map(self.subst, path))
+ 
+     def get_calculator(self):
+         return None
+@@ -255,8 +255,8 @@
+         return self.fs.File(filename)
+ 
+ def deps_match(self, deps, headers):
+-    scanned = map(os.path.normpath, map(str, deps))
+-    expect = map(os.path.normpath, headers)
++    scanned = list(map(os.path.normpath, list(map(str, deps))))
++    expect = list(map(os.path.normpath, headers))
+     self.failUnless(scanned == expect, "expect %s != scanned %s" % (expect, scanned))
+ 
+ # define some tests:
+@@ -382,7 +382,7 @@
+         env.fs.chdir(env.Dir(''))
+         path = s.path(env, dir)
+         deps2 = s(env.File('#fff4.f'), env, path)
+-        headers1 =  map(test.workpath, ['include/f4.f'])
++        headers1 =  list(map(test.workpath, ['include/f4.f']))
+         headers2 =  ['include/f4.f']
+         deps_match(self, deps1, headers1)
+         deps_match(self, deps2, headers2)
+--- src/engine/SCons/Scanner/IDLTests.py (original)
++++ src/engine/SCons/Scanner/IDLTests.py (refactored)
+@@ -205,7 +205,7 @@
+     def subst_path(self, path, target=None, source=None, conv=None):
+         if type(path) != type([]):
+             path = [path]
+-        return map(self.subst, path)
++        return list(map(self.subst, path))
+ 
+     def has_key(self, key):
+         return self.Dictionary().has_key(key)
+@@ -238,8 +238,8 @@
+     my_normpath = os.path.normcase
+ 
+ def deps_match(self, deps, headers):
+-    scanned = map(my_normpath, map(str, deps))
+-    expect = map(my_normpath, headers)
++    scanned = list(map(my_normpath, list(map(str, deps))))
++    expect = list(map(my_normpath, headers))
+     self.failUnless(scanned == expect, "expect %s != scanned %s" % (expect, scanned))
+ 
+ # define some tests:
+@@ -329,7 +329,7 @@
+         env.fs.chdir(env.Dir(''))
+         path = s.path(env, dir)
+         deps2 = s(env.File('#t4.idl'), env, path)
+-        headers1 =  map(test.workpath, ['include/fa.idl', 'include/fb.idl'])
++        headers1 =  list(map(test.workpath, ['include/fa.idl', 'include/fb.idl']))
+         headers2 =  ['include/fa.idl', 'include/fb.idl']
+         deps_match(self, deps1, headers1)
+         deps_match(self, deps2, headers2)
+--- src/engine/SCons/Scanner/LaTeX.py (original)
++++ src/engine/SCons/Scanner/LaTeX.py (refactored)
+@@ -59,11 +59,11 @@
+         if SCons.Util.is_List(env[var]):
+             #TODO(1.5)
+             #env.PrependENVPath(var, [os.path.abspath(str(p)) for p in env[var]])
+-            env.PrependENVPath(var, map(lambda p: os.path.abspath(str(p)), env[var]))
++            env.PrependENVPath(var, [os.path.abspath(str(p)) for p in env[var]])
+         else:
+             # Split at os.pathsep to convert into absolute path
+             #TODO(1.5) env.PrependENVPath(var, [os.path.abspath(p) for p in str(env[var]).split(os.pathsep)])
+-            env.PrependENVPath(var, map(lambda p: os.path.abspath(p), str(env[var]).split(os.pathsep)))
++            env.PrependENVPath(var, [os.path.abspath(p) for p in str(env[var]).split(os.pathsep)])
+     except KeyError:
+         pass
+ 
+@@ -255,7 +255,7 @@
+                 #return map(lambda e: filename+e, self.graphics_extensions + TexGraphics)
+                 # use the line above to find dependency for PDF builder when only .eps figure is present
+                 # Since it will be found if the user tell scons how to make the pdf figure leave it out for now.
+-                return map(lambda e: filename+e, self.graphics_extensions)
++                return [filename+e for e in self.graphics_extensions]
+         return [filename]
+ 
+     def sort_key(self, include):
+@@ -367,7 +367,7 @@
+ 
+         #
+         nodes.sort()
+-        nodes = map(lambda pair: pair[1], nodes)
++        nodes = [pair[1] for pair in nodes]
+         return nodes
+ 
+ # Local Variables:
+--- src/engine/SCons/Scanner/LaTeXTests.py (original)
++++ src/engine/SCons/Scanner/LaTeXTests.py (refactored)
+@@ -87,7 +87,7 @@
+     def subst_path(self, path, target=None, source=None, conv=None):
+         if type(path) != type([]):
+             path = [path]
+-        return map(self.subst, path)
++        return list(map(self.subst, path))
+ 
+     def get_calculator(self):
+         return None
+@@ -108,8 +108,8 @@
+ 
+ def deps_match(self, deps, headers):
+     global my_normpath
+-    scanned = map(my_normpath, map(str, deps))
+-    expect = map(my_normpath, headers)
++    scanned = list(map(my_normpath, list(map(str, deps))))
++    expect = list(map(my_normpath, headers))
+     self.failUnless(scanned == expect, "expect %s != scanned %s" % (expect, scanned))
+ 
+ 
+--- src/engine/SCons/Scanner/ProgTests.py (original)
++++ src/engine/SCons/Scanner/ProgTests.py (refactored)
+@@ -56,7 +56,7 @@
+         elif len(args) == 1:
+             return self._dict[args[0]]
+         else:
+-            return map(lambda x: self._dict[x], args)
++            return [self._dict[x] for x in args]
+ 
+     def has_key(self, key):
+         return self.Dictionary().has_key(key)
+@@ -81,7 +81,7 @@
+     def subst_path(self, path, target=None, source=None, conv=None):
+         if type(path) != type([]):
+             path = [path]
+-        return map(self.subst, path)
++        return list(map(self.subst, path))
+ 
+     def get_factory(self, factory):
+         return factory or self.fs.File
+@@ -101,10 +101,10 @@
+         return self.name
+     
+ def deps_match(deps, libs):
+-    deps=map(str, deps)
++    deps=list(map(str, deps))
+     deps.sort()
+     libs.sort()
+-    return map(os.path.normpath, deps) == map(os.path.normpath, libs)
++    return list(map(os.path.normpath, deps)) == list(map(os.path.normpath, libs))
+ 
+ # define some tests:
+ 
+@@ -115,14 +115,14 @@
+         s = SCons.Scanner.Prog.ProgramScanner()
+         path = s.path(env)
+         deps = s(DummyNode('dummy'), env, path)
+-        assert deps_match(deps, ['l1.lib']), map(str, deps)
++        assert deps_match(deps, ['l1.lib']), list(map(str, deps))
+ 
+         env = DummyEnvironment(LIBPATH=[ test.workpath("") ],
+                                LIBS='l1')
+         s = SCons.Scanner.Prog.ProgramScanner()
+         path = s.path(env)
+         deps = s(DummyNode('dummy'), env, path)
+-        assert deps_match(deps, ['l1.lib']), map(str, deps)
++        assert deps_match(deps, ['l1.lib']), list(map(str, deps))
+ 
+         f1 = env.fs.File(test.workpath('f1'))
+         env = DummyEnvironment(LIBPATH=[ test.workpath("") ],
+@@ -143,13 +143,13 @@
+ 
+ class ProgramScannerTestCase2(unittest.TestCase):
+     def runTest(self):
+-        env = DummyEnvironment(LIBPATH=map(test.workpath,
+-                                           ["", "d1", "d1/d2" ]),
++        env = DummyEnvironment(LIBPATH=list(map(test.workpath,
++                                           ["", "d1", "d1/d2" ])),
+                                LIBS=[ 'l1', 'l2', 'l3' ])
+         s = SCons.Scanner.Prog.ProgramScanner()
+         path = s.path(env)
+         deps = s(DummyNode('dummy'), env, path)
+-        assert deps_match(deps, ['l1.lib', 'd1/l2.lib', 'd1/d2/l3.lib' ]), map(str, deps)
++        assert deps_match(deps, ['l1.lib', 'd1/l2.lib', 'd1/d2/l3.lib' ]), list(map(str, deps))
+ 
+ class ProgramScannerTestCase3(unittest.TestCase):
+     def runTest(self):
+@@ -159,7 +159,7 @@
+         s = SCons.Scanner.Prog.ProgramScanner()
+         path = s.path(env)
+         deps = s(DummyNode('dummy'), env, path)
+-        assert deps_match(deps, ['d1/l2.lib', 'd1/d2/l3.lib']), map(str, deps)
++        assert deps_match(deps, ['d1/l2.lib', 'd1/d2/l3.lib']), list(map(str, deps))
+ 
+ class ProgramScannerTestCase5(unittest.TestCase):
+     def runTest(self):
+@@ -174,7 +174,7 @@
+         s = SCons.Scanner.Prog.ProgramScanner()
+         path = s.path(env)
+         deps = s(DummyNode('dummy'), env, path)
+-        assert deps_match(deps, [ 'd1/l2.lib' ]), map(str, deps)
++        assert deps_match(deps, [ 'd1/l2.lib' ]), list(map(str, deps))
+ 
+ class ProgramScannerTestCase6(unittest.TestCase):
+     def runTest(self):
+@@ -185,7 +185,7 @@
+         s = SCons.Scanner.Prog.ProgramScanner()
+         path = s.path(env)
+         deps = s(DummyNode('dummy'), env, path)
+-        assert deps_match(deps, ['dir/libfoo.a', 'dir/sub/libbar.a', 'dir/libxyz.other']), map(str, deps)
++        assert deps_match(deps, ['dir/libfoo.a', 'dir/sub/libbar.a', 'dir/libxyz.other']), list(map(str, deps))
+ 
+ class ProgramScannerTestCase7(unittest.TestCase):
+     def runTest(self):
+@@ -198,7 +198,7 @@
+         s = SCons.Scanner.Prog.ProgramScanner()
+         path = s.path(env)
+         deps = s(DummyNode('dummy'), env, path)
+-        assert deps_match(deps, ['dir/libfoo.a', 'dir/sub/libbar.a', 'dir/libxyz.other']), map(str, deps)
++        assert deps_match(deps, ['dir/libfoo.a', 'dir/sub/libbar.a', 'dir/libxyz.other']), list(map(str, deps))
+ 
+ class ProgramScannerTestCase8(unittest.TestCase):
+     def runTest(self):
+--- src/engine/SCons/Scanner/RCTests.py (original)
++++ src/engine/SCons/Scanner/RCTests.py (refactored)
+@@ -88,7 +88,7 @@
+     def subst_path(self, path, target=None, source=None, conv=None):
+         if type(path) != type([]):
+             path = [path]
+-        return map(self.subst, path)
++        return list(map(self.subst, path))
+ 
+     def has_key(self, key):
+         return self.Dictionary().has_key(key)
+@@ -112,8 +112,8 @@
+     my_normpath = os.path.normcase
+ 
+ def deps_match(self, deps, headers):
+-    scanned = map(my_normpath, map(str, deps))
+-    expect = map(my_normpath, headers)
++    scanned = list(map(my_normpath, list(map(str, deps))))
++    expect = list(map(my_normpath, headers))
+     scanned.sort()
+     expect.sort()
+     self.failUnless(scanned == expect, "expect %s != scanned %s" % (expect, scanned))
+--- src/engine/SCons/Scanner/ScannerTests.py (original)
++++ src/engine/SCons/Scanner/ScannerTests.py (refactored)
+@@ -50,7 +50,7 @@
+     def subst_path(self, path, target=None, source=None, conv=None):
+         if type(path) != type([]):
+             path = [path]
+-        return map(self.subst, path)
++        return list(map(self.subst, path))
+     def get_factory(self, factory):
+         return factory or self.fs.File
+ 
+@@ -128,7 +128,7 @@
+         self.deps = deps
+         path = scanner.path(env)
+         scanned = scanner(filename, env, path)
+-        scanned_strs = map(lambda x: str(x), scanned)
++        scanned_strs = [str(x) for x in scanned]
+ 
+         self.failUnless(self.filename == filename, "the filename was passed incorrectly")
+         self.failUnless(self.env == env, "the environment was passed incorrectly")
+@@ -596,7 +596,7 @@
+                ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     return suite
+ 
+ if __name__ == "__main__":
+--- src/engine/SCons/Scanner/__init__.py (original)
++++ src/engine/SCons/Scanner/__init__.py (refactored)
+@@ -359,7 +359,7 @@
+             includes = self.find_include_names (node)
+             # Intern the names of the include files. Saves some memory
+             # if the same header is included many times.
+-            node.includes = map(SCons.Util.silent_intern, includes)
++            node.includes = list(map(SCons.Util.silent_intern, includes))
+ 
+         # This is a hand-coded DSU (decorate-sort-undecorate, or
+         # Schwartzian transform) pattern.  The sort key is the raw name
+@@ -382,7 +382,7 @@
+                 nodes.append((sortkey, n))
+ 
+         nodes.sort()
+-        nodes = map(lambda pair: pair[1], nodes)
++        nodes = [pair[1] for pair in nodes]
+         return nodes
+ 
+ class ClassicCPP(Classic):
+--- src/engine/SCons/Script/Interactive.py (original)
++++ src/engine/SCons/Script/Interactive.py (refactored)
+@@ -318,7 +318,7 @@
+             if l[:len(spaces)] == spaces:
+                 l = l[len(spaces):]
+             return l
+-        lines = map(strip_spaces, lines)
++        lines = list(map(strip_spaces, lines))
+         return '\n'.join(lines)
+ 
+     def do_exit(self, argv):
+--- src/engine/SCons/Script/Main.py (original)
++++ src/engine/SCons/Script/Main.py (refactored)
+@@ -501,7 +501,7 @@
+     def do_print(self):
+         stats_table = {}
+         for s in self.stats:
+-            for n in map(lambda t: t[0], s):
++            for n in [t[0] for t in s]:
+                 stats_table[n] = [0, 0, 0, 0]
+         i = 0
+         for s in self.stats:
+@@ -518,8 +518,8 @@
+         fmt2 = ''.join(pre + [' %7d']*l + post)
+         labels = self.labels[:l]
+         labels.append(("", "Class"))
+-        self.outfp.write(fmt1 % tuple(map(lambda x: x[0], labels)))
+-        self.outfp.write(fmt1 % tuple(map(lambda x: x[1], labels)))
++        self.outfp.write(fmt1 % tuple([x[0] for x in labels]))
++        self.outfp.write(fmt1 % tuple([x[1] for x in labels]))
+         for k in keys:
+             r = stats_table[k][:l] + [k]
+             self.outfp.write(fmt2 % tuple(r))
+--- src/engine/SCons/Script/MainTests.py (original)
++++ src/engine/SCons/Script/MainTests.py (refactored)
+@@ -42,7 +42,7 @@
+     tclasses = []
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Script/SConsOptions.py (original)
++++ src/engine/SCons/Script/SConsOptions.py (refactored)
+@@ -197,7 +197,7 @@
+             if self.nargs in (1, '?'):
+                 return self.check_value(opt, value)
+             else:
+-                return tuple(map(lambda v: self.check_value(opt, v), value))
++                return tuple([self.check_value(opt, v) for v in value])
+ 
+     def process(self, opt, value, values, parser):
+ 
+--- src/engine/SCons/Script/SConscript.py (original)
++++ src/engine/SCons/Script/SConscript.py (refactored)
+@@ -396,11 +396,11 @@
+ 
+             if not SCons.Util.is_List(dirs):
+                 dirs = [ dirs ]
+-            dirs = map(str, dirs)
++            dirs = list(map(str, dirs))
+ 
+             name = kw.get('name', 'SConscript')
+ 
+-            files = map(lambda n: os.path.join(n, name), dirs)
++            files = [os.path.join(n, name) for n in dirs]
+ 
+         elif len(ls) == 1:
+ 
+@@ -530,11 +530,11 @@
+     def SConscript(self, *ls, **kw):
+         def subst_element(x, subst=self.subst):
+             if SCons.Util.is_List(x):
+-                x = map(subst, x)
++                x = list(map(subst, x))
+             else:
+                 x = subst(x)
+             return x
+-        ls = map(subst_element, ls)
++        ls = list(map(subst_element, ls))
+         subst_kw = {}
+         for key, val in kw.items():
+             if SCons.Util.is_String(val):
+--- src/engine/SCons/Tool/FortranCommon.py (original)
++++ src/engine/SCons/Tool/FortranCommon.py (refactored)
+@@ -72,7 +72,7 @@
+     # Convert module name to a .mod filename
+     suffix = env.subst('$FORTRANMODSUFFIX', target=target, source=source)
+     moddir = env.subst('$FORTRANMODDIR', target=target, source=source)
+-    modules = map(lambda x: x.lower() + suffix, modules)
++    modules = [x.lower() + suffix for x in modules]
+     for m in modules:
+        target.append(env.fs.File(m, moddir))
+     return (target, source)
+--- src/engine/SCons/Tool/JavaCommonTests.py (original)
++++ src/engine/SCons/Tool/JavaCommonTests.py (refactored)
+@@ -569,7 +569,7 @@
+     tclasses = [ parse_javaTestCase ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Tool/PharLapCommon.py (original)
++++ src/engine/SCons/Tool/PharLapCommon.py (refactored)
+@@ -98,7 +98,7 @@
+         if not SCons.Util.is_List(env_dict[key]):
+             paths = paths.split(sep)
+             is_list = 0
+-        if os.path.normcase(path) not in map(os.path.normcase, paths):
++        if os.path.normcase(path) not in list(map(os.path.normcase, paths)):
+             paths = [ path ] + paths
+         if is_list:
+             env_dict[key] = paths
+--- src/engine/SCons/Tool/filesystem.py (original)
++++ src/engine/SCons/Tool/filesystem.py (refactored)
+@@ -44,12 +44,12 @@
+     n_target = []
+ 
+     for t in target:
+-        n_target = n_target + map( lambda s: t.File( str( s ) ), source )
++        n_target = n_target + [t.File( str( s ) ) for s in source]
+ 
+     return (n_target, source)
+ 
+ def copy_action_func(target, source, env):
+-    assert( len(target) == len(source) ), "\ntarget: %s\nsource: %s" %(map(str, target),map(str, source))
++    assert( len(target) == len(source) ), "\ntarget: %s\nsource: %s" %(list(map(str, target)),list(map(str, source)))
+ 
+     for t, s in zip(target, source):
+         if copyFunc(t.get_path(), s.get_path(), env):
+--- src/engine/SCons/Tool/install.py (original)
++++ src/engine/SCons/Tool/install.py (refactored)
+@@ -76,7 +76,7 @@
+         raise SCons.Errors.UserError('Missing INSTALL construction variable.')
+ 
+     assert len(target)==len(source), \
+-           "Installing source %s into target %s: target and source lists must have same length."%(map(str, source), map(str, target))
++           "Installing source %s into target %s: target and source lists must have same length."%(list(map(str, source)), list(map(str, target)))
+     for t,s in zip(target,source):
+         if install(t.get_path(),s.get_path(),env):
+             return 1
+--- src/engine/SCons/Tool/javac.py (original)
++++ src/engine/SCons/Tool/javac.py (refactored)
+@@ -79,7 +79,7 @@
+                 # them so our target and source lists are determinate.
+                 java_files.sort()
+                 mydir = dirnode.Dir(dirname)
+-                java_paths = map(lambda f: mydir.File(f), java_files)
++                java_paths = [mydir.File(f) for f in java_files]
+                 for jp in java_paths:
+                      arg[jp] = True
+ 
+--- src/engine/SCons/Tool/msvs.py (original)
++++ src/engine/SCons/Tool/msvs.py (refactored)
+@@ -752,14 +752,14 @@
+             # First remove any common prefix
+             commonprefix = None
+             if len(sources) > 1:
+-                s = map(os.path.normpath, sources)
++                s = list(map(os.path.normpath, sources))
+                 # take the dirname because the prefix may include parts
+                 # of the filenames (e.g. if you have 'dir\abcd' and
+                 # 'dir\acde' then the cp will be 'dir\a' )
+                 cp = os.path.dirname( os.path.commonprefix(s) )
+                 if cp and s[0][len(cp)] == os.sep:
+                     # +1 because the filename starts after the separator
+-                    sources = map(lambda s: s[len(cp)+1:], sources)
++                    sources = [s[len(cp)+1:] for s in sources]
+                     commonprefix = cp
+             elif len(sources) == 1:
+                 commonprefix = os.path.dirname( sources[0] )
+@@ -856,7 +856,7 @@
+         if len(projects) < 1:
+             raise SCons.Errors.UserError, \
+                 "You must specify at least one project to create an MSVSSolution."
+-        self.dspfiles = map(str, projects)
++        self.dspfiles = list(map(str, projects))
+ 
+         if self.env.has_key('name'):
+             self.name = self.env['name']
+--- src/engine/SCons/Tool/swig.py (original)
++++ src/engine/SCons/Tool/swig.py (refactored)
+@@ -96,28 +96,26 @@
+                 mnames, directors = _find_modules(src)
+             if directors:
+                 _add_director_header_targets(target, env)
+-            python_files = map(lambda m: m + ".py", mnames)
++            python_files = [m + ".py" for m in mnames]
+             outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
+             # .py files should be generated in SWIGOUTDIR if specified,
+             # otherwise in the same directory as the target
+             if outdir:
+-                python_files = map(lambda j:
+-                                   env.fs.File(os.path.join(outdir, j)),
+-                                   python_files)
++                python_files = [env.fs.File(os.path.join(outdir, j)) for j in python_files]
+             else:
+-                python_files = map(lambda m: target[0].dir.File(m), python_files)
++                python_files = [target[0].dir.File(m) for m in python_files]
+             target.extend(python_files)
+         if "-java" in flags:
+             if mnames is None:
+                 mnames, directors = _find_modules(src)
+             if directors:
+                 _add_director_header_targets(target, env)
+-            java_files = map(lambda m: [m + ".java", m + "JNI.java"], mnames)
++            java_files = [[m + ".java", m + "JNI.java"] for m in mnames]
+             java_files = SCons.Util.flatten(java_files)
+             outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
+             if outdir:
+-                 java_files = map(lambda j: os.path.join(outdir, j), java_files)
+-            java_files = map(env.fs.File, java_files)
++                 java_files = [os.path.join(outdir, j) for j in java_files]
++            java_files = list(map(env.fs.File, java_files))
+             for jf in java_files:
+                 t_from_s = lambda t, p, s, x: t.dir
+                 SCons.Util.AddMethod(jf, t_from_s, 'target_from_source')
+--- src/engine/SCons/Tool/MSCommon/common.py (original)
++++ src/engine/SCons/Tool/MSCommon/common.py (refactored)
+@@ -149,7 +149,7 @@
+ 
+     # TODO(1.5):  replace with the following list comprehension:
+     #dkeep = dict([(i, []) for i in keep])
+-    dkeep = dict(map(lambda i: (i, []), keep))
++    dkeep = dict([(i, []) for i in keep])
+ 
+     # rdk will  keep the regex to match the .bat file output line starts
+     rdk = {}
+--- src/engine/SCons/Tool/MSCommon/vs.py (original)
++++ src/engine/SCons/Tool/MSCommon/vs.py (refactored)
+@@ -416,7 +416,7 @@
+     if not env.has_key('MSVS') or not SCons.Util.is_Dict(env['MSVS']):
+         # TODO(1.5):
+         #versions = [vs.version for vs in get_installed_visual_studios()]
+-        versions = map(lambda vs: vs.version, get_installed_visual_studios())
++        versions = [vs.version for vs in get_installed_visual_studios()]
+         env['MSVS'] = {'VERSIONS' : versions}
+     else:
+         versions = env['MSVS'].get('VERSIONS', [])
+@@ -473,7 +473,7 @@
+         msvs_list = get_installed_visual_studios()
+         # TODO(1.5):
+         #vscommonvarnames = [ vs.common_tools_var for vs in msvs_list ]
+-        vscommonvarnames = map(lambda vs: vs.common_tools_var, msvs_list)
++        vscommonvarnames = [vs.common_tools_var for vs in msvs_list]
+         nenv = normalize_env(env['ENV'], vscommonvarnames + ['COMSPEC'])
+         output = get_output(batfilename, arch, env=nenv)
+         vars = parse_output(output, vars)
+@@ -487,7 +487,7 @@
+     msvs_list = get_installed_visual_studios()
+     # TODO(1.5)
+     #versions = [ msvs.version for msvs in msvs_list ]
+-    versions = map(lambda msvs:  msvs.version, msvs_list)
++    versions = [msvs.version for msvs in msvs_list]
+     return versions
+ 
+ # Local Variables:
+--- src/engine/SCons/Tool/packaging/__init__.py (original)
++++ src/engine/SCons/Tool/packaging/__init__.py (refactored)
+@@ -125,7 +125,7 @@
+         except ImportError, e:
+             raise EnvironmentError("packager %s not available: %s"%(type,str(e)))
+ 
+-    packagers=map(load_packager, PACKAGETYPE)
++    packagers=list(map(load_packager, PACKAGETYPE))
+ 
+     # set up targets and the PACKAGEROOT
+     try:
+@@ -223,7 +223,7 @@
+     opts.AddVariables(
+         EnumVariable( 'PACKAGETYPE',
+                      'the type of package to create.',
+-                     None, allowed_values=map( str, __all__ ),
++                     None, allowed_values=list(map( str, __all__ )),
+                      ignorecase=2
+                   )
+     )
+--- src/engine/SCons/Tool/packaging/rpm.py (original)
++++ src/engine/SCons/Tool/packaging/rpm.py (refactored)
+@@ -351,7 +351,7 @@
+             try:
+                 #int_values_for_key = [ (get_country_code(k),v) for k,v in values.items() if strip_country_code(k) == key ]
+                 x = [t for t in values.items() if strip_country_code(t[0]) == key]
+-                int_values_for_key = map(lambda t: (get_country_code(t[0]),t[1]), x)
++                int_values_for_key = [(get_country_code(t[0]),t[1]) for t in x]
+                 for v in int_values_for_key:
+                     str = str + replacement % v
+             except KeyError, e:
+--- src/engine/SCons/Variables/ListVariable.py (original)
++++ src/engine/SCons/Variables/ListVariable.py (refactored)
+@@ -98,7 +98,7 @@
+         val = allowedElems
+     else:
+         val = [_f for _f in val.split(',') if _f]
+-        val = map(lambda v: mapdict.get(v, v), val)
++        val = [mapdict.get(v, v) for v in val]
+         notAllowed = [v for v in val if not v in allowedElems]
+         if notAllowed:
+             raise ValueError("Invalid value(s) for option: %s" %
+--- src/engine/SCons/Variables/VariablesTests.py (original)
++++ src/engine/SCons/Variables/VariablesTests.py (refactored)
+@@ -652,7 +652,7 @@
+                  UnknownVariablesTestCase ]
+     for tclass in tclasses:
+         names = unittest.getTestCaseNames(tclass, 'test_')
+-        suite.addTests(map(tclass, names))
++        suite.addTests(list(map(tclass, names)))
+     if not unittest.TextTestRunner().run(suite).wasSuccessful():
+         sys.exit(1)
+ 
+--- src/engine/SCons/Variables/__init__.py (original)
++++ src/engine/SCons/Variables/__init__.py (refactored)
+@@ -108,7 +108,7 @@
+         """
+         Returns the keywords for the options
+         """
+-        return map(lambda o: o.key, self.options)
++        return [o.key for o in self.options]
+ 
+     def Add(self, key, help="", default=None, validator=None, converter=None, **kw):
+         """
+--- src/script/scons-time.py (original)
++++ src/script/scons-time.py (refactored)
+@@ -576,11 +576,11 @@
+         and returns the next run number after the largest it finds.
+         """
+         x = re.compile(re.escape(prefix) + '-([0-9]+).*')
+-        matches = map(lambda e: x.match(e), os.listdir(dir))
++        matches = [x.match(e) for e in os.listdir(dir)]
+         matches = [_f for _f in matches if _f]
+         if not matches:
+             return 0
+-        run_numbers = map(lambda m: int(m.group(1)), matches)
++        run_numbers = [int(m.group(1)) for m in matches]
+         return int(max(run_numbers)) + 1
+ 
+     def gnuplot_results(self, results, fmt='%s %.3f'):
+--- src/script/scons.py (original)
++++ src/script/scons.py (refactored)
+@@ -137,12 +137,11 @@
+         # check only /foo/lib/scons*.
+         prefs.append(sys.prefix)
+ 
+-    temp = map(lambda x: os.path.join(x, 'lib'), prefs)
+-    temp.extend(map(lambda x: os.path.join(x,
++    temp = [os.path.join(x, 'lib') for x in prefs]
++    temp.extend([os.path.join(x,
+                                            'lib',
+                                            'python' + sys.version[:3],
+-                                           'site-packages'),
+-                           prefs))
++                                           'site-packages') for x in prefs])
+     prefs = temp
+ 
+     # Add the parent directory of the current python's library to the
+@@ -162,8 +161,8 @@
+ 
+ # Look first for 'scons-__version__' in all of our preference libs,
+ # then for 'scons'.
+-libs.extend(map(lambda x: os.path.join(x, scons_version), prefs))
+-libs.extend(map(lambda x: os.path.join(x, 'scons'), prefs))
++libs.extend([os.path.join(x, scons_version) for x in prefs])
++libs.extend([os.path.join(x, 'scons') for x in prefs])
+ 
+ sys.path = libs + sys.path
+ 
+--- src/script/sconsign.py (original)
++++ src/script/sconsign.py (refactored)
+@@ -126,12 +126,11 @@
+         # check only /foo/lib/scons*.
+         prefs.append(sys.prefix)
+ 
+-    temp = map(lambda x: os.path.join(x, 'lib'), prefs)
+-    temp.extend(map(lambda x: os.path.join(x,
++    temp = [os.path.join(x, 'lib') for x in prefs]
++    temp.extend([os.path.join(x,
+                                            'lib',
+                                            'python' + sys.version[:3],
+-                                           'site-packages'),
+-                           prefs))
++                                           'site-packages') for x in prefs])
+     prefs = temp
+ 
+     # Add the parent directory of the current python's library to the
+@@ -151,8 +150,8 @@
+ 
+ # Look first for 'scons-__version__' in all of our preference libs,
+ # then for 'scons'.
+-libs.extend(map(lambda x: os.path.join(x, scons_version), prefs))
+-libs.extend(map(lambda x: os.path.join(x, 'scons'), prefs))
++libs.extend([os.path.join(x, scons_version) for x in prefs])
++libs.extend([os.path.join(x, 'scons') for x in prefs])
+ 
+ sys.path = libs + sys.path
+ 
+@@ -286,7 +285,7 @@
+         field_list = []
+     if '\n' in name:
+         name = repr(name)
+-    outlist = [name+':'] + [_f for _f in map(lambda x: field(x, ninfo, Verbose), field_list) if _f]
++    outlist = [name+':'] + [_f for _f in [field(x, ninfo, Verbose) for x in field_list] if _f]
+     if Verbose:
+         sep = '\n    ' + prefix
+     else:
+--- test/option-j.py (original)
++++ test/option-j.py (refactored)
+@@ -90,10 +90,10 @@
+     test.run(arguments = args)
+ 
+     str = test.read("f1")
+-    start1,finish1 = map(float, str.split("\n"))
++    start1,finish1 = list(map(float, str.split("\n")))
+ 
+     str = test.read("f2")
+-    start2,finish2 = map(float, str.split("\n"))
++    start2,finish2 = list(map(float, str.split("\n")))
+ 
+     return start2, finish1
+ 
+@@ -148,10 +148,10 @@
+ test.must_contain_all_lines(test.stderr(), [warn])
+ 
+ str = test.read("f1")
+-start1,finish1 = map(float, str.split("\n"))
++start1,finish1 = list(map(float, str.split("\n")))
+ 
+ str = test.read("f2")
+-start2,finish2 = map(float, str.split("\n"))
++start2,finish2 = list(map(float, str.split("\n")))
+ 
+ test.fail_test(start2 < finish1)
+ 
+--- test/textfile.py (original)
++++ test/textfile.py (refactored)
+@@ -69,18 +69,18 @@
+ 
+ test.up_to_date(arguments = '.')
+ 
+-files = map(test.workpath, (
++files = list(map(test.workpath, (
+             'foo1.txt', 'foo2.txt', 'foo1a.txt', 'foo2a.txt',
+             'bar1',     'bar2',     'bar1a.txt', 'bar2a.txt',
+-        ))
++        )))
+ def check_times():
+     # make sure the files didn't get rewritten, because nothing changed:
+-    before = map(os.path.getmtime, files)
++    before = list(map(os.path.getmtime, files))
+     # introduce a small delay, to make the test valid
+     test.sleep()
+     # should still be up-to-date
+     test.up_to_date(arguments = '.')
+-    after = map(os.path.getmtime, files)
++    after = list(map(os.path.getmtime, files))
+     test.fail_test(before != after)
+ 
+ # make sure that the file content is as expected
+--- test/Perforce/Perforce.py (original)
++++ test/Perforce/Perforce.py (refactored)
+@@ -65,11 +65,11 @@
+                 if ' ' in a:
+                     a = '"%s"' % a
+                 return a
+-            args = map(quote_space, [self.p4d, '-q', '-d'] + \
++            args = list(map(quote_space, [self.p4d, '-q', '-d'] + \
+                                     self.p4portflags + \
+                                     ['-J', 'Journal',
+                                      '-L', 'Log',
+-                                     '-r', self.workpath('depot')])
++                                     '-r', self.workpath('depot')]))
+ 
+             # We don't use self.run() because the TestCmd logic will hang
+             # waiting for the daemon to exit, even when we pass it
+@@ -207,7 +207,7 @@
+ os.environ["PWD"] = test.workpath('import')
+ paths = [ 'aaa.in', 'bbb.in', 'ccc.in',
+           'sub/ddd.in', 'sub/eee.in', 'sub/fff.in', 'sub/SConscript' ]
+-paths = map(os.path.normpath, paths)
++paths = list(map(os.path.normpath, paths))
+ args = '-c testclient1 add -t binary %s' % ' '.join(paths)
+ test.p4(args, chdir='import')
+ 
+--- test/ZIP/ZIP.py (original)
++++ test/ZIP/ZIP.py (refactored)
+@@ -94,7 +94,7 @@
+ 
+     def files(fname):
+         zf = zipfile.ZipFile(fname, 'r')
+-        return map(lambda x: x.filename, zf.infolist())
++        return [x.filename for x in zf.infolist()]
+ 
+ except ImportError:
+     internal_zip = 0
+@@ -106,7 +106,7 @@
+         lines = test.stdout().split("\n")[:-1]
+         def lastword(line):
+             return line.split()[-1]
+-        return map(lastword, lines)
++        return list(map(lastword, lines))
+ 
+ if zip:
+ 
+--- test/option/debug-time.py (original)
++++ test/option/debug-time.py (refactored)
+@@ -109,7 +109,7 @@
+ expected_total_time = complete_time - overhead
+ 
+ pattern = r'Command execution time: (\d+\.\d+) seconds'
+-times = map(float, re.findall(pattern, test.stdout()))
++times = list(map(float, re.findall(pattern, test.stdout())))
+ expected_command_time = reduce(lambda x, y: x + y, times, 0.0)
+ 
+ 
+--- test/option/help-options.py (original)
++++ test/option/help-options.py (refactored)
+@@ -55,11 +55,11 @@
+ 
+ lines = stdout.split('\n')
+ lines = [x for x in lines if x[:3] == '  -']
+-lines = map(lambda x: x[3:], lines)
+-lines = map(lambda x: x[0] == '-' and x[1:] or x, lines)
+-options = map(lambda x: x.split()[0], lines)
+-options = map(lambda x: x[-1] == ',' and x[:-1] or x, options)
+-lowered = map(lambda x: x.lower(), options)
++lines = [x[3:] for x in lines]
++lines = [x[0] == '-' and x[1:] or x for x in lines]
++options = [x.split()[0] for x in lines]
++options = [x[-1] == ',' and x[:-1] or x for x in options]
++lowered = [x.lower() for x in options]
+ sorted = lowered[:]
+ sorted.sort()
+ if lowered != sorted:
+--- test/scons-time/help/all-subcommands.py (original)
++++ test/scons-time/help/all-subcommands.py (refactored)
+@@ -48,9 +48,9 @@
+ functions = globals['SConsTimer'].__dict__.keys()
+ do_funcs = [x for x in functions if x[:3] == 'do_']
+ 
+-subcommands = map(lambda x: x[3:], do_funcs)
++subcommands = [x[3:] for x in do_funcs]
+ 
+-expect = map(lambda x: '    %s ' % x, subcommands)
++expect = ['    %s ' % x for x in subcommands]
+ 
+ test.run(arguments = 'help')
+ 
+--- QMTest/TestCmd.py (original)
++++ QMTest/TestCmd.py (refactored)
+@@ -307,8 +307,8 @@
+ except NameError:
+     def zip(*lists):
+         result = []
+-        for i in xrange(min(map(len, lists))):
+-            result.append(tuple(map(lambda l: l[i], lists)))
++        for i in xrange(min(list(map(len, lists)))):
++            result.append(tuple([l[i] for l in lists]))
+         return result
+ 
+ class Collector:
+@@ -316,7 +316,7 @@
+         self.entries = [top]
+     def __call__(self, arg, dirname, names):
+         pathjoin = lambda n: os.path.join(dirname, n)
+-        self.entries.extend(map(pathjoin, names))
++        self.entries.extend(list(map(pathjoin, names)))
+ 
+ def _caller(tblist, skip):
+     string = ""
+@@ -472,15 +472,15 @@
+         for op, a1, a2, b1, b2 in sm.get_opcodes():
+             if op == 'delete':
+                 result.append("%sd%d" % (comma(a1, a2), b1))
+-                result.extend(map(lambda l: '< ' + l, a[a1:a2]))
++                result.extend(['< ' + l for l in a[a1:a2]])
+             elif op == 'insert':
+                 result.append("%da%s" % (a1, comma(b1, b2)))
+-                result.extend(map(lambda l: '> ' + l, b[b1:b2]))
++                result.extend(['> ' + l for l in b[b1:b2]])
+             elif op == 'replace':
+                 result.append("%sc%s" % (comma(a1, a2), comma(b1, b2)))
+-                result.extend(map(lambda l: '< ' + l, a[a1:a2]))
++                result.extend(['< ' + l for l in a[a1:a2]])
+                 result.append('---')
+-                result.extend(map(lambda l: '> ' + l, b[b1:b2]))
++                result.extend(['> ' + l for l in b[b1:b2]])
+         return result
+ 
+ def diff_re(a, b, fromfile='', tofile='',
+--- QMTest/TestCommon.py (original)
++++ QMTest/TestCommon.py (refactored)
+@@ -227,7 +227,7 @@
+         them.  Exits FAILED if any of the files does not exist or is
+         not writable.
+         """
+-        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
++        files = [is_List(x) and os.path.join(*x) or x for x in files]
+         existing, missing = separate_files(files)
+         unwritable = [x for x in existing if not is_writable(x)]
+         if missing:
+@@ -313,7 +313,7 @@
+         pathname will be constructed by concatenating them.  Exits FAILED
+         if any of the files does not exist.
+         """
+-        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
++        files = [is_List(x) and os.path.join(*x) or x for x in files]
+         missing = [x for x in files if not os.path.exists(x)]
+         if missing:
+             print "Missing files: `%s'" % "', `".join(missing)
+@@ -385,7 +385,7 @@
+         which case the pathname will be constructed by concatenating them.
+         Exits FAILED if any of the files exists.
+         """
+-        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
++        files = [is_List(x) and os.path.join(*x) or x for x in files]
+         existing = list(filter(os.path.exists, files))
+         if existing:
+             print "Unexpected files exist: `%s'" % "', `".join(existing)
+@@ -399,7 +399,7 @@
+         them.  Exits FAILED if any of the files does not exist or is
+         writable.
+         """
+-        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
++        files = [is_List(x) and os.path.join(*x) or x for x in files]
+         existing, missing = separate_files(files)
+         writable = list(filter(is_writable, existing))
+         if missing:
+--- QMTest/TestSCons.py (original)
++++ QMTest/TestSCons.py (refactored)
+@@ -30,7 +30,7 @@
+     def zip(*lists):
+         result = []
+         for i in xrange(len(lists[0])):
+-            result.append(tuple(map(lambda l: l[i], lists)))
++            result.append(tuple([l[i] for l in lists]))
+         return result
+     __builtin__.zip = zip
+ 
+@@ -171,7 +171,7 @@
+ except AttributeError:
+     # Pre-1.6 Python has no sys.version_info
+     version_string = sys.version.split()[0]
+-    version_ints = map(int, version_string.split('.'))
++    version_ints = list(map(int, version_string.split('.')))
+     sys.version_info = tuple(version_ints + ['final', 0])
+ 
+ def python_version_string():
+--- QMTest/scons_tdb.py (original)
++++ QMTest/scons_tdb.py (refactored)
+@@ -154,9 +154,9 @@
+ 
+ def get_sys_values():
+     sys_attributes.sort()
+-    result = map(lambda k: (k, getattr(sys, k, _null)), sys_attributes)
++    result = [(k, getattr(sys, k, _null)) for k in sys_attributes]
+     result = [t for t in result if not t[1] is _null]
+-    result = map(lambda t: t[0] + '=' + repr(t[1]), result)
++    result = [t[0] + '=' + repr(t[1]) for t in result]
+     return '\n '.join(result)
+ 
+ module_attributes = [
+@@ -169,9 +169,9 @@
+ 
+ def get_module_info(module):
+     module_attributes.sort()
+-    result = map(lambda k: (k, getattr(module, k, _null)), module_attributes)
++    result = [(k, getattr(module, k, _null)) for k in module_attributes]
+     result = [t for t in result if not t[1] is _null]
+-    result = map(lambda t: t[0] + '=' + repr(t[1]), result)
++    result = [t[0] + '=' + repr(t[1]) for t in result]
+     return '\n '.join(result)
+ 
+ environ_keys = [
+@@ -215,9 +215,9 @@
+ 
+ def get_environment():
+     environ_keys.sort()
+-    result = map(lambda k: (k, os.environ.get(k, _null)), environ_keys)
++    result = [(k, os.environ.get(k, _null)) for k in environ_keys]
+     result = [t for t in result if not t[1] is _null]
+-    result = map(lambda t: t[0] + '-' + t[1], result)
++    result = [t[0] + '-' + t[1] for t in result]
+     return '\n '.join(result)
+ 
+ class SConsXMLResultStream(XMLResultStream):
+--- QMTest/unittest.py (original)
++++ QMTest/unittest.py (refactored)
+@@ -354,8 +354,8 @@
+        prefix. The cases are sorted by their function names
+        using the supplied comparison function, which defaults to 'cmp'.
+     """
+-    cases = map(testCaseClass,
+-                getTestCaseNames(testCaseClass, prefix, sortUsing))
++    cases = list(map(testCaseClass,
++                getTestCaseNames(testCaseClass, prefix, sortUsing)))
+     return TestSuite(cases)
+ 
+ 
+--- bin/linecount.py (original)
++++ bin/linecount.py (refactored)
+@@ -86,7 +86,7 @@
+     try: names.remove('.svn')
+     except ValueError: pass
+     names = list(filter(arg, names))
+-    arg.extend(map(lambda n: os.path.join(dirname, n), names))
++    arg.extend([os.path.join(dirname, n) for n in names])
+ 
+ os.path.walk('src', t, src_Tests_py_tests)
+ os.path.walk('src', t, src_test_tests)
+--- bin/objcounts.py (original)
++++ bin/objcounts.py (refactored)
+@@ -40,7 +40,7 @@
+     list = [l.split() for l in lines if re.match('\s+\d', l)]
+     d = {}
+     for l in list:
+-        d[l[-1]] = map(int, l[:-1])
++        d[l[-1]] = list(map(int, l[:-1]))
+     return d
+ 
+ c1 = fetch_counts(sys.argv[1])
+--- bin/scons-diff.py (original)
++++ bin/scons-diff.py (refactored)
+@@ -97,15 +97,15 @@
+     for op, a1, a2, b1, b2 in sm.get_opcodes():
+         if op == 'delete':
+             result.append("%sd%d\n" % (comma(a1, a2), b1))
+-            result.extend(map(lambda l: '< ' + l, a[a1:a2]))
++            result.extend(['< ' + l for l in a[a1:a2]])
+         elif op == 'insert':
+             result.append("%da%s\n" % (a1, comma(b1, b2)))
+-            result.extend(map(lambda l: '> ' + l, b[b1:b2]))
++            result.extend(['> ' + l for l in b[b1:b2]])
+         elif op == 'replace':
+             result.append("%sc%s\n" % (comma(a1, a2), comma(b1, b2)))
+-            result.extend(map(lambda l: '< ' + l, a[a1:a2]))
++            result.extend(['< ' + l for l in a[a1:a2]])
+             result.append('---\n')
+-            result.extend(map(lambda l: '> ' + l, b[b1:b2]))
++            result.extend(['> ' + l for l in b[b1:b2]])
+     return result
+ 
+ diff_map = {
+--- bin/scons-doc.py (original)
++++ bin/scons-doc.py (refactored)
+@@ -718,7 +718,7 @@
+             i = 0
+             while lines[0][i] == ' ':
+                 i = i + 1
+-            lines = map(lambda l: l[i:], lines)
++            lines = [l[i:] for l in lines]
+             path = f.name.replace('__ROOT__', t.rootpath)
+             if not os.path.isabs(path):
+                 path = t.workpath('WORK', path)
+--- bin/scons-proc.py (original)
++++ bin/scons-proc.py (refactored)
+@@ -150,12 +150,12 @@
+             for chunk in v.summary.body:
+                 f.write(str(chunk))
+             if v.sets:
+-                s = map(lambda x: '&cv-link-%s;' % x, v.sets)
++                s = ['&cv-link-%s;' % x for x in v.sets]
+                 f.write('<para>\n')
+                 f.write('Sets:  ' + ', '.join(s) + '.\n')
+                 f.write('</para>\n')
+             if v.uses:
+-                u = map(lambda x: '&cv-link-%s;' % x, v.uses)
++                u = ['&cv-link-%s;' % x for x in v.uses]
+                 f.write('<para>\n')
+                 f.write('Uses:  ' + ', '.join(u) + '.\n')
+                 f.write('</para>\n')
+@@ -200,7 +200,7 @@
+             chunks.extend(self.mansep())
+             for n in self.initial_chunks(v.name):
+                 chunks.append('.IP %s\n' % n)
+-            chunks.extend(map(str, v.summary.body))
++            chunks.extend(list(map(str, v.summary.body)))
+ 
+         body = ''.join(chunks)
+         body = body.replace('<programlisting>', '.ES')
+--- bin/sconsexamples.py (original)
++++ bin/sconsexamples.py (refactored)
+@@ -411,7 +411,7 @@
+             i = 0
+             while lines[0][i] == ' ':
+                 i = i + 1
+-            lines = map(lambda l: l[i:], lines)
++            lines = [l[i:] for l in lines]
+             path = f.name.replace('__ROOT__', t.workpath('ROOT'))
+             dir, name = os.path.split(f.name)
+             if dir:
+--- bench/bench.py (original)
++++ bench/bench.py (refactored)
+@@ -96,7 +96,7 @@
+ except NameError:
+     function_names = [x for x in locals().keys() if x[:4] == FunctionPrefix]
+     function_names.sort()
+-    l = map(lambda f: locals()[f], function_names)
++    l = [locals()[f] for f in function_names]
+     FunctionList = [f for f in l if type(f) == types.FunctionType]
+ 
+ IterationList = [None] * Iterations
+--- bench/timeit.py (original)
++++ bench/timeit.py (refactored)
+@@ -277,7 +277,7 @@
+         return 1
+     best = min(r)
+     if verbose:
+-        print "raw times:", ' '.join(map(lambda x: "%.*g" % (precision, x), r))
++        print "raw times:", ' '.join(["%.*g" % (precision, x) for x in r])
+     print "%d loops," % number,
+     usec = best * 1e6 / number
+     if usec < 1000:
