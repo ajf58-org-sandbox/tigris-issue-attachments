@@ -1,0 +1,206 @@
+From eef83f3f624a5f70cc0df155d45fcf724e2aa405 Mon Sep 17 00:00:00 2001
+From: Emil Stanchev <estanchev@vmware.com>
+Date: Wed, 20 Jul 2011 15:53:46 +0300
+Subject: [PATCH 1/4] Fix a pending children and side effects bug.
+
+---
+ src/engine/SCons/Taskmaster.py      |    8 ++++++++
+ src/engine/SCons/TaskmasterTests.py |   32 +++++++++++++++++++++++++++++++-
+ 2 files changed, 39 insertions(+), 1 deletions(-)
+
+diff --git a/src/engine/SCons/Taskmaster.py b/src/engine/SCons/Taskmaster.py
+index 58a8d90..f122279 100644
+--- a/src/engine/SCons/Taskmaster.py
++++ b/src/engine/SCons/Taskmaster.py
+@@ -970,6 +970,14 @@ class Taskmaster(object):
+                 to_visit = to_visit | parents
+                 pending_children = pending_children - parents
+ 
++                # Clean up the other branches of side effect
++                for se in node.get_side_effects():
++                    waiting_s_e = se.get_waiting_s_e()
++                    # Prevent an infinite loop
++                    se.waiting_s_e = set()
++                    to_visit = to_visit | waiting_s_e
++                    pending_children = pending_children - waiting_s_e
++
+                 for p in parents:
+                     p.ref_count = p.ref_count - 1
+                     if T: T.write(self.trace_message('       removing parent %s from the pending children set\n' %
+diff --git a/src/engine/SCons/TaskmasterTests.py b/src/engine/SCons/TaskmasterTests.py
+index 66c6b9c..634e78d 100644
+--- a/src/engine/SCons/TaskmasterTests.py
++++ b/src/engine/SCons/TaskmasterTests.py
+@@ -32,6 +32,7 @@ import unittest
+ 
+ import SCons.Taskmaster
+ import SCons.Errors
++import SCons.Job
+ 
+ 
+ built_text = None
+@@ -131,8 +132,17 @@ class Node(object):
+         wp.add(node)
+         return 1
+ 
++    def add_to_waiting_s_e(self, node):
++        self.waiting_s_e.add(node)
++    
+     def get_state(self):
+         return self.state
++    
++    def get_side_effects(self):
++        return self.side_effects
++
++    def get_waiting_s_e(self):
++        return self.waiting_s_e
+ 
+     def set_state(self, state):
+         self.state = state
+@@ -185,7 +195,7 @@ class Node(object):
+                 def get_all_prerequisites(self):
+                     return []
+                 def get_action_side_effects(self):
+-                    return []
++                    return [se for t in self.targets for se in t.side_effects]
+             self.executor = Executor()
+             self.executor.targets = self.targets
+         return self.executor
+@@ -953,6 +963,26 @@ class TaskmasterTestCase(unittest.TestCase):
+         t.execute()
+         assert built_text is None, built_text
+         assert cache_text == ["n7 retrieved", "n8 retrieved"], cache_text
++    
++    def test_pending_children_side_effects(self):
++        n1 = Node("n1")
++        n2 = Node("n2")
++        n3 = Node("n3")
++        n4 = Node("n4")
++        side_effect = Node("se")
++
++        def build_error():
++            import time; time.sleep(2)
++            raise SystemError("Node failed.")
++        n1.build = build_error
++        n1.side_effects = [side_effect]
++        n2.side_effects = [side_effect]
++
++        n3.kids = [n2]
++        n4.kids = [n1, n2, n3]
++        tm = SCons.Taskmaster.Taskmaster([n4])
++        jobs = SCons.Job.Jobs(2, tm)
++        jobs.run()
+ 
+     def test_exception(self):
+         """Test generic Taskmaster exception handling
+-- 
+1.7.4.1
+
+
+From 436d1c4a79babaf11e64badb3d40128980264241 Mon Sep 17 00:00:00 2001
+From: Emil Stanchev <estanchev@vmware.com>
+Date: Wed, 20 Jul 2011 17:02:10 +0300
+Subject: [PATCH 2/4] foo
+
+---
+ src/engine/SCons/Taskmaster.py |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/src/engine/SCons/Taskmaster.py b/src/engine/SCons/Taskmaster.py
+index f122279..f3f9c2f 100644
+--- a/src/engine/SCons/Taskmaster.py
++++ b/src/engine/SCons/Taskmaster.py
+@@ -975,8 +975,14 @@ class Taskmaster(object):
+                     waiting_s_e = se.get_waiting_s_e()
+                     # Prevent an infinite loop
+                     se.waiting_s_e = set()
+-                    to_visit = to_visit | waiting_s_e
++                    stack = waiting_s_e
+                     pending_children = pending_children - waiting_s_e
++                    while stack:
++                        n = stack.pop()
++                        waiting_parents = n.waiting_parents
++                        n.waiting_parents = set()
++                        stack = stack | waiting_parents
++                        pending_children = pending_children - waiting_parents
+ 
+                 for p in parents:
+                     p.ref_count = p.ref_count - 1
+-- 
+1.7.4.1
+
+
+From 785ac23a62fd35781093ee8c73df3ba9301de43f Mon Sep 17 00:00:00 2001
+From: Emil Stanchev <estanchev@vmware.com>
+Date: Wed, 20 Jul 2011 17:08:36 +0300
+Subject: [PATCH 3/4] foo
+
+---
+ src/engine/SCons/Taskmaster.py |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/src/engine/SCons/Taskmaster.py b/src/engine/SCons/Taskmaster.py
+index f3f9c2f..27ccf0a 100644
+--- a/src/engine/SCons/Taskmaster.py
++++ b/src/engine/SCons/Taskmaster.py
+@@ -973,10 +973,12 @@ class Taskmaster(object):
+                 # Clean up the other branches of side effect
+                 for se in node.get_side_effects():
+                     waiting_s_e = se.get_waiting_s_e()
+-                    # Prevent an infinite loop
+-                    se.waiting_s_e = set()
+-                    stack = waiting_s_e
+                     pending_children = pending_children - waiting_s_e
++                    stack = set(waiting_s_e)
++                    if T:
++                        for n in waiting_s_e:
++                            T.write(self.trace_message('       removing side effect parent %s from the pending children set\n' %
++                                    self.trace_node(n)))
+                     while stack:
+                         n = stack.pop()
+                         waiting_parents = n.waiting_parents
+@@ -984,6 +986,11 @@ class Taskmaster(object):
+                         stack = stack | waiting_parents
+                         pending_children = pending_children - waiting_parents
+ 
++                        if T:
++                            for p in waiting_parents:
++                                T.write(self.trace_message('       removing parent %s from the pending children set\n' %
++                                                           self.trace_node(p)))
++
+                 for p in parents:
+                     p.ref_count = p.ref_count - 1
+                     if T: T.write(self.trace_message('       removing parent %s from the pending children set\n' %
+-- 
+1.7.4.1
+
+
+From b5cec6fd05e7aad25a6402d4af3eb3308a6d8ed8 Mon Sep 17 00:00:00 2001
+From: Emil Stanchev <estanchev@vmware.com>
+Date: Wed, 31 Aug 2011 15:56:54 +0300
+Subject: [PATCH 4/4] foo
+
+---
+ src/engine/SCons/Taskmaster.py |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/engine/SCons/Taskmaster.py b/src/engine/SCons/Taskmaster.py
+index 27ccf0a..604af32 100644
+--- a/src/engine/SCons/Taskmaster.py
++++ b/src/engine/SCons/Taskmaster.py
+@@ -986,9 +986,9 @@ class Taskmaster(object):
+                         stack = stack | waiting_parents
+                         pending_children = pending_children - waiting_parents
+ 
+-                        if T:
+-                            for p in waiting_parents:
+-                                T.write(self.trace_message('       removing parent %s from the pending children set\n' %
++                    for p in waiting_parents:
++                        p.ref_count = p.ref_count - 1
++                        if T: T.write(self.trace_message('       removing parent %s from the pending children set\n' %
+                                                            self.trace_node(p)))
+ 
+                 for p in parents:
+-- 
+1.7.4.1
+
