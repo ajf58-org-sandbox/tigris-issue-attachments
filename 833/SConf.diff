@@ -1,0 +1,21 @@
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 5214)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -543,9 +543,15 @@
+         nodesToBeBuilt = []
+ 
+         f = "conftest_" + str(_ac_build_counter)
++        # If MSVC_BATCH is enabled test are not processed correctly
++        # as builder is trying to compile allways first test file.
++        # It is not the best fix but making output in separete
++        # directories fixes the problem.
++        conftestdir = self.confdir.Dir(f)
++        self._createDir(conftestdir)
+         pref = self.env.subst( builder.builder.prefix )
+         suff = self.env.subst( builder.builder.suffix )
+-        target = self.confdir.File(pref + f + suff)
++        target = conftestdir.File(pref + f + suff)
+ 
+         try:
+             # Slide our wrapper into the construction environment as
