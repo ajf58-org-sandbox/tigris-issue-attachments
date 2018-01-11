@@ -1,0 +1,125 @@
+diff --git a/src/engine/SCons/Conftest.py b/src/engine/SCons/Conftest.py
+index ba7dbf1..89e4819 100644
+--- a/src/engine/SCons/Conftest.py
++++ b/src/engine/SCons/Conftest.py
+@@ -306,6 +306,56 @@ int main() {
+                  function_name)
+     return ret
+ 
++def CheckFuncsAtOnce(context, function_names, header = None, language = None):
++    lang, suffix, msg = _lang2suffix(language)
++
++    if context.headerfilename:
++        includetext = '#include "%s"' % context.headerfilename
++    else:
++        includetext = ''
++
++    if not header:
++        header = ['#ifdef __cplusplus']
++        header.append('extern "C" {')
++        header.append('#endif')
++        for f in function_names:
++            header.append("\tchar %s();" % f)
++        header.append('#ifdef __cplusplus')
++        header.append('};')
++        header.append('#endif')
++        header = "\n".join(header)
++
++    tmp = []
++    for f in function_names:
++        tmp.append("\t%s();" % f)
++
++    body = """
++%(include)s
++#include <assert.h>
++%(hdr)s
++
++int main(void)
++{
++%(tmp)s
++    return 0;
++}
++""" % {'tmp' : "\n".join(tmp), 'include': includetext, 'hdr': header }
++
++    context.Display("Checking for %s functions %s... " % (lang, 
++                    ", ".join(function_names)))
++
++    ret = context.BuildProg(body, suffix)
++
++    if ret:
++        context.Display("no\n")
++        _LogFailed(context, body, ret)
++    else:
++        for k in function_names:
++            _Have(context, "HAVE_%s" % k, 1,
++                  "Define to 1 if you have the `%s' function." % k)
++        context.Display("yes\n")
++
++    return ret
+ 
+ def CheckHeader(context, header_name, header = None, language = None,
+                                                         include_quotes = None):
+diff --git a/src/engine/SCons/SConf.py b/src/engine/SCons/SConf.py
+index 25fc2bc..82f5ff3 100644
+--- a/src/engine/SCons/SConf.py
++++ b/src/engine/SCons/SConf.py
+@@ -406,6 +406,7 @@ class SConfBase:
+                  'CheckSHCC'          : CheckSHCC,
+                  'CheckSHCXX'         : CheckSHCXX,
+                  'CheckFunc'          : CheckFunc,
++                 'CheckFuncsAtOnce'   : CheckFuncsAtOnce,
+                  'CheckType'          : CheckType,
+                  'CheckTypeSize'      : CheckTypeSize,
+                  'CheckDeclaration'   : CheckDeclaration,
+@@ -883,6 +884,13 @@ def CheckFunc(context, function_name, header = None, language = None):
+     context.did_show_result = 1
+     return not res
+ 
++def CheckFuncsAtOnce(context, function_names, header = None, language = None):
++    res = SCons.Conftest.CheckFuncsAtOnce(context, function_names, 
++                                          header = header, 
++                                          language = language)
++    context.did_show_result = 1
++    return not res
++
+ def CheckType(context, type_name, includes = "", language = None):
+     res = SCons.Conftest.CheckType(context, type_name,
+                                         header = includes, language = language)
+diff --git a/src/engine/SCons/SConfTests.py b/src/engine/SCons/SConfTests.py
+index cef3889..b83dfd8 100644
+--- a/src/engine/SCons/SConfTests.py
++++ b/src/engine/SCons/SConfTests.py
+@@ -590,6 +590,33 @@ int main() {
+         finally:
+             sconf.Finish()
+ 
++    def test_CheckFuncsAtOnce(self):
++        """Test SConf.CheckFuncsAtOnce()
++        """
++        self._resetSConfState()
++        sconf = self.SConf.SConf(self.scons_env,
++                                 conf_dir=self.test.workpath('config.tests'),
++                                 log_file=self.test.workpath('config.log'),
++                                 config_h = self.test.workpath('config.h'))
++
++        try:
++            r = sconf.CheckFuncsAtOnce(['malloc', 'free'])
++            assert r, "did not find malloc and free"
++            assert sconf.config_h_text == \
++"""
++/* Define to 1 if you have the `malloc' function. */
++#define HAVE_MALLOC 1
++
++/* Define to 1 if you have the `free' function. */
++#define HAVE_FREE 1\n"""
++
++            sconf.config_h_text = ''
++            r = sconf.CheckFuncsAtOnce(['malloc', 'thisfunctiondoesnotexistfree'])
++            assert not r, "did find thisfunctiondoesnotexistfree ?"
++            assert sconf.config_h_text == ''
++        finally:
++            sconf.Finish()
++
+     def test_Define(self):
+         """Test SConf.Define()
+         """
