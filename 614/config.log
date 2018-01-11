@@ -1,0 +1,19 @@
+file /home/marcnarc/Code/scons-bug/compile/SConscript,line 4:
+	Configure(confdir = compile/tests)
+scons: Configure: Checking for C header file ifaddrs.h... 
+scons: Configure: "compile/tests/conftest_0.c" is up to date.
+scons: Configure: The original builder output was:
+  |compile/tests/conftest_0.c <-
+  |  |#include "sys/types.h"
+  |  |#include "sys/socket.h"
+  |  |
+  |  |#include "ifaddrs.h"
+  |  |
+  |  |
+  |
+gcc -o compile/tests/conftest_0.o -c compile/tests/conftest_0.c
+gcc: compile/tests/conftest_0.c: No such file or directory
+gcc: no input files
+scons: Configure: no
+
+
