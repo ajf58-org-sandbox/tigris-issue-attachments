@@ -1,0 +1,28 @@
+--- orig/scons-2.0.1/engine/SCons/Node/Python.py	2010-08-17 08:02:51.000000000 +0200
++++ patch/scons-2.0.1/engine/SCons/Node/Python.py	2011-08-29 22:23:25.269781000 +0200
+@@ -96,10 +96,9 @@
+         cannot use the actual node.built_value."""
+         ###TODO: something reasonable about universal newlines
+         contents = str(self.value)
+-        for kid in self.children(None):
+-            contents = contents + kid.get_contents()
+-        return contents
+-
++        childsigs = [n.get_csig() for n in self.children(None)]
++        return contents + ''.join(childsigs)
++        
+     get_contents = get_text_contents    ###TODO should return 'bytes' value
+ 
+     def changed_since_last_build(self, target, prev_ni):
+@@ -118,8 +117,9 @@
+         except AttributeError:
+             pass
+         contents = self.get_contents()
+-        self.get_ninfo().csig = contents
+-        return contents
++        csig = SCons.Util.MD5signature(contents)
++        self.get_ninfo().csig = csig
++        return csig
+ 
+ # Local Variables:
+ # tab-width:4
