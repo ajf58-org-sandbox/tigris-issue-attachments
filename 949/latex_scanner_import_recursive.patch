@@ -1,0 +1,136 @@
+diff -r 7844f53476b0 src/engine/SCons/Scanner/LaTeX.py
+--- a/src/engine/SCons/Scanner/LaTeX.py	Fri Sep 12 19:59:39 2014 +0200
++++ b/src/engine/SCons/Scanner/LaTeX.py	Wed Sep 17 17:34:29 2014 +0100
+@@ -101,7 +101,7 @@
+                suffixes =  '$LATEXSUFFIXES',
+                # in the search order, see below in LaTeX class docstring
+                graphics_extensions = TexGraphics,
+-               recursive = 0)
++               recursive = 1)
+     return ds
+ 
+ def PDFLaTeXScanner():
+@@ -112,7 +112,7 @@
+                suffixes =  '$LATEXSUFFIXES',
+                # in the search order, see below in LaTeX class docstring
+                graphics_extensions = LatexGraphics,
+-               recursive = 0)
++               recursive = 1)
+     return ds
+ 
+ class LaTeX(SCons.Scanner.Base):
+@@ -166,6 +166,7 @@
+                      'usepackage': 'TEXINPUTS',
+                      'lstinputlisting': 'TEXINPUTS'}
+     env_variables = SCons.Util.unique(list(keyword_paths.values()))
++    two_arg_commands = ['import', 'subimport', 'includefrom', 'subincludefrom']
+ 
+     def __init__(self, name, suffixes, graphics_extensions, *args, **kw):
+ 
+@@ -175,8 +176,27 @@
+         # line followed by one or more newline characters (i.e. blank
+         # lines), interfering with a match on the next line.
+         # add option for whitespace before the '[options]' or the '{filename}'
+-        regex = r'^[^%\n]*\\(include|includegraphics(?:\s*\[[^\]]+\])?|lstinputlisting(?:\[[^\]]+\])?|input|bibliography|addbibresource|addglobalbib|addsectionbib|usepackage)\s*{([^}]*)}'
+-        self.cre = re.compile(regex, re.M)
++        regex = r'''
++            ^[^%\n]*
++            \\(
++                include
++              | includegraphics(?:\s*\[[^\]]+\])?
++              | lstinputlisting(?:\[[^\]]+\])?
++              | input
++              | import
++              | subimport
++              | includefrom
++              | subincludefrom
++              | bibliography
++              | addbibresource
++              | addglobalbib
++              | addsectionbib
++              | usepackage
++              )
++                  \s*{([^}]*)}       # first arg
++              (?: \s*{([^}]*)} )?    # maybe another arg
++        '''
++        self.cre = re.compile(regex, re.M | re.X)
+         self.comment_re = re.compile(r'^((?:(?:\\%)|[^%\n])*)(.*)$', re.M)
+ 
+         self.graphics_extensions = graphics_extensions
+@@ -229,7 +249,7 @@
+ 
+         kw['function'] = _scan
+         kw['path_function'] = FindMultiPathDirs(LaTeX.keyword_paths)
+-        kw['recursive'] = 0
++        kw['recursive'] = 1
+         kw['skeys'] = suffixes
+         kw['scan_check'] = LaTeXScanCheck(suffixes)
+         kw['name'] = name
+@@ -242,7 +262,8 @@
+             base, ext = os.path.splitext( filename )
+             if ext == "":
+                 return [filename + '.tex']
+-        if (include[0] == 'include'):
++        if include[0] in ('include', 'import', 'subimport',
++                          'includefrom', 'subincludefrom'):
+             return [filename + '.tex']
+         if include[0] == 'bibliography':
+             base, ext = os.path.splitext( filename )
+@@ -270,7 +291,7 @@
+         try:
+             sub_path = path[include[0]]
+         except (IndexError, KeyError):
+-            sub_path = ()
++            sub_path = ((), ())
+         try_names = self._latex_names(include)
+         for n in try_names:
+             # see if we find it using the path in env[var]
+@@ -326,7 +347,12 @@
+             split_includes = []
+             for include in includes:
+                 inc_type = noopt_cre.sub('', include[0])
+-                inc_list = include[1].split(',')
++                if inc_type in self.two_arg_commands:
++                    inc_subdir = include[1]
++                    inc_list = [os.path.join(inc_subdir, fn)
++                                for fn in include[2].split(',')]
++                else:
++                    inc_list = include[1].split(',')
+                 for j in range(len(inc_list)):
+                     split_includes.append( (inc_type, inc_list[j]) )
+             #
+diff -r 7844f53476b0 src/engine/SCons/Scanner/LaTeXTests.py
+--- a/src/engine/SCons/Scanner/LaTeXTests.py	Fri Sep 12 19:59:39 2014 +0200
++++ b/src/engine/SCons/Scanner/LaTeXTests.py	Wed Sep 17 17:34:29 2014 +0100
+@@ -44,6 +44,10 @@
+ include{incNO}
+ %\include{incNO}
+ xyzzy \include{inc6}
++\subimport{subdir}{inc3}
++\import{subdir}{inc3a}
++\includefrom{subdir}{inc3b}
++\subincludefrom{subdir}{inc3c}
+ """)
+ 
+ test.write('test2.latex',"""
+@@ -61,6 +65,9 @@
+ test.write('inc1.tex',"\n")
+ test.write('inc2.tex',"\n")
+ test.write(['subdir', 'inc3.tex'], "\n")
++test.write(['subdir', 'inc3a.tex'], "\n")
++test.write(['subdir', 'inc3b.tex'], "\n")
++test.write(['subdir', 'inc3c.tex'], "\n")
+ test.write(['subdir', 'inc4.eps'], "\n")
+ test.write('inc5.xyz', "\n")
+ test.write('inc6.tex', "\n")
+@@ -122,7 +129,9 @@
+         s = SCons.Scanner.LaTeX.LaTeXScanner()
+         path = s.path(env)
+         deps = s(env.File('test1.latex'), env, path)
+-        headers = ['inc1.tex', 'inc2.tex', 'inc6.tex']
++        headers = ['inc1.tex', 'inc2.tex', 'inc6.tex',
++                   'subdir/inc3.tex', 'subdir/inc3a.tex',
++                   'subdir/inc3b.tex', 'subdir/inc3c.tex']
+         deps_match(self, deps, headers)
+ 
+ class LaTeXScannerTestCase2(unittest.TestCase):
