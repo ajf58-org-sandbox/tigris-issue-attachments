@@ -1,0 +1,290 @@
+Index: test/Variables/help.py
+===================================================================
+--- test/Variables/help.py	(revision 4788)
++++ test/Variables/help.py	(working copy)
+@@ -33,8 +33,8 @@
+ try:
+     True, False
+ except NameError:
+-    True = (0 == 0)
+-    False = (0 != 0)
++    exec('True = (0 == 0)')
++    exec('False = (0 != 0)')
+ 
+ str_True = str(True)
+ str_False = str(False)
+Index: test/Variables/PackageVariable.py
+===================================================================
+--- test/Variables/PackageVariable.py	(revision 4788)
++++ test/Variables/PackageVariable.py	(working copy)
+@@ -33,8 +33,8 @@
+ try:
+     True, False
+ except NameError:
+-    True = (0 == 0)
+-    False = (0 != 0)
++    exec('True = (0 == 0)')
++    exec('False = (0 != 0)')
+ 
+ import TestSCons
+ 
+Index: test/Variables/BoolVariable.py
+===================================================================
+--- test/Variables/BoolVariable.py	(revision 4788)
++++ test/Variables/BoolVariable.py	(working copy)
+@@ -33,8 +33,8 @@
+ try:
+     True, False
+ except NameError:
+-    True = (0 == 0)
+-    False = (0 != 0)
++    exec('True = (0 == 0)')
++    exec('False = (0 != 0)')
+ 
+ import TestSCons
+ 
+Index: test/Deprecated/Options/help.py
+===================================================================
+--- test/Deprecated/Options/help.py	(revision 4788)
++++ test/Deprecated/Options/help.py	(working copy)
+@@ -34,8 +34,8 @@
+ try:
+     True, False
+ except NameError:
+-    True = (0 == 0)
+-    False = (0 != 0)
++    exec('True = (0 == 0)')
++    exec('False = (0 != 0)')
+ 
+ str_True = str(True)
+ str_False = str(False)
+Index: test/Deprecated/Options/PackageOption.py
+===================================================================
+--- test/Deprecated/Options/PackageOption.py	(revision 4788)
++++ test/Deprecated/Options/PackageOption.py	(working copy)
+@@ -33,8 +33,8 @@
+ try:
+     True, False
+ except NameError:
+-    True = (0 == 0)
+-    False = (0 != 0)
++    exec('True = (0 == 0)')
++    exec('False = (0 != 0)')
+ 
+ import TestSCons
+ 
+Index: test/Deprecated/Options/BoolOption.py
+===================================================================
+--- test/Deprecated/Options/BoolOption.py	(revision 4788)
++++ test/Deprecated/Options/BoolOption.py	(working copy)
+@@ -31,8 +31,8 @@
+ try:
+     True, False
+ except NameError:
+-    True = (0 == 0)
+-    False = (0 != 0)
++    exec('True = (0 == 0)')
++    exec('False = (0 != 0)')
+ 
+ import TestSCons
+ 
+Index: test/NodeOps.py
+===================================================================
+--- test/NodeOps.py	(revision 4788)
++++ test/NodeOps.py	(working copy)
+@@ -121,13 +121,6 @@
+ import os
+ Import('*')
+ 
+-import __builtin__
+-try:
+-    __builtin__.True
+-except AttributeError:
+-    __builtin__.True = 1
+-    __builtin__.False = 0
+-
+ def mycopy(env, source, target):
+     open(str(target[0]),'w').write(open(str(source[0]),'r').read())
+ 
+Index: src/script/scons-time.py
+===================================================================
+--- src/script/scons-time.py	(revision 4789)
++++ src/script/scons-time.py	(working copy)
+@@ -45,18 +45,13 @@
+ import time
+ 
+ try:
+-    False
++    True, False
+ except NameError:
+-    # Pre-2.2 Python has no False keyword.
+-    False = not 1
++    # Pre-2.2 Python has no True or False keyword.
++    exec('True = not 0')
++    exec('False = not 1')
+ 
+ try:
+-    True
+-except NameError:
+-    # Pre-2.2 Python has no True keyword.
+-    True = not 0
+-
+-try:
+     sorted
+ except NameError:
+     # Pre-2.4 Python has no sorted() function.
+Index: src/engine/SCons/WarningsTests.py
+===================================================================
+--- src/engine/SCons/WarningsTests.py	(revision 4788)
++++ src/engine/SCons/WarningsTests.py	(working copy)
+@@ -29,7 +29,7 @@
+ 
+ class TestOutput:
+     def __call__(self, x):
+-        args = x[0]
++        args = x.args[0]
+         if len(args) == 1:
+             args = args[0]
+         self.out = str(args)
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 4788)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -594,7 +594,7 @@
+     *current call stack* rather than sys.exc_info() to get our stack trace.
+     This is used by the warnings framework to print warnings."""
+     filename, lineno, routine, dummy = find_deepest_user_frame(traceback.extract_stack())
+-    sys.stderr.write("\nscons: warning: %s\n" % e[0])
++    sys.stderr.write("\nscons: warning: %s\n" % e.args[0])
+     sys.stderr.write('File "%s", line %d, in %s\n' % (filename, lineno, routine))
+ 
+ def _scons_internal_error():
+Index: src/engine/SCons/compat/_scons_subprocess.py
+===================================================================
+--- src/engine/SCons/compat/_scons_subprocess.py	(revision 4788)
++++ src/engine/SCons/compat/_scons_subprocess.py	(working copy)
+@@ -433,14 +433,7 @@
+ except:
+     MAXFD = 256
+ 
+-# True/False does not exist on 2.2.0
+ try:
+-    False
+-except NameError:
+-    False = 0
+-    True = 1
+-
+-try:
+     isinstance(1, int)
+ except TypeError:
+     def is_int(obj):
+Index: src/engine/SCons/compat/_scons_builtins.py
+===================================================================
+--- src/engine/SCons/compat/_scons_builtins.py	(revision 4788)
++++ src/engine/SCons/compat/_scons_builtins.py	(working copy)
+@@ -62,6 +62,22 @@
+ import builtins
+ 
+ try:
++    False
++except NameError:
++    # Pre-2.2 Python has no False keyword.
++    exec('builtins.False = not 1')
++    # Assign to False in this module namespace so it shows up in pydoc output.
++    #False = False
++
++try:
++    True
++except NameError:
++    # Pre-2.2 Python has no True keyword.
++    exec('builtins.True = not 0')
++    # Assign to True in this module namespace so it shows up in pydoc output.
++    #True = True
++
++try:
+     all
+ except NameError:
+     # Pre-2.5 Python has no all() function.
+@@ -122,22 +138,6 @@
+     builtins.dict = dict
+ 
+ try:
+-    False
+-except NameError:
+-    # Pre-2.2 Python has no False keyword.
+-    builtins.False = not 1
+-    # Assign to False in this module namespace so it shows up in pydoc output.
+-    #False = False
+-
+-try:
+-    True
+-except NameError:
+-    # Pre-2.2 Python has no True keyword.
+-    builtins.True = not 0
+-    # Assign to True in this module namespace so it shows up in pydoc output.
+-    #True = True
+-
+-try:
+     file
+ except NameError:
+     # Pre-2.2 Python has no file() function.
+Index: src/engine/SCons/Defaults.py
+===================================================================
+--- src/engine/SCons/Defaults.py	(revision 4788)
++++ src/engine/SCons/Defaults.py	(working copy)
+@@ -223,7 +223,8 @@
+             os.makedirs(str(entry))
+         except os.error, e:
+             p = str(entry)
+-            if (e[0] == errno.EEXIST or (sys.platform=='win32' and e[0]==183)) \
++            if (e.args[0] == errno.EEXIST or
++                    (sys.platform=='win32' and e.args[0]==183)) \
+                     and os.path.isdir(str(entry)):
+                 pass            # not an error if already exists
+             else:
+Index: src/engine/SCons/Builder.py
+===================================================================
+--- src/engine/SCons/Builder.py	(revision 4788)
++++ src/engine/SCons/Builder.py	(working copy)
+@@ -170,7 +170,7 @@
+         try:
+             ret = SCons.Util.Selector.__call__(self, env, source, ext)
+         except KeyError, e:
+-            raise UserError("Ambiguous suffixes after environment substitution: %s == %s == %s" % (e[0], e[1], e[2]))
++            raise UserError("Ambiguous suffixes after environment substitution: %s == %s == %s" % (e.args[0], e.args[1], e.args[2]))
+         if ret is None:
+             raise UserError("While building `%s' from `%s': Don't know how to build from a source file with suffix `%s'.  Expected a suffix in this list: %s." % \
+                             (repr(list(map(str, target))), repr(list(map(str, source))), ext, repr(self.keys())))
+Index: QMTest/TestCmd.py
+===================================================================
+--- QMTest/TestCmd.py	(revision 4788)
++++ QMTest/TestCmd.py	(working copy)
+@@ -765,7 +765,7 @@
+             try:
+                 written = os.write(self.stdin.fileno(), input)
+             except OSError, why:
+-                if why[0] == errno.EPIPE: #broken pipe
++                if why.args[0] == errno.EPIPE: #broken pipe
+                     return self._close('stdin')
+                 raise
+ 
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 4788)
++++ QMTest/TestSCons.py	(working copy)
+@@ -24,12 +24,10 @@
+ import time
+ 
+ try:
+-    x = True
++    True
+ except NameError:
+-    True = not 0
+-    False = not 1
+-else:
+-    del x
++    exec('True = not 0')
++    exec('False = not 1')
+ 
+ from TestCommon import *
+ from TestCommon import __all__
