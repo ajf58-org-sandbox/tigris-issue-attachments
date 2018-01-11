@@ -1,0 +1,85 @@
+diff -r fba5a2e24405 src/engine/SCons/Scanner/Prog.py
+--- a/src/engine/SCons/Scanner/Prog.py	Tue Jun 17 21:53:37 2014 -0700
++++ b/src/engine/SCons/Scanner/Prog.py	Tue Jun 17 23:34:25 2014 -0700
+@@ -51,9 +51,20 @@
+         # There are no LIBS in this environment, so just return a null list:
+         return []
+     if SCons.Util.is_String(libs):
+-        libs = libs.split()
++        libs = env.subst(libs)
++        if SCons.Util.is_String(libs):
++            libs = libs.split()
+     else:
+         libs = SCons.Util.flatten(libs)
++        _libs = []
++        for value in libs:
++            if SCons.Util.is_String(value):
++                value = env.subst(value)
++                if SCons.Util.is_String(value):
++                    value = value.split()
++            _libs.append(value)
++        libs = _libs
++    libs = SCons.Util.flatten(libs)
+ 
+     try:
+         prefix = env['LIBPREFIXES']
+@@ -83,7 +94,6 @@
+     adjustixes = SCons.Util.adjustixes
+     for lib in libs:
+         if SCons.Util.is_String(lib):
+-            lib = env.subst(lib)
+             for pref, suf in pairs:
+                 l = adjustixes(lib, pref, suf)
+                 l = find_file(l, libpath, verbose=print_find_libs)
+diff -r fba5a2e24405 src/engine/SCons/Scanner/ProgTests.py
+--- a/src/engine/SCons/Scanner/ProgTests.py	Tue Jun 17 21:53:37 2014 -0700
++++ b/src/engine/SCons/Scanner/ProgTests.py	Tue Jun 17 23:34:25 2014 -0700
+@@ -73,7 +73,7 @@
+ 
+     def subst(self, s, target=None, source=None, conv=None):
+         try:
+-            if s[0] == '$':
++            if isinstance(s, str) and s[0] == '$':
+                 return self._dict[s[1:]]
+         except IndexError:
+             return ''
+@@ -223,6 +223,30 @@
+         deps = s(DummyNode('dummy'), env, path)
+         assert deps == [n1, n2], deps
+ 
++class ProgramScannerTestCase9(unittest.TestCase):
++    def runTest(self):
++        env = DummyEnvironment(LIBPATH=[ test.workpath("dir") ],
++                               LIBS=['foo', '$LIBBAR'],
++                               LIBPREFIXES=['lib'],
++                               LIBSUFFIXES=['.a'],
++                               LIBBAR=['sub/libbar', 'xyz.other'])
++        s = SCons.Scanner.Prog.ProgramScanner()
++        path = s.path(env)
++        deps = s(DummyNode('dummy'), env, path)
++        assert deps_match(deps, ['dir/libfoo.a', 'dir/sub/libbar.a', 'dir/libxyz.other']), list(map(str, deps))
++
++class ProgramScannerTestCase10(unittest.TestCase):
++    def runTest(self):
++        env = DummyEnvironment(LIBPATH=[ test.workpath("dir") ],
++                               LIBS=['foo', '$LIBBAR'],
++                               LIBPREFIXES=['lib'],
++                               LIBSUFFIXES=['.a'],
++                               LIBBAR='sub/libbar xyz.other')
++        s = SCons.Scanner.Prog.ProgramScanner()
++        path = s.path(env)
++        deps = s(DummyNode('dummy'), env, path)
++        assert deps_match(deps, ['dir/libfoo.a', 'dir/sub/libbar.a', 'dir/libxyz.other']), list(map(str, deps))
++
+ def suite():
+     suite = unittest.TestSuite()
+     suite.addTest(ProgramScannerTestCase1())
+@@ -232,6 +256,8 @@
+     suite.addTest(ProgramScannerTestCase6())
+     suite.addTest(ProgramScannerTestCase7())
+     suite.addTest(ProgramScannerTestCase8())
++    suite.addTest(ProgramScannerTestCase9())
++    suite.addTest(ProgramScannerTestCase10())
+     try: unicode
+     except NameError: pass
+     else:
