@@ -1,0 +1,4 @@
+467c467
+<         if hasattr(x, '__semi_deepcopy__'):
+---
+>         if hasattr(x, '__semi_deepcopy__') and x.__semi_deepcopy__ is not None:
