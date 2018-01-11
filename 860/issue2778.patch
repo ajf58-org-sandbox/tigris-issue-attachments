@@ -1,0 +1,63 @@
+Index: Executor.py
+===================================================================
+--- Executor.py	(revision 5349)
++++ Executor.py	(working copy)
+@@ -169,6 +169,20 @@
+         self._unchanged_sources_list = SCons.Util.NodeList(us)
+         self._unchanged_targets_list = SCons.Util.NodeList(ut)
+ 
++# RDEVE: patch for interactive mode with changed_sources
++    def _clean_changes(self):
++        """
++            delete the cached values for changed/unchanged sources
++        """
++        try:
++            del self._changed_sources_list
++            del self._changed_targets_list
++            del self._unchanged_sources_list
++            del self._unchanged_targets_list
++        except:
++            pass
++# RDEVE: end of patch
++
+     def _get_changed_sources(self, *args, **kw):
+         try:
+             return self._changed_sources_list
+@@ -344,9 +358,9 @@
+             elif status:
+                 msg = "Error %s" % status
+                 raise SCons.Errors.BuildError(
+-                    errstr=msg, 
++                    errstr=msg,
+                     node=self.batches[0].targets,
+-                    executor=self, 
++                    executor=self,
+                     action=act)
+         return status
+ 
+@@ -359,6 +373,7 @@
+ 
+     def cleanup(self):
+         self._memo = {}
++        self._clean_changes()  # RDEVE: patch for changed_sources
+ 
+     def add_sources(self, sources):
+         """Add source files to this Executor's list.  This is necessary
+@@ -532,7 +547,7 @@
+         for act in self.get_action_list():
+             deps = act.get_implicit_deps(self.get_all_targets(),
+                                          self.get_all_sources(),
+-                                         build_env)
++                                         build_env )
+             result.extend(deps)
+         return result
+ 
+@@ -609,7 +624,7 @@
+         """Morph this Null executor to a real Executor object."""
+         batches = self.batches
+         self.__class__ = Executor
+-        self.__init__([])            
++        self.__init__([])
+         self.batches = batches
+ 
+     # The following methods require morphing this Null Executor to a
