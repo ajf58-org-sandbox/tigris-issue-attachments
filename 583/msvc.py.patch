@@ -1,0 +1,22 @@
+--- msvc.py.old	2008-09-06 16:34:17.000000000 +0200
++++ msvc.py	2009-02-21 23:21:52.000000000 +0100
+@@ -220,7 +220,7 @@
+                             property_name = property.attributes.get('name')
+                             if property_name is None:
+                                 continue
+-                            var_name = environment_var_map.get(property_name)
++                            var_name = environment_var_map.get(property_name.value)
+                             if var_name:
+                                 data = property.childNodes[0].data
+                                 value_list = string.split(data, '|')
+@@ -230,9 +230,7 @@
+                                     while value_list:
+                                         dest, value = value_list[:2]
+                                         del value_list[:2]
+-                                        # ToDo: Support for destinations
+-                                        # other than Win32
+-                                        if dest == 'Win32':
++                                        if (platform in 'x86' and dest == 'Win32') or(platform == 'x86_amd64' and dest == 'x64') or (platform == dest):
+                                             dirs[var_name] = value
+                                             break
+     else:
