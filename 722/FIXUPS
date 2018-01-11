@@ -1,0 +1,839 @@
+Index: test/Glob/subdir.py
+===================================================================
+--- test/Glob/subdir.py	(revision 4732)
++++ test/Glob/subdir.py	(working copy)
+@@ -46,9 +46,7 @@
+ 
+ env['BUILDERS']['Concatenate'] = Builder(action=concatenate)
+ 
+-f_in = Glob('subdir/*.in')
+-f_in.sort(lambda a,b: cmp(a.name, b.name))
+-env.Concatenate('f.out', f_in)
++env.Concatenate('f.out', sorted(Glob('subdir/*.in'), key=lambda t: t.name))
+ """)
+ 
+ test.write(['subdir', 'file.in'], "subdir/file.in\n")
+Index: test/Glob/strings.py
+===================================================================
+--- test/Glob/strings.py	(revision 4732)
++++ test/Glob/strings.py	(working copy)
+@@ -55,9 +55,7 @@
+ 
+ env['BUILDERS']['Concatenate'] = Builder(action=concatenate)
+ 
+-f_in = Glob('f*.in', strings=True)
+-f_in.sort()
+-env.Concatenate('f.out', f_in)
++env.Concatenate('f.out', sorted(Glob('f*.in', strings=True)))
+ """)
+ 
+ test.write(['src', 'f1.in'], "src/f1.in\n")
+Index: test/Glob/Repository.py
+===================================================================
+--- test/Glob/Repository.py	(revision 4732)
++++ test/Glob/Repository.py	(working copy)
+@@ -75,9 +75,7 @@
+ Import("env")
+ env.Build('xxx.out', Glob('x*.in'))
+ env.Build('yyy.out', Glob('yy?.in'))
+-zzz_in = Glob('*/zzz.in')
+-zzz_in.sort(lambda a,b: cmp(a.abspath, b.abspath))
+-env.Build('zzz.out', zzz_in)
++env.Build('zzz.out', sorted(Glob('*/zzz.in'), key=lambda t: t.abspath))
+ """)
+ 
+ test.write(['repository', 'src', 'xxx.in'], "repository/src/xxx.in\n")
+Index: test/Glob/source.py
+===================================================================
+--- test/Glob/source.py	(revision 4732)
++++ test/Glob/source.py	(working copy)
+@@ -59,9 +59,8 @@
+ test.write(['var1', 'SConscript'], """\
+ Import("env")
+ 
+-f_in = Glob('f[45].in', source=True)
+-f_in.sort(lambda a,b: cmp(a.name, b.name))
+-env.Concatenate('f.out', f_in)
++env.Concatenate('f.out', sorted(Glob('f[45].in', source=True),
++                                key=lambda t: t.name))
+ """)
+ 
+ test.write(['var2', 'SConscript'], """\
+Index: test/Glob/subst.py
+===================================================================
+--- test/Glob/subst.py	(revision 4732)
++++ test/Glob/subst.py	(working copy)
+@@ -44,9 +44,7 @@
+ 
+ env['BUILDERS']['Copy'] = Builder(action=copy)
+ 
+-f_in = env.Glob('$PATTERN')
+-f_in.sort(lambda a,b: cmp(a.name, b.name))
+-env.Copy('f.out', f_in)
++env.Copy('f.out', sorted(env.Glob('$PATTERN'), key=lambda t: t.name))
+ """)
+ 
+ test.write('f1.in', "f1.in\n")
+Index: test/Glob/basic.py
+===================================================================
+--- test/Glob/basic.py	(revision 4732)
++++ test/Glob/basic.py	(working copy)
+@@ -43,9 +43,7 @@
+ 
+ env['BUILDERS']['Concatenate'] = Builder(action=concatenate)
+ 
+-f_in = Glob('f*.in')
+-f_in.sort(lambda a,b: cmp(a.name, b.name))
+-env.Concatenate('f.out', f_in)
++env.Concatenate('f.out', sorted(Glob('f*.in'), key=lambda t: t.name))
+ """)
+ 
+ test.write('f1.in', "f1.in\n")
+Index: test/Glob/VariantDir.py
+===================================================================
+--- test/Glob/VariantDir.py	(revision 4732)
++++ test/Glob/VariantDir.py	(working copy)
+@@ -54,9 +54,7 @@
+ 
+ env['BUILDERS']['Concatenate'] = Builder(action=concatenate)
+ 
+-f_in = Glob('f*.in')
+-f_in.sort(lambda a,b: cmp(a.name, b.name))
+-env.Concatenate('f.out', f_in)
++env.Concatenate('f.out', sorted(Glob('f*.in'), key=lambda t: t.name))
+ """)
+ 
+ test.write(['src', 'f1.in'], "src/f1.in\n")
+Index: test/TAR/TARFLAGS.py
+===================================================================
+--- test/TAR/TARFLAGS.py	(revision 4732)
++++ test/TAR/TARFLAGS.py	(working copy)
+@@ -46,6 +46,8 @@
+     else: opt_string = opt_string + ' ' + opt
+ def process(outfile, name):
+     if os.path.isdir(name):
++        ## TODO 2.5: the next three lines can be replaced by
++        #for entry in sorted(os.listdir(name)):
+         entries = os.listdir(name)
+         entries.sort()
+         for entry in entries:
+Index: test/TAR/TAR.py
+===================================================================
+--- test/TAR/TAR.py	(revision 4732)
++++ test/TAR/TAR.py	(working copy)
+@@ -44,6 +44,8 @@
+     if opt == '-f': out = arg
+ def process(outfile, name):
+     if os.path.isdir(name):
++        ## TODO 2.5: the next three lines can be replaced by
++        #for entry in sorted(os.listdir(name)):
+         list = os.listdir(name)
+         list.sort()
+         for entry in list:
+Index: test/ARGUMENTS.py
+===================================================================
+--- test/ARGUMENTS.py	(revision 4732)
++++ test/ARGUMENTS.py	(working copy)
+@@ -30,9 +30,7 @@
+ 
+ test.write('SConstruct', """
+ foo = open('foo.out', 'wb')
+-keys = ARGUMENTS.keys()
+-keys.sort()
+-for k in keys:
++for k in sorted(list(ARGUMENTS.keys())):
+     foo.write(k + " = " + ARGUMENTS[k] + "\\n")
+ foo.close()
+ """)
+Index: test/Builder-factories.py
+===================================================================
+--- test/Builder-factories.py	(revision 4732)
++++ test/Builder-factories.py	(working copy)
+@@ -48,9 +48,7 @@
+ def collect(env, source, target):
+     out = open(str(target[0]), 'wb')
+     dir = str(source[0])
+-    files = os.listdir(dir)
+-    files.sort()
+-    for f in files:
++    for f in sorted(os.listdir(dir)):
+         f = os.path.join(dir, f)
+         out.write(open(f, 'r').read())
+     out.close()
+Index: test/ZIP/ZIP.py
+===================================================================
+--- test/ZIP/ZIP.py	(revision 4732)
++++ test/ZIP/ZIP.py	(working copy)
+@@ -49,6 +49,8 @@
+ import sys
+ def process(outfile, name):
+     if os.path.isdir(name):
++        ## TODO 2.5: the next three lines can be replaced by
++        #for entry in sorted(os.listdir(name)):
+         list = os.listdir(name)
+         list.sort()
+         for entry in list:
+Index: test/option/help-options.py
+===================================================================
+--- test/option/help-options.py	(revision 4732)
++++ test/option/help-options.py	(working copy)
+@@ -60,11 +60,10 @@
+ options = [x.split()[0] for x in lines]
+ options = [x[-1] == ',' and x[:-1] or x for x in options]
+ lowered = [x.lower() for x in options]
+-sorted = lowered[:]
+-sorted.sort()
+-if lowered != sorted:
++ordered = sorted(lowered)
++if lowered != ordered:
+     print "lowered =", lowered
+-    print "sorted =", sorted
++    print "sorted =", ordered
+     test.fail_test()
+ 
+ test.pass_test()
+Index: test/packaging/convenience-functions.py
+===================================================================
+--- test/packaging/convenience-functions.py	(revision 4732)
++++ test/packaging/convenience-functions.py	(working copy)
+@@ -43,10 +43,8 @@
+ prog = env.Install( 'bin/', ["f1", "f2"] )
+ env.File( "f3" )
+ 
+-src_files = list(map(str, env.FindSourceFiles()))
+-oth_files = list(map(str, env.FindInstalledFiles()))
+-src_files.sort()
+-oth_files.sort()
++src_files = sorted(map(str, env.FindSourceFiles()))
++oth_files = sorted(map(str, env.FindInstalledFiles()))
+ 
+ print src_files
+ print oth_files
+Index: test/Scanner/no-Dir-node.py
+===================================================================
+--- test/Scanner/no-Dir-node.py	(revision 4732)
++++ test/Scanner/no-Dir-node.py	(working copy)
+@@ -81,10 +81,8 @@
+ 
+ test.write('SConstruct', """\
+ def foo(target, source, env):
+-    children = source[0].children()
+-    children.sort(lambda a,b: cmp(a.name, b.name))
+     fp = open(str(target[0]), 'wb')
+-    for c in children:
++    for c in sorted(source[0].children(), key=lambda t: t.name):
+         fp.write('%s\\n' % c)
+     fp.close()
+ Command('list.out', 'subdir', foo, source_scanner = DirScanner)
+Index: test/Scanner/generated.py
+===================================================================
+--- test/Scanner/generated.py	(revision 4732)
++++ test/Scanner/generated.py	(working copy)
+@@ -301,10 +301,8 @@
+ Scanned = {}
+ 
+ def write_out(file, dict):
+-    keys = dict.keys()
+-    keys.sort()
+     f = open(file, 'wb')
+-    for k in keys:
++    for k in sorted(dict.keys()):
+         file = os.path.split(k)[1]
+         f.write(file + ": " + str(dict[k]) + "\\n")
+     f.close()
+Index: test/GetBuildFailures/parallel.py
+===================================================================
+--- test/GetBuildFailures/parallel.py	(revision 4732)
++++ test/GetBuildFailures/parallel.py	(working copy)
+@@ -79,9 +79,7 @@
+ 
+ def print_build_failures():
+     from SCons.Script import GetBuildFailures
+-    bf_list = GetBuildFailures()
+-    bf_list.sort(lambda a,b: cmp(a.filename, b.filename))
+-    for bf in bf_list:
++    for bf in sorted(GetBuildFailures(), key=lambda t: t.filename):
+         print "%%s failed:  %%s" %% (bf.node, bf.errstr)
+ 
+ try:
+Index: test/GetBuildFailures/serial.py
+===================================================================
+--- test/GetBuildFailures/serial.py	(revision 4732)
++++ test/GetBuildFailures/serial.py	(working copy)
+@@ -89,9 +89,7 @@
+ 
+ def print_build_failures():
+     from SCons.Script import GetBuildFailures
+-    bf_list = GetBuildFailures()
+-    bf_list.sort(lambda a,b: cmp(str(a.node), str(b.node)))
+-    for bf in bf_list:
++    for bf in sorted(GetBuildFailures(), key=lambda t: str(t.node)):
+         assert( isinstance(bf, SCons.Errors.BuildError) )
+         print "BF: %%s failed (%%s):  %%s" %% (bf.node, bf.status, bf.errstr)
+         if bf.command:
+Index: test/GetBuildFailures/option-k.py
+===================================================================
+--- test/GetBuildFailures/option-k.py	(revision 4732)
++++ test/GetBuildFailures/option-k.py	(working copy)
+@@ -64,9 +64,8 @@
+ 
+ def print_build_failures():
+     from SCons.Script import GetBuildFailures
+-    bf_list = GetBuildFailures()
+-    bf_list.sort(lambda a,b: cmp(a.filename, b.filename))
+-    for bf in bf_list:
++    for bf in sorted(GetBuildFailures(),
++                     cmp=lambda a,b: cmp(a.filename, b.filename)):
+         print "%%s failed:  %%s" %% (bf.node, bf.errstr)
+ 
+ try:
+Index: test/Mkdir.py
+===================================================================
+--- test/Mkdir.py	(revision 4732)
++++ test/Mkdir.py	(working copy)
+@@ -129,9 +129,7 @@
+     outfp = open(target, "wb")
+     for src in source:
+         s = str(src)
+-        l = os.listdir(s)
+-        l.sort()
+-        for f in l:
++        for f in sorted(os.listdir(s)):
+             f = os.path.join(s, f)
+             if os.path.isfile(f):
+                 outfp.write(open(f, "rb").read())
+Index: test/Command.py
+===================================================================
+--- test/Command.py	(revision 4732)
++++ test/Command.py	(working copy)
+@@ -58,9 +58,7 @@
+     target = str(target[0])
+     source = str(source[0])
+     t = open(target, 'wb')
+-    files = os.listdir(source)
+-    files.sort()
+-    for f in files:
++    for f in sorted(os.listdir(source)):
+         t.write(open(os.path.join(source, f), 'rb').read())
+     t.close()
+     return 0
+Index: bench/is_types.py
+===================================================================
+--- bench/is_types.py	(revision 4732)
++++ bench/is_types.py	(working copy)
+@@ -63,7 +63,10 @@
+ DictType = types.DictType
+ ListType = types.ListType
+ StringType = types.StringType
+-if hasattr(types, 'UnicodeType'):
++try: unicode
++except NameError:
++    UnicodeType = None
++else:
+     UnicodeType = types.UnicodeType
+ 
+ 
+@@ -77,7 +80,7 @@
+ def original_is_List(e):
+     return type(e) is types.ListType or isinstance(e, UserList)
+ 
+-if hasattr(types, 'UnicodeType'):
++if UnicodeType is not None:
+     def original_is_String(e):
+         return type(e) is types.StringType \
+             or type(e) is types.UnicodeType \
+@@ -100,7 +103,7 @@
+     return type(e) is types.ListType \
+         or (type(e) is types.InstanceType and isinstance(e, UserList))
+ 
+-if hasattr(types, 'UnicodeType'):
++if UnicodeType is not None:
+     def checkInstanceType_is_String(e):
+         return type(e) is types.StringType \
+             or type(e) is types.UnicodeType \
+@@ -125,7 +128,7 @@
+     return t is types.ListType \
+         or (t is types.InstanceType and isinstance(e, UserList))
+ 
+-if hasattr(types, 'UnicodeType'):
++if UnicodeType is not None:
+     def cache_type_e_is_String(e):
+         t = type(e)
+         return t is types.StringType \
+@@ -153,7 +156,7 @@
+     return t is ListType \
+         or (t is InstanceType and isinstance(e, UserList))
+ 
+-if hasattr(types, 'UnicodeType'):
++if UnicodeType is not None:
+     def global_cache_type_e_is_String(e):
+         t = type(e)
+         return t is StringType \
+@@ -176,7 +179,7 @@
+     UserString : types.StringType,
+ }
+ 
+-if hasattr(types, 'UnicodeType'):
++if UnicodeType is not None:
+     def myType(obj):
+         t = type(obj)
+         if t is types.InstanceType:
+Index: src/script/scons-time.py
+===================================================================
+--- src/script/scons-time.py	(revision 4732)
++++ src/script/scons-time.py	(working copy)
+@@ -59,6 +59,32 @@
+     import __builtin__
+     __builtin__.True = not 0
+ 
++try:
++    sorted
++except NameError:
++    # Pre-2.4 Python has no sorted() function.
++    #
++    # The pre-2.4 Python list.sort() method does not support
++    # list.sort(key=) nor list.sort(reverse=) keyword arguments, so
++    # we must implement the functionality of those keyword arguments
++    # by hand instead of passing them to list.sort().
++    def sorted(iterable, cmp=None, key=None, reverse=False):
++        if key is not None:
++            result = [(key(x), x) for x in iterable]
++        else:
++            result = iterable[:]
++        if cmp is None:
++            # Pre-2.3 Python does not support list.sort(None).
++            result.sort()
++        else:
++            result.sort(cmp)
++        if key is not None:
++            result = [t1 for t0,t1 in result]
++        if reverse:
++            result.reverse()
++        return result
++    __builtin__.sorted = sorted
++
+ def make_temp_file(**kw):
+     try:
+         result = tempfile.mktemp(**kw)
+Index: src/engine/SCons/Node/NodeTests.py
+===================================================================
+--- src/engine/SCons/Node/NodeTests.py	(revision 4732)
++++ src/engine/SCons/Node/NodeTests.py	(working copy)
+@@ -50,7 +50,7 @@
+             all.append(curr_a)
+         elif isinstance(curr_a, MyListAction):
+             all.extend(curr_a.list)
+-        elif type(curr_a) == type([1,2]):
++        elif type(curr_a) == type([]):
+             all.extend(curr_a)
+         else:
+             raise 'Cannot Combine Actions'
+Index: src/engine/SCons/ActionTests.py
+===================================================================
+--- src/engine/SCons/ActionTests.py	(revision 4732)
++++ src/engine/SCons/ActionTests.py	(working copy)
+@@ -304,7 +304,9 @@
+         # a singleton list returns the contained action
+         test_positional_args(cmd_action, ["string"])
+ 
+-        if hasattr(types, 'UnicodeType'):
++        try: unicode
++        except NameError: pass
++        else:
+             a2 = eval("SCons.Action.Action(u'string')")
+             assert isinstance(a2, SCons.Action.CommandAction), a2
+ 
+Index: src/engine/SCons/UtilTests.py
+===================================================================
+--- src/engine/SCons/UtilTests.py	(revision 4732)
++++ src/engine/SCons/UtilTests.py	(working copy)
+@@ -27,7 +27,6 @@
+ import os.path
+ import StringIO
+ import sys
+-import types
+ import unittest
+ 
+ from UserDict import UserDict
+@@ -38,6 +37,10 @@
+ 
+ from SCons.Util import *
+ 
++try: unicode
++except NameError: HasUnicode = False
++else:             HasUnicode = True
++
+ class OutBuffer:
+     def __init__(self):
+         self.buffer = ""
+@@ -214,7 +217,7 @@
+         assert not is_Dict([])
+         assert not is_Dict(())
+         assert not is_Dict("")
+-        if hasattr(types, 'UnicodeType'):
++        if HasUnicode:
+             exec "assert not is_Dict(u'')"
+ 
+     def test_is_List(self):
+@@ -231,12 +234,12 @@
+         assert not is_List(())
+         assert not is_List({})
+         assert not is_List("")
+-        if hasattr(types, 'UnicodeType'):
++        if HasUnicode:
+             exec "assert not is_List(u'')"
+ 
+     def test_is_String(self):
+         assert is_String("")
+-        if hasattr(types, 'UnicodeType'):
++        if HasUnicode:
+             exec "assert is_String(u'')"
+         try:
+             import UserString
+@@ -267,7 +270,7 @@
+         assert not is_Tuple([])
+         assert not is_Tuple({})
+         assert not is_Tuple("")
+-        if hasattr(types, 'UnicodeType'):
++        if HasUnicode:
+             exec "assert not is_Tuple(u'')"
+ 
+     def test_to_String(self):
+@@ -289,7 +292,7 @@
+             assert to_String(s2) == s2, s2
+             assert to_String(s2) == 'foo', s2
+ 
+-            if hasattr(types, 'UnicodeType'):
++            if HasUnicode:
+                 s3=UserString.UserString(unicode('bar'))
+                 assert to_String(s3) == s3, s3
+                 assert to_String(s3) == unicode('bar'), s3
+@@ -298,7 +301,7 @@
+         except ImportError:
+             pass
+ 
+-        if hasattr(types, 'UnicodeType'):
++        if HasUnicode:
+             s4 = unicode('baz')
+             assert to_String(s4) == unicode('baz'), to_String(s4)
+             assert type(to_String(s4)) is types.UnicodeType, \
+Index: src/engine/SCons/Scanner/ProgTests.py
+===================================================================
+--- src/engine/SCons/Scanner/ProgTests.py	(revision 4732)
++++ src/engine/SCons/Scanner/ProgTests.py	(working copy)
+@@ -25,7 +25,6 @@
+ 
+ import os.path
+ import sys
+-import types
+ import unittest
+ 
+ import TestCmd
+@@ -232,7 +231,9 @@
+     suite.addTest(ProgramScannerTestCase6())
+     suite.addTest(ProgramScannerTestCase7())
+     suite.addTest(ProgramScannerTestCase8())
+-    if hasattr(types, 'UnicodeType'):
++    try: unicode
++    except NameError: pass
++    else:
+         code = """if 1:
+             class ProgramScannerTestCase4(unittest.TestCase):
+                 def runTest(self):
+Index: src/engine/SCons/dblite.py
+===================================================================
+--- src/engine/SCons/dblite.py	(revision 4732)
++++ src/engine/SCons/dblite.py	(working copy)
+@@ -5,7 +5,6 @@
+ import time
+ import shutil
+ import os
+-import types
+ import __builtin__
+ 
+ keep_all_files = 00000
+@@ -14,13 +13,13 @@
+ def corruption_warning(filename):
+     print "Warning: Discarding corrupt database:", filename
+ 
+-if hasattr(types, 'UnicodeType'):
++try: unicode
++except NameError:
+     def is_string(s):
+-        t = type(s)
+-        return t is types.StringType or t is types.UnicodeType
++        return type(s) is types.StringType
+ else:
+     def is_string(s):
+-        return type(s) is types.StringType
++        return type(s) in (types.StringType, types.UnicodeType)
+ 
+ try:
+     unicode('a')
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+--- src/engine/SCons/EnvironmentTests.py	(revision 4732)
++++ src/engine/SCons/EnvironmentTests.py	(working copy)
+@@ -271,8 +271,9 @@
+         assert isinstance(nodes[0], X)
+         assert nodes[0].name == "Util.py UtilTests.py"
+ 
+-        import types
+-        if hasattr(types, 'UnicodeType'):
++        try: unicode
++        except NameError: pass
++        else:
+             code = """if 1:
+                 nodes = env.arg2nodes(u"Util.py UtilTests.py", Factory)
+                 assert len(nodes) == 1, nodes
+Index: src/engine/SCons/compat/builtins.py
+===================================================================
+--- src/engine/SCons/compat/builtins.py	(revision 4732)
++++ src/engine/SCons/compat/builtins.py	(working copy)
+@@ -152,25 +152,19 @@
+     # we must implement the functionality of those keyword arguments
+     # by hand instead of passing them to list.sort().
+     def sorted(iterable, cmp=None, key=None, reverse=False):
+-        if key:
+-            decorated = [ (key(x), x) for x in iterable ]
+-            if cmp is None:
+-                # Pre-2.3 Python does not support list.sort(None).
+-                decorated.sort()
+-            else:
+-                decorated.sort(cmp)
+-            if reverse:
+-                decorated.reverse()
+-            result = [ t[1] for t in decorated ]
++        if key is not None:
++            result = [(key(x), x) for x in iterable]
+         else:
+             result = iterable[:]
+-            if cmp is None:
+-                # Pre-2.3 Python does not support list.sort(None).
+-                result.sort()
+-            else:
+-                result.sort(cmp)
+-            if reverse:
+-                result.reverse()
++        if cmp is None:
++            # Pre-2.3 Python does not support list.sort(None).
++            result.sort()
++        else:
++            result.sort(cmp)
++        if key is not None:
++            result = [t1 for t0,t1 in result]
++        if reverse:
++            result.reverse()
+         return result
+     __builtin__.sorted = sorted
+ 
+Index: src/engine/SCons/compat/_scons_UserString.py
+===================================================================
+--- src/engine/SCons/compat/_scons_UserString.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_UserString.py	(working copy)
+@@ -33,17 +33,13 @@
+ in later versions.
+ """
+ 
+-import types
+-
+-StringType = types.StringType
+-
+-if hasattr(types, 'UnicodeType'):
+-    UnicodeType = types.UnicodeType
++try: unicode
++except NameError:
+     def is_String(obj):
+-        return type(obj) in (StringType, UnicodeType)
++        return type(obj) is types.StringType
+ else:
+     def is_String(obj):
+-        return type(obj) is StringType
++        return type(obj) in (types.StringType, types.UnicodeType)
+ 
+ class UserString:
+     def __init__(self, seq):
+Index: src/engine/SCons/compat/_scons_sets.py
+===================================================================
+--- src/engine/SCons/compat/_scons_sets.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_sets.py	(working copy)
+@@ -110,9 +110,9 @@
+     # __str__ is the same as __repr__
+     __str__ = __repr__
+ 
+-    def _repr(self, sorted=False):
++    def _repr(self, sort_them=False):
+         elements = self._data.keys()
+-        if sorted:
++        if sort_them:
+             elements.sort()
+         return '%s(%r)' % (self.__class__.__name__, elements)
+ 
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 4732)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -155,8 +155,7 @@
+             source[0].get_contents().replace( '\n', "\n  |" ) )
+ 
+ # python 2.2 introduces types.BooleanType
+-BooleanTypes = [types.IntType]
+-if hasattr(types, 'BooleanType'): BooleanTypes.append(types.BooleanType)
++BooleanTypes = [types.IntType, types.BooleanType]
+ 
+ class SConfBuildInfo(SCons.Node.FS.FileBuildInfo):
+     """
+Index: src/engine/SCons/BuilderTests.py
+===================================================================
+--- src/engine/SCons/BuilderTests.py	(revision 4732)
++++ src/engine/SCons/BuilderTests.py	(working copy)
+@@ -306,7 +306,8 @@
+         #be = target.get_build_env()
+         #assert be['VAR'] == 'foo', be['VAR']
+ 
+-        if not hasattr(types, 'UnicodeType'):
++        try: unicode
++        except NameError:
+             uni = str
+         else:
+             uni = unicode
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 4732)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -47,6 +47,9 @@
+ ListType        = types.ListType
+ StringType      = types.StringType
+ TupleType       = types.TupleType
++try: unicode
++except NameError: UnicodeType = None
++else:             UnicodeType = types.UnicodeType
+ 
+ def dictify(keys, values, result={}):
+     for k, v in zip(keys, values):
+@@ -343,7 +346,7 @@
+         t = type(obj)
+         return t is TupleType
+ 
+-    if hasattr(types, 'UnicodeType'):
++    if UnicodeType is not None:
+         def is_String(obj):
+             t = type(obj)
+             return t is StringType \
+@@ -398,8 +401,7 @@
+     # to_String_for_signature() will use a for_signature() method if the
+     # specified object has one.
+     #
+-    if hasattr(types, 'UnicodeType'):
+-        UnicodeType = types.UnicodeType
++    if UnicodeType is not None:
+         def to_String(s):
+             if isinstance(s, UserString):
+                 t = type(s.data)
+Index: runtest.py
+===================================================================
+--- runtest.py	(revision 4732)
++++ runtest.py	(working copy)
+@@ -97,6 +97,31 @@
+ if not hasattr(os, 'WEXITSTATUS'):
+     os.WEXITSTATUS = lambda x: x
+ 
++try:
++    sorted
++except NameError:
++    # Pre-2.4 Python has no sorted() function.
++    #
++    # The pre-2.4 Python list.sort() method does not support
++    # list.sort(key=) nor list.sort(reverse=) keyword arguments, so
++    # we must implement the functionality of those keyword arguments
++    # by hand instead of passing them to list.sort().
++    def sorted(iterable, cmp=None, key=None, reverse=0):
++        if key is not None:
++            result = [(key(x), x) for x in iterable]
++        else:
++            result = iterable[:]
++        if cmp is None:
++            # Pre-2.3 Python does not support list.sort(None).
++            result.sort()
++        else:
++            result.sort(cmp)
++        if key is not None:
++            result = [t1 for t0,t1 in result]
++        if reverse:
++            result.reverse()
++        return result
++
+ cwd = os.getcwd()
+ 
+ all = 0
+@@ -619,9 +644,7 @@
+                         os.path.walk(path, find_Tests_py, tdict)
+                     elif path[:4] == 'test':
+                         os.path.walk(path, find_py, tdict)
+-                    t = tdict.keys()
+-                    t.sort()
+-                    tests.extend(t)
++                    tests.extend(sorted(tdict.keys()))
+                 else:
+                     tests.append(path)
+ elif testlistfile:
+@@ -658,8 +681,7 @@
+                 elif a[-1] not in tdict:
+                     tdict[a[-1]] = Test(a[-1], spe)
+ 
+-    tests = tdict.keys()
+-    tests.sort()
++    tests = sorted(tdict.keys())
+ 
+ if qmtest:
+     if baseline:
+Index: bin/xmlagenda.py
+===================================================================
+--- bin/xmlagenda.py	(revision 4732)
++++ bin/xmlagenda.py	(working copy)
+@@ -17,7 +17,7 @@
+ 
+ # The team members
+ # FIXME: These names really should be external to this script
+-team = 'Bill Greg Steven Gary Ken Brandon Sohail Jim David'.split()
++team = 'Steven Gary Greg Ken Jim David Bill Sergey Jason'.split()
+ team.sort()
+ 
+ # The elements to be picked out of the issue
+Index: bin/scons-doc.py
+===================================================================
+--- bin/scons-doc.py	(revision 4732)
++++ bin/scons-doc.py	(working copy)
+@@ -241,7 +241,7 @@
+ class ToolSurrogate:
+     def __init__(self, tool, variable, func, varlist):
+         self.tool = tool
+-        if not type(variable) is type([]):
++        if not isinstance(variable, list):
+             variable = [variable]
+         self.variable = variable
+         self.func = func
+Index: QMTest/TestCmd.py
+===================================================================
+--- QMTest/TestCmd.py	(revision 4732)
++++ QMTest/TestCmd.py	(working copy)
+@@ -259,14 +259,15 @@
+     class UserString:
+         pass
+ 
+-if hasattr(types, 'UnicodeType'):
++try: types.UnicodeType
++except NameError:
+     def is_String(e):
++        return type(e) is types.StringType or isinstance(e, UserString)
++else:
++    def is_String(e):
+         return type(e) is types.StringType \
+             or type(e) is types.UnicodeType \
+             or isinstance(e, UserString)
+-else:
+-    def is_String(e):
+-        return type(e) is types.StringType or isinstance(e, UserString)
+ 
+ tempfile.template = 'testcmd.'
+ if os.name in ('posix', 'nt'):
