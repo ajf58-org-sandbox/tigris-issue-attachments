@@ -1,0 +1,2 @@
+env = Environment(CPPATH = ['subdir'])
+env.SConscript(dirs=['subdir'], exports=['env'], name='SConstruct',)
