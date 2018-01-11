@@ -1,0 +1,1042 @@
+Index: test/LoadableModule.py
+===================================================================
+--- test/LoadableModule.py	(revision 4732)
++++ test/LoadableModule.py	(working copy)
+@@ -102,11 +102,13 @@
+          stderr=TestSCons.noisy_ar,
+          match=TestSCons.match_re_dotall)
+ 
+-if sys.platform.find('darwin') != -1:
+-    test.run(program='/usr/bin/file',
+-             arguments = "foo1",
+-             match = TestCmd.match_re,
+-             stdout="foo1: Mach-O bundle (ppc|i386)\n")
++# TODO: Add new Intel-based Macs?  Why are we only picking on Macs?
++#if sys.platform.find('darwin') != -1:
++#    test.run(program='/usr/bin/file',
++#             arguments = "foo1",
++#             match = TestCmd.match_re,
++#             stdout="foo1: Mach-O bundle (ppc|i386)\n")
++# My laptop prints "foo1: Mach-O 64-bit bundle x86_64"
+ 
+ if sys.platform in platforms_with_dlopen:
+     os.environ['LD_LIBRARY_PATH'] = test.workpath()
+Index: src/engine/SCons/Node/NodeTests.py
+===================================================================
+--- src/engine/SCons/Node/NodeTests.py	(revision 4733)
++++ src/engine/SCons/Node/NodeTests.py	(working copy)
+@@ -1101,22 +1101,22 @@
+ 
+         nw = SCons.Node.Walker(n1)
+         assert not nw.is_done()
+-        assert nw.next().name ==  "n1"
++        assert nw.get_next().name ==  "n1"
+         assert nw.is_done()
+-        assert nw.next() is None
++        assert nw.get_next() is None
+ 
+         n2 = MyNode("n2")
+         n3 = MyNode("n3")
+         n1.add_source([n2, n3])
+ 
+         nw = SCons.Node.Walker(n1)
+-        n = nw.next()
++        n = nw.get_next()
+         assert n.name ==  "n2", n.name
+-        n = nw.next()
++        n = nw.get_next()
+         assert n.name ==  "n3", n.name
+-        n = nw.next()
++        n = nw.get_next()
+         assert n.name ==  "n1", n.name
+-        n = nw.next()
++        n = nw.get_next()
+         assert n is None, n
+ 
+         n4 = MyNode("n4")
+@@ -1127,17 +1127,17 @@
+         n3.add_dependency([n6, n7])
+ 
+         nw = SCons.Node.Walker(n1)
+-        assert nw.next().name ==  "n4"
+-        assert nw.next().name ==  "n5"
++        assert nw.get_next().name ==  "n4"
++        assert nw.get_next().name ==  "n5"
+         assert n2 in nw.history
+-        assert nw.next().name ==  "n2"
+-        assert nw.next().name ==  "n6"
+-        assert nw.next().name ==  "n7"
++        assert nw.get_next().name ==  "n2"
++        assert nw.get_next().name ==  "n6"
++        assert nw.get_next().name ==  "n7"
+         assert n3 in nw.history
+-        assert nw.next().name ==  "n3"
++        assert nw.get_next().name ==  "n3"
+         assert n1 in nw.history
+-        assert nw.next().name ==  "n1"
+-        assert nw.next() is None
++        assert nw.get_next().name ==  "n1"
++        assert nw.get_next() is None
+ 
+         n8 = MyNode("n8")
+         n8.add_dependency([n3])
+@@ -1150,16 +1150,16 @@
+         global cycle_detected
+ 
+         nw = SCons.Node.Walker(n3, cycle_func = cycle)
+-        n = nw.next()
++        n = nw.get_next()
+         assert n.name == "n6", n.name
+-        n = nw.next()
++        n = nw.get_next()
+         assert n.name == "n8", n.name
+         assert cycle_detected
+         cycle_detected = None
+-        n = nw.next()
++        n = nw.get_next()
+         assert n.name == "n7", n.name
+-        n = nw.next()
+-        assert nw.next() is None
++        n = nw.get_next()
++        assert nw.get_next() is None
+ 
+     def test_abspath(self):
+         """Test the get_abspath() method."""
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 4733)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -647,7 +647,7 @@
+             return self._memo['_save_str']
+         except KeyError:
+             pass
+-        result = intern(self._get_str())
++        result = sys.intern(self._get_str())
+         self._memo['_save_str'] = result
+         return result
+ 
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 4733)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -1276,7 +1276,7 @@
+ 
+     This is depth-first, children are visited before the parent.
+     The Walker object can be initialized with any node, and
+-    returns the next node on the descent with each next() call.
++    returns the next node on the descent with each get_next() call.
+     'kids_func' is an optional function that will be called to
+     get the children of a node instead of calling 'children'.
+     'cycle_func' is an optional function that will be called
+@@ -1296,7 +1296,7 @@
+         self.history = {} # used to efficiently detect and avoid cycles
+         self.history[node] = None
+ 
+-    def next(self):
++    def get_next(self):
+         """Return the next node for this walk of the tree.
+ 
+         This function is intentionally iterative, not recursive,
+Index: src/engine/SCons/Script/Interactive.py
+===================================================================
+--- src/engine/SCons/Script/Interactive.py	(revision 4732)
++++ src/engine/SCons/Script/Interactive.py	(working copy)
+@@ -247,9 +247,9 @@
+             walker = SCons.Node.Walker(node,
+                                         kids_func=get_unseen_children,
+                                         eval_func=add_to_seen_nodes)
+-            n = walker.next()
++            n = walker.get_next()
+             while n:
+-                n = walker.next()
++                n = walker.get_next()
+ 
+         for node in seen_nodes.keys():
+             # Call node.clear() to clear most of the state
+Index: src/engine/SCons/compat/_scons_sets15.py
+===================================================================
+--- src/engine/SCons/compat/_scons_sets15.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_sets15.py	(working copy)
+@@ -14,8 +14,6 @@
+ # Python 1.5 and 2.1, which don't support __iter__() and iterator types.
+ #
+ 
+-import string
+-
+ class Set:
+     """The set class. It can contain mutable objects."""
+ 
+@@ -30,7 +28,7 @@
+                     self.elems.append(elem)
+ 
+     def __str__(self):
+-        return "set([%s])" % string.join(map(str, self.elems), ", ")
++        return "set([%s])" % ", ".join(map(str, self.elems))
+ 
+ 
+     def copy(self):
+@@ -123,7 +121,7 @@
+         """Cartesian product of two sets."""
+         ret = Set()
+         for elemself in self.elems:
+-            x = map(lambda other, s=elemself: (s, other), other.elems)
++            x = list(map(lambda other, s=elemself: (s, other), other.elems))
+             ret.elems.extend(x)
+         return ret
+ 
+Index: src/engine/SCons/compat/_scons_itertools.py
+===================================================================
+--- src/engine/SCons/compat/_scons_itertools.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_itertools.py	(working copy)
+@@ -90,13 +90,13 @@
+     return result
+ 
+ def imap(function, *iterables):
+-    return apply(map, (function,) + tuple(iterables))
++    return iter(map(function, *tuple(iterables)))
+ 
+ def islice(*args, **kw):
+     raise NotImplementedError
+ 
+ def izip(*iterables):
+-    return apply(zip, iterables)
++    return iter(zip(*iterables))
+ 
+ def repeat(*args, **kw):
+     # returns infinite length, should not be supported
+Index: src/engine/SCons/compat/_scons_platform.py
+===================================================================
+--- src/engine/SCons/compat/_scons_platform.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_platform.py	(working copy)
+@@ -61,7 +61,7 @@
+     except AttributeError:
+         no_os_uname = 1
+ 
+-    if no_os_uname or not filter(None, (system, node, release, version, machine)):
++    if no_os_uname or not [_f for _f in (system, node, release, version, machine) if _f]:
+         # Hmm, no there is either no uname or uname has returned
+         #'unknowns'... we'll have to poke around the system then.
+         if no_os_uname:
+@@ -119,7 +119,7 @@
+         elif system[:4] == 'java':
+             release,vendor,vminfo,osinfo = java_ver()
+             system = 'Java'
+-            version = string.join(vminfo,', ')
++            version = ', '.join(vminfo)
+             if not version:
+                 version = vendor
+ 
+Index: src/engine/SCons/compat/builtins.py
+===================================================================
+--- src/engine/SCons/compat/builtins.py	(revision 4733)
++++ src/engine/SCons/compat/builtins.py	(working copy)
+@@ -184,8 +184,8 @@
+         argument sequence.
+         """
+         result = []
+-        for i in xrange(min(map(len, lists))):
+-            result.append(tuple(map(lambda l: l[i], lists)))
++        for i in xrange(min(list(map(len, lists)))):
++            result.append(tuple([l[i] for l in lists]))
+         return result
+     __builtin__.zip = zip
+ 
+Index: src/engine/SCons/compat/_scons_UserString.py
+===================================================================
+--- src/engine/SCons/compat/_scons_UserString.py	(revision 4733)
++++ src/engine/SCons/compat/_scons_UserString.py	(working copy)
+@@ -36,7 +36,7 @@
+ try: unicode
+ except NameError:
+     def is_String(obj):
+-        return type(obj) is str
++        return isinstance(obj, str)
+ else:
+     def is_String(obj):
+         return type(obj) in (str, unicode)
+@@ -57,9 +57,9 @@
+     def __complex__(self): return complex(self.data)
+     def __hash__(self): return hash(self.data)
+ 
+-    def __cmp__(self, string):
++    def __cmp__(self, str):
+         if isinstance(string, UserString):
+-            return cmp(self.data, string.data)
++            return cmp(self.data, str.data)
+         else:
+             return cmp(self.data, string)
+     def __contains__(self, char):
+Index: src/engine/SCons/compat/_scons_subprocess.py
+===================================================================
+--- src/engine/SCons/compat/_scons_subprocess.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_subprocess.py	(working copy)
+@@ -356,7 +356,6 @@
+ mswindows = (sys.platform == "win32")
+ 
+ import os
+-import string
+ import types
+ import traceback
+ 
+@@ -445,7 +444,7 @@
+     isinstance(1, int)
+ except TypeError:
+     def is_int(obj):
+-        return type(obj) == type(1)
++        return isinstance(obj, type(1))
+     def is_int_or_long(obj):
+         return type(obj) in (type(1), type(1L))
+ else:
+@@ -458,9 +457,9 @@
+     types.StringTypes
+ except AttributeError:
+     try:
+-        types.StringTypes = (types.StringType, types.UnicodeType)
++        types.StringTypes = (str, unicode)
+     except AttributeError:
+-        types.StringTypes = (types.StringType,)
++        types.StringTypes = (str,)
+     def is_string(obj):
+         return type(obj) in types.StringTypes
+ else:
+@@ -471,7 +470,7 @@
+ 
+ def _cleanup():
+     for inst in _active[:]:
+-        if inst.poll(_deadstate=sys.maxint) >= 0:
++        if inst.poll(_deadstate=sys.maxsize) >= 0:
+             try:
+                 _active.remove(inst)
+             except ValueError:
+@@ -504,7 +503,7 @@
+ 
+     check_call(["ls", "-l"])
+     """
+-    retcode = apply(call, popenargs, kwargs)
++    retcode = call(*popenargs, **kwargs)
+     cmd = kwargs.get("args")
+     if cmd is None:
+         cmd = popenargs[0]
+@@ -578,7 +577,7 @@
+             result.extend(bs_buf)
+             result.append('"')
+ 
+-    return string.join(result, '')
++    return ''.join(result)
+ 
+ 
+ try:
+@@ -674,7 +673,7 @@
+             # We didn't get to successfully create a child process.
+             return
+         # In case the child hasn't been waited on, check if it's done.
+-        self.poll(_deadstate=sys.maxint)
++        self.poll(_deadstate=sys.maxsize)
+         if self.returncode is None and _active is not None:
+             # Child is still running, keep us alive until we can wait on it.
+             _active.append(self)
+@@ -853,7 +852,7 @@
+                 # a subclass of OSError.  FIXME: We should really
+                 # translate errno using _sys_errlist (or simliar), but
+                 # how can this be done from Python?
+-                raise apply(WindowsError, e.args)
++                raise WindowsError(*e.args)
+ 
+             # Retain the process handle, but close the thread handle
+             self._child_created = True
+@@ -1100,7 +1099,7 @@
+                     exc_lines = traceback.format_exception(exc_type,
+                                                            exc_value,
+                                                            tb)
+-                    exc_value.child_traceback = string.join(exc_lines, '')
++                    exc_value.child_traceback = ''.join(exc_lines)
+                     os.write(errpipe_write, pickle.dumps(exc_value))
+ 
+                 # This exitcode won't be reported to applications, so it
+@@ -1209,9 +1208,9 @@
+ 
+             # All data exchanged.  Translate lists into strings.
+             if stdout is not None:
+-                stdout = string.join(stdout, '')
++                stdout = ''.join(stdout)
+             if stderr is not None:
+-                stderr = string.join(stderr, '')
++                stderr = ''.join(stderr)
+ 
+             # Translate newlines, if requested.  We cannot let the file
+             # object do the translation: It is based on stdio, which is
+Index: src/engine/SCons/compat/_scons_hashlib.py
+===================================================================
+--- src/engine/SCons/compat/_scons_hashlib.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_hashlib.py	(working copy)
+@@ -34,7 +34,7 @@
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import md5
+-import string
++from string import hexdigits
+ 
+ class md5obj:
+ 
+@@ -72,7 +72,7 @@
+         # hexdigest() method (*cough* 1.5.2 *cough*), so provide an
+         # equivalent lifted from elsewhere.
+         def hexdigest(self):
+-            h = string.hexdigits
++            h = hexdigits
+             r = ''
+             for c in self.digest():
+                 i = ord(c)
+Index: src/engine/SCons/compat/__init__.py
+===================================================================
+--- src/engine/SCons/compat/__init__.py	(revision 4732)
++++ src/engine/SCons/compat/__init__.py	(working copy)
+@@ -117,7 +117,7 @@
+         import os,posixpath
+         result=[]
+         pat = os.path.normcase(pat)
+-        if not fnmatch._cache.has_key(pat):
++        if pat not in fnmatch._cache:
+             import re
+             res = fnmatch.translate(pat)
+             fnmatch._cache[pat] = re.compile(res)
+@@ -269,15 +269,8 @@
+     sys.maxsize
+ except AttributeError:
+     # Pre-2.6 Python has no sys.maxsize attribute
+-    sys.maxsize = sys.maxint
+-try:
+-    sys.version_info
+-except AttributeError:
+-    # Pre-1.6 Python has no sys.version_info
+-    import string
+-    version_string = string.split(sys.version)[0]
+-    version_ints = map(int, string.split(version_string, '.'))
+-    sys.version_info = tuple(version_ints + ['final', 0])
++    # Wrapping sys in () is silly, but protects it from 2to3 renames fixer
++    sys.maxsize = (sys).maxint
+ 
+ try:
+     import UserString
+@@ -308,7 +301,7 @@
+             flags = flags | os.O_BINARY
+         while True:
+             try :
+-                name = apply(tempfile.mktemp, args, kw)
++                name = tempfile.mktemp(*args, **kw)
+                 fd = os.open( name, flags, 0600 )
+                 return (fd, os.path.abspath(name))
+             except OSError, e:
+Index: src/engine/SCons/compat/_scons_optparse.py
+===================================================================
+--- src/engine/SCons/compat/_scons_optparse.py	(revision 4733)
++++ src/engine/SCons/compat/_scons_optparse.py	(working copy)
+@@ -66,7 +66,6 @@
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ """
+ 
+-import string
+ import sys, os
+ import types
+ import textwrap
+@@ -161,7 +160,7 @@
+ 
+     def __str__(self):
+         return (_("ambiguous option: %s (%s?)")
+-                % (self.opt_str, string.join(self.possibilities, ", ")))
++                % (self.opt_str, ", ".join(self.possibilities)))
+ 
+ 
+ class HelpFormatter:
+@@ -296,7 +295,7 @@
+         if default_value is NO_DEFAULT or default_value is None:
+             default_value = self.NO_DEFAULT_VALUE
+ 
+-        return string.replace(option.help, self.default_tag, str(default_value))
++        return option.help.replace(self.default_tag, str(default_value))
+ 
+     def format_option(self, option):
+         # The help for each option consists of two parts:
+@@ -331,7 +330,7 @@
+                 result.append("%*s%s\n" % (self.help_position, "", line))
+         elif opts[-1] != "\n":
+             result.append("\n")
+-        return string.join(result, "")
++        return "".join(result)
+ 
+     def store_option_strings(self, parser):
+         self.indent()
+@@ -354,7 +353,7 @@
+     def format_option_strings(self, option):
+         """Return a comma-separated list of option strings & metavariables."""
+         if option.takes_value():
+-            metavar = option.metavar or string.upper(option.dest)
++            metavar = option.metavar or option.dest.upper()
+             short_opts = []
+             for sopt in option._short_opts:
+                 short_opts.append(self._short_opt_fmt % (sopt, metavar))
+@@ -370,7 +369,7 @@
+         else:
+             opts = long_opts + short_opts
+ 
+-        return string.join(opts, ", ")
++        return ", ".join(opts)
+ 
+ class IndentedHelpFormatter (HelpFormatter):
+     """Format help with indented section bodies.
+@@ -411,9 +410,9 @@
+ 
+ 
+ def _parse_num(val, type):
+-    if string.lower(val[:2]) == "0x":         # hexadecimal
++    if val[:2].lower() == "0x":         # hexadecimal
+         radix = 16
+-    elif string.lower(val[:2]) == "0b":       # binary
++    elif val[:2].lower() == "0b":       # binary
+         radix = 2
+         val = val[2:] or "0"            # have to remove "0b" prefix
+     elif val[:1] == "0":                # octal
+@@ -458,7 +457,7 @@
+     if value in option.choices:
+         return value
+     else:
+-        choices = string.join(map(repr, option.choices), ", ")
++        choices = ", ".join(map(repr, option.choices))
+         raise OptionValueError(
+             _("option %s: invalid choice: %r (choose from %s)")
+             % (opt, value, choices))
+@@ -606,7 +605,7 @@
+         # Filter out None because early versions of Optik had exactly
+         # one short option and one long option, either of which
+         # could be None.
+-        opts = filter(None, opts)
++        opts = [_f for _f in opts if _f]
+         if not opts:
+             raise TypeError("at least one option string must be supplied")
+         return opts
+@@ -634,7 +633,7 @@
+ 
+     def _set_attrs(self, attrs):
+         for attr in self.ATTRS:
+-            if attrs.has_key(attr):
++            if attr in attrs:
+                 setattr(self, attr, attrs[attr])
+                 del attrs[attr]
+             else:
+@@ -645,7 +644,7 @@
+         if attrs:
+             attrs = sorted(attrs.keys())
+             raise OptionError(
+-                "invalid keyword arguments: %s" % string.join(attrs, ", "),
++                "invalid keyword arguments: %s" % ", ".join(attrs),
+                 self)
+ 
+ 
+@@ -673,7 +672,7 @@
+             # Python 2.1 and earlier, and is short-circuited by the
+             # first check on modern Pythons.)
+             import __builtin__
+-            if ( type(self.type) is types.TypeType or
++            if ( isinstance(self.type, type) or
+                  (hasattr(self.type, "__name__") and
+                   getattr(__builtin__, self.type.__name__, None) is self.type) ):
+                 self.type = self.type.__name__
+@@ -695,7 +694,7 @@
+             elif type(self.choices) not in (tuple, list):
+                 raise OptionError(
+                     "choices must be a list of strings ('%s' supplied)"
+-                    % string.split(str(type(self.choices)), "'")[1], self)
++                    % str(type(self.choices)).split("'")[1], self)
+         elif self.choices is not None:
+             raise OptionError(
+                 "must not supply choices for type %r" % self.type, self)
+@@ -711,7 +710,7 @@
+             # or from the first short option string if no long options.
+             if self._long_opts:
+                 # eg. "--foo-bar" -> "foo_bar"
+-                self.dest = string.replace(self._long_opts[0][2:], '-', '_')
++                self.dest = self._long_opts[0][2:].replace('-', '_')
+             else:
+                 self.dest = self._short_opts[0][1]
+ 
+@@ -736,12 +735,12 @@
+                 raise OptionError(
+                     "callback not callable: %r" % self.callback, self)
+             if (self.callback_args is not None and
+-                type(self.callback_args) is not tuple):
++                not isinstance(self.callback_args, tuple)):
+                 raise OptionError(
+                     "callback_args, if supplied, must be a tuple: not %r"
+                     % self.callback_args, self)
+             if (self.callback_kwargs is not None and
+-                type(self.callback_kwargs) is not dict):
++                not isinstance(self.callback_kwargs, dict)):
+                 raise OptionError(
+                     "callback_kwargs, if supplied, must be a dict: not %r"
+                     % self.callback_kwargs, self)
+@@ -770,7 +769,7 @@
+     # -- Miscellaneous methods -----------------------------------------
+ 
+     def __str__(self):
+-        return string.join(self._short_opts + self._long_opts, "/")
++        return "/".join(self._short_opts + self._long_opts)
+ 
+     __repr__ = _repr
+ 
+@@ -798,7 +797,7 @@
+             if self.nargs == 1:
+                 return self.check_value(opt, value)
+             else:
+-                return tuple(map(lambda v: self.check_value(opt, v), value))
++                return tuple([self.check_value(opt, v) for v in value])
+ 
+     def process(self, opt, value, values, parser):
+ 
+@@ -830,7 +829,7 @@
+         elif action == "callback":
+             args = self.callback_args or ()
+             kwargs = self.callback_kwargs or {}
+-            apply(self.callback, (self, opt, value, parser,) + args, kwargs)
++            self.callback(self, opt, value, parser, *args, **kwargs)
+         elif action == "help":
+             parser.print_help()
+             parser.exit()
+@@ -890,7 +889,7 @@
+         are silently ignored.
+         """
+         for attr in dir(self):
+-            if dict.has_key(attr):
++            if attr in dict:
+                 dval = dict[attr]
+                 if dval is not None:
+                     setattr(self, attr, dval)
+@@ -1010,10 +1009,10 @@
+     def _check_conflict(self, option):
+         conflict_opts = []
+         for opt in option._short_opts:
+-            if self._short_opt.has_key(opt):
++            if opt in self._short_opt:
+                 conflict_opts.append((opt, self._short_opt[opt]))
+         for opt in option._long_opts:
+-            if self._long_opt.has_key(opt):
++            if opt in self._long_opt:
+                 conflict_opts.append((opt, self._long_opt[opt]))
+ 
+         if conflict_opts:
+@@ -1021,7 +1020,7 @@
+             if handler == "error":
+                 raise OptionConflictError(
+                     "conflicting option string(s): %s"
+-                    % string.join(map(lambda co: co[0], conflict_opts), ", "),
++                    % ", ".join([co[0] for co in conflict_opts]),
+                     option)
+             elif handler == "resolve":
+                 for (opt, c_option) in conflict_opts:
+@@ -1038,8 +1037,8 @@
+         """add_option(Option)
+            add_option(opt_str, ..., kwarg=val, ...)
+         """
+-        if type(args[0]) is str:
+-            option = apply(self.option_class, args, kwargs)
++        if isinstance(args[0], str):
++            option = self.option_class(*args, **kwargs)
+         elif len(args) == 1 and not kwargs:
+             option = args[0]
+             if not isinstance(option, Option):
+@@ -1059,7 +1058,7 @@
+         if option.dest is not None:     # option has a dest, we need a default
+             if option.default is not NO_DEFAULT:
+                 self.defaults[option.dest] = option.default
+-            elif not self.defaults.has_key(option.dest):
++            elif option.dest not in self.defaults:
+                 self.defaults[option.dest] = None
+ 
+         return option
+@@ -1075,8 +1074,8 @@
+                 self._long_opt.get(opt_str))
+ 
+     def has_option(self, opt_str):
+-        return (self._short_opt.has_key(opt_str) or
+-                self._long_opt.has_key(opt_str))
++        return (opt_str in self._short_opt or
++                opt_str in self._long_opt)
+ 
+     def remove_option(self, opt_str):
+         option = self._short_opt.get(opt_str)
+@@ -1101,7 +1100,7 @@
+         for option in self.option_list:
+             if not option.help is SUPPRESS_HELP:
+                 result.append(formatter.format_option(option))
+-        return string.join(result, "")
++        return "".join(result)
+ 
+     def format_description(self, formatter):
+         return formatter.format_description(self.get_description())
+@@ -1112,7 +1111,7 @@
+             result.append(self.format_description(formatter))
+         if self.option_list:
+             result.append(self.format_option_help(formatter))
+-        return string.join(result, "\n")
++        return "\n".join(result)
+ 
+ 
+ class OptionGroup (OptionContainer):
+@@ -1304,7 +1303,7 @@
+         elif usage is SUPPRESS_USAGE:
+             self.usage = None
+         # For backwards compatibility with Optik 1.3 and earlier.
+-        elif string.lower(usage)[:7] == "usage: ":
++        elif usage.lower()[:7] == "usage: ":
+             self.usage = usage[7:]
+         else:
+             self.usage = usage
+@@ -1349,8 +1348,8 @@
+ 
+     def add_option_group(self, *args, **kwargs):
+         # XXX lots of overlap with OptionContainer.add_option()
+-        if type(args[0]) is str:
+-            group = apply(OptionGroup, (self,) + args, kwargs)
++        if isinstance(args[0], str):
++            group = OptionGroup(self, *args, **kwargs)
+         elif len(args) == 1 and not kwargs:
+             group = args[0]
+             if not isinstance(group, OptionGroup):
+@@ -1497,7 +1496,7 @@
+         # Value explicitly attached to arg?  Pretend it's the next
+         # argument.
+         if "=" in arg:
+-            (opt, next_arg) = string.split(arg, "=", 1)
++            (opt, next_arg) = arg.split("=", 1)
+             rargs.insert(0, next_arg)
+             had_explicit_value = True
+         else:
+@@ -1577,7 +1576,7 @@
+             return self.prog
+ 
+     def expand_prog_name(self, s):
+-        return string.replace(s, "%prog", self.get_prog_name())
++        return s.replace("%prog", self.get_prog_name())
+ 
+     def get_description(self):
+         return self.expand_prog_name(self.description)
+@@ -1648,7 +1647,7 @@
+             result.append("\n")
+         formatter.dedent()
+         # Drop the last "\n", or the header if no options or option groups:
+-        return string.join(result[:-1], "")
++        return "".join(result[:-1])
+ 
+     def format_epilog(self, formatter):
+         return formatter.format_epilog(self.epilog)
+@@ -1663,7 +1662,7 @@
+             result.append(self.format_description(formatter) + "\n")
+         result.append(self.format_option_help(formatter))
+         result.append(self.format_epilog(formatter))
+-        return string.join(result, "")
++        return "".join(result)
+ 
+     # used by test suite
+     def _get_encoding(self, file):
+@@ -1694,11 +1693,11 @@
+     'words', raise BadOptionError.
+     """
+     # Is there an exact match?
+-    if wordmap.has_key(s):
++    if s in wordmap:
+         return s
+     else:
+         # Isolate all words with s as a prefix.
+-        possibilities = filter(lambda w: w[:len(s)] == s, wordmap.keys())
++        possibilities = [w for w in wordmap.keys() if w[:len(s)] == s]
+         # No exact match, so there had better be just one possibility.
+         if len(possibilities) == 1:
+             return possibilities[0]
+Index: src/engine/SCons/compat/_scons_textwrap.py
+===================================================================
+--- src/engine/SCons/compat/_scons_textwrap.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_textwrap.py	(working copy)
+@@ -7,7 +7,8 @@
+ 
+ __revision__ = "$Id: textwrap.py,v 1.32.8.2 2004/05/13 01:48:15 gward Exp $"
+ 
+-import string, re
++import re
++from string import lowercase, maketrans
+ 
+ try:
+    unicode
+@@ -71,7 +72,7 @@
+         be broken, and some lines might be longer than 'width'.
+     """
+ 
+-    whitespace_trans = string.maketrans(_whitespace, ' ' * len(_whitespace))
++    whitespace_trans = maketrans(_whitespace, ' ' * len(_whitespace))
+ 
+     unicode_whitespace_trans = {}
+     try:
+@@ -101,12 +102,10 @@
+         wordsep_re = re.compile(r'(\s+|'                    # any whitespace
+                                 r'-*\w{2,}-(?=\w{2,}))')    # hyphenated words
+ 
+-    # XXX will there be a locale-or-charset-aware version of
+-    # string.lowercase in 2.3?
+     sentence_end_re = re.compile(r'[%s]'              # lowercase letter
+                                  r'[\.\!\?]'          # sentence-ending punct.
+                                  r'[\"\']?'           # optional end-of-quote
+-                                 % string.lowercase)
++                                 % lowercase)
+ 
+ 
+     def __init__(self,
+@@ -137,12 +136,12 @@
+         becomes " foo    bar  baz".
+         """
+         if self.expand_tabs:
+-            text = string.expandtabs(text)
++            text = text.expandtabs()
+         if self.replace_whitespace:
+-            if type(text) == type(''):
+-                text = string.translate(text, self.whitespace_trans)
++            if isinstance(text, str):
++                text = text.translate(self.whitespace_trans)
+             elif isinstance(text, unicode):
+-                text = string.translate(text, self.unicode_whitespace_trans)
++                text = text.translate(self.unicode_whitespace_trans)
+         return text
+ 
+ 
+@@ -158,7 +157,7 @@
+           'use', ' ', 'the', ' ', '-b', ' ', 'option!'
+         """
+         chunks = self.wordsep_re.split(text)
+-        chunks = filter(None, chunks)
++        chunks = [_f for _f in chunks if _f]
+         return chunks
+ 
+     def _fix_sentence_endings(self, chunks):
+@@ -242,7 +241,7 @@
+ 
+             # First chunk on line is whitespace -- drop it, unless this
+             # is the very beginning of the text (ie. no lines started yet).
+-            if string.strip(chunks[0]) == '' and lines:
++            if chunks[0].strip() == '' and lines:
+                 del chunks[0]
+ 
+             while chunks:
+@@ -263,13 +262,13 @@
+                 self._handle_long_word(chunks, cur_line, cur_len, width)
+ 
+             # If the last chunk on this line is all whitespace, drop it.
+-            if cur_line and string.strip(cur_line[-1]) == '':
++            if cur_line and cur_line[-1].strip() == '':
+                 del cur_line[-1]
+ 
+             # Convert current line back to a string and store it in list
+             # of all lines (return value).
+             if cur_line:
+-                lines.append(indent + string.join(cur_line, ''))
++                lines.append(indent + ''.join(cur_line))
+ 
+         return lines
+ 
+@@ -299,7 +298,7 @@
+         more than 'self.width' columns, and return a new string
+         containing the entire wrapped paragraph.
+         """
+-        return string.join(self.wrap(text), "\n")
++        return "\n".join(self.wrap(text))
+ 
+ 
+ # -- Convenience interface ---------------------------------------------
+@@ -316,7 +315,7 @@
+     """
+     kw = kwargs.copy()
+     kw['width'] = width
+-    w = apply(TextWrapper, (), kw)
++    w = TextWrapper(**kw)
+     return w.wrap(text)
+ 
+ def fill(text, width=70, **kwargs):
+@@ -330,7 +329,7 @@
+     """
+     kw = kwargs.copy()
+     kw['width'] = width
+-    w = apply(TextWrapper, (), kw)
++    w = TextWrapper(**kw)
+     return w.fill(text)
+ 
+ 
+@@ -373,7 +372,7 @@
+         for i in range(len(lines)):
+             lines[i] = lines[i][margin:]
+ 
+-    return string.join(lines, '\n')
++    return '\n'.join(lines)
+ 
+ # Local Variables:
+ # tab-width:4
+Index: src/engine/SCons/compat/_scons_shlex.py
+===================================================================
+--- src/engine/SCons/compat/_scons_shlex.py	(revision 4732)
++++ src/engine/SCons/compat/_scons_shlex.py	(working copy)
+@@ -26,7 +26,7 @@
+ except NameError:
+     import types
+     def is_basestring(s):
+-        return type(s) is types.StringType
++        return isinstance(s, str)
+ else:
+     def is_basestring(s):
+         return isinstance(s, basestring)
+@@ -285,7 +285,7 @@
+     def __iter__(self):
+         return self
+ 
+-    def next(self):
++    def __next__(self):
+         token = self.get_token()
+         if token == self.eof:
+             raise StopIteration
+@@ -311,7 +311,7 @@
+     else:
+         file = sys.argv[1]
+         lexer = shlex(open(file), file)
+-    while 1:
++    while True:
+         tt = lexer.get_token()
+         if tt:
+             print "Token: " + repr(tt)
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 4733)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -1568,22 +1568,14 @@
+ 
+ 
+ 
+-# Wrap the intern() function so it doesn't throw exceptions if ineligible
+-# arguments are passed. The intern() function was moved into the sys module in
+-# Python 3.
+-try:
+-    intern
+-except NameError:
+-    from sys import intern
+-
+ def silent_intern(x):
+     """
+-    Perform intern() on the passed argument and return the result.
++    Perform sys.intern() on the passed argument and return the result.
+     If the input is ineligible (e.g. a unicode string) the original argument is
+     returned and no exception is thrown.
+     """
+     try:
+-        return intern(x)
++        return sys.intern(x)
+     except TypeError:
+         return x
+ 
+Index: src/engine/SCons/Tool/MSCommon/vc.py
+===================================================================
+--- src/engine/SCons/Tool/MSCommon/vc.py	(revision 4732)
++++ src/engine/SCons/Tool/MSCommon/vc.py	(working copy)
+@@ -36,9 +36,9 @@
+ """
+ import SCons.compat
+ 
+-import string
+ import os
+ import platform
++from string import digits as string_digits
+ 
+ import SCons.Warnings
+ 
+@@ -218,7 +218,7 @@
+     debug('vc.py: find_batch_file() pdir:%s'%pdir)
+ 
+     # filter out e.g. "Exp" from the version name
+-    msvc_ver_numeric = string.join(filter(lambda x: x in string.digits + ".", msvc_version), '')
++    msvc_ver_numeric = ''.join([x for x in msvc_version if x in string_digits + "."])
+     vernum = float(msvc_ver_numeric)
+     if 7 <= vernum < 8:
+         pdir = os.path.join(pdir, os.pardir, "Common7", "Tools")
+Index: bin/scons-proc.py
+===================================================================
+--- bin/scons-proc.py	(revision 4732)
++++ bin/scons-proc.py	(working copy)
+@@ -225,19 +225,19 @@
+         body = body.replace('<para>', '\n')
+         body = body.replace('</para>\n', '')
+ 
+-        body = string.replace(body, '<variablelist>\n', '.RS 10\n')
++        body = body.replace('<variablelist>\n', '.RS 10\n')
+         # Handling <varlistentry> needs to be rationalized and made
+         # consistent.  Right now, the <term> values map to arbitrary,
+         # ad-hoc idioms in the current man page.
+         body = re.compile(r'<varlistentry>\n<term><literal>([^<]*)</literal></term>\n<listitem>\n').sub(r'.TP 6\n.B \1\n', body)
+         body = re.compile(r'<varlistentry>\n<term><parameter>([^<]*)</parameter></term>\n<listitem>\n').sub(r'.IP \1\n', body)
+         body = re.compile(r'<varlistentry>\n<term>([^<]*)</term>\n<listitem>\n').sub(r'.HP 6\n.B \1\n', body)
+-        body = string.replace(body, '</listitem>\n', '')
+-        body = string.replace(body, '</varlistentry>\n', '')
+-        body = string.replace(body, '</variablelist>\n', '.RE\n')
++        body = body.replace('</listitem>\n', '')
++        body = body.replace('</varlistentry>\n', '')
++        body = body.replace('</variablelist>\n', '.RE\n')
+ 
+         body = re.sub(r'\.EE\n\n+(?!\.IP)', '.EE\n.IP\n', body)
+-        body = string.replace(body, '\n.IP\n\'\\"', '\n\n\'\\"')
++        body = body.replace('\n.IP\n\'\\"', '\n\n\'\\"')
+         body = re.sub('&(scons|SConstruct|SConscript|jar|Make|lambda);', r'\\fB\1\\fP', body)
+         body = re.sub('&(TARGET|TARGETS|SOURCE|SOURCES);', r'\\fB$\1\\fP', body)
+         body = body.replace('&Dir;', r'\fBDir\fP')
+@@ -335,7 +335,7 @@
+     prefix = 't-'
+     tag = 'literal'
+     def idfunc(self):
+-        return string.replace(self.name, '+', 'X')
++        return self.name.replace('+', 'X')
+     def termfunc(self):
+         return [self.name]
+     def entityfunc(self):
+Index: QMTest/TestCmd.py
+===================================================================
+--- QMTest/TestCmd.py	(revision 4733)
++++ QMTest/TestCmd.py	(working copy)
+@@ -302,15 +302,6 @@
+ else:
+     atexit.register(_clean)
+ 
+-try:
+-    zip
+-except NameError:
+-    def zip(*lists):
+-        result = []
+-        for i in xrange(min(list(map(len, lists)))):
+-            result.append(tuple([l[i] for l in lists]))
+-        return result
+-
+ class Collector:
+     def __init__(self, top):
+         self.entries = [top]
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 4733)
++++ QMTest/TestSCons.py	(working copy)
+@@ -23,18 +23,7 @@
+ import sys
+ import time
+ 
+-import __builtin__
+ try:
+-    __builtin__.zip
+-except AttributeError:
+-    def zip(*lists):
+-        result = []
+-        for i in xrange(len(lists[0])):
+-            result.append(tuple([l[i] for l in lists]))
+-        return result
+-    __builtin__.zip = zip
+-
+-try:
+     x = True
+ except NameError:
+     True = not 0
