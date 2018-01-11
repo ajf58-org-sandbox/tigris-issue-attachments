@@ -1,0 +1,8 @@
+
+from SCons.Script import Environment
+
+env = Environment()
+env.VariantDir('output', src_dir='.', duplicate=1)
+
+target, = env.Command('output/target.txt', 'output/source.txt', 'cp $SOURCE $TARGET')
+env.AlwaysBuild(target)
