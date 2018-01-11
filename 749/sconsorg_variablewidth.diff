@@ -1,0 +1,716 @@
+Index: contact.php
+===================================================================
+--- contact.php	(revision 4902)
++++ contact.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Contact", "contact");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle">Contact</h2>
+ 
+ <h3>Mailing lists</h3>
+@@ -73,7 +72,6 @@
+ <a href="mailto:dev@scons.tigris.org">dev@scons</a>
+ mailing list as described above.</p>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: dev.php
+===================================================================
+--- dev.php	(revision 4902)
++++ dev.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Development", "dev");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2> Development </h2>
+ 
+ <p> <span class="sconslogo">SCons</span> is actively looking for developers.
+@@ -206,7 +205,6 @@
+ </div>
+ </div>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: documentation.php
+===================================================================
+--- documentation.php	(revision 4902)
++++ documentation.php	(working copy)
+@@ -10,7 +10,6 @@
+ 	$listpage = "http://scons.tigris.org/servlets/SummarizeList";
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Documentation </h2>
+ 
+ <p>
+@@ -124,7 +123,6 @@
+ mailing list to receive news and announcements about new documentation.
+ </p>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: docversions.php
+===================================================================
+--- docversions.php	(revision 4902)
++++ docversions.php	(working copy)
+@@ -10,7 +10,6 @@
+ 	$listpage = "http://scons.tigris.org/servlets/SummarizeList";
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle">Version-Specific SCons Documentation</h2>
+ 
+ <p>
+@@ -129,7 +128,6 @@
+ </sconsversiontable>
+ </div>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: donate.php
+===================================================================
+--- donate.php	(revision 4902)
++++ donate.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Donate", "donate");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Donate </h2>
+ 
+ <p> Thank you for considering a donation to support <span
+@@ -57,7 +56,6 @@
+ 
+ <p> Thanks again for consideration a donation.  </p>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: download.php
+===================================================================
+--- download.php	(revision 4902)
++++ download.php	(working copy)
+@@ -10,7 +10,6 @@
+ 	$listpage = "http://scons.tigris.org/servlets/SummarizeList";
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Download </h2>
+ 
+ <!-- INTRO PARAGRAPHS WHEN THE STABLE AND LATEST RELEASES ARE DIFFERENT -->
+@@ -62,40 +61,94 @@
+ <div id="sconsdownloadtable">
+ <downloadtable>
+   <downloadrow>
+-    <downloadversion>&nbsp;</downloadversion>
+-    <downloadversion>Stable (<?echo $stablerelease_1x?>)</downloadversion>
+-    <downloadversion>Latest (<?echo $latestrelease_1x?>)</downloadversion>
+-    <downloadversion>Latest (<?echo $latestrelease_2x?>)</downloadversion>
++    <downloadhead>Version</downloadhead>
++    <downloadhead>Archive type</downloadhead>
++    <downloadhead>Filename</downloadhead>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>Stable (<?echo $stablerelease_1x?>)</downloadversion>
+     <downloaddescription>Gzip tar file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.tar.gz">scons-<?echo $stablerelease_1x;?>.tar.gz</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.tar.gz">scons-<?echo $latestrelease_1x;?>.tar.gz</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.tar.gz">scons-<?echo $latestrelease_2x;?>.tar.gz</a></downloadentry>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
+     <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.zip">scons-<?echo $stablerelease_1x;?>.zip</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Redhat RPM</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.noarch.rpm">scons-<?echo $stablerelease_1x;?>.noarch.rpm</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Windows installer</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.exe">scons-<?echo $stablerelease_1x;?>.exe</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Source RPM</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.src.rpm">scons-<?echo $stablerelease_1x;?>.src.rpm</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>Latest (<?echo $latestrelease_1x?>)</downloadversion>
++    <downloaddescription>Gzip tar file</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.tar.gz">scons-<?echo $latestrelease_1x;?>.tar.gz</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.zip">scons-<?echo $latestrelease_1x;?>.zip</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Redhat RPM</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.noarch.rpm">scons-<?echo $latestrelease_1x;?>.noarch.rpm</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Windows installer</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.exe">scons-<?echo $latestrelease_1x;?>.exe</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Source RPM</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.src.rpm">scons-<?echo $latestrelease_1x;?>.src.rpm</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>Latest (<?echo $latestrelease_2x?>)</downloadversion>
++    <downloaddescription>Gzip tar file</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.tar.gz">scons-<?echo $latestrelease_2x;?>.tar.gz</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.zip">scons-<?echo $latestrelease_2x;?>.zip</a></downloadentry>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
+     <downloaddescription>Redhat RPM</downloaddescription>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>-1.noarch.rpm">scons-<?echo $stablerelease_1x;?>-1.noarch.rpm</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>-1.noarch.rpm">scons-<?echo $latestrelease_1x;?>-1.noarch.rpm</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>-1.noarch.rpm">scons-<?echo $latestrelease_2x;?>-1.noarch.rpm</a></downloadentry>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.noarch.rpm">scons-<?echo $latestrelease_2x;?>.noarch.rpm</a></downloadentry>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
+     <downloaddescription>Windows installer</downloaddescription>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.win32.exe">scons-<?echo $stablerelease_1x;?>.win32.exe</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.win32.exe">scons-<?echo $latestrelease_1x;?>.win32.exe</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.win32.exe">scons-<?echo $latestrelease_2x;?>.win32.exe</a></downloadentry>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.exe">scons-<?echo $latestrelease_2x;?>.exe</a></downloadentry>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
+     <downloaddescription>Source RPM</downloaddescription>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>-1.src.rpm">scons-<?echo $stablerelease_1x;?>-1.src.rpm</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>-1.src.rpm">scons-<?echo $latestrelease_1x;?>-1.src.rpm</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>-1.src.rpm">scons-<?echo $latestrelease_2x;?>-1.src.rpm</a></downloadentry>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.src.rpm">scons-<?echo $latestrelease_2x;?>.src.rpm</a></downloadentry>
+   </downloadrow>
+ </downloadtable>
+ </div>
+@@ -118,24 +171,52 @@
+ <div id="sconsdownloadtable">
+ <downloadtable>
+   <downloadrow>
+-    <downloadversion>&nbsp;</downloadversion>
+-    <downloadversion>Stable (<?echo $stablerelease_1x?>)</downloadversion>
+-    <downloadversion>Latest (<?echo $latestrelease_1x?>)</downloadversion>
+-    <downloadversion>Latest (<?echo $latestrelease_2x?>)</downloadversion>
++    <downloadhead>Version</downloadhead>
++    <downloadhead>Archive type</downloadhead>
++    <downloadhead>Filename</downloadhead>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>Stable (<?echo $stablerelease_1x?>)</downloadversion>
+     <downloaddescription>Gzip tar file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $stablerelease_1x;?>.tar.gz">scons-local-<?echo $stablerelease_1x;?>.tar.gz</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $latestrelease_1x;?>.tar.gz">scons-local-<?echo $latestrelease_1x;?>.tar.gz</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $latestrelease_2x;?>.tar.gz">scons-local-<?echo $latestrelease_2x;?>.tar.gz</a></downloadentry>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
+     <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $stablerelease_1x;?>.zip">scons-local-<?echo $stablerelease_1x;?>.zip</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>Latest (<?echo $latestrelease_1x?>)</downloadversion>
++    <downloaddescription>Gzip tar file</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $latestrelease_1x;?>.tar.gz">scons-local-<?echo $latestrelease_1x;?>.tar.gz</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $latestrelease_1x;?>.zip">scons-local-<?echo $latestrelease_1x;?>.zip</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>Latest (<?echo $latestrelease_2x?>)</downloadversion>
++    <downloaddescription>Gzip tar file</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $latestrelease_2x;?>.tar.gz">scons-local-<?echo $latestrelease_2x;?>.tar.gz</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-local-<?echo $latestrelease_2x;?>.zip">scons-local-<?echo $latestrelease_2x;?>.zip</a></downloadentry>
+   </downloadrow>
+ </downloadtable>
++</div>
+ 
+ <h3> scons-src Packages </h3>
+ <p>
+@@ -145,26 +226,53 @@
+ <div id="sconsdownloadtable">
+ <downloadtable>
+   <downloadrow>
+-    <downloadversion>&nbsp;</downloadversion>
+-    <downloadversion>Stable (<?echo $stablerelease_1x?>)</downloadversion>
+-    <downloadversion>Latest (<?echo $latestrelease_1x?>)</downloadversion>
+-    <downloadversion>Latest (<?echo $latestrelease_2x?>)</downloadversion>
++    <downloadhead>Version</downloadhead>
++    <downloadhead>Archive type</downloadhead>
++    <downloadhead>Filename</downloadhead>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>Stable (<?echo $stablerelease_1x?>)</downloadversion>
+     <downloaddescription>Gzip tar file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $stablerelease_1x;?>.tar.gz">scons-src-<?echo $stablerelease_1x;?>.tar.gz</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_1x;?>.tar.gz">scons-src-<?echo $latestrelease_1x;?>.tar.gz</a></downloadentry>
+-    <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_2x;?>.tar.gz">scons-src-<?echo $latestrelease_2x;?>.tar.gz</a></downloadentry>
+   </downloadrow>
+   <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
+     <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $stablerelease_1x;?>.zip">scons-src-<?echo $stablerelease_1x;?>.zip</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>Latest (<?echo $latestrelease_1x?>)</downloadversion>
++    <downloaddescription>Gzip tar file</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_1x;?>.tar.gz">scons-src-<?echo $latestrelease_1x;?>.tar.gz</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_1x;?>.zip">scons-src-<?echo $latestrelease_1x;?>.zip</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloadversion>&nbsp;</downloadversion>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>Latest (<?echo $latestrelease_2x?>)</downloadversion>
++    <downloaddescription>Gzip tar file</downloaddescription>
++    <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_2x;?>.tar.gz">scons-src-<?echo $latestrelease_2x;?>.tar.gz</a></downloadentry>
++  </downloadrow>
++  <downloadrow>
++    <downloadversion>&nbsp;</downloadversion>
++    <downloaddescription>Zip file</downloaddescription>
+     <downloadentry><a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_2x;?>.zip">scons-src-<?echo $latestrelease_2x;?>.zip</a></downloadentry>
+   </downloadrow>
+ </downloadtable>
++</div>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: faq.php
+===================================================================
+--- faq.php	(revision 4902)
++++ faq.php	(working copy)
+@@ -7,14 +7,11 @@
+ 	make_top("FAQ", "faq");
+ ?>
+ 
+-<div id="bodycontent">
+-
+ <h2> FAQ </h2>
+ 
+ Please see the new <a href="wiki/FrequentlyAskedQuestions">Wiki
+ FAQ</a> instead of this page.
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: guidelines.php
+===================================================================
+--- guidelines.php	(revision 4902)
++++ guidelines.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Developer's Guidelines", "guidelines");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2> SCons Developer's Guidelines </h2>
+ 
+ <center>6 February 2010</center>
+@@ -266,7 +265,6 @@
+ 
+ </ol>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: index.php
+===================================================================
+--- index.php	(revision 4902)
++++ index.php	(working copy)
+@@ -10,7 +10,6 @@
+ 	$listpage = "http://scons.tigris.org/servlets/SummarizeList";
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Latest News </h2>
+ 
+ <h3> SCons 2.0.0.alpha.20100508 is available </h3>
+@@ -129,7 +128,6 @@
+ it is no longer directly connected with Software Carpentry (well, that, and to
+ make it slightly easier to type...).  </p>
+ 
+-</div> <!-- End bodycontent -->
+ 
+ <?
+ 	make_bottom();
+Index: links.php
+===================================================================
+--- links.php	(revision 4902)
++++ links.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Links", "links");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Links </h2>
+ 
+ <?
+@@ -16,7 +15,6 @@
+ 
+ ?>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: lists.php
+===================================================================
+--- lists.php	(revision 4902)
++++ lists.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Mailing Lists", "lists");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 id="lists">Mailing Lists</h2>
+ 
+ <p>These are the major <span class="sconslogo">SCons</span> mailing lists
+@@ -109,7 +108,6 @@
+ href="http://scons.tigris.org/servlets/SummarizeList?listName=issues">Tigris.org forum interface</a></li>
+ </ul>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: logos.php
+===================================================================
+--- logos.php	(revision 4902)
++++ logos.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Logos", "logos");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> SCons Logos </h2>
+ 
+ You are welcome to use these SCons logos
+@@ -39,7 +38,6 @@
+ is the Creative Commons Attribution-Noncommercial-Share Alike 3.0
+ Unported license.
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: news.php
+===================================================================
+--- news.php	(revision 4902)
++++ news.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("News", "news");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> News </h2>
+ 
+ <?
+@@ -16,7 +15,6 @@
+ 
+ ?>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: refer.php
+===================================================================
+--- refer.php	(revision 4902)
++++ refer.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("References", "references");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> References </h2>
+ 
+ There are lots of people
+@@ -21,7 +20,6 @@
+ 
+ ?>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: css/scons.css
+===================================================================
+--- css/scons.css	(revision 4902)
++++ css/scons.css	(working copy)
+@@ -23,11 +23,7 @@
+ 	border: 1px solid;
+ 	border-color: black;
+ 	background-color: white;
+-	background-image: url(../images/sconsback.png);
+-	background-repeat: repeat-y 50% 0;
+-	background-position: right top;
+ 	margin: 30px auto;
+-	width: 750px;
+ 	}
+ 	
+ #banner {
+@@ -41,9 +37,19 @@
+ 	font-size: small;
+ 	line-height: 0.9em;
+ 	float: right;
+-	width: 220px;
++	width: 25%;
+ 	clear: both;
+-	margin-top: 10px;
++	margin-top: 55px;
++	}
++
++#leftmenu {
++	font-family: sans-serif;
++	font-size: small;
++	line-height: 0.9em;
++	float: left;
++	width: 5%;
++	clear: both;
++	margin-top: 55px;
+ 	}
+ 
+ #menu li {
+@@ -106,8 +112,8 @@
+ 	}
+ 
+ #bodycontent {
+-	margin: 15px;
+-	width: 520px;
++	margin-left: 7%;
++	margin-right: 27%;
+ 	font-size: small;
+ 	line-height: 1.5em;
+ 	}
+@@ -127,21 +133,25 @@
+         display: table-row;
+         }
+ 
++#sconsdownloadtable downloadhead {
++        display: table-cell;
++        font-weight: bold;
++    text-align: center;
++        }
++
+ #sconsdownloadtable downloadentry {
+         display: table-cell;
+-	text-align: center;
++	text-align: left;
+         vertical-align: bottom;
+         }
+ 
+ #sconsdownloadtable downloaddescription {
+         display: table-cell;
+-        font-weight: bold;
+ 	text-align: left;
+         }
+ 
+ #sconsdownloadtable downloadversion {
+         display: table-cell;
+-        font-weight: bold;
+ 	text-align: center;
+         }
+ 
+@@ -176,8 +186,14 @@
+ 
+ #osrating {
+ 	margin-left: 35px;
++    margin-top: 20px;
+ 	}
+-	
++
++#hostedby {
++    margin-left: 35px;
++    margin-top: 20px;
++    }
++
+ 
+ h2 {
+ 	color: #272;
+Index: includes/templates.php
+===================================================================
+--- includes/templates.php	(revision 4902)
++++ includes/templates.php	(working copy)
+@@ -32,15 +32,8 @@
+ 
+ <div id="main">
+ 
+-<div id="banner">
+-
+-&nbsp;
+-&nbsp;
+-&nbsp;
+-&nbsp;
+-&nbsp;
+-
+-</div> 
++<div id="leftmenu">
++</div>
+ 
+ <div id="menu">
+ <ul class="menuitems">
+@@ -50,47 +43,42 @@
+ <li><a href="contact.php"<?if(!strcmp($page,"contact"))echo $currentpage;?>>Contact</a></li>
+ <li><a href="download.php"<?if(!strcmp($page,"download"))echo $currentpage;?>>Download</a><br />
+     <ul class="submenuitems">
+-    <li>Stable 1.x(<?echo $stablerelease_1x;?>)</li>
++    <li>Stable 1.x</li>
+ 	<ul class="subsubmenuitems">
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.tar.gz">Tarball</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.zip">Zip</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.win32.exe">Windows</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>-1.noarch.rpm">Redhat</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-src-<?echo $stablerelease_1x;?>.tar.gz">Source</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.win32.exe">Windows (.exe)</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>-1.noarch.rpm">Redhat (.rpm)</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $stablerelease_1x;?>.tar.gz">Other (.tar.gz)</a> </li>
+ 	</ul>
+     </ul>
+     <ul class="submenuitems">
+-    <li>Latest 1.x(<?echo $latestrelease_1x;?>)</li>
++    <li>Latest 1.x</li>
+ 	<ul class="subsubmenuitems">
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.tar.gz">Tarball</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.zip">Zip</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.win32.exe">Windows</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>-1.noarch.rpm">Redhat</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_1x;?>.tar.gz">Source</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.win32.exe">Windows (.exe)</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>-1.noarch.rpm">Redhat (.rpm)</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_1x;?>.tar.gz">Other (.tar.gz)</a> </li>
+ 	</ul>
+     </ul>
+     <ul class="submenuitems">
+-    <li>Latest 2.0(<?echo $latestrelease_2x;?>)</li>
++    <li>Latest 2.0</li>
+ 	<ul class="subsubmenuitems">
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.tar.gz">Tarball</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.zip">Zip</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.win32.exe">Windows</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>-1.noarch.rpm">Redhat</a> </li>
+-	<li> <a href="<?echo $downloadpage;?>/scons-src-<?echo $latestrelease_2x;?>.tar.gz">Source</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.win32.exe">Windows (.exe)</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>-1.noarch.rpm">Redhat (.rpm)</a> </li>
++	<li> <a href="<?echo $downloadpage;?>/scons-<?echo $latestrelease_2x;?>.tar.gz">Other (.tar.gz)</a> </li>
+ 	</ul>
+     <li><a href="http://sourceforge.net/project/showfiles.php?group_id=30337">Other versions</a> (SourceForge)</li>
++    <li><a href="download.php">More info about versions...</a></li>
+     </ul>
+ </li>
+ <li> <a href="documentation.php"<?if(!strcmp($page,"docs"))echo $currentpage;?>>Documentation</a><br />
+     <ul class="submenuitems">
+-    <li>Stable 1.x(<?echo $stablerelease_1x;?>)</li>
++    <li>Stable 1.x</li>
+ 	<ul class="submenuitems">
+ 	<li><a href="/doc/<?echo $stablerelease_1x;?>/HTML/scons-user/book1.html">User's Guide</a></li>
+ 	<li><a href="/doc/<?echo $stablerelease_1x;?>/HTML/scons-man.html">Man page</a></li>
+ 	</ul>
+     </ul>
+     <ul class="submenuitems">
+-    <li>Latest 1.x(<?echo $latestrelease_1x;?>)</li>
++    <li>Latest 1.x</li>
+ 	<ul class="submenuitems">
+ 	<li><a href="/doc/<?echo $latestrelease_1x;?>/HTML/scons-user/book1.html">User's Guide</a></li>
+ 	<li><a href="/doc/<?echo $latestrelease_1x;?>/HTML/scons-man.html">Man page</a></li>
+@@ -98,7 +86,7 @@
+ 	</ul>
+     </ul>
+     <ul class="submenuitems">
+-    <li>Latest 2.0(<?echo $latestrelease_2x;?>)</li>
++    <li>Latest 2.0</li>
+ 	<ul class="submenuitems">
+ 	<li><a href="/doc/<?echo $latestrelease_2x;?>/HTML/scons-user/book1.html">User's Guide</a></li>
+ 	<li><a href="/doc/<?echo $latestrelease_2x;?>/HTML/scons-man.html">Man page</a></li>
+@@ -155,13 +143,14 @@
+ </form>
+ </div>
+ 
+-<div id="menu">
+-<ul class="menuitems">
+-<li>Hosting provided by:  <a href="http://www.pair.com/">pair.com</a></li>
+-</ul>
++<div id="hostedby">
++Hosting provided by:  <a href="http://www.pair.com/">pair.com</a>
+ </div>
+ 
+ </div> <!-- menu -->
++<div id="bodycontent">
++<div id="banner"></div>
++
+ <?
+ 
+ } // End make_top
+@@ -169,6 +158,7 @@
+ function make_bottom()
+ {
+ 	?>
++</div> <!-- End bodycontent -->
+ <div id="footer">
+ &copy; 2004-2010 <a href="http://www.scons.org">The SCons Foundation</a>
+ </div>
