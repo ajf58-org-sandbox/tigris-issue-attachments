@@ -1,0 +1,41 @@
+### Eclipse Workspace Patch 1.0
+#P scons_trunk
+Index: src/engine/SCons/Tool/javac.py
+===================================================================
+--- src/engine/SCons/Tool/javac.py	(revision 5187)
++++ src/engine/SCons/Tool/javac.py	(working copy)
+@@ -72,18 +72,22 @@
+         elif isinstance(entry, SCons.Node.FS.Dir):
+             result = SCons.Util.OrderedDict()
+             dirnode = entry.rdir()
+-            def find_java_files(arg, dirpath, filenames):
+-                java_files = sorted([n for n in filenames
+-                                       if _my_normcase(n).endswith(js)])
+-                mydir = dirnode.Dir(dirpath)
+-                java_paths = [mydir.File(f) for f in java_files]
+-                for jp in java_paths:
+-                     arg[jp] = True
+-            for dirpath, dirnames, filenames in os.walk(dirnode.get_abspath()):
+-               find_java_files(result, dirpath, filenames)
+-            entry.walk(find_java_files, result)
+-
+-            slist.extend(list(result.keys()))
++            if not dirnode.dir.srcdir:
++                def find_java_files(arg, dirpath, filenames):
++                    java_files = sorted([n for n in filenames
++                                           if _my_normcase(n).endswith(js)])
++                    mydir = dirnode.Dir(dirpath)
++                    java_paths = [mydir.File(f) for f in java_files]
++                    for jp in java_paths:
++                         arg[jp] = True
++                for dirpath, dirnames, filenames in os.walk(dirnode.get_abspath()):
++                   find_java_files(result, dirpath, filenames)
++                entry.walk(find_java_files, result)
++    
++                slist.extend(list(result.keys()))
++            else:
++                slist.extend(dirnode.glob(os.path.join(dirnode.get_abspath(),
++                                                       '*.java')))
+         else:
+             raise SCons.Errors.UserError("Java source must be File or Dir, not '%s'" % entry.__class__)
+ 
