@@ -1,0 +1,41 @@
+# Write data files, so the test is easy to run
+pkg_cfg = open('bug.pc', 'w')
+pkg_cfg.write("""prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: bug
+Description: A test case .pc file
+Version: 1.2
+Cflags: -DSOMETHING -DVARIABLE=2
+""")
+pkg_cfg.close()
+
+main_c = open('main.c', 'w')
+main_c.write("""int main(int argc, char *argv[])
+{
+  return 0;
+}
+""")
+main_c.close()
+
+# Passing test cases
+
+env_1 = Environment(CPPDEFINES=[('DEBUG','1'), 'TEST'])
+env_1.ParseConfig('PKG_CONFIG_PATH=. pkg-config --cflags bug')
+env_1.Object('test1','main.c')
+
+env_2 = Environment(CPPDEFINES=[('DEBUG','1'), 'TEST'])
+env_2.MergeFlags('-DSOMETHING -DVARIABLE=2')
+env_2.Object('test2','main.c')
+
+# Failing test cases
+
+env_3 = Environment(CPPDEFINES={'DEBUG':1, 'TEST':None})
+env_3.ParseConfig('PKG_CONFIG_PATH=. pkg-config --cflags bug')
+env_3.Object('test3','main.c')
+
+env_4 = Environment(CPPDEFINES={'DEBUG':1, 'TEST':None})
+env_4.MergeFlags('-DSOMETHING -DVARIABLE=2')
+env_4.Object('test4','main.c')
