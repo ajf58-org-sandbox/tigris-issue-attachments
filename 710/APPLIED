@@ -1,0 +1,1956 @@
+RefactoringTool: Files that were modified:
+RefactoringTool: SConstruct
+RefactoringTool: doc/SConscript
+RefactoringTool: src/setup.py
+RefactoringTool: src/test_files.py
+RefactoringTool: src/test_setup.py
+RefactoringTool: src/test_strings.py
+RefactoringTool: src/engine/SCons/Action.py
+RefactoringTool: src/engine/SCons/ActionTests.py
+RefactoringTool: src/engine/SCons/Builder.py
+RefactoringTool: src/engine/SCons/BuilderTests.py
+RefactoringTool: src/engine/SCons/Defaults.py
+RefactoringTool: src/engine/SCons/Environment.py
+RefactoringTool: src/engine/SCons/EnvironmentTests.py
+RefactoringTool: src/engine/SCons/Errors.py
+RefactoringTool: src/engine/SCons/Executor.py
+RefactoringTool: src/engine/SCons/ExecutorTests.py
+RefactoringTool: src/engine/SCons/Memoize.py
+RefactoringTool: src/engine/SCons/SConf.py
+RefactoringTool: src/engine/SCons/SubstTests.py
+RefactoringTool: src/engine/SCons/Util.py
+RefactoringTool: src/engine/SCons/cpp.py
+RefactoringTool: src/engine/SCons/cppTests.py
+RefactoringTool: src/engine/SCons/exitfuncs.py
+RefactoringTool: src/engine/SCons/Node/Alias.py
+RefactoringTool: src/engine/SCons/Node/FS.py
+RefactoringTool: src/engine/SCons/Node/FSTests.py
+RefactoringTool: src/engine/SCons/Node/NodeTests.py
+RefactoringTool: src/engine/SCons/Node/Python.py
+RefactoringTool: src/engine/SCons/Node/__init__.py
+RefactoringTool: src/engine/SCons/Options/BoolOption.py
+RefactoringTool: src/engine/SCons/Options/EnumOption.py
+RefactoringTool: src/engine/SCons/Options/ListOption.py
+RefactoringTool: src/engine/SCons/Options/PackageOption.py
+RefactoringTool: src/engine/SCons/Options/PathOption.py
+RefactoringTool: src/engine/SCons/Options/__init__.py
+RefactoringTool: src/engine/SCons/Platform/win32.py
+RefactoringTool: src/engine/SCons/Scanner/C.py
+RefactoringTool: src/engine/SCons/Scanner/Dir.py
+RefactoringTool: src/engine/SCons/Scanner/Fortran.py
+RefactoringTool: src/engine/SCons/Scanner/LaTeX.py
+RefactoringTool: src/engine/SCons/Scanner/Prog.py
+RefactoringTool: src/engine/SCons/Scanner/__init__.py
+RefactoringTool: src/engine/SCons/Script/Main.py
+RefactoringTool: src/engine/SCons/Script/SConsOptions.py
+RefactoringTool: src/engine/SCons/Script/SConscript.py
+RefactoringTool: src/engine/SCons/Tool/__init__.py
+RefactoringTool: src/engine/SCons/Tool/icl.py
+RefactoringTool: src/engine/SCons/Tool/install.py
+RefactoringTool: src/engine/SCons/Tool/javac.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/sdk.py
+RefactoringTool: src/engine/SCons/Tool/packaging/__init__.py
+RefactoringTool: src/engine/SCons/Tool/packaging/ipk.py
+RefactoringTool: src/engine/SCons/Tool/packaging/msi.py
+RefactoringTool: src/engine/SCons/Tool/packaging/rpm.py
+RefactoringTool: src/engine/SCons/Variables/__init__.py
+RefactoringTool: test/Copy-Action.py
+RefactoringTool: test/Perforce/Perforce.py
+RefactoringTool: QMTest/TestCmd.py
+RefactoringTool: QMTest/TestCommon.py
+RefactoringTool: QMTest/TestRuntest.py
+RefactoringTool: QMTest/TestSCons.py
+RefactoringTool: QMTest/TestSConsMSVS.py
+RefactoringTool: QMTest/TestSCons_time.py
+RefactoringTool: QMTest/TestSConsign.py
+RefactoringTool: QMTest/unittest.py
+RefactoringTool: bin/scons-test.py
+RefactoringTool: bin/scons-unzip.py
+RefactoringTool: bench/bench.py
+RefactoringTool: bench/env.__setitem__.py
+--- SConstruct (original)
++++ SConstruct (refactored)
+@@ -832,7 +832,7 @@
+     # Now go through and arrange to create whatever packages we can.
+     #
+     build_src_files = map(lambda x, b=build: os.path.join(b, x), src_files)
+-    apply(Local, build_src_files, {})
++    Local(*build_src_files)
+ 
+     distutils_formats = []
+ 
+@@ -1241,7 +1241,7 @@
+ 
+         env.Command(b_psv_stamp, src_deps + b_ps_files, cmds)
+ 
+-        apply(Local, b_ps_files, {})
++        Local(*b_ps_files)
+ 
+         if gzip:
+ 
+--- doc/SConscript (original)
++++ doc/SConscript (refactored)
+@@ -92,7 +92,7 @@
+                 if tail == 'doc':
+                     break
+                 a = [tail] + a
+-            file = apply(os.path.join, a, {})
++            file = os.path.join(*a)
+         includes.append(file)
+ 
+     return includes
+--- src/setup.py (original)
++++ src/setup.py (refactored)
+@@ -414,7 +414,7 @@
+                           'build_scripts'   : build_scripts}
+ }
+ 
+-apply(distutils.core.setup, (), arguments)
++distutils.core.setup(**arguments)
+ 
+ if Installed:
+     print '\n'.join(Installed)
+--- src/test_files.py (original)
++++ src/test_files.py (refactored)
+@@ -46,7 +46,7 @@
+     cwd = os.getcwd()
+ 
+ def build_path(*args):
+-    return apply(os.path.join, (cwd, 'build',) + args)
++    return os.path.join(*(cwd, 'build',) + args)
+ 
+ build_scons_tar_gz  = build_path('unpack-tar-gz', 'scons-'+test.scons_version)
+ build_scons_zip     = build_path('unpack-zip', 'scons-'+test.scons_version)
+--- src/test_setup.py (original)
++++ src/test_setup.py (refactored)
+@@ -116,7 +116,7 @@
+         kw['chdir'] = scons_version
+         kw['program'] = python
+         kw['stderr'] = None
+-        return apply(TestSCons.TestSCons.run, (self,)+args, kw)
++        return TestSCons.TestSCons.run(*(self,)+args, **kw)
+ 
+     def remove(self, dir):
+         try: shutil.rmtree(dir)
+--- src/test_strings.py (original)
++++ src/test_strings.py (refactored)
+@@ -46,7 +46,7 @@
+ scons_version = TestSCons.SConsVersion
+ 
+ def build_path(*args):
+-    return apply(os.path.join, ('build',)+args)
++    return os.path.join(*('build',)+args)
+ 
+ build_scons     = build_path('scons')
+ build_local     = build_path('scons-local', 'scons-local-'+scons_version)
+--- src/engine/SCons/Action.py (original)
++++ src/engine/SCons/Action.py (refactored)
+@@ -353,7 +353,7 @@
+ 
+     if is_List(act):
+         #TODO(1.5) return CommandAction(act, **kw)
+-        return apply(CommandAction, (act,), kw)
++        return CommandAction(act, **kw)
+ 
+     if callable(act):
+         try:
+@@ -380,7 +380,7 @@
+         commands = str(act).split('\n')
+         if len(commands) == 1:
+             #TODO(1.5) return CommandAction(commands[0], **kw)
+-            return apply(CommandAction, (commands[0],), kw)
++            return CommandAction(commands[0], **kw)
+         # The list of string commands may include a LazyAction, so we
+         # reprocess them via _do_create_list_action.
+         return _do_create_list_action(commands, kw)
+@@ -654,7 +654,7 @@
+ 
+     try:
+         #FUTURE return subprocess.Popen(cmd, **kw)
+-        return apply(subprocess.Popen, (cmd,), kw)
++        return subprocess.Popen(cmd, **kw)
+     except EnvironmentError, e:
+         if error == 'raise': raise
+         # return a dummy Popen instance that only returns error
+@@ -684,7 +684,7 @@
+         if __debug__: logInstanceCreation(self, 'Action.CommandAction')
+ 
+         #TODO(1.5) _ActionAction.__init__(self, **kw)
+-        apply(_ActionAction.__init__, (self,), kw)
++        _ActionAction.__init__(self, **kw)
+         if is_List(cmd):
+             if filter(is_List, cmd):
+                 raise TypeError, "CommandAction should be given only " \
+@@ -859,7 +859,7 @@
+                              env=env,
+                              for_signature=for_signature)
+         #TODO(1.5) gen_cmd = Action(ret, **self.gen_kw)
+-        gen_cmd = apply(Action, (ret,), self.gen_kw)
++        gen_cmd = Action(ret, **self.gen_kw)
+         if not gen_cmd:
+             raise SCons.Errors.UserError("Object returned from command generator: %s cannot be used to create an Action." % repr(ret))
+         return gen_cmd
+@@ -929,7 +929,7 @@
+     def __init__(self, var, kw):
+         if __debug__: logInstanceCreation(self, 'Action.LazyAction')
+         #FUTURE CommandAction.__init__(self, '${'+var+'}', **kw)
+-        apply(CommandAction.__init__, (self, '${'+var+'}'), kw)
++        CommandAction.__init__(self, '${'+var+'}', **kw)
+         self.var = SCons.Util.to_String(var)
+         self.gen_kw = kw
+ 
+@@ -945,7 +945,7 @@
+         else:
+             c = ''
+         #TODO(1.5) gen_cmd = Action(c, **self.gen_kw)
+-        gen_cmd = apply(Action, (c,), self.gen_kw)
++        gen_cmd = Action(c, **self.gen_kw)
+         if not gen_cmd:
+             raise SCons.Errors.UserError("$%s value %s cannot be used to create an Action." % (self.var, repr(c)))
+         return gen_cmd
+@@ -957,7 +957,7 @@
+         args = (self, target, source, env) + args
+         c = self.get_parent_class(env)
+         #TODO(1.5) return c.__call__(*args, **kw)
+-        return apply(c.__call__, args, kw)
++        return c.__call__(*args, **kw)
+ 
+     def get_presig(self, target, source, env):
+         c = self.get_parent_class(env)
+@@ -986,7 +986,7 @@
+                 self.funccontents = _object_contents(execfunction)
+ 
+         #TODO(1.5) _ActionAction.__init__(self, **kw)
+-        apply(_ActionAction.__init__, (self,), kw)
++        _ActionAction.__init__(self, **kw)
+ 
+     def function_name(self):
+         try:
+@@ -1215,17 +1215,17 @@
+         args = self.subst_args(target, source, env)
+         kw = self.subst_kw(target, source, env)
+         #TODO(1.5) return self.parent.actfunc(*args, **kw)
+-        return apply(self.parent.actfunc, args, kw)
++        return self.parent.actfunc(*args, **kw)
+ 
+     def strfunction(self, target, source, env):
+         args = self.subst_args(target, source, env)
+         kw = self.subst_kw(target, source, env)
+         #TODO(1.5) return self.parent.strfunc(*args, **kw)
+-        return apply(self.parent.strfunc, args, kw)
++        return self.parent.strfunc(*args, **kw)
+ 
+     def __str__(self):
+         #TODO(1.5) return self.parent.strfunc(*self.args, **self.kw)
+-        return apply(self.parent.strfunc, self.args, self.kw)
++        return self.parent.strfunc(*self.args, **self.kw)
+ 
+ class ActionFactory:
+     """A factory class that will wrap up an arbitrary function
+--- src/engine/SCons/ActionTests.py (original)
++++ src/engine/SCons/ActionTests.py (refactored)
+@@ -192,7 +192,7 @@
+ def test_varlist(pos_call, str_call, cmd, cmdstrfunc, **kw):
+     def call_action(a, pos_call=pos_call, str_call=str_call, kw=kw):
+         #FUTURE a = SCons.Action.Action(*a, **kw)
+-        a = apply(SCons.Action.Action, a, kw)
++        a = SCons.Action.Action(*a, **kw)
+         # returned object must provide these entry points
+         assert hasattr(a, '__call__')
+         assert hasattr(a, 'get_contents')
+@@ -228,7 +228,7 @@
+     """Test that Action() returns the expected type and that positional args work.
+     """
+     #FUTURE act = SCons.Action.Action(cmd, **kw)
+-    act = apply(SCons.Action.Action, (cmd,), kw)
++    act = SCons.Action.Action(cmd, **kw)
+     pos_callback(act)
+     assert act.varlist is (), act.varlist
+ 
+@@ -236,7 +236,7 @@
+         # only valid cmdstrfunc is None
+         def none(a): pass
+         #FUTURE test_varlist(pos_callback, none, cmd, None, **kw)
+-        apply(test_varlist, (pos_callback, none, cmd, None), kw)
++        test_varlist(pos_callback, none, cmd, None, **kw)
+     else:
+         # _ActionAction should have set these
+         assert hasattr(act, 'strfunction')
+@@ -250,25 +250,25 @@
+             assert hasattr(a, 'strfunction')
+             assert a.cmdstr == 'cmdstr', a.cmdstr
+         #FUTURE test_varlist(pos_callback, cmdstr, cmd, 'cmdstr', **kw)
+-        apply(test_varlist, (pos_callback, cmdstr, cmd, 'cmdstr'), kw)
++        test_varlist(pos_callback, cmdstr, cmd, 'cmdstr', **kw)
+ 
+         def fun(): pass
+         def strfun(a, fun=fun):
+             assert a.strfunction is fun, a.strfunction
+             assert a.cmdstr == _null, a.cmdstr
+         #FUTURE test_varlist(pos_callback, strfun, cmd, fun, **kw)
+-        apply(test_varlist, (pos_callback, strfun, cmd, fun), kw)
++        test_varlist(pos_callback, strfun, cmd, fun, **kw)
+ 
+         def none(a):
+             assert hasattr(a, 'strfunction')
+             assert a.cmdstr is None, a.cmdstr
+         #FUTURE test_varlist(pos_callback, none, cmd, None, **kw)
+-        apply(test_varlist, (pos_callback, none, cmd, None), kw)
++        test_varlist(pos_callback, none, cmd, None, **kw)
+ 
+         """Test handling of bad cmdstrfunc arguments """
+         try:
+             #FUTURE a = SCons.Action.Action(cmd, [], **kw)
+-            a = apply(SCons.Action.Action, (cmd, []), kw)
++            a = SCons.Action.Action(cmd, [], **kw)
+         except SCons.Errors.UserError, e:
+             s = str(e)
+             m = 'Invalid command display variable'
+--- src/engine/SCons/Builder.py (original)
++++ src/engine/SCons/Builder.py (refactored)
+@@ -272,7 +272,7 @@
+         elif SCons.Util.is_List(emitter):
+             kw['emitter'] = ListEmitter(emitter)
+ 
+-    result = apply(BuilderBase, (), kw)
++    result = BuilderBase(**kw)
+ 
+     if not composite is None:
+         result = CompositeBuilder(result, composite)
+--- src/engine/SCons/BuilderTests.py (original)
++++ src/engine/SCons/BuilderTests.py (refactored)
+@@ -125,7 +125,7 @@
+     def get(self, key, value=None):
+         return self.d.get(key, value)
+     def Override(self, overrides):
+-        env = apply(Environment, (), self.d)
++        env = Environment(**self.d)
+         env.d.update(overrides)
+         env.scanner = self.scanner
+         return env
+--- src/engine/SCons/Defaults.py (original)
++++ src/engine/SCons/Defaults.py (refactored)
+@@ -87,7 +87,7 @@
+     global _default_env
+     if not _default_env:
+         import SCons.Util
+-        _default_env = apply(SCons.Environment.Environment, args, kw)
++        _default_env = SCons.Environment.Environment(*args, **kw)
+         if SCons.Util.md5:
+             _default_env.Decider('MD5')
+         else:
+@@ -449,7 +449,7 @@
+                 v = frame.f_locals[variable]
+                 if v:
+                     method = getattr(v, self.method)
+-                    return apply(method, args, kw)
++                    return method(*args, **kw)
+             frame = frame.f_back
+         return None
+ 
+--- src/engine/SCons/Environment.py (original)
++++ src/engine/SCons/Environment.py (refactored)
+@@ -101,7 +101,7 @@
+         if SCons.Util.is_List(tool) or type(tool)==type(()):
+             toolname = tool[0]
+             toolargs = tool[1] # should be a dict of kw args
+-            tool = apply(env.Tool, (toolname,), toolargs)
++            tool = env.Tool(toolname, **toolargs)
+         else:
+             env.Tool(tool)
+ 
+@@ -217,7 +217,7 @@
+ 
+     def __call__(self, *args, **kwargs):
+         nargs = (self.object,) + args
+-        return apply(self.method, nargs, kwargs)
++        return self.method(*nargs, **kwargs)
+ 
+     def clone(self, new_object):
+         """
+@@ -253,7 +253,7 @@
+             target = [target]
+         if source is not None and not SCons.Util.is_List(source):
+             source = [source]
+-        return apply(MethodWrapper.__call__, (self, target, source) + args, kw)
++        return MethodWrapper.__call__(*(self, target, source) + args, **kw)
+ 
+     def __repr__(self):
+         return '<BuilderWrapper %s>' % repr(self.name)
+@@ -467,7 +467,7 @@
+                     if SCons.Util.is_String(n):
+                         # n = self.subst(n, raw=1, **kw)
+                         kw['raw'] = 1
+-                        n = apply(self.subst, (n,), kw)
++                        n = self.subst(n, **kw)
+                         if node_factory:
+                             n = node_factory(n)
+                     if SCons.Util.is_List(n):
+@@ -477,7 +477,7 @@
+                 elif node_factory:
+                     # v = node_factory(self.subst(v, raw=1, **kw))
+                     kw['raw'] = 1
+-                    v = node_factory(apply(self.subst, (v,), kw))
++                    v = node_factory(self.subst(v, **kw))
+                     if SCons.Util.is_List(v):
+                         nodes.extend(v)
+                     else:
+@@ -583,7 +583,7 @@
+         if not SCons.Util.is_List(command): kw['shell'] = True
+         # run constructed command
+         #TODO(1.5) p = SCons.Action._subproc(self, command, **kw)
+-        p = apply(SCons.Action._subproc, (self, command), kw)
++        p = SCons.Action._subproc(self, command, **kw)
+         out,err = p.communicate()
+         status = p.wait()
+         if err:
+@@ -803,7 +803,7 @@
+         if not SCons.Util.is_Dict(args):
+             args = self.ParseFlags(args)
+         if not unique:
+-            apply(self.Append, (), args)
++            self.Append(**args)
+             return self
+         for key, value in args.items():
+             if not value:
+@@ -980,7 +980,7 @@
+             # old "options" keyword.
+             variables = kw['options']
+             del kw['options']
+-        apply(self.Replace, (), kw)
++        self.Replace(**kw)
+         keys = kw.keys()
+         if variables:
+             keys = keys + variables.keys()
+@@ -1323,12 +1323,12 @@
+         new = {}
+         for key, value in kw.items():
+             new[key] = SCons.Subst.scons_subst_once(value, self, key)
+-        apply(clone.Replace, (), new)
++        clone.Replace(**new)
+ 
+         apply_tools(clone, tools, toolpath)
+ 
+         # apply them again in case the tools overwrote them
+-        apply(clone.Replace, (), new)        
++        clone.Replace(**new)        
+ 
+         # Finally, apply any flags to be merged in
+         if parse_flags: clone.MergeFlags(parse_flags)
+@@ -1342,7 +1342,7 @@
+             msg = "The env.Copy() method is deprecated; use the env.Clone() method instead."
+             SCons.Warnings.warn(SCons.Warnings.DeprecatedCopyWarning, msg)
+             _warn_copy_deprecated = False
+-        return apply(self.Clone, args, kw)
++        return self.Clone(*args, **kw)
+ 
+     def _changed_build(self, dependency, target, prev_ni):
+         if dependency.changed_state(target, prev_ni):
+@@ -1688,7 +1688,7 @@
+         for k in kw.keys():
+             if self._dict.has_key(k):
+                 del kw[k]
+-        apply(self.Replace, (), kw)
++        self.Replace(**kw)
+ 
+     def _find_toolpath_dir(self, tp):
+         return self.fs.Dir(self.subst(tp)).srcnode().abspath
+@@ -1699,7 +1699,7 @@
+             if toolpath is None:
+                 toolpath = self.get('toolpath', [])
+             toolpath = map(self._find_toolpath_dir, toolpath)
+-            tool = apply(SCons.Tool.Tool, (tool, toolpath), kw)
++            tool = SCons.Tool.Tool(tool, toolpath, **kw)
+         tool(self)
+ 
+     def WhereIs(self, prog, path=None, pathext=None, reject=[]):
+@@ -1739,7 +1739,7 @@
+             return a
+         nargs = map(subst_string, args)
+         nkw = self.subst_kw(kw)
+-        return apply(SCons.Action.Action, nargs, nkw)
++        return SCons.Action.Action(*nargs, **nkw)
+ 
+     def AddPreAction(self, files, action):
+         nodes = self.arg2nodes(files, self.fs.Entry)
+@@ -1792,7 +1792,7 @@
+             'multi'             : 1,
+             'is_explicit'       : None,
+         })
+-        bld = apply(SCons.Builder.Builder, (), nkw)
++        bld = SCons.Builder.Builder(**nkw)
+ 
+         # Apply the Builder separately to each target so that the Aliases
+         # stay separate.  If we did one "normal" Builder call with the
+@@ -1809,7 +1809,7 @@
+                 b = bld
+             else:
+                 nkw['action'] = b.action + action
+-                b = apply(SCons.Builder.Builder, (), nkw)
++                b = SCons.Builder.Builder(**nkw)
+             t.convert()
+             result.extend(b(self, t, t.sources + source))
+         return result
+@@ -1826,11 +1826,11 @@
+         if kw.has_key('build_dir'):
+             kw['variant_dir'] = kw['build_dir']
+             del kw['build_dir']
+-        return apply(self.VariantDir, args, kw)
++        return self.VariantDir(*args, **kw)
+ 
+     def Builder(self, **kw):
+         nkw = self.subst_kw(kw)
+-        return apply(SCons.Builder.Builder, (), nkw)
++        return SCons.Builder.Builder(**nkw)
+ 
+     def CacheDir(self, path):
+         import SCons.CacheDir
+@@ -1858,7 +1858,7 @@
+             nkw['custom_tests'] = self.subst_kw(nkw['custom_tests'])
+         except KeyError:
+             pass
+-        return apply(SCons.SConf.SConf, nargs, nkw)
++        return SCons.SConf.SConf(*nargs, **nkw)
+ 
+     def Command(self, target, source, action, **kw):
+         """Builds the supplied target files from the supplied
+@@ -1873,8 +1873,8 @@
+         try: bkw['source_scanner'] = kw['source_scanner']
+         except KeyError: pass
+         else: del kw['source_scanner']
+-        bld = apply(SCons.Builder.Builder, (), bkw)
+-        return apply(bld, (self, target, source), kw)
++        bld = SCons.Builder.Builder(**bkw)
++        return bld(self, target, source, **kw)
+ 
+     def Depends(self, target, dependency):
+         """Explicity specify that 'target's depend on 'dependency'."""
+@@ -1891,9 +1891,9 @@
+         if SCons.Util.is_Sequence(s):
+             result=[]
+             for e in s:
+-                result.append(apply(self.fs.Dir, (e,) + args, kw))
++                result.append(self.fs.Dir(*(e,) + args, **kw))
+             return result
+-        return apply(self.fs.Dir, (s,) + args, kw)
++        return self.fs.Dir(*(s,) + args, **kw)
+ 
+     def NoClean(self, *targets):
+         """Tags a target so that it will not be cleaned by -c"""
+@@ -1920,17 +1920,17 @@
+         if SCons.Util.is_Sequence(s):
+             result=[]
+             for e in s:
+-                result.append(apply(self.fs.Entry, (e,) + args, kw))
++                result.append(self.fs.Entry(*(e,) + args, **kw))
+             return result
+-        return apply(self.fs.Entry, (s,) + args, kw)
++        return self.fs.Entry(*(s,) + args, **kw)
+ 
+     def Environment(self, **kw):
+-        return apply(SCons.Environment.Environment, (), self.subst_kw(kw))
++        return SCons.Environment.Environment(**self.subst_kw(kw))
+ 
+     def Execute(self, action, *args, **kw):
+         """Directly execute an action through an Environment
+         """
+-        action = apply(self.Action, (action,) + args, kw)
++        action = self.Action(*(action,) + args, **kw)
+         result = action([], [], self)
+         if isinstance(result, SCons.Errors.BuildError):
+             errstr = result.errstr
+@@ -1948,9 +1948,9 @@
+         if SCons.Util.is_Sequence(s):
+             result=[]
+             for e in s:
+-                result.append(apply(self.fs.File, (e,) + args, kw))
++                result.append(self.fs.File(*(e,) + args, **kw))
+             return result
+-        return apply(self.fs.File, (s,) + args, kw)
++        return self.fs.File(*(s,) + args, **kw)
+ 
+     def FindFile(self, file, dirs):
+         file = self.subst(file)
+@@ -2003,7 +2003,7 @@
+ 
+     def Repository(self, *dirs, **kw):
+         dirs = self.arg2nodes(list(dirs), self.fs.Dir)
+-        apply(self.fs.Repository, dirs, kw)
++        self.fs.Repository(*dirs, **kw)
+ 
+     def Requires(self, target, prerequisite):
+         """Specify that 'prerequisite' must be built before 'target',
+@@ -2022,7 +2022,7 @@
+                 arg = self.subst(arg)
+             nargs.append(arg)
+         nkw = self.subst_kw(kw)
+-        return apply(SCons.Scanner.Base, nargs, nkw)
++        return SCons.Scanner.Base(*nargs, **nkw)
+ 
+     def SConsignFile(self, name=".sconsign", dbm_module=None):
+         if name is not None:
+@@ -2310,13 +2310,13 @@
+             nkw = kwargs.copy()
+             nkw['gvars'] = {}
+             self.raw_to_mode(nkw)
+-            return apply(SCons.Subst.scons_subst_list, nargs, nkw)
++            return SCons.Subst.scons_subst_list(*nargs, **nkw)
+         def subst_target_source(self, string, *args, **kwargs):
+             nargs = (string, self,) + args
+             nkw = kwargs.copy()
+             nkw['gvars'] = {}
+             self.raw_to_mode(nkw)
+-            return apply(SCons.Subst.scons_subst, nargs, nkw)
++            return SCons.Subst.scons_subst(*nargs, **nkw)
+     return _NoSubstitutionProxy(subject)
+ 
+ # Local Variables:
+--- src/engine/SCons/EnvironmentTests.py (original)
++++ src/engine/SCons/EnvironmentTests.py (refactored)
+@@ -173,7 +173,7 @@
+             kw['BUILDERS'] = {'Object' : static_obj}
+             static_obj.add_action('.cpp', 'fake action')
+             
+-        env = apply(Environment, args, kw)
++        env = Environment(*args, **kw)
+         return env
+ 
+ class SubstitutionTestCase(unittest.TestCase):
+@@ -3926,9 +3926,9 @@
+ 
+         args = ('$XXX $TARGET $SOURCE $YYY',)
+         kw = {'target' : DummyNode('ttt'), 'source' : DummyNode('sss')}
+-        x = apply(env.subst_target_source, args, kw)
++        x = env.subst_target_source(*args, **kw)
+         assert x == 'x ttt sss y', x
+-        x = apply(proxy.subst_target_source, args, kw)
++        x = proxy.subst_target_source(*args, **kw)
+         assert x == ' ttt sss ', x
+ 
+ class EnvironmentVariableTestCase(unittest.TestCase):
+--- src/engine/SCons/Errors.py (original)
++++ src/engine/SCons/Errors.py (refactored)
+@@ -133,7 +133,7 @@
+         self.node = node
+         self.status = status
+         self.exitstatus = status
+-        apply(Exception.__init__, (self,) + args)
++        Exception.__init__(*(self,) + args)
+ 
+ def convert_to_BuildError(status, exc_info=None):
+     """
+--- src/engine/SCons/Executor.py (original)
++++ src/engine/SCons/Executor.py (refactored)
+@@ -341,7 +341,7 @@
+         for act in self.get_action_list():
+             #args = (self.get_all_targets(), self.get_all_sources(), env)
+             args = ([], [], env)
+-            status = apply(act, args, kw)
++            status = act(*args, **kw)
+             if isinstance(status, SCons.Errors.BuildError):
+                 status.executor = self
+                 raise status
+--- src/engine/SCons/ExecutorTests.py (original)
++++ src/engine/SCons/ExecutorTests.py (refactored)
+@@ -38,7 +38,7 @@
+     def Override(self, overrides):
+         d = self._dict.copy()
+         d.update(overrides)
+-        return apply(MyEnvironment, (), d)
++        return MyEnvironment(**d)
+     def _update(self, dict):
+         self._dict.update(dict)
+ 
+@@ -47,7 +47,7 @@
+         self.actions = actions
+     def __call__(self, target, source, env, **kw):
+         for action in self.actions:
+-            apply(action, (target, source, env), kw)
++            action(target, source, env, **kw)
+     def genstring(self, target, source, env):
+         return ' '.join(['GENSTRING'] + map(str, self.actions) + target + source)
+     def get_contents(self, target, source, env):
+@@ -78,7 +78,7 @@
+                                            [],
+                                            [self],
+                                            ['s1', 's2'])
+-        apply(executor, (self,))
++        executor(self)
+     def get_env_scanner(self, env, kw):
+         return MyScanner('dep-')
+     def get_implicit_deps(self, env, scanner, path):
+--- src/engine/SCons/Memoize.py (original)
++++ src/engine/SCons/Memoize.py (refactored)
+@@ -169,7 +169,7 @@
+             self.hit = self.hit + 1
+         else:
+             self.miss = self.miss + 1
+-        return apply(self.underlying_method, args, kw)
++        return self.underlying_method(*args, **kw)
+ 
+ class CountDict(Counter):
+     """
+@@ -199,12 +199,12 @@
+         except KeyError:
+             self.miss = self.miss + 1
+         else:
+-            key = apply(self.keymaker, args, kw)
++            key = self.keymaker(*args, **kw)
+             if memo_dict.has_key(key):
+                 self.hit = self.hit + 1
+             else:
+                 self.miss = self.miss + 1
+-        return apply(self.underlying_method, args, kw)
++        return self.underlying_method(*args, **kw)
+ 
+ class Memoizer:
+     """Object which performs caching of method calls for its 'primary'
+--- src/engine/SCons/SConf.py (original)
++++ src/engine/SCons/SConf.py (refactored)
+@@ -243,7 +243,7 @@
+                 def excepthook(type, value, tb):
+                     traceback.print_tb(tb)
+                     print type, value
+-            apply(excepthook, self.exc_info())
++            excepthook(*self.exc_info())
+         return SCons.Taskmaster.Task.failed(self)
+ 
+     def collect_node_states(self):
+@@ -642,7 +642,7 @@
+                 raise (SCons.Errors.UserError,
+                        "Test called after sconf.Finish()")
+             context = CheckContext(self.sconf)
+-            ret = apply(self.test, (context,) +  args, kw)
++            ret = self.test(*(context,) +  args, **kw)
+             if self.sconf.config_h is not None:
+                 self.sconf.config_h_text = self.sconf.config_h_text + context.config_h
+             context.Result("error: no result")
+@@ -801,19 +801,19 @@
+             self.did_show_result = 1
+ 
+     def TryBuild(self, *args, **kw):
+-        return apply(self.sconf.TryBuild, args, kw)
++        return self.sconf.TryBuild(*args, **kw)
+ 
+     def TryAction(self, *args, **kw):
+-        return apply(self.sconf.TryAction, args, kw)
++        return self.sconf.TryAction(*args, **kw)
+ 
+     def TryCompile(self, *args, **kw):
+-        return apply(self.sconf.TryCompile, args, kw)
++        return self.sconf.TryCompile(*args, **kw)
+ 
+     def TryLink(self, *args, **kw):
+-        return apply(self.sconf.TryLink, args, kw)
++        return self.sconf.TryLink(*args, **kw)
+ 
+     def TryRun(self, *args, **kw):
+-        return apply(self.sconf.TryRun, args, kw)
++        return self.sconf.TryRun(*args, **kw)
+ 
+     def __getattr__( self, attr ):
+         if( attr == 'env' ):
+@@ -886,7 +886,7 @@
+                 del kw[bt]
+             except KeyError:
+                 pass
+-        return apply(SConfBase, args, kw)
++        return SConfBase(*args, **kw)
+     else:
+         return SCons.Util.Null()
+ 
+--- src/engine/SCons/SubstTests.py (original)
++++ src/engine/SCons/SubstTests.py (refactored)
+@@ -241,7 +241,7 @@
+             input, expect = cases[:2]
+             expect = convert(expect)
+             try:
+-                result = apply(function, (input, env), kwargs)
++                result = function(input, env, **kwargs)
+             except Exception, e:
+                 fmt = "    input %s generated %s (%s)"
+                 print fmt % (repr(input), e.__class__.__name__, repr(e))
+--- src/engine/SCons/Util.py (original)
++++ src/engine/SCons/Util.py (refactored)
+@@ -126,9 +126,8 @@
+         return iter(self.data)
+ 
+     def __call__(self, *args, **kwargs):
+-        result = map(lambda x, args=args, kwargs=kwargs: apply(x,
+-                                                               args,
+-                                                               kwargs),
++        result = map(lambda x, args=args, kwargs=kwargs: x(*args,
++                                                               **kwargs),
+                      self.data)
+         return self.__class__(result)
+ 
+@@ -1402,7 +1401,7 @@
+     def sort(self, *args, **kwds):
+         self.__make_unique()
+         #return UserList.sort(self, *args, **kwds)
+-        return apply(UserList.sort, (self,)+args, kwds)
++        return UserList.sort(*(self,)+args, **kwds)
+     def extend(self, other):
+         UserList.extend(self, other)
+         self.unique = False
+@@ -1605,7 +1604,7 @@
+     def __new__(cls, *args, **kwargs):
+         if not '_inst' in vars(cls):
+             #cls._inst = type.__new__(cls, *args, **kwargs)
+-            cls._inst = apply(type.__new__, (cls,) + args, kwargs)
++            cls._inst = type.__new__(*(cls,) + args, **kwargs)
+         return cls._inst
+     def __init__(self, *args, **kwargs):
+         pass
+--- src/engine/SCons/cpp.py (original)
++++ src/engine/SCons/cpp.py (refactored)
+@@ -562,7 +562,7 @@
+                 s = self.cpp_namespace[m.group(1)]
+                 if callable(s):
+                     args = function_arg_separator.split(m.group(2))
+-                    s = apply(s, args)
++                    s = s(*args)
+             if not s:
+                 return None
+         return (t[0], s[0], s[1:-1])
+@@ -583,7 +583,7 @@
+     to tailor its behavior.
+     """
+     def __init__(self, *args, **kw):
+-        apply(PreProcessor.__init__, (self,)+args, kw)
++        PreProcessor.__init__(*(self,)+args, **kw)
+         d = self.default_table
+         for func in ['if', 'elif', 'else', 'endif', 'ifdef', 'ifndef']:
+             d[func] = d[func] = self.do_nothing
+--- src/engine/SCons/cppTests.py (original)
++++ src/engine/SCons/cppTests.py (refactored)
+@@ -674,7 +674,7 @@
+         """)
+         class MyPreProcessor(cpp.DumbPreProcessor):
+             def __init__(self, *args, **kw):
+-                apply(cpp.DumbPreProcessor.__init__, (self,) + args, kw)
++                cpp.DumbPreProcessor.__init__(*(self,) + args, **kw)
+                 self.files = []
+             def __call__(self, file):
+                 self.files.append(file)
+--- src/engine/SCons/exitfuncs.py (original)
++++ src/engine/SCons/exitfuncs.py (refactored)
+@@ -41,7 +41,7 @@
+ 
+     while _exithandlers:
+         func, targs, kargs =  _exithandlers.pop()
+-        apply(func, targs, kargs)
++        func(*targs, **kargs)
+ 
+ def register(func, *targs, **kargs):
+     """register a function to be executed upon normal program termination
+--- src/engine/SCons/Node/Alias.py (original)
++++ src/engine/SCons/Node/Alias.py (refactored)
+@@ -45,7 +45,7 @@
+         try:
+             a = self[name]
+         except KeyError:
+-            a = apply(SCons.Node.Alias.Alias, (name,), kw)
++            a = SCons.Node.Alias.Alias(name, **kw)
+             self[name] = a
+         return a
+ 
+--- src/engine/SCons/Node/FS.py (original)
++++ src/engine/SCons/Node/FS.py (refactored)
+@@ -1326,7 +1326,7 @@
+                 if start_dir.is_under(bd):
+                     # If already in the build-dir location, don't reflect
+                     return [orig], fmt % str(orig)
+-                p = apply(os.path.join, [bd.path] + tail)
++                p = os.path.join(*[bd.path] + tail)
+                 targets.append(self.Entry(p))
+             tail = [dir.name] + tail
+             dir = dir.up()
+@@ -1621,7 +1621,7 @@
+         """A null "builder" for directories."""
+         global MkdirBuilder
+         if self.builder is not MkdirBuilder:
+-            apply(SCons.Node.Node.build, [self,], kw)
++            SCons.Node.Node.build(*[self,], **kw)
+ 
+     #
+     #
+--- src/engine/SCons/Node/FSTests.py (original)
++++ src/engine/SCons/Node/FSTests.py (refactored)
+@@ -1433,7 +1433,7 @@
+         test.subdir('sub', ['sub', 'dir'])
+ 
+         def drive_workpath(drive, dirs, test=test):
+-            x = apply(test.workpath, dirs)
++            x = test.workpath(*dirs)
+             drive, path = os.path.splitdrive(x)
+             return 'X:' + path
+ 
+@@ -1577,7 +1577,7 @@
+         d1 = fs.Dir('d1')
+         d2 = d1.Dir('d2')
+         dirs = os.path.normpath(d2.abspath).split(os.sep)
+-        above_path = apply(os.path.join, ['..']*len(dirs) + ['above'])
++        above_path = os.path.join(*['..']*len(dirs) + ['above'])
+         above = d2.Dir(above_path)
+ 
+     def test_rel_path(self):
+@@ -2247,7 +2247,7 @@
+         strings_kwargs = copy.copy(kwargs)
+         strings_kwargs['strings'] = True
+         for input, string_expect, node_expect in cases:
+-            r = apply(self.fs.Glob, (input,), strings_kwargs)
++            r = self.fs.Glob(input, **strings_kwargs)
+             r.sort()
+             assert r == string_expect, "Glob(%s, strings=True) expected %s, got %s" % (input, string_expect, r)
+ 
+@@ -2258,7 +2258,7 @@
+         # Verify those by running the list through str() before comparing
+         # them with the expected list of strings.
+         for input, string_expect, node_expect in cases:
+-            r = apply(self.fs.Glob, (input,), kwargs)
++            r = self.fs.Glob(input, **kwargs)
+             if node_expect:
+                 r.sort(lambda a,b: cmp(a.path, b.path))
+                 result = []
+--- src/engine/SCons/Node/NodeTests.py (original)
++++ src/engine/SCons/Node/NodeTests.py (refactored)
+@@ -124,7 +124,7 @@
+     def Override(self, overrides):
+         d = self._dict.copy()
+         d.update(overrides)
+-        return apply(Environment, (), d)
++        return Environment(**d)
+     def _update(self, dict):
+         self._dict.update(dict)
+     def get_factory(self, factory):
+--- src/engine/SCons/Node/Python.py (original)
++++ src/engine/SCons/Node/Python.py (refactored)
+@@ -67,7 +67,7 @@
+ 
+     def build(self, **kw):
+         if not hasattr(self, 'built_value'):
+-            apply (SCons.Node.Node.build, (self,), kw)
++            SCons.Node.Node.build(self, **kw)
+ 
+     is_up_to_date = SCons.Node.Node.children_are_up_to_date
+ 
+--- src/engine/SCons/Node/__init__.py (original)
++++ src/engine/SCons/Node/__init__.py (refactored)
+@@ -371,7 +371,7 @@
+ 
+         """
+         try:
+-            apply(self.get_executor(), (self,), kw)
++            self.get_executor()(self, **kw)
+         except SCons.Errors.BuildError, e:
+             e.node = self
+             raise
+--- src/engine/SCons/Options/BoolOption.py (original)
++++ src/engine/SCons/Options/BoolOption.py (refactored)
+@@ -41,7 +41,7 @@
+         msg = "The BoolOption() function is deprecated; use the BoolVariable() function instead."
+         SCons.Warnings.warn(SCons.Warnings.DeprecatedOptionsWarning, msg)
+         warned = True
+-    return apply(SCons.Variables.BoolVariable, args, kw)
++    return SCons.Variables.BoolVariable(*args, **kw)
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Options/EnumOption.py (original)
++++ src/engine/SCons/Options/EnumOption.py (refactored)
+@@ -41,7 +41,7 @@
+         msg = "The EnumOption() function is deprecated; use the EnumVariable() function instead."
+         SCons.Warnings.warn(SCons.Warnings.DeprecatedOptionsWarning, msg)
+         warned = True
+-    return apply(SCons.Variables.EnumVariable, args, kw)
++    return SCons.Variables.EnumVariable(*args, **kw)
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Options/ListOption.py (original)
++++ src/engine/SCons/Options/ListOption.py (refactored)
+@@ -41,7 +41,7 @@
+         msg = "The ListOption() function is deprecated; use the ListVariable() function instead."
+         SCons.Warnings.warn(SCons.Warnings.DeprecatedOptionsWarning, msg)
+         warned = True
+-    return apply(SCons.Variables.ListVariable, args, kw)
++    return SCons.Variables.ListVariable(*args, **kw)
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Options/PackageOption.py (original)
++++ src/engine/SCons/Options/PackageOption.py (refactored)
+@@ -41,7 +41,7 @@
+         msg = "The PackageOption() function is deprecated; use the PackageVariable() function instead."
+         SCons.Warnings.warn(SCons.Warnings.DeprecatedOptionsWarning, msg)
+         warned = True
+-    return apply(SCons.Variables.PackageVariable, args, kw)
++    return SCons.Variables.PackageVariable(*args, **kw)
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Options/PathOption.py (original)
++++ src/engine/SCons/Options/PathOption.py (refactored)
+@@ -45,27 +45,27 @@
+ 
+     def __call__(self, *args, **kw):
+         self.warn()
+-        return apply(SCons.Variables.PathVariable, args, kw)
++        return SCons.Variables.PathVariable(*args, **kw)
+ 
+     def PathAccept(self, *args, **kw):
+         self.warn()
+-        return apply(SCons.Variables.PathVariable.PathAccept, args, kw)
++        return SCons.Variables.PathVariable.PathAccept(*args, **kw)
+ 
+     def PathIsDir(self, *args, **kw):
+         self.warn()
+-        return apply(SCons.Variables.PathVariable.PathIsDir, args, kw)
++        return SCons.Variables.PathVariable.PathIsDir(*args, **kw)
+ 
+     def PathIsDirCreate(self, *args, **kw):
+         self.warn()
+-        return apply(SCons.Variables.PathVariable.PathIsDirCreate, args, kw)
++        return SCons.Variables.PathVariable.PathIsDirCreate(*args, **kw)
+ 
+     def PathIsFile(self, *args, **kw):
+         self.warn()
+-        return apply(SCons.Variables.PathVariable.PathIsFile, args, kw)
++        return SCons.Variables.PathVariable.PathIsFile(*args, **kw)
+ 
+     def PathExists(self, *args, **kw):
+         self.warn()
+-        return apply(SCons.Variables.PathVariable.PathExists, args, kw)
++        return SCons.Variables.PathVariable.PathExists(*args, **kw)
+ 
+ PathOption = _PathOptionClass()
+ 
+--- src/engine/SCons/Options/__init__.py (original)
++++ src/engine/SCons/Options/__init__.py (refactored)
+@@ -48,24 +48,20 @@
+             msg = "The Options class is deprecated; use the Variables class instead."
+             SCons.Warnings.warn(SCons.Warnings.DeprecatedOptionsWarning, msg)
+             warned = True
+-        apply(SCons.Variables.Variables.__init__,
+-              (self,) + args,
+-              kw)
++        SCons.Variables.Variables.__init__(*(self,) + args,
++              **kw)
+ 
+     def AddOptions(self, *args, **kw):
+-        return apply(SCons.Variables.Variables.AddVariables,
+-                     (self,) + args,
+-                     kw)
++        return SCons.Variables.Variables.AddVariables(*(self,) + args,
++                     **kw)
+ 
+     def UnknownOptions(self, *args, **kw):
+-        return apply(SCons.Variables.Variables.UnknownVariables,
+-                     (self,) + args,
+-                     kw)
++        return SCons.Variables.Variables.UnknownVariables(*(self,) + args,
++                     **kw)
+ 
+     def FormatOptionHelpText(self, *args, **kw):
+-        return apply(SCons.Variables.Variables.FormatVariableHelpText,
+-                     (self,) + args,
+-                     kw)
++        return SCons.Variables.Variables.FormatVariableHelpText(*(self,) + args,
++                     **kw)
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Platform/win32.py (original)
++++ src/engine/SCons/Platform/win32.py (refactored)
+@@ -66,14 +66,14 @@
+     _builtin_open = __builtin__.open
+     
+     def _scons_file(*args, **kw):
+-        fp = apply(_builtin_file, args, kw)
++        fp = _builtin_file(*args, **kw)
+         win32api.SetHandleInformation(msvcrt.get_osfhandle(fp.fileno()),
+                                       win32con.HANDLE_FLAG_INHERIT,
+                                       0)
+         return fp
+ 
+     def _scons_open(*args, **kw):
+-        fp = apply(_builtin_open, args, kw)
++        fp = _builtin_open(*args, **kw)
+         win32api.SetHandleInformation(msvcrt.get_osfhandle(fp.fileno()),
+                                       win32con.HANDLE_FLAG_INHERIT,
+                                       0)
+--- src/engine/SCons/Scanner/C.py (original)
++++ src/engine/SCons/Scanner/C.py (refactored)
+@@ -44,7 +44,7 @@
+     missing.
+     """
+     def __init__(self, *args, **kw):
+-        apply(SCons.cpp.PreProcessor.__init__, (self,)+args, kw)
++        SCons.cpp.PreProcessor.__init__(*(self,)+args, **kw)
+         self.missing = []
+     def initialize_result(self, fname):
+         self.result = SCons.Util.UniqueList([fname])
+--- src/engine/SCons/Scanner/Dir.py (original)
++++ src/engine/SCons/Scanner/Dir.py (refactored)
+@@ -35,14 +35,14 @@
+     directories for on-disk files"""
+     kw['node_factory'] = SCons.Node.FS.Entry
+     kw['recursive'] = only_dirs
+-    return apply(SCons.Scanner.Base, (scan_on_disk, "DirScanner"), kw)
++    return SCons.Scanner.Base(scan_on_disk, "DirScanner", **kw)
+ 
+ def DirEntryScanner(**kw):
+     """Return a prototype Scanner instance for "scanning"
+     directory Nodes for their in-memory entries"""
+     kw['node_factory'] = SCons.Node.FS.Entry
+     kw['recursive'] = None
+-    return apply(SCons.Scanner.Base, (scan_in_memory, "DirEntryScanner"), kw)
++    return SCons.Scanner.Base(scan_in_memory, "DirEntryScanner", **kw)
+ 
+ skip_entry = {}
+ 
+--- src/engine/SCons/Scanner/Fortran.py (original)
++++ src/engine/SCons/Scanner/Fortran.py (refactored)
+@@ -74,7 +74,7 @@
+         kw['skeys'] = suffixes
+         kw['name'] = name
+ 
+-        apply(SCons.Scanner.Current.__init__, (self,) + args, kw)
++        SCons.Scanner.Current.__init__(*(self,) + args, **kw)
+ 
+     def scan(self, node, env, path=()):
+ 
+--- src/engine/SCons/Scanner/LaTeX.py (original)
++++ src/engine/SCons/Scanner/LaTeX.py (refactored)
+@@ -230,7 +230,7 @@
+         kw['scan_check'] = LaTeXScanCheck(suffixes)
+         kw['name'] = name
+ 
+-        apply(SCons.Scanner.Base.__init__, (self,) + args, kw)
++        SCons.Scanner.Base.__init__(*(self,) + args, **kw)
+ 
+     def _latex_names(self, include):
+         filename = include[1]
+--- src/engine/SCons/Scanner/Prog.py (original)
++++ src/engine/SCons/Scanner/Prog.py (refactored)
+@@ -35,7 +35,7 @@
+     """Return a prototype Scanner instance for scanning executable
+     files for static-lib dependencies"""
+     kw['path_function'] = SCons.Scanner.FindPathDirs('LIBPATH')
+-    ps = apply(SCons.Scanner.Base, [scan, "ProgramScanner"], kw)
++    ps = SCons.Scanner.Base(*[scan, "ProgramScanner"], **kw)
+     return ps
+ 
+ def scan(node, env, libpath = ()):
+--- src/engine/SCons/Scanner/__init__.py (original)
++++ src/engine/SCons/Scanner/__init__.py (refactored)
+@@ -55,9 +55,9 @@
+     patterned on SCons code.
+     """
+     if SCons.Util.is_Dict(function):
+-        return apply(Selector, (function,) + args, kw)
++        return Selector(*(function,) + args, **kw)
+     else:
+-        return apply(Base, (function,) + args, kw)
++        return Base(*(function,) + args, **kw)
+ 
+ 
+ 
+@@ -217,7 +217,7 @@
+         nodes = []
+         for l in list:
+             if self.node_class and not isinstance(l, self.node_class):
+-                l = apply(node_factory, (l,), kw)
++                l = node_factory(l, **kw)
+             nodes.append(l)
+         return nodes
+ 
+@@ -279,7 +279,7 @@
+     for custom modules that may be out there.)
+     """
+     def __init__(self, dict, *args, **kw):
+-        apply(Base.__init__, (self, None,)+args, kw)
++        Base.__init__(*(self, None,)+args, **kw)
+         self.dict = dict
+         self.skeys = dict.keys()
+ 
+@@ -308,7 +308,7 @@
+         def current_check(node, env):
+             return not node.has_builder() or node.is_up_to_date()
+         kw['scan_check'] = current_check
+-        apply(Base.__init__, (self,) + args, kw)
++        Base.__init__(*(self,) + args, **kw)
+ 
+ class Classic(Current):
+     """
+@@ -338,7 +338,7 @@
+         kw['skeys'] = suffixes
+         kw['name'] = name
+ 
+-        apply(Current.__init__, (self,) + args, kw)
++        Current.__init__(*(self,) + args, **kw)
+ 
+     def find_include(self, include, source_dir, path):
+         n = SCons.Node.FS.find_file(include, (source_dir,) + tuple(path))
+--- src/engine/SCons/Script/Main.py (original)
++++ src/engine/SCons/Script/Main.py (refactored)
+@@ -144,7 +144,7 @@
+ 
+ def Progress(*args, **kw):
+     global ProgressObject
+-    ProgressObject = apply(Progressor, args, kw)
++    ProgressObject = Progressor(*args, **kw)
+ 
+ # Task control.
+ #
+@@ -470,7 +470,7 @@
+ def AddOption(*args, **kw):
+     if not kw.has_key('default'):
+         kw['default'] = None
+-    result = apply(OptionsParser.add_local_option, args, kw)
++    result = OptionsParser.add_local_option(*args, **kw)
+     return result
+ 
+ def GetOption(name):
+--- src/engine/SCons/Script/SConsOptions.py (original)
++++ src/engine/SCons/Script/SConsOptions.py (refactored)
+@@ -356,7 +356,7 @@
+             group = self.add_option_group(group)
+             self.local_option_group = group
+ 
+-        result = apply(group.add_option, args, kw)
++        result = group.add_option(*args, **kw)
+ 
+         if result:
+             # The option was added succesfully.  We now have to add the
+--- src/engine/SCons/Script/SConscript.py (original)
++++ src/engine/SCons/Script/SConscript.py (refactored)
+@@ -458,7 +458,7 @@
+         if not SCons.Script.sconscript_reading:
+             raise SCons.Errors.UserError, "Calling Configure from Builders is not supported."
+         kw['_depth'] = kw.get('_depth', 0) + 1
+-        return apply(SCons.Environment.Base.Configure, (self,)+args, kw)
++        return SCons.Environment.Base.Configure(*(self,)+args, **kw)
+ 
+     def Default(self, *targets):
+         SCons.Script._Set_Default_Targets(self, targets)
+@@ -549,7 +549,7 @@
+ 
+         files, exports = self._get_SConscript_filenames(ls, subst_kw)
+         subst_kw['exports'] = exports
+-        return apply(_SConscript, [self.fs,] + files, subst_kw)
++        return _SConscript(*[self.fs,] + files, **subst_kw)
+ 
+     def SConscriptChdir(self, flag):
+         global sconscript_chdir
+@@ -568,7 +568,7 @@
+     if not SCons.Script.sconscript_reading:
+         raise SCons.Errors.UserError, "Calling Configure from Builders is not supported."
+     kw['_depth'] = 1
+-    return apply(SCons.SConf.SConf, args, kw)
++    return SCons.SConf.SConf(*args, **kw)
+ 
+ # It's very important that the DefaultEnvironmentCall() class stay in this
+ # file, with the get_calling_namespaces() function, the compute_exports()
+@@ -612,7 +612,7 @@
+     def __call__(self, *args, **kw):
+         env = self.factory()
+         method = getattr(env, self.method_name)
+-        return apply(method, args, kw)
++        return method(*args, **kw)
+ 
+ 
+ def BuildDefaultGlobals():
+--- src/engine/SCons/Tool/__init__.py (original)
++++ src/engine/SCons/Tool/__init__.py (refactored)
+@@ -178,7 +178,7 @@
+             self.options(opts)
+             opts.Update(env)
+ 
+-        apply(self.generate, ( env, ) + args, kw)
++        self.generate(*( env, ) + args, **kw)
+ 
+     def __str__(self):
+         return self.name
+@@ -474,7 +474,7 @@
+         builder = self.get_builder(env)
+         if builder is None:
+             return [], []
+-        return apply(builder, args, kw)
++        return builder(*args, **kw)
+ 
+ class ToolInitializer:
+     """
+@@ -530,9 +530,9 @@
+ def Initializers(env):
+     ToolInitializer(env, ['install'], ['_InternalInstall', '_InternalInstallAs'])
+     def Install(self, *args, **kw):
+-        return apply(self._InternalInstall, args, kw)
++        return self._InternalInstall(*args, **kw)
+     def InstallAs(self, *args, **kw):
+-        return apply(self._InternalInstallAs, args, kw)
++        return self._InternalInstallAs(*args, **kw)
+     env.AddMethod(Install)
+     env.AddMethod(InstallAs)
+ 
+--- src/engine/SCons/Tool/icl.py (original)
++++ src/engine/SCons/Tool/icl.py (refactored)
+@@ -40,10 +40,10 @@
+ 
+ def generate(*args, **kw):
+     """Add Builders and construction variables for icl to an Environment."""
+-    return apply(SCons.Tool.intelc.generate, args, kw)
++    return SCons.Tool.intelc.generate(*args, **kw)
+ 
+ def exists(*args, **kw):
+-    return apply(SCons.Tool.intelc.exists, args, kw)
++    return SCons.Tool.intelc.exists(*args, **kw)
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Tool/install.py (original)
++++ src/engine/SCons/Tool/install.py (refactored)
+@@ -159,14 +159,14 @@
+             # be relative to the top-level SConstruct directory.
+             target = env.fs.Entry('.'+os.sep+src.name, dnode)
+             #tgt.extend(BaseInstallBuilder(env, target, src, **kw))
+-            tgt.extend(apply(BaseInstallBuilder, (env, target, src), kw))
++            tgt.extend(BaseInstallBuilder(env, target, src, **kw))
+     return tgt
+ 
+ def InstallAsBuilderWrapper(env, target=None, source=None, **kw):
+     result = []
+     for src, tgt in map(lambda x, y: (x, y), source, target):
+         #result.extend(BaseInstallBuilder(env, tgt, src, **kw))
+-        result.extend(apply(BaseInstallBuilder, (env, tgt, src), kw))
++        result.extend(BaseInstallBuilder(env, tgt, src, **kw))
+     return result
+ 
+ added = None
+--- src/engine/SCons/Tool/javac.py (original)
++++ src/engine/SCons/Tool/javac.py (refactored)
+@@ -193,7 +193,7 @@
+                 b = env.JavaClassFile
+             else:
+                 b = env.JavaClassDir
+-        result.extend(apply(b, (t, s) + args, kw))
++        result.extend(b(*(t, s) + args, **kw))
+ 
+     return result
+ 
+--- src/engine/SCons/Tool/MSCommon/sdk.py (original)
++++ src/engine/SCons/Tool/MSCommon/sdk.py (refactored)
+@@ -124,7 +124,7 @@
+     """
+     HKEY_FMT = r'Software\Microsoft\Microsoft SDKs\Windows\v%s\InstallationFolder'
+     def __init__(self, *args, **kw):
+-        apply(SDKDefinition.__init__, (self,)+args, kw)
++        SDKDefinition.__init__(*(self,)+args, **kw)
+         self.hkey_data = self.version
+ 
+ class PlatformSDK(SDKDefinition):
+@@ -133,7 +133,7 @@
+     """
+     HKEY_FMT = r'Software\Microsoft\MicrosoftSDK\InstalledSDKS\%s\Install Dir'
+     def __init__(self, *args, **kw):
+-        apply(SDKDefinition.__init__, (self,)+args, kw)
++        SDKDefinition.__init__(*(self,)+args, **kw)
+         self.hkey_data = self.uuid
+ 
+ #
+--- src/engine/SCons/Tool/packaging/__init__.py (original)
++++ src/engine/SCons/Tool/packaging/__init__.py (refactored)
+@@ -153,7 +153,7 @@
+     try:
+         for packager in packagers:
+             t=[target.pop(0)]
+-            t=apply(packager.package, [env,t,source], kw)
++            t=packager.package(*[env,t,source], **kw)
+             targets.extend(t)
+ 
+         assert( len(target) == 0 )
+--- src/engine/SCons/Tool/packaging/ipk.py (original)
++++ src/engine/SCons/Tool/packaging/ipk.py (refactored)
+@@ -76,7 +76,7 @@
+         target=[ "%s_%s_%s.ipk"%(NAME, VERSION, buildarchitecture) ]
+ 
+     # now apply the Ipkg builder
+-    return apply(bld, [env, target, specfile], kw)
++    return bld(*[env, target, specfile], **kw)
+ 
+ def gen_ipk_dir(proot, source, env, kw):
+     # make sure the packageroot is a Dir object.
+@@ -98,7 +98,7 @@
+     spec_target.append(control.File('preinst'))
+ 
+     # apply the builder to the specfile targets
+-    apply(s_bld, [env, spec_target, source], kw)
++    s_bld(*[env, spec_target, source], **kw)
+ 
+     # the packageroot directory does now contain the specfiles.
+     return proot
+--- src/engine/SCons/Tool/packaging/msi.py (original)
++++ src/engine/SCons/Tool/packaging/msi.py (refactored)
+@@ -511,7 +511,7 @@
+ 
+     # put the arguments into the env and call the specfile builder.
+     env['msi_spec'] = kw
+-    specfile = apply( wxs_builder, [env, target, source], kw )
++    specfile = wxs_builder(* [env, target, source], **kw)
+ 
+     # now call the WiX Tool with the built specfile added as a source.
+     msifile  = env.WiX(target, specfile)
+--- src/engine/SCons/Tool/packaging/rpm.py (original)
++++ src/engine/SCons/Tool/packaging/rpm.py (refactored)
+@@ -91,7 +91,7 @@
+     target, source = collectintargz(target, source, env)
+ 
+     # now call the rpm builder to actually build the packet.
+-    return apply(bld, [env, target, source], kw)
++    return bld(*[env, target, source], **kw)
+ 
+ def collectintargz(target, source, env):
+     """ Puts all source files into a tar.gz file. """
+--- src/engine/SCons/Variables/__init__.py (original)
++++ src/engine/SCons/Variables/__init__.py (refactored)
+@@ -123,7 +123,7 @@
+         """
+ 
+         if SCons.Util.is_List(key) or type(key) == type(()):
+-            apply(self._do_add, key)
++            self._do_add(*key)
+             return
+ 
+         if not SCons.Util.is_String(key) or \
+@@ -148,7 +148,7 @@
+             )
+         """
+         for o in optlist:
+-            apply(self._do_add, o)
++            self._do_add(*o)
+ 
+ 
+     def Update(self, env, args=None):
+--- test/Copy-Action.py (original)
++++ test/Copy-Action.py (refactored)
+@@ -155,9 +155,9 @@
+ def must_be_same(f1, f2):
+     global errors
+     if type(f1) is type([]):
+-        f1 = apply(os.path.join, f1)
++        f1 = os.path.join(*f1)
+     if type(f2) is type([]):
+-        f2 = apply(os.path.join, f2)
++        f2 = os.path.join(*f2)
+     s1 = os.stat(f1)
+     s2 = os.stat(f2)
+     for value in ['ST_MODE', 'ST_MTIME']:
+--- test/Perforce/Perforce.py (original)
++++ test/Perforce/Perforce.py (refactored)
+@@ -37,7 +37,7 @@
+ 
+ class TestPerforce(TestSCons.TestSCons):
+     def __init__(self, *args, **kw):
+-        apply(TestSCons.TestSCons.__init__, (self,)+args, kw)
++        TestSCons.TestSCons.__init__(*(self,)+args, **kw)
+ 
+         self.p4d = None
+ 
+@@ -111,7 +111,7 @@
+             args = args[1:]
+         kw['arguments'] = ' '.join(self.p4portflags + [arguments])
+         kw['program'] = self.p4path
+-        return apply(self.run, args, kw)
++        return self.run(*args, **kw)
+ 
+     def substitute(self, s, **kw):
+         kw = kw.copy()
+--- QMTest/TestCmd.py (original)
++++ QMTest/TestCmd.py (refactored)
+@@ -648,14 +648,14 @@
+             universal_newlines = 1
+             def __init__(self, command, **kw):
+                 if kw.get('stderr') == 'STDOUT':
+-                    apply(popen2.Popen4.__init__, (self, command, 1))
++                    popen2.Popen4.__init__(self, command, 1)
+                 else:
+-                    apply(popen2.Popen3.__init__, (self, command, 1))
++                    popen2.Popen3.__init__(self, command, 1)
+                 self.stdin = self.tochild
+                 self.stdout = self.fromchild
+                 self.stderr = self.childerr
+             def wait(self, *args, **kw):
+-                resultcode = apply(popen2.Popen3.wait, (self,)+args, kw)
++                resultcode = popen2.Popen3.wait(*(self,)+args, **kw)
+                 if os.WIFEXITED(resultcode):
+                     return os.WEXITSTATUS(resultcode)
+                 elif os.WIFSIGNALED(resultcode):
+@@ -943,7 +943,7 @@
+ 
+     def canonicalize(self, path):
+         if is_List(path):
+-            path = apply(os.path.join, tuple(path))
++            path = os.path.join(*tuple(path))
+         if not os.path.isabs(path):
+             path = os.path.join(self.workdir, path)
+         return path
+@@ -1032,7 +1032,7 @@
+         def diff(self, a, b, name, *args, **kw):
+             print self.banner(name)
+             args = (a.splitlines(), b.splitlines()) + args
+-            lines = apply(self.diff_function, args, kw)
++            lines = self.diff_function(*args, **kw)
+             for l in lines:
+                 print l
+ 
+@@ -1313,7 +1313,7 @@
+             if sub is None:
+                 continue
+             if is_List(sub):
+-                sub = apply(os.path.join, tuple(sub))
++                sub = os.path.join(*tuple(sub))
+             new = os.path.join(self.workdir, sub)
+             try:
+                 os.mkdir(new)
+@@ -1403,7 +1403,7 @@
+         """Find an executable file.
+         """
+         if is_List(file):
+-            file = apply(os.path.join, tuple(file))
++            file = os.path.join(*tuple(file))
+         if not os.path.isabs(file):
+             file = where_is(file, path, pathext)
+         return file
+@@ -1425,7 +1425,7 @@
+         the temporary working directory name with the specified
+         arguments using the os.path.join() method.
+         """
+-        return apply(os.path.join, (self.workdir,) + tuple(args))
++        return os.path.join(*(self.workdir,) + tuple(args))
+ 
+     def readable(self, top, read=1):
+         """Make the specified directory tree readable (read == 1)
+--- QMTest/TestCommon.py (original)
++++ QMTest/TestCommon.py (refactored)
+@@ -216,7 +216,7 @@
+         calling the base class initialization, and then changing directory
+         to the workdir.
+         """
+-        apply(TestCmd.__init__, [self], kw)
++        TestCmd.__init__(*[self], **kw)
+         os.chdir(self.workdir)
+ 
+     def must_be_writable(self, *files):
+@@ -226,7 +226,7 @@
+         them.  Exits FAILED if any of the files does not exist or is
+         not writable.
+         """
+-        files = map(lambda x: is_List(x) and apply(os.path.join, x) or x, files)
++        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+         existing, missing = separate_files(files)
+         unwritable = filter(lambda x, iw=is_writable: not iw(x), existing)
+         if missing:
+@@ -312,7 +312,7 @@
+         pathname will be constructed by concatenating them.  Exits FAILED
+         if any of the files does not exist.
+         """
+-        files = map(lambda x: is_List(x) and apply(os.path.join, x) or x, files)
++        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+         missing = filter(lambda x: not os.path.exists(x), files)
+         if missing:
+             print "Missing files: `%s'" % "', `".join(missing)
+@@ -384,7 +384,7 @@
+         which case the pathname will be constructed by concatenating them.
+         Exits FAILED if any of the files exists.
+         """
+-        files = map(lambda x: is_List(x) and apply(os.path.join, x) or x, files)
++        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+         existing = filter(os.path.exists, files)
+         if existing:
+             print "Unexpected files exist: `%s'" % "', `".join(existing)
+@@ -398,7 +398,7 @@
+         them.  Exits FAILED if any of the files does not exist or is
+         writable.
+         """
+-        files = map(lambda x: is_List(x) and apply(os.path.join, x) or x, files)
++        files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+         existing, missing = separate_files(files)
+         writable = filter(is_writable, existing)
+         if missing:
+@@ -457,9 +457,8 @@
+                 else:
+                     arguments = options + " " + arguments
+         try:
+-            return apply(TestCmd.start,
+-                         (self, program, interpreter, arguments, universal_newlines),
+-                         kw)
++            return TestCmd.start(self, program, interpreter, arguments, universal_newlines,
++                         **kw)
+         except KeyboardInterrupt:
+             raise
+         except Exception, e:
+@@ -495,7 +494,7 @@
+                         command.  A value of None means don't
+                         test exit status.
+         """
+-        apply(TestCmd.finish, (self, popen,), kw)
++        TestCmd.finish(self, popen, **kw)
+         match = kw.get('match', self.match)
+         self._complete(self.stdout(), stdout,
+                        self.stderr(), stderr, status, match)
+@@ -537,7 +536,7 @@
+             del kw['match']
+         except KeyError:
+             match = self.match
+-        apply(TestCmd.run, [self], kw)
++        TestCmd.run(*[self], **kw)
+         self._complete(self.stdout(), stdout,
+                        self.stderr(), stderr, status, match)
+ 
+--- QMTest/TestRuntest.py (original)
++++ QMTest/TestRuntest.py (refactored)
+@@ -125,7 +125,7 @@
+             del kw['noqmtest']
+ 
+         orig_cwd = os.getcwd()
+-        apply(TestCommon.__init__, [self], kw)
++        TestCommon.__init__(*[self], **kw)
+   
+         if not noqmtest:
+             qmtest = self.where_is('qmtest')
+--- QMTest/TestSCons.py (original)
++++ QMTest/TestSCons.py (refactored)
+@@ -267,7 +267,7 @@
+             sconsflags = sconsflags + ['--warn=no-python-version']
+             os.environ['SCONSFLAGS'] = ' '.join(sconsflags)
+ 
+-        apply(TestCommon.__init__, [self], kw)
++        TestCommon.__init__(*[self], **kw)
+ 
+         import SCons.Node.FS
+         if SCons.Node.FS.default_fs is None:
+@@ -283,7 +283,7 @@
+         if not ENV is None:
+             kw['ENV'] = ENV
+         try:
+-            return apply(SCons.Environment.Environment, args, kw)
++            return SCons.Environment.Environment(*args, **kw)
+         except (SCons.Errors.UserError, SCons.Errors.InternalError):
+             return None
+ 
+@@ -377,7 +377,7 @@
+                                                   '--warn=no-visual-c-missing')]
+         os.environ['SCONSFLAGS'] = ' '.join(sconsflags)
+         try:
+-            result = apply(TestCommon.run, (self,)+args, kw)
++            result = TestCommon.run(*(self,)+args, **kw)
+         finally:
+             sconsflags = save_sconsflags
+         return result
+@@ -394,7 +394,7 @@
+         # up-to-date output is okay.
+         kw['stdout'] = re.escape(stdout) + '.*'
+         kw['match'] = self.match_re_dotall
+-        apply(self.run, (), kw)
++        self.run(**kw)
+ 
+     def not_up_to_date(self, options = None, arguments = None, **kw):
+         """Asserts that none of the targets listed in arguments is
+@@ -411,7 +411,7 @@
+         stdout = re.escape(self.wrap_stdout(build_str='ARGUMENTSGOHERE'))
+         kw['stdout'] = stdout.replace('ARGUMENTSGOHERE', s)
+         kw['match'] = self.match_re_dotall
+-        apply(self.run, (), kw)
++        self.run(**kw)
+ 
+     def option_not_yet_implemented(self, option, arguments=None, **kw):
+         """
+@@ -429,7 +429,7 @@
+                 kw['arguments'] = option + ' ' + arguments
+         # TODO(1.5)
+         #return self.run(**kw)
+-        return apply(self.run, (), kw)
++        return self.run(**kw)
+ 
+     def diff_substr(self, expect, actual, prelen=20, postlen=40):
+         i = 0
+@@ -770,7 +770,7 @@
+ 
+     def Qt_create_SConstruct(self, place):
+         if type(place) is type([]):
+-            place = apply(test.workpath, place)
++            place = test.workpath(*place)
+         self.write(place, """\
+ if ARGUMENTS.get('noqtdir', 0): QTDIR=None
+ else: QTDIR=r'%s'
+@@ -966,7 +966,7 @@
+         """
+         if not kw.has_key('stdin'):
+             kw['stdin'] = True
+-        return apply(TestCommon.start, (self,) + args, kw)
++        return TestCommon.start(*(self,) + args, **kw)
+ 
+     def wait_for(self, fname, timeout=10.0, popen=None):
+         """
+@@ -1060,7 +1060,7 @@
+ 
+         # TODO(1.5)
+         #TestSCons.__init__(self, *args, **kw)
+-        apply(TestSCons.__init__, (self,)+args, kw)
++        TestSCons.__init__(*(self,)+args, **kw)
+ 
+         # TODO(sgk):    better way to get the script dir than sys.argv[0]
+         test_dir = os.path.dirname(sys.argv[0])
+@@ -1095,16 +1095,16 @@
+         if self.calibrate:
+             # TODO(1.5)
+             #self.calibration(*args, **kw)
+-            apply(self.calibration, args, kw)
++            self.calibration(*args, **kw)
+         else:
+             self.uptime()
+             # TODO(1.5)
+             #self.startup(*args, **kw)
+             #self.full(*args, **kw)
+             #self.null(*args, **kw)
+-            apply(self.startup, args, kw)
+-            apply(self.full, args, kw)
+-            apply(self.null, args, kw)
++            self.startup(*args, **kw)
++            self.full(*args, **kw)
++            self.null(*args, **kw)
+ 
+     def trace(self, graph, name, value, units, sort=None):
+         fmt = "TRACE: graph=%s name=%s value=%s units=%s"
+@@ -1124,7 +1124,7 @@
+         for name, args in stats.items():
+             # TODO(1.5)
+             #self.trace(name, trace, *args)
+-            apply(self.trace, (name, trace), args)
++            self.trace(name, trace, **args)
+ 
+     def uptime(self):
+         try:
+@@ -1165,7 +1165,7 @@
+         kw['status'] = None
+         # TODO(1.5)
+         #self.run(*args, **kw)
+-        apply(self.run, args, kw)
++        self.run(*args, **kw)
+         sys.stdout.write(self.stdout())
+         stats = self.collect_stats(self.stdout())
+         # Delete the time-commands, since no commands are ever
+@@ -1179,7 +1179,7 @@
+         """
+         # TODO(1.5)
+         #self.run(*args, **kw)
+-        apply(self.run, args, kw)
++        self.run(*args, **kw)
+         sys.stdout.write(self.stdout())
+         stats = self.collect_stats(self.stdout())
+         self.report_traces('full', stats)
+@@ -1187,9 +1187,9 @@
+         #self.trace('full-memory', 'initial', **stats['memory-initial'])
+         #self.trace('full-memory', 'prebuild', **stats['memory-prebuild'])
+         #self.trace('full-memory', 'final', **stats['memory-final'])
+-        apply(self.trace, ('full-memory', 'initial'), stats['memory-initial'])
+-        apply(self.trace, ('full-memory', 'prebuild'), stats['memory-prebuild'])
+-        apply(self.trace, ('full-memory', 'final'), stats['memory-final'])
++        self.trace('full-memory', 'initial', **stats['memory-initial'])
++        self.trace('full-memory', 'prebuild', **stats['memory-prebuild'])
++        self.trace('full-memory', 'final', **stats['memory-final'])
+ 
+     def calibration(self, *args, **kw):
+         """
+@@ -1199,7 +1199,7 @@
+         """
+         # TODO(1.5)
+         #self.run(*args, **kw)
+-        apply(self.run, args, kw)
++        self.run(*args, **kw)
+         if self.variables:
+             for variable, value in self.variables.items():
+                 sys.stdout.write('VARIABLE: %s=%s\n' % (variable, value))
+@@ -1215,7 +1215,7 @@
+         #self.up_to_date(arguments='.', **kw)
+         kw = kw.copy()
+         kw['arguments'] = '.'
+-        apply(self.up_to_date, (), kw)
++        self.up_to_date(**kw)
+         sys.stdout.write(self.stdout())
+         stats = self.collect_stats(self.stdout())
+         # time-commands should always be 0.0 on a null build, because
+@@ -1230,9 +1230,9 @@
+         #self.trace('null-memory', 'initial', **stats['memory-initial'])
+         #self.trace('null-memory', 'prebuild', **stats['memory-prebuild'])
+         #self.trace('null-memory', 'final', **stats['memory-final'])
+-        apply(self.trace, ('null-memory', 'initial'), stats['memory-initial'])
+-        apply(self.trace, ('null-memory', 'prebuild'), stats['memory-prebuild'])
+-        apply(self.trace, ('null-memory', 'final'), stats['memory-final'])
++        self.trace('null-memory', 'initial', **stats['memory-initial'])
++        self.trace('null-memory', 'prebuild', **stats['memory-prebuild'])
++        self.trace('null-memory', 'final', **stats['memory-final'])
+ 
+     def elapsed_time(self):
+         """
+@@ -1254,7 +1254,7 @@
+         try:
+             # TODO(1.5)
+             #result = TestSCons.run(self, *args, **kw)
+-            result = apply(TestSCons.run, (self,)+args, kw)
++            result = TestSCons.run(*(self,)+args, **kw)
+         finally:
+             self.endTime = time.time()
+         return result
+--- QMTest/TestSConsMSVS.py (original)
++++ QMTest/TestSConsMSVS.py (refactored)
+@@ -656,7 +656,7 @@
+         sconsflags = sconsflags + ['--warn=no-deprecated']
+         os.environ['SCONSFLAGS'] = ' '.join(sconsflags)
+         try:
+-            result = apply(TestSCons.run, (self,)+args, kw)
++            result = TestSCons.run(*(self,)+args, **kw)
+         finally:
+             os.environ['SCONSFLAGS'] = save_sconsflags or ''
+         return result
+--- QMTest/TestSCons_time.py (original)
++++ QMTest/TestSCons_time.py (refactored)
+@@ -184,7 +184,7 @@
+         if not kw.has_key('workdir'):
+             kw['workdir'] = ''
+ 
+-        apply(TestCommon.__init__, [self], kw)
++        TestCommon.__init__(*[self], **kw)
+ 
+         # Now that the testing object has been set up, check if we should
+         # skip the test due to the Python version.  We need to be able to
+@@ -246,7 +246,7 @@
+             tempdir = realpath(tempdir)
+ 
+         args = (tempdir, 'scons-time-',) + args
+-        x = apply(os.path.join, args)
++        x = os.path.join(*args)
+         x = re.escape(x)
+         x = x.replace('time\\-', 'time\\-[^%s]*' % sep)
+         return x
+--- QMTest/TestSConsign.py (original)
++++ QMTest/TestSConsign.py (refactored)
+@@ -47,7 +47,7 @@
+             os.chdir(script_dir)
+         self.script_dir = os.getcwd()
+ 
+-        apply(TestSCons.__init__, (self,)+args, kw)
++        TestSCons.__init__(*(self,)+args, **kw)
+ 
+         self.my_kw = {
+             'interpreter' : python,     # imported from TestSCons
+@@ -80,7 +80,7 @@
+ 
+     def run_sconsign(self, *args, **kw):
+         kw.update(self.my_kw)
+-        return apply(self.run, args, kw)
++        return self.run(*args, **kw)
+ 
+ # Local Variables:
+ # tab-width:4
+--- QMTest/unittest.py (original)
++++ QMTest/unittest.py (refactored)
+@@ -204,7 +204,7 @@
+ 
+     def failIf(self, expr, msg=None):
+         "Fail the test if the expression is true."
+-        apply(self.assert_,(not expr,msg))
++        self.assert_(not expr,msg)
+ 
+     def assertRaises(self, excClass, callableObj, *args, **kwargs):
+         """Assert that an exception of class excClass is thrown
+@@ -215,7 +215,7 @@
+            unexpected exception.
+         """
+         try:
+-            apply(callableObj, args, kwargs)
++            callableObj(*args, **kwargs)
+         except excClass:
+             return
+         else:
+@@ -428,7 +428,7 @@
+         return getattr(self.stream,attr)
+ 
+     def writeln(self, *args):
+-        if args: apply(self.write, args)
++        if args: self.write(*args)
+         self.write(self.linesep)
+ 
+  
+@@ -467,7 +467,7 @@
+                                 (len(errors), errFlavour))
+         i = 1
+         for test,error in errors:
+-            errString = "".join(apply(traceback.format_exception,error))
++            errString = "".join(traceback.format_exception(*error))
+             self.stream.writeln("%i) %s" % (i, test))
+             self.stream.writeln(errString)
+             i = i + 1
+@@ -566,7 +566,7 @@
+             self.stream.writeln(separator1)
+         self.stream.writeln("\t%s" % flavour)
+         self.stream.writeln(separator2)
+-        for line in apply(traceback.format_exception, err):
++        for line in traceback.format_exception(*err):
+             for l in line.split("\n")[:-1]:
+                 self.stream.writeln("\t%s" % l)
+         self.stream.writeln(separator1)
+--- bin/scons-test.py (original)
++++ bin/scons-test.py (refactored)
+@@ -89,7 +89,7 @@
+         l.append(tail)
+     l.append(outdir)
+     l.reverse()
+-    return apply(os.path.join, l)
++    return os.path.join(*l)
+ 
+ for name in zf.namelist():
+     dest = outname(name)
+--- bin/scons-unzip.py (original)
++++ bin/scons-unzip.py (refactored)
+@@ -52,7 +52,7 @@
+         l.append(tail)
+     l.append(outdir)
+     l.reverse()
+-    return apply(os.path.join, l)
++    return os.path.join(*l)
+ 
+ for name in zf.namelist():
+     dest = outname(name)
+--- bench/bench.py (original)
++++ bench/bench.py (refactored)
+@@ -104,7 +104,7 @@
+     results = []
+     for i in range(Runs):
+         start = Now()
+-        apply(func, args, kw)
++        func(*args, **kw)
+         finish = Now()
+         results.append((finish - start) / Iterations)
+     return results
+@@ -119,7 +119,7 @@
+     print func.__name__ + d + ':'
+ 
+     for label, args, kw in Data:
+-        r = apply(timer, (func,)+args, kw)
++        r = timer(*(func,)+args, **kw)
+         display(label, r)
+ 
+ # Local Variables:
+--- bench/env.__setitem__.py (original)
++++ bench/env.__setitem__.py (refactored)
+@@ -339,7 +339,7 @@
+       s['num'] = iterations
+       s['title'] = title
+       s['init'] = init
+-      apply(times,(),s)
++      times(**s)
+ 
+ print 'Environment __setitem__ benchmark using',
+ print 'Python', sys.version.split()[0],
