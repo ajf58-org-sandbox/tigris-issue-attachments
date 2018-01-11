@@ -1,0 +1,1073 @@
+Index: QMTest/TestSConsMSVS.py
+===================================================================
+--- QMTest/TestSConsMSVS.py	(revision 5176)
++++ QMTest/TestSConsMSVS.py	(working copy)
+@@ -474,6 +474,26 @@
+ EndGlobal
+ """
+ 
++expected_slnfile_10_0 = """\
++Microsoft Visual Studio Solution File, Format Version 11.00
++# Visual Studio 2010
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test.vcxproj", "Test.vcxproj", "{39A97E1F-1A52-8954-A0B1-A10A8487545E}"
++EndProject
++Global
++<SCC_SLN_INFO>
++\tGlobalSection(SolutionConfigurationPlatforms) = preSolution
++\t\tRelease|Win32 = Release|Win32
++\tEndGlobalSection
++\tGlobalSection(ProjectConfigurationPlatforms) = postSolution
++\t\t{39A97E1F-1A52-8954-A0B1-A10A8487545E}.Release|Win32.ActiveCfg = Release|Win32
++\t\t{39A97E1F-1A52-8954-A0B1-A10A8487545E}.Release|Win32.Build.0 = Release|Win32
++\tEndGlobalSection
++\tGlobalSection(SolutionProperties) = preSolution
++\t\tHideSolutionNode = FALSE
++\tEndGlobalSection
++EndGlobal
++"""
++
+ expected_vcprojfile_8_0 = """\
+ <?xml version="1.0" encoding="Windows-1252"?>
+ <VisualStudioProject
+@@ -650,6 +670,70 @@
+ </VisualStudioProject>
+ """
+ 
++expected_vcprojfile_10_0 = """\
++<?xml version="1.0" encoding="utf-8"?>
++<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
++\t<ItemGroup Label="ProjectConfigurations">
++\t\t<ProjectConfiguration Include="Release|Win32">
++\t\t\t<Configuration>Release</Configuration>
++\t\t\t<Platform>Win32</Platform>
++\t\t</ProjectConfiguration>
++\t</ItemGroup>
++\t<PropertyGroup Label="Globals">
++\t\t<ProjectGuid>{39A97E1F-1A52-8954-A0B1-A10A8487545E}</ProjectGuid>
++<SCC_VCPROJ_INFO>
++\t\t<RootNamespace>Test</RootNamespace>
++\t\t<Keyword>MakeFileProj</Keyword>
++\t</PropertyGroup>
++\t<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />
++\t<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
++\t\t<ConfigurationType>Makefile</ConfigurationType>
++\t\t<UseOfMfc>false</UseOfMfc>
++\t</PropertyGroup>
++\t<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />
++\t<ImportGroup Label="ExtensionSettings">
++\t</ImportGroup>
++\t<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
++\t\t<Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++\t</ImportGroup>
++\t<PropertyGroup Label="UserMacros" />
++\t<PropertyGroup>
++\t<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
++\t\t<NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;</NMakeBuildCommandLine>
++\t\t<NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;</NMakeReBuildCommandLine>
++\t\t<NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct -c &quot;Test.exe&quot;</NMakeCleanCommandLine>
++\t\t<NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Test.exe</NMakeOutput>
++\t\t<NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">DEF1;DEF2;DEF3=1234</NMakePreprocessorDefinitions>
++\t\t<NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">inc1;inc2</NMakeIncludeSearchPath>
++\t\t<NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
++\t\t<NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
++\t\t<NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
++\t</PropertyGroup>
++\t<ItemGroup>
++\t\t<ClInclude Include="sdk.h" />
++\t</ItemGroup>
++\t<ItemGroup>
++\t\t<ClInclude Include="test.h" />
++\t</ItemGroup>
++\t<ItemGroup>
++\t\t<None Include="readme.txt" />
++\t</ItemGroup>
++\t<ItemGroup>
++\t\t<None Include="test.rc" />
++\t</ItemGroup>
++\t<ItemGroup>
++\t\t<ClCompile Include="test1.cpp" />
++\t\t<ClCompile Include="test2.cpp" />
++\t</ItemGroup>
++\t<ItemGroup>
++\t\t<None Include="SConstruct" />
++\t</ItemGroup>
++\t<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />
++\t<ImportGroup Label="ExtensionTargets">
++\t</ImportGroup>
++</Project>
++"""
++
+ SConscript_contents_8_0 = """\
+ env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='8.0',
+                 CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
+@@ -696,8 +780,29 @@
+                 variant = 'Release')
+ """
+ 
++SConscript_contents_10_0 = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='10.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                HOST_ARCH='%(HOST_ARCH)s')
+ 
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
+ 
++env.MSVSProject(target = 'Test.vcxproj',
++                slnguid = '{SLNGUID}',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
+ class TestSConsMSVS(TestSCons):
+     """Subclass for testing MSVS-specific portions of SCons."""
+ 
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+--- src/engine/SCons/Tool/msvs.py	(revision 5176)
++++ src/engine/SCons/Tool/msvs.py	(working copy)
+@@ -860,7 +860,313 @@
+             self.PrintHeader()
+             self.PrintProject()
+             self.file.close()
++			
++V10DSPHeader = """\
++<?xml version="1.0" encoding="%(encoding)s"?>
++<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
++"""
+ 
++V10DSPProjectConfiguration = """\
++\t\t<ProjectConfiguration Include="%(variant)s|%(platform)s">
++\t\t\t<Configuration>%(variant)s</Configuration>
++\t\t\t<Platform>%(platform)s</Platform>
++\t\t</ProjectConfiguration>
++"""
++
++V10DSPGlobals = """\
++\t<PropertyGroup Label="Globals">
++\t\t<ProjectGuid>%(project_guid)s</ProjectGuid>
++%(scc_attrs)s\t\t<RootNamespace>%(name)s</RootNamespace>
++\t\t<Keyword>MakeFileProj</Keyword>
++\t</PropertyGroup>
++"""
++
++V10DSPPropertyGroupCondition = """\
++\t<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'" Label="Configuration">
++\t\t<ConfigurationType>Makefile</ConfigurationType>
++\t\t<UseOfMfc>false</UseOfMfc>
++\t</PropertyGroup>
++"""
++
++V10DSPImportGroupCondition = """\
++\t<ImportGroup Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'" Label="PropertySheets">
++\t\t<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++\t</ImportGroup>
++"""
++
++V10DSPCommandLine = """\
++\t\t<NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">%(buildcmd)s</NMakeBuildCommandLine>
++\t\t<NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">%(rebuildcmd)s</NMakeReBuildCommandLine>
++\t\t<NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">%(cleancmd)s</NMakeCleanCommandLine>
++\t\t<NMakeOutput Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">%(runfile)s</NMakeOutput>
++\t\t<NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">%(preprocdefs)s</NMakePreprocessorDefinitions>
++\t\t<NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">%(includepath)s</NMakeIncludeSearchPath>
++\t\t<NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
++\t\t<NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
++\t\t<NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='%(variant)s|%(platform)s'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
++"""
++
++class _GenerateV10DSP(_DSPGenerator):
++    """Generates a Project file for MSVS 2010"""
++
++    def __init__(self, dspfile, source, env):
++        _DSPGenerator.__init__(self, dspfile, source, env)
++        
++        self.dspheader = V10DSPHeader
++        self.dspconfiguration = V10DSPProjectConfiguration
++        self.dspglobals = V10DSPGlobals
++
++    def PrintHeader(self):
++        env = self.env
++        name = self.name
++        encoding = env.subst('$MSVSENCODING')
++        project_guid = env.get('MSVS_PROJECT_GUID', '')
++        scc_provider = env.get('MSVS_SCC_PROVIDER', '')
++        scc_project_name = env.get('MSVS_SCC_PROJECT_NAME', '')
++        scc_aux_path = env.get('MSVS_SCC_AUX_PATH', '')
++        # MSVS_SCC_LOCAL_PATH is kept  for backwards compatibility purpose and should
++        # be deprecated as soon as possible.
++        scc_local_path_legacy = env.get('MSVS_SCC_LOCAL_PATH', '')
++        scc_connection_root = env.get('MSVS_SCC_CONNECTION_ROOT', os.curdir)
++        scc_local_path = os.path.relpath(scc_connection_root, os.path.dirname(self.dspabs))
++        if not project_guid:
++            project_guid = _generateGUID(self.dspfile, '')
++        if scc_provider != '':
++            scc_attrs = '\t\t<SccProjectName>%s</SccProjectName>\n' % scc_project_name
++            if scc_aux_path != '':
++                scc_attrs += '\t\t<SccAuxPath>%s</SccAuxPath>\n' % scc_aux_path
++            scc_attrs += ('\t\t<SccLocalPath>%s</SccLocalPath>\n'
++                          '\t\t<SccProvider>%s</SccProvider>\n' % (scc_local_path, scc_provider))
++        elif scc_local_path_legacy != '':
++            # This case is kept for backwards compatibility purpose and should
++            # be deprecated as soon as possible.
++            scc_attrs = ('\t\t<SccProjectName>%s</SccProjectName>\n'
++                         '\t\t<SccLocalPath>%s</SccLocalPath>\n' % (scc_project_name, scc_local_path_legacy))
++        else:
++            self.dspglobals = self.dspglobals.replace('%(scc_attrs)s', '')
++            
++        self.file.write(self.dspheader % locals())
++        
++        self.file.write('\t<ItemGroup Label="ProjectConfigurations">\n')
++        
++        confkeys = sorted(self.configs.keys())
++        for kind in confkeys:
++            variant = self.configs[kind].variant
++            platform = self.configs[kind].platform
++            self.file.write(self.dspconfiguration % locals())
++        
++        self.file.write('\t</ItemGroup>\n')
++        
++        self.file.write(self.dspglobals % locals())
++    
++    def PrintProject(self):
++        name = self.name
++        confkeys = sorted(self.configs.keys())
++             
++        self.file.write('\t<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />\n')
++        
++        for kind in confkeys:
++            variant = self.configs[kind].variant
++            platform = self.configs[kind].platform
++            self.file.write(V10DSPPropertyGroupCondition % locals())
++
++        self.file.write('\t<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />\n')
++        self.file.write('\t<ImportGroup Label="ExtensionSettings">\n')
++        self.file.write('\t</ImportGroup>\n')
++        
++        for kind in confkeys:
++            variant = self.configs[kind].variant
++            platform = self.configs[kind].platform
++            self.file.write(V10DSPImportGroupCondition % locals())
++        
++        self.file.write('\t<PropertyGroup Label="UserMacros" />\n')
++        self.file.write('\t<PropertyGroup>\n')
++        self.file.write('\t<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>\n')
++        
++        for kind in confkeys:
++            variant = self.configs[kind].variant
++            platform = self.configs[kind].platform
++            outdir = self.configs[kind].outdir
++            buildtarget = self.configs[kind].buildtarget
++            runfile     = self.configs[kind].runfile
++            cmdargs = self.configs[kind].cmdargs
++            
++            env_has_buildtarget = 'MSVSBUILDTARGET' in self.env
++            if not env_has_buildtarget:
++                self.env['MSVSBUILDTARGET'] = buildtarget
++
++            starting = 'echo Starting SCons && '
++            if cmdargs:
++                cmdargs = ' ' + cmdargs
++            else:
++                cmdargs = ''
++            buildcmd    = xmlify(starting + self.env.subst('$MSVSBUILDCOM', 1) + cmdargs)
++            rebuildcmd  = xmlify(starting + self.env.subst('$MSVSREBUILDCOM', 1) + cmdargs)
++            cleancmd    = xmlify(starting + self.env.subst('$MSVSCLEANCOM', 1) + cmdargs)
++
++            preprocdefs = xmlify(';'.join(processDefines(self.env.get('CPPDEFINES', []))))
++            includepath = xmlify(';'.join(self.env.get('CPPPATH', [])))
++
++            if not env_has_buildtarget:
++                del self.env['MSVSBUILDTARGET']
++
++            self.file.write(V10DSPCommandLine % locals())
++        
++        self.file.write('\t</PropertyGroup>\n')
++        
++        #filter settings in MSVS 2010 are stored in separate file
++        self.filtersabs = self.dspabs + '.filters'
++        try:
++            self.filters_file = open(self.filtersabs, 'w')
++        except IOError, detail:
++            raise SCons.Errors.InternalError('Unable to open "' + self.filtersabs + '" for writing:' + str(detail))
++            
++        self.filters_file.write('<?xml version="1.0" encoding="utf-8"?>\n'
++                                '<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\n')
++                                
++        self.PrintSourceFiles()
++        
++        self.filters_file.write('</Project>')
++        self.filters_file.close()
++        
++        self.file.write('\t<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />\n'
++                        '\t<ImportGroup Label="ExtensionTargets">\n'
++                        '\t</ImportGroup>\n'
++                        '</Project>\n')
++                        
++        if self.nokeep == 0:
++            # now we pickle some data and add it to the file -- MSDEV will ignore it.
++            pdata = pickle.dumps(self.configs,1)
++            pdata = base64.encodestring(pdata)
++            self.file.write('<!-- SCons Data:\n' + pdata + '\n')
++            pdata = pickle.dumps(self.sources,1)
++            pdata = base64.encodestring(pdata)
++            self.file.write(pdata + '-->\n')
++
++    def printFilters(self, hierarchy, name):
++        sorteditems = sorted(hierarchy.items(), key = lambda a: a[0].lower())
++        
++        for key, value in sorteditems:
++            if SCons.Util.is_Dict(value):
++                filter_name = name + '\\' + key
++                self.filters_file.write('\t\t<Filter Include="%s">\n'
++                                        '\t\t\t<UniqueIdentifier>%s</UniqueIdentifier>\n'
++                                        '\t\t</Filter>\n' % (filter_name, _generateGUID(self.dspabs, filter_name)))
++                self.printFilters(value, filter_name)
++        
++    def printSources(self, hierarchy, kind, commonprefix, filter_name):
++        keywords = {'Source Files': 'ClCompile',
++                    'Header Files': 'ClInclude',
++                    'Local Headers': 'ClInclude',
++                    'Resource Files': 'None',
++                    'Other Files': 'None'}
++                    
++        sorteditems = sorted(hierarchy.items(), key = lambda a: a[0].lower())
++
++        # First folders, then files
++        for key, value in sorteditems:
++            if SCons.Util.is_Dict(value):
++                self.printSources(value, kind, commonprefix, filter_name + '\\' + key)
++
++        for key, value in sorteditems:
++            if SCons.Util.is_String(value):
++                file = value
++                if commonprefix:
++                    file = os.path.join(commonprefix, value)
++                file = os.path.normpath(file)
++                
++                self.file.write('\t\t<%s Include="%s" />\n' % (keywords[kind], file))
++                self.filters_file.write('\t\t<%s Include="%s">\n'
++                                        '\t\t\t<Filter>%s</Filter>\n'
++                                        '\t\t</%s>\n' % (keywords[kind], file, filter_name, keywords[kind]))
++
++    def PrintSourceFiles(self):
++        categories = {'Source Files': 'cpp;c;cxx;l;y;def;odl;idl;hpj;bat',
++                      'Header Files': 'h;hpp;hxx;hm;inl',
++                      'Local Headers': 'h;hpp;hxx;hm;inl',
++                      'Resource Files': 'r;rc;ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe',
++                      'Other Files': ''}
++        
++        cats = sorted([k for k in categories.keys() if self.sources[k]],
++		              key = lambda a: a.lower())
++        
++        # print vcxproj.filters file first
++        self.filters_file.write('\t<ItemGroup>\n')
++        for kind in cats:
++            self.filters_file.write('\t\t<Filter Include="%s">\n'
++                                    '\t\t\t<UniqueIdentifier>{7b42d31d-d53c-4868-8b92-ca2bc9fc052f}</UniqueIdentifier>\n'
++                                    '\t\t\t<Extensions>%s</Extensions>\n'
++                                    '\t\t</Filter>\n' % (kind, categories[kind]))
++                                    
++            # First remove any common prefix
++            sources = self.sources[kind]
++            commonprefix = None
++            if len(sources) > 1:
++                s = list(map(os.path.normpath, sources))
++                # take the dirname because the prefix may include parts
++                # of the filenames (e.g. if you have 'dir\abcd' and
++                # 'dir\acde' then the cp will be 'dir\a' )
++                cp = os.path.dirname( os.path.commonprefix(s) )
++                if cp and s[0][len(cp)] == os.sep:
++                    # +1 because the filename starts after the separator
++                    sources = [s[len(cp)+1:] for s in sources]
++                    commonprefix = cp
++            elif len(sources) == 1:
++                commonprefix = os.path.dirname( sources[0] )
++                sources[0] = os.path.basename( sources[0] )
++            
++            hierarchy = makeHierarchy(sources)
++            self.printFilters(hierarchy, kind)
++            
++        self.filters_file.write('\t</ItemGroup>\n')
++            
++        # then print files and filters
++        for kind in cats:
++            self.file.write('\t<ItemGroup>\n')
++            self.filters_file.write('\t<ItemGroup>\n')
++                
++            # First remove any common prefix
++            sources = self.sources[kind]
++            commonprefix = None
++            if len(sources) > 1:
++                s = list(map(os.path.normpath, sources))
++                # take the dirname because the prefix may include parts
++                # of the filenames (e.g. if you have 'dir\abcd' and
++                # 'dir\acde' then the cp will be 'dir\a' )
++                cp = os.path.dirname( os.path.commonprefix(s) )
++                if cp and s[0][len(cp)] == os.sep:
++                    # +1 because the filename starts after the separator
++                    sources = [s[len(cp)+1:] for s in sources]
++                    commonprefix = cp
++            elif len(sources) == 1:
++                commonprefix = os.path.dirname( sources[0] )
++                sources[0] = os.path.basename( sources[0] )
++            
++            hierarchy = makeHierarchy(sources)
++            self.printSources(hierarchy, kind, commonprefix, kind)
++                        
++            self.file.write('\t</ItemGroup>\n')
++            self.filters_file.write('\t</ItemGroup>\n')
++                
++        # add the SConscript file outside of the groups
++        self.file.write('\t<ItemGroup>\n'
++                        '\t\t<None Include="%s" />\n'
++                        #'\t\t<None Include="SConstruct" />\n'
++                        '\t</ItemGroup>\n' % str(self.sconscript))
++
++    def Parse(self):
++        print "_GenerateV10DSP.Parse()"
++
++    def Build(self):
++        try:
++            self.file = open(self.dspabs, 'w')
++        except IOError, detail:
++            raise SCons.Errors.InternalError('Unable to open "' + self.dspabs + '" for writing:' + str(detail))
++        else:
++            self.PrintHeader()
++            self.PrintProject()
++            self.file.close()
++
+ class _DSWGenerator(object):
+     """ Base class for DSW generators """
+     def __init__(self, dswfile, source, env):
+@@ -896,7 +1202,9 @@
+         self.version = self.env['MSVS_VERSION']
+         self.version_num, self.suite = msvs_parse_version(self.version)
+         self.versionstr = '7.00'
+-        if self.version_num >= 9.0:
++        if self.version_num >= 10.0:
++            self.versionstr = '11.00'
++        elif self.version_num >= 9.0:
+             self.versionstr = '10.00'
+         elif self.version_num >= 8.0:
+             self.versionstr = '9.00'
+@@ -998,7 +1306,9 @@
+     def PrintSolution(self):
+         """Writes a solution file"""
+         self.file.write('Microsoft Visual Studio Solution File, Format Version %s\n' % self.versionstr )
+-        if self.version_num >= 9.0:
++        if self.version_num >= 10.0:
++            self.file.write('# Visual Studio 2010\n')
++        elif self.version_num >= 9.0:
+             self.file.write('# Visual Studio 2008\n')
+         elif self.version_num >= 8.0:
+             self.file.write('# Visual Studio 2005\n')
+@@ -1168,7 +1478,10 @@
+     version_num = 6.0
+     if 'MSVS_VERSION' in env:
+         version_num, suite = msvs_parse_version(env['MSVS_VERSION'])
+-    if version_num >= 7.0:
++    if version_num >= 10.0:
++        g = _GenerateV10DSP(dspfile, source, env)
++        g.Build()
++    elif version_num >= 7.0:
+         g = _GenerateV7DSP(dspfile, source, env)
+         g.Build()
+     else:
+@@ -1431,7 +1744,6 @@
+     env['MSVSBUILDCOM'] = '$MSVSSCONSCOM "$MSVSBUILDTARGET"'
+     env['MSVSREBUILDCOM'] = '$MSVSSCONSCOM "$MSVSBUILDTARGET"'
+     env['MSVSCLEANCOM'] = '$MSVSSCONSCOM -c "$MSVSBUILDTARGET"'
+-    env['MSVSENCODING'] = 'Windows-1252'
+ 
+     # Set-up ms tools paths for default version
+     msvc_setup_env_once(env)
+@@ -1445,9 +1757,17 @@
+     if (version_num < 7.0):
+         env['MSVS']['PROJECTSUFFIX']  = '.dsp'
+         env['MSVS']['SOLUTIONSUFFIX'] = '.dsw'
+-    else:
++    elif (version_num < 10.0):
+         env['MSVS']['PROJECTSUFFIX']  = '.vcproj'
+         env['MSVS']['SOLUTIONSUFFIX'] = '.sln'
++    else:
++        env['MSVS']['PROJECTSUFFIX']  = '.vcxproj'
++        env['MSVS']['SOLUTIONSUFFIX'] = '.sln'
++		
++    if (version_num >= 10.0):
++        env['MSVSENCODING'] = 'utf-8'
++    else:
++        env['MSVSENCODING'] = 'Windows-1252'
+ 
+     env['GET_MSVSPROJECTSUFFIX']  = GetMSVSProjectSuffix
+     env['GET_MSVSSOLUTIONSUFFIX']  = GetMSVSSolutionSuffix
+Index: test/MSVS/vs-10.0-exec.py
+===================================================================
+--- test/MSVS/vs-10.0-exec.py	(revision 0)
++++ test/MSVS/vs-10.0-exec.py	(revision 0)
+@@ -0,0 +1,109 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can actually build a simple program using our generated
++Visual Studio 10.0 project (.vcxproj) and solution (.sln) files
++using Visual Studio 10.0 (Professional edition).
++"""
++
++import os
++import sys
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++if sys.platform != 'win32':
++    msg = "Skipping Visual Studio test on non-Windows platform '%s'\n" % sys.platform
++    test.skip_test(msg)
++
++msvs_version = '10.0'
++
++if not msvs_version in test.msvs_versions():
++    msg = "Visual Studio %s not installed; skipping test.\n" % msvs_version
++    test.skip_test(msg)
++
++
++
++# Let SCons figure out the Visual Studio environment variables for us and
++# print out a statement that we can exec to suck them into our external
++# environment so we can execute devenv and really try to build something.
++
++test.run(arguments = '-n -q -Q -f -', stdin = """\
++env = Environment(tools = ['msvc'], MSVS_VERSION='%(msvs_version)s')
++print "os.environ.update(%%s)" %% repr(env['ENV'])
++""" % locals())
++
++exec(test.stdout())
++
++
++
++test.subdir('sub dir')
++
++test.write(['sub dir', 'SConstruct'], """\
++env=Environment(MSVS_VERSION = '%(msvs_version)s')
++
++env.MSVSProject(target = 'foo.vcxproj',
++                srcs = ['foo.c'],
++                buildtarget = 'foo.exe',
++                variant = 'Release')
++
++env.Program('foo.c')
++""" % locals())
++
++test.write(['sub dir', 'foo.c'], r"""
++int
++main(int argc, char *argv)
++{
++    printf("foo.c\n");
++    exit (0);
++}
++""")
++
++test.run(chdir='sub dir', arguments='.')
++
++test.vcproj_sys_path(test.workpath('sub dir', 'foo.vcxproj'))
++
++import SCons.Platform.win32
++system_dll_path = os.path.join( SCons.Platform.win32.get_system_root(), 'System32' )
++os.environ['PATH'] = os.environ['PATH'] + os.pathsep + system_dll_path
++
++test.run(chdir='sub dir',
++         program=[test.get_msvs_executable(msvs_version)],
++         arguments=['foo.sln', '/build', 'Release'])
++
++test.run(program=test.workpath('sub dir', 'foo'), stdout="foo.c\n")
++
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-10.0-files.py
+===================================================================
+--- test/MSVS/vs-10.0-files.py	(revision 0)
++++ test/MSVS/vs-10.0-files.py	(revision 0)
+@@ -0,0 +1,106 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 10.0 project (.vcxproj) and
++solution (.sln) files that look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++host_arch = test.get_vs_host_arch()
++
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['10.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_10_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_10_0
++SConscript_contents = TestSConsMSVS.SConscript_contents_10_0
++
++
++
++test.write('SConstruct', SConscript_contents%{'HOST_ARCH': host_arch})
++
++test.run(arguments="Test.vcxproj")
++
++test.must_exist(test.workpath('Test.vcxproj'))
++vcproj = test.read('Test.vcxproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '10.0', None, 'SConstruct')
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '10.0', None, 'SConstruct')
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++test.run(arguments='-c .')
++
++test.must_not_exist(test.workpath('Test.vcxproj'))
++test.must_not_exist(test.workpath('Test.sln'))
++
++test.run(arguments='Test.vcxproj')
++
++test.must_exist(test.workpath('Test.vcxproj'))
++test.must_exist(test.workpath('Test.sln'))
++
++test.run(arguments='-c Test.sln')
++
++test.must_not_exist(test.workpath('Test.vcxproj'))
++test.must_not_exist(test.workpath('Test.sln'))
++
++
++
++# Test that running SCons with $PYTHON_ROOT in the environment
++# changes the .vcxproj output as expected.
++os.environ['PYTHON_ROOT'] = 'xyzzy'
++python = os.path.join('$(PYTHON_ROOT)', os.path.split(TestSConsMSVS.python)[1])
++
++test.run(arguments='Test.vcxproj')
++
++test.must_exist(test.workpath('Test.vcxproj'))
++vcproj = test.read('Test.vcxproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '10.0', None, 'SConstruct',
++                              python=python)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-10.0-scc-files.py
+===================================================================
+--- test/MSVS/vs-10.0-scc-files.py	(revision 0)
++++ test/MSVS/vs-10.0-scc-files.py	(revision 0)
+@@ -0,0 +1,115 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 10.0 project (.vcxproj) and
++solution (.sln) files that contain SCC information and look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['10.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_10_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_10_0
++SConscript_contents = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='10.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                MSVS_SCC_CONNECTION_ROOT='.',
++                MSVS_SCC_PROVIDER='MSSCCI:Perforce SCM',
++                MSVS_SCC_PROJECT_NAME='Perforce Project')
++
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
++
++env.MSVSProject(target = 'Test.vcxproj',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++expected_sln_sccinfo = """\
++\tGlobalSection(SourceCodeControl) = preSolution
++\t\tSccNumberOfProjects = 2
++\t\tSccProjectName0 = Perforce\u0020Project
++\t\tSccLocalPath0 = .
++\t\tSccProvider0 = MSSCCI:Perforce\u0020SCM
++\t\tCanCheckoutShared = true
++\t\tSccProjectUniqueName1 = Test.vcxproj
++\t\tSccLocalPath1 = .
++\t\tCanCheckoutShared = true
++\t\tSccProjectFilePathRelativizedFromConnection1 = .\\\\
++\tEndGlobalSection
++"""
++
++expected_vcproj_sccinfo = """\
++\t\t<SccProjectName>Perforce Project</SccProjectName>
++\t\t<SccLocalPath>.</SccLocalPath>
++\t\t<SccProvider>MSSCCI:Perforce SCM</SccProvider>
++"""
++
++
++test.write('SConstruct', SConscript_contents)
++
++test.run(arguments="Test.vcxproj")
++
++test.must_exist(test.workpath('Test.vcxproj'))
++vcproj = test.read('Test.vcxproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '10.0', None, 'SConstruct',
++                              vcproj_sccinfo=expected_vcproj_sccinfo)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '10.0', None, 'SConstruct',
++                              sln_sccinfo=expected_sln_sccinfo)
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-10.0-scc-legacy-files.py
+===================================================================
+--- test/MSVS/vs-10.0-scc-legacy-files.py	(revision 0)
++++ test/MSVS/vs-10.0-scc-legacy-files.py	(revision 0)
+@@ -0,0 +1,98 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 10.0 project (.vcxproj) and
++solution (.sln) files that contain SCC information and look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['10.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_10_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_10_0
++SConscript_contents = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='10.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                MSVS_SCC_LOCAL_PATH='C:\\MyMsVsProjects',
++                MSVS_SCC_PROJECT_NAME='Perforce Project')
++
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
++
++env.MSVSProject(target = 'Test.vcxproj',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++expected_vcproj_sccinfo = """\
++\t\t<SccProjectName>Perforce Project</SccProjectName>
++\t\t<SccLocalPath>C:\\MyMsVsProjects</SccLocalPath>
++"""
++
++
++test.write('SConstruct', SConscript_contents)
++
++test.run(arguments="Test.vcxproj")
++
++test.must_exist(test.workpath('Test.vcxproj'))
++vcproj = test.read('Test.vcxproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '10.0', None, 'SConstruct',
++                              vcproj_sccinfo=expected_vcproj_sccinfo)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '10.0', None, 'SConstruct')
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-10.0Exp-exec.py
+===================================================================
+--- test/MSVS/vs-10.0Exp-exec.py	(revision 0)
++++ test/MSVS/vs-10.0Exp-exec.py	(revision 0)
+@@ -0,0 +1,109 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can actually build a simple program using our generated
++Visual Studio 10.0 project (.vcxproj) and solution (.sln) files
++using Visual C++ 10.0 Express edition.
++"""
++
++import os
++import sys
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++if sys.platform != 'win32':
++    msg = "Skipping Visual Studio test on non-Windows platform '%s'\n" % sys.platform
++    test.skip_test(msg)
++
++msvs_version = '10.0Exp'
++
++if not msvs_version in test.msvs_versions():
++    msg = "Visual Studio %s not installed; skipping test.\n" % msvs_version
++    test.skip_test(msg)
++
++
++
++# Let SCons figure out the Visual Studio environment variables for us and
++# print out a statement that we can exec to suck them into our external
++# environment so we can execute devenv and really try to build something.
++
++test.run(arguments = '-n -q -Q -f -', stdin = """\
++env = Environment(tools = ['msvc'], MSVS_VERSION='%(msvs_version)s')
++print "os.environ.update(%%s)" %% repr(env['ENV'])
++""" % locals())
++
++exec(test.stdout())
++
++
++
++test.subdir('sub dir')
++
++test.write(['sub dir', 'SConstruct'], """\
++env=Environment(MSVS_VERSION = '%(msvs_version)s')
++
++env.MSVSProject(target = 'foo.vcxproj',
++                srcs = ['foo.c'],
++                buildtarget = 'foo.exe',
++                variant = 'Release')
++
++env.Program('foo.c')
++""" % locals())
++
++test.write(['sub dir', 'foo.c'], r"""
++int
++main(int argc, char *argv)
++{
++    printf("foo.c\n");
++    exit (0);
++}
++""")
++
++test.run(chdir='sub dir', arguments='.')
++
++test.vcproj_sys_path(test.workpath('sub dir', 'foo.vcxproj'))
++
++import SCons.Platform.win32
++system_dll_path = os.path.join( SCons.Platform.win32.get_system_root(), 'System32' )
++os.environ['PATH'] = os.environ['PATH'] + os.pathsep + system_dll_path
++
++test.run(chdir='sub dir',
++         program=[test.get_msvs_executable(msvs_version)],
++         arguments=['foo.sln', '/build', 'Release'])
++
++test.run(program=test.workpath('sub dir', 'foo'), stdout="foo.c\n")
++
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
