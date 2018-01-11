@@ -1,0 +1,33 @@
+Index: src/CHANGES.txt
+===================================================================
+--- src/CHANGES.txt	(revision 4559)
++++ src/CHANGES.txt	(working copy)
+@@ -120,10 +120,14 @@
+ 
+     - Fix problem with filenames of sideeffects when the user changes
+       the name of the output file from the latex default
+-      
++
+     - Add scanning of files included in Latex by means of \lstinputlisting{}
+       Patch from Stefan Hepp.
+ 
++    - Change command line for epstopdf to use --outfile= instead of -o
++      since this works on all platforms.
++      Patch from Stefan Hepp.
++
+ RELEASE 1.2.0.d20090223 - Mon, 23 Feb 2009 08:41:06 -0800
+ 
+   From Stanislav Baranov:
+Index: src/engine/SCons/Tool/pdf.py
+===================================================================
+--- src/engine/SCons/Tool/pdf.py	(revision 4554)
++++ src/engine/SCons/Tool/pdf.py	(working copy)
+@@ -64,7 +64,7 @@
+ 
+     env['EPSTOPDF']      = 'epstopdf'
+     env['EPSTOPDFFLAGS'] = SCons.Util.CLVar('')
+-    env['EPSTOPDFCOM']   = '$EPSTOPDF $EPSTOPDFFLAGS ${SOURCE} -o ${TARGET}'
++    env['EPSTOPDFCOM']   = '$EPSTOPDF $EPSTOPDFFLAGS ${SOURCE} --outfile=${TARGET}'
+ 
+ def exists(env):
+     # This only puts a skeleton Builder in place, so if someone
