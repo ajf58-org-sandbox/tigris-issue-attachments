@@ -1,0 +1,125 @@
+--- /usr/lib/scons/SCons/Tool/tex.py	2009-08-12 15:00:42.000000000 +0200
++++ tex.py	2009-08-13 18:54:48.625600728 +0200
+@@ -52,7 +52,7 @@
+ check_suffixes = ['.toc', '.lof', '.lot', '.out', '.nav', '.snm']
+ 
+ # these are files that require bibtex or makeindex to be run when they change
+-all_suffixes = check_suffixes + ['.bbl', '.idx', '.nlo', '.glo']
++all_suffixes = check_suffixes + ['.bbl', '.idx', '.nlo', '.glo', '.acn']
+ 
+ #
+ # regular expressions used to search for Latex features
+@@ -87,6 +87,8 @@
+ hyperref_re = re.compile(r"^[^%\n]*\\usepackage.*\{hyperref\}", re.MULTILINE)
+ makenomenclature_re = re.compile(r"^[^%\n]*\\makenomenclature", re.MULTILINE)
+ makeglossary_re = re.compile(r"^[^%\n]*\\makeglossary", re.MULTILINE)
++makeglossaries_re = re.compile(r"^[^%\n]*\\makeglossaries", re.MULTILINE)
++makeacronyms_re = re.compile(r"^[^%\n]*\\makeglossaries", re.MULTILINE)
+ beamer_re = re.compile(r"^[^%\n]*\\documentclass\{beamer\}", re.MULTILINE)
+ 
+ # search to find all files included by Latex
+@@ -121,6 +123,9 @@
+ # An action to run MakeIndex (for glossary) on a file.
+ MakeGlossaryAction = None
+ 
++# An action to run MakeIndex (for acronyms) on a file.
++MakeAcronymsAction = None
++
+ # Used as a return value of modify_env_var if the variable is not set.
+ _null = SCons.Scanner.LaTeX._null
+ 
+@@ -202,6 +207,8 @@
+     run_makeindex = makeindex_re.search(src_content) and not os.path.exists(targetbase + '.idx')
+     run_nomenclature = makenomenclature_re.search(src_content) and not os.path.exists(targetbase + '.nlo')
+     run_glossary = makeglossary_re.search(src_content) and not os.path.exists(targetbase + '.glo')
++    run_glossaries = makeglossaries_re.search(src_content) and not os.path.exists(targetbase + '.glo')
++    run_acronyms = makeacronyms_re.search(src_content) and not os.path.exists(targetbase + '.acn')
+ 
+     saved_hashes = {}
+     suffix_nodes = {}
+@@ -308,7 +315,7 @@
+                 return result
+ 
+         # Now decide if latex will need to be run again due to glossary.
+-        if check_MD5(suffix_nodes['.glo'],'.glo') or (count == 1 and run_glossary):
++        if check_MD5(suffix_nodes['.glo'],'.glo') or (count == 1 and run_glossaries) or (count == 1 and run_glossary):
+             # We must run makeindex
+             if Verbose:
+                 print "Need to run makeindex for glossary"
+@@ -317,6 +324,16 @@
+             if result != 0:
+                 return result
+ 
++        # Now decide if latex will need to be run again due to acronyms.
++        if check_MD5(suffix_nodes['.acn'],'.acn') or (count == 1 and run_acronyms):
++            # We must run makeindex
++            if Verbose:
++                print "Need to run makeindex for acronyms"
++            acrfile = suffix_nodes['.acn']
++            result = MakeAcronymsAction(acrfile, acrfile, env)
++            if result != 0:
++                return result
++
+         # Now decide if latex needs to be run yet again to resolve warnings.
+         if warning_rerun_re.search(logContent):
+             must_rerun_latex = True
+@@ -489,7 +506,7 @@
+     #
+     # file names we will make use of in searching the sources and log file
+     #
+-    emit_suffixes = ['.aux', '.log', '.ilg', '.blg', '.nls', '.nlg', '.gls', '.glg'] + all_suffixes
++    emit_suffixes = ['.aux', '.log', '.ilg', '.blg', '.nls', '.nlg', '.gls', '.glg', '.alg'] + all_suffixes
+     auxfilename = targetbase + '.aux'
+     logfilename = targetbase + '.log'
+ 
+@@ -503,6 +520,7 @@
+     idx_exists = os.path.exists(targetbase + '.idx')
+     nlo_exists = os.path.exists(targetbase + '.nlo')
+     glo_exists = os.path.exists(targetbase + '.glo')
++    acr_exists = os.path.exists(targetbase + '.acn')
+ 
+     # set up list with the regular expressions
+     # we use to find features used
+@@ -515,6 +533,8 @@
+                          hyperref_re,
+                          makenomenclature_re,
+                          makeglossary_re,
++                         makeglossaries_re,
++                         makeacronyms_re,
+                          beamer_re ]
+     # set up list with the file suffixes that need emitting
+     # when a feature is found
+@@ -527,6 +547,8 @@
+                   ['.out'],
+                   ['.nlo', '.nls', '.nlg'],
+                   ['.glo', '.gls', '.glg'],
++                  ['.glo', '.gls', '.glg'],
++                  ['.acn', '.acr', '.alg'],
+                   ['.nav', '.snm', '.out', '.toc'] ]
+     # build the list of lists
+     file_tests = []
+@@ -612,6 +634,12 @@
+     if MakeGlossaryAction is None:
+         MakeGlossaryAction = SCons.Action.Action("$MAKEGLOSSARYCOM", "$MAKEGLOSSARYCOMSTR")
+ 
++    # Define an action to run MakeIndex on a file for acronyms.
++    global MakeAcronymsAction
++    if MakeAcronymsAction is None:
++        MakeAcronymsAction = SCons.Action.Action("$MAKEACRONYMSCOM", "$MAKEACRONYMSCOMSTR")
++
++
+     global TeXLaTeXAction
+     if TeXLaTeXAction is None:
+         TeXLaTeXAction = SCons.Action.Action(TeXLaTeXFunction,
+@@ -647,6 +675,11 @@
+     env['MAKEGLOSSARYFLAGS'] = SCons.Util.CLVar('-s ${MAKEGLOSSARYSTYLE} -t ${SOURCE.filebase}.glg')
+     env['MAKEGLOSSARYCOM']   = 'cd ${TARGET.dir} && $MAKEGLOSSARY ${SOURCE.filebase}.glo $MAKEGLOSSARYFLAGS -o ${SOURCE.filebase}.gls'
+ 
++    env['MAKEACRONYMS']      = 'makeindex'
++    env['MAKEACRONYMSSTYLE'] = '${SOURCE.filebase}.ist'
++    env['MAKEACRONYMSFLAGS'] = SCons.Util.CLVar('-s ${MAKEACRONYMSSTYLE} -t ${SOURCE.filebase}.alg')
++    env['MAKEACRONYMSCOM']   = 'cd ${TARGET.dir} && $MAKEACRONYMS ${SOURCE.filebase}.acn $MAKEACRONYMSFLAGS -o ${SOURCE.filebase}.acr'
++
+     env['MAKENCL']      = 'makeindex'
+     env['MAKENCLSTYLE'] = '$nomencl.ist'
+     env['MAKENCLFLAGS'] = '-s ${MAKENCLSTYLE} -t ${SOURCE.filebase}.nlg'
