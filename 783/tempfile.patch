@@ -1,0 +1,77 @@
+Index: src/engine/SCons/Tool/mingw.py
+===================================================================
+--- src/engine/SCons/Tool/mingw.py	(revision 5129)
++++ src/engine/SCons/Tool/mingw.py	(working copy)
+@@ -43,14 +43,14 @@
+ import SCons.Util
+ 
+ # This is what we search for to find mingw:
+-key_program = 'mingw32-gcc'
++key_program = 'gcc'
+ 
+ def find(env):
+     # First search in the SCons path and then the OS path:
+     return env.WhereIs(key_program) or SCons.Util.WhereIs(key_program)
+ 
+ def shlib_generator(target, source, env, for_signature):
+-    cmd = SCons.Util.CLVar(['$SHLINK', '$SHLINKFLAGS']) 
++    cmd = ['$SHLINK', '$SHLINKFLAGS']
+ 
+     dll = env.FindIxes(target, 'SHLIBPREFIX', 'SHLIBSUFFIX')
+     if dll: cmd.extend(['-o', dll])
+@@ -65,7 +65,11 @@
+     if not insert_def in ['', '0', 0] and def_target: \
+         cmd.append('-Wl,--output-def,'+def_target.get_string(for_signature))
+ 
+-    return [cmd]
++    cmd = ' '.join(map(str, cmd))
++    if env['_MINGW_USE_TEMPFILE']:
++        return "${TEMPFILE('" + cmd + "')}"
++    else:
++        return cmd
+ 
+ def shlib_emitter(target, source, env):
+     dll = env.FindIxes(target, 'SHLIBPREFIX', 'SHLIBSUFFIX')
+@@ -82,13 +86,10 @@
+                                       'SHLIBPREFIX', 'SHLIBSUFFIX',
+                                       'LIBPREFIX', 'LIBSUFFIX'))
+ 
+-    # Append a def file target if there isn't already a def file target
+-    # or a def file source. There is no option to disable def file
+-    # target emitting, because I can't figure out why someone would ever
+-    # want to turn it off.
++    insert_def = env.subst("$WINDOWS_INSERT_DEF")
+     def_source = env.FindIxes(source, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
+     def_target = env.FindIxes(target, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
+-    if not def_source and not def_target:
++    if not insert_def in ['', '0', 0] and not def_source and not def_target:
+         target.append(env.ReplaceIxes(dll,  
+                                       'SHLIBPREFIX', 'SHLIBSUFFIX',
+                                       'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX'))
+@@ -120,6 +121,17 @@
+     env['CC'] = 'gcc'
+     env['SHCCFLAGS'] = SCons.Util.CLVar('$CCFLAGS')
+     env['CXX'] = 'g++'
++    # Enable TEMFILE only for gcc versions that support @ indirection
++    # since long command lines still can work if a custom spawner is used
++    version_major, version_minor = map(int, env["CCVERSION"].split("."))[0:2]
++    if version_major >= 4 and version_minor >= 1:
++        env['_MINGW_USE_TEMPFILE'] = True
++    else:
++        env['_MINGW_USE_TEMPFILE'] = False
++    env['_LINKCOM'] = env['LINKCOM']
++    env['LINKCOM'] = '${_MINGW_USE_TEMPFILE and TEMPFILE(_LINKCOM) or _LINKCOM}'
++    env['_ARCOM'] = env['ARCOM']
++    env['ARCOM'] = '${_MINGW_USE_TEMPFILE and TEMPFILE(_ARCOM) or _ARCOM}'
+     env['SHCXXFLAGS'] = SCons.Util.CLVar('$CXXFLAGS')
+     env['SHLINKFLAGS'] = SCons.Util.CLVar('$LINKFLAGS -shared')
+     env['SHLINKCOM']   = shlib_action
+@@ -148,6 +160,8 @@
+     env['LIBPREFIX'] = 'lib'
+     env['LIBSUFFIX'] = '.a'
+ 
++    env['MAXLINELENGTH'] = 8191
++
+ def exists(env):
+     return find(env)
+ 
