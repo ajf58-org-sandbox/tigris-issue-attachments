@@ -1,0 +1,23 @@
+=== modified file 'engine/SCons/Scanner/RC.py'
+--- engine/SCons/Scanner/RC.py	2010-02-03 15:22:00 +0000
++++ engine/SCons/Scanner/RC.py	2010-02-04 16:27:10 +0000
+@@ -36,11 +36,13 @@
+ 
+ def RCScan():
+     """Return a prototype Scanner instance for scanning RC source files"""
+- 
+-    res_re= r'^(?:\s*#\s*(?:include)|' \
+-            '.*?\s+(?:ICON|BITMAP|CURSOR|HTML|FONT|MESSAGETABLE|TYPELIB|REGISTRY|D3DFX)' \
+-            '\s*.*?)' \
+-            '\s*(<|"| )([^>"\s]+)(?:[>" ])*$'
++    
++    # We're looking for these:
++    #  #include "resources.h"
++    #  IDB_MANDATORY BITMAP "cb_mandatory.bmp"
++    res_re = (r'^\s*'+                         # skip witespace at the beginning of the line
++              r'(?:\w+\s+\w+|#\s*include)'+    # either "#include" or "BLAH BLAH"
++              r'\s+(["<])([^\s>"]+)(?:[>"]|)') # either "file" or <file>
+     resScanner = SCons.Scanner.ClassicCPP( "ResourceScanner",
+                                            "$RCSUFFIXES",
+                                            "CPPPATH",
+
