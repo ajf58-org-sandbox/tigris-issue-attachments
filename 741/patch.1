@@ -1,0 +1,15 @@
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 4819)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -749,6 +749,10 @@
+ 
+     # Here's where everything really happens.
+ 
++    # this needs to be set early to avoid prints we don't expect
++    progress_display.set_mode(not (options.no_progress or options.silent))
++    display.set_mode(not options.silent)
++
+     # First order of business:  set up default warnings and then
+     # handle the user's warning options, so that we can issue (or
+     # suppress) appropriate warnings about anything that might happen,
