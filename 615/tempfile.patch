@@ -1,0 +1,50 @@
+Index: engine/SCons/Platform/__init__.py
+===================================================================
+
+D:\work\BeoBuildEnv\scons>c:\bin\diff.exe -u -L "engine/SCons/Platform/__init__.py	(revision 588)" -L "engine/SCons/Platform/__init__.py	(working copy)" engine\SCons\Platform\.svn\text-base\__init__.py.svn-base engine\SCons\Platform\__init__.py 
+--- engine/SCons/Platform/__init__.py	(revision 588)
++++ engine/SCons/Platform/__init__.py	(working copy)
+@@ -137,11 +137,16 @@
+     env["LINKCOM"] = "${TEMPFILE('$LINK $TARGET $SOURCES')}"
+ 
+     By default, the name of the temporary file used begins with a
+-    prefix of '@'.  This may be configred for other tool chains by
++    prefix of '@'.  This may be configured for other tool chains by
+     setting '$TEMPFILEPREFIX'.
++    You can configure the extension of the temporary file through the
++    TEMPFILEEXTENSION variable, which defaults to '.lnk' (see comments
++    in the code below).
+ 
+     env["TEMPFILEPREFIX"] = '-@'        # diab compiler
+     env["TEMPFILEPREFIX"] = '-via'      # arm tool chain
++    env["TEMPFILEPREFIX"] = ''          # (the empty string) PC Lint
++    env["TEMPFILEEXTENSION"] = '.lnt'          # PC Lint
+     """
+     def __init__(self, cmd):
+         self.cmd = cmd
+@@ -176,7 +181,12 @@
+         # We use the .lnk suffix for the benefit of the Phar Lap
+         # linkloc linker, which likes to append an .lnk suffix if
+         # none is given.
+-        tmp = os.path.normpath(tempfile.mktemp('.lnk'))
++        if env.has_key('TEMPFILEEXTENSION'):
++          extension = env.subst('$TEMPFILEEXTENSION')
++        else:
++            extension = '.lnk'
++
++        tmp = os.path.normpath(tempfile.mktemp(extension))
+         native_tmp = SCons.Util.get_native_path(tmp)
+ 
+         if env['SHELL'] and env['SHELL'] == 'sh':
+@@ -192,8 +202,9 @@
+             # Windows path names.
+             rm = 'del'
+ 
+-        prefix = env.subst('$TEMPFILEPREFIX')
+-        if not prefix:
++        if env.has_key('TEMPFILEPREFIX'):
++            prefix = env.subst('$TEMPFILEPREFIX')
++        else:
+             prefix = '@'
+ 
+         args = map(SCons.Subst.quote_spaces, cmd[1:])
