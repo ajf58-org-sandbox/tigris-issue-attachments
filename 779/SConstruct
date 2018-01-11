@@ -1,0 +1,82 @@
+# Write data files, so the test is easy to run
+pkg_cfg = open('bug.pc', 'w')
+pkg_cfg.write("""prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: bug
+Description: A test case .pc file
+Version: 1.2
+Cflags: -DSOMETHING -DVARIABLE=2
+""")
+pkg_cfg.close()
+
+main_c = open('main.c', 'w')
+main_c.write("""int main(int argc, char *argv[])
+{
+  return 0;
+}
+""")
+main_c.close()
+
+# http://scons.tigris.org/issues/show_bug.cgi?id=2671
+# Passing test cases
+env_1 = Environment(CPPDEFINES=[('DEBUG','1'), 'TEST'])
+env_1.ParseConfig('PKG_CONFIG_PATH=. pkg-config --cflags bug')
+env_1.Object('test1','main.c')
+
+env_2 = Environment(CPPDEFINES=[('DEBUG','1'), 'TEST'])
+env_2.MergeFlags('-DSOMETHING -DVARIABLE=2')
+env_2.Object('test2','main.c')
+
+# Failing test cases
+env_3 = Environment(CPPDEFINES={'DEBUG':1, 'TEST':None})
+env_3.ParseConfig('PKG_CONFIG_PATH=. pkg-config --cflags bug')
+env_3.Object('test3','main.c')
+
+env_4 = Environment(CPPDEFINES={'DEBUG':1, 'TEST':None})
+env_4.MergeFlags('-DSOMETHING -DVARIABLE=2')
+env_4.Object('test4','main.c')
+
+# http://scons.tigris.org/issues/show_bug.cgi?id=1738
+env_1738_1 = Environment(tools=['default'])
+env_1738_1.ParseConfig('pkg-config --cflags --libs xtrans')
+env_1738_1.Append(CPPDEFINES={'value' : '1'})
+env_1738_1.Object('test_1738_1', 'main.c')
+
+env_1738_2 = Environment()
+env_1738_2['CPPDEFINES'] = ['FOO']
+env_1738_2.Append(CPPDEFINES={'value' : '1'})
+env_1738_2.Object('test_1738_2', 'main.c')
+
+# http://scons.tigris.org/issues/show_bug.cgi?id=2300
+env_2300_1 = DefaultEnvironment(CPPDEFINES = 'foo')
+env_2300_1.Append(CPPDEFINES='bar')
+env_2300_1.Object('test_2300_1', 'main.c')
+
+env_2300_2 = DefaultEnvironment(CPPDEFINES = ['foo']) # note the list
+env_2300_2.Append(CPPDEFINES='bar')
+env_2300_2.Object('test_2300_2', 'main.c')
+
+# http://scons.tigris.org/issues/show_bug.cgi?id=1152
+cases=[('string', 'FOO'),
+       ('list', ['NAME1', 'NAME2']),
+       ('list-of-2lists', [('NAME1','VAL1'), ['NAME2','VAL2']]),
+       ('dict', {'NAME1' : 'VAL1', 'NAME2' : 'VAL2'})
+       ]
+
+for (t1, c1) in cases:
+    for (t2, c2) in cases:
+        print "==== Testing CPPDEFINES, appending a %s to a %s"%(t2, t1)
+        print "   orig = %s, append = %s"%(c1, c2)
+        env=Environment(CPPDEFINES = c1)
+        env.Append(CPPDEFINES = c2)
+        final=env.subst('$_CPPDEFFLAGS',source="src", target="tgt")
+        print 'Append: \n\tresult=%s\n\tfinal=%s'%\
+              (env['CPPDEFINES'], final)
+        env=Environment(CPPDEFINES = c1)
+        env.AppendUnique(CPPDEFINES = c2)
+        final=env.subst('$_CPPDEFFLAGS',source="src", target="tgt")
+        print 'AppendUnique:\n\tresult=%s\n\tfinal=%s'%\
+              (env['CPPDEFINES'], final)
