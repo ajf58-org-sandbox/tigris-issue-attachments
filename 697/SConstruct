@@ -1,0 +1,22 @@
+# Paranthesis in files' names test.
+# Note that 'cat a(' is a syntax error, but 'cat "a("' works, and
+# a backslash is needed in the following: sh -c "cat a\(".
+
+e = Environment()
+
+with open('a(', 'w') as f:
+	f.write('I have a "(" in my name.\n')
+
+with open('a (', 'w') as f:
+	f.write('I have a space and "(" in my name.\n')
+
+e.Command('t1', 'a(',  'cat $SOURCE"') 
+# cat a(
+# cat: a\(: No such file or directory
+
+e.Command('t2', 'a (', 'cat $SOURCE')
+# cat "a ("
+# cat: a \(: No such file or directory
+
+
+
