@@ -1,0 +1,48 @@
+Index: src/engine/SCons/Executor.py
+===================================================================
+--- src/engine/SCons/Executor.py	(revision 5214)
++++ src/engine/SCons/Executor.py	(working copy)
+@@ -238,6 +238,13 @@
+             result.extend(batch.targets)
+         return result
+ 
++    def get_node_targets(self, node):
++        result = []
++        for batch in self.batches:
++            if node in batch.targets:
++                result.extend(batch.targets)
++        return result
++
+     def get_all_sources(self):
+         """Returns all sources for all batches of this Executor."""
+         result = []
+
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 5214)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -622,9 +622,22 @@
+                 # essentially short-circuits an N*M scan of the
+                 # sources for each individual target, which is a hell
+                 # of a lot more efficient.
+-                for tgt in executor.get_all_targets():
+-                    tgt.add_to_implicit(implicit)
+ 
++                # Coment to previous comment. Getting all targets
++                # when MSVC_BATCH is enabled causes to rebuild all
++                # targets and not only needed ones. Moreover it
++                # caused deps to be set incorrectly - deps from each
++                # node was set as deps to all targets in batch.
++                # Following fix is not the best one but should work.
++                if 'MSVC_BATCH' in build_env and build_env['MSVC_BATCH']:
++                    # batch mode
++                    for tgt in executor.get_node_targets(self):
++                        tgt.add_to_implicit(implicit)
++                else:
++                    # default mode
++                    for tgt in executor.get_all_targets():
++                        tgt.add_to_implicit(implicit)
++
+                 if implicit_deps_unchanged or self.is_up_to_date():
+                     return
+                 # one of this node's sources has changed,
