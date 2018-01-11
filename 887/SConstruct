@@ -1,0 +1,15 @@
+e = Environment()
+
+def emit(source, target, env):
+    print 'FOO =', env['FOO']
+    env.SetDefault(FOO='BAR')
+    print 'FOO =', env['FOO']
+    return (target, source)
+
+e['BUILDERS']['Foo'] = Builder(action='cat < $SOURCE > $TARGET',
+                               emitter=emit,
+                               suffix='out')
+
+e.Foo('foo', FOO='bar')
+
+# vim:ft=python
