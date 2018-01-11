@@ -1,0 +1,16 @@
+Index: src/engine/SCons/Defaults.py
+===================================================================
+--- src/engine/SCons/Defaults.py	(revision 5177)
++++ src/engine/SCons/Defaults.py	(working copy)
+@@ -199,9 +199,9 @@
+         dest = [dest]
+     for entry in dest:
+         entry = str(entry)
+-        if not must_exist and not os.path.exists(entry):
++        if not must_exist and not os.path.exists(entry) and not os.path.islink(entry):
+             continue
+-        if not os.path.exists(entry) or os.path.isfile(entry):
++        if not os.path.exists(entry) or os.path.isfile(entry) or os.path.islink(entry):
+             os.unlink(entry)
+             continue
+         else:
