@@ -1,0 +1,133 @@
+Index: test/SWIG/module-parens.py
+===================================================================
+*** test/SWIG/module-parens.py	(revision 3873)
+--- test/SWIG/module-parens.py	(working copy)
+***************
+*** 59,76 ****
+      # SWIG requires the -classic flag on pre-2.0 Python versions.
+      env.Append(SWIGFLAGS = ' -classic')
+  
+! env.LoadableModule('test1.so', ['test1.i', 'test1.cc'])
+! env.LoadableModule('test2.so', ['test2.i', 'test2.cc'])
+! env.Clean('.', ['test1_wrap.h', 'test2_wrap.h'])  ### SEE NOTE BELOW
+  """ % locals())
+- # NOTE: For some reason, this test on OS X is unstable.  The first time 'scons'
+- # is run, it works as expected.  However, when 'scons' is run again, the
+- # 'test?_wrap.os' files are rebuilt.  (When run a third time, it correctly
+- # determines that nothing is to be rebuilt.)  When 'scons -c' is run, the
+- # 'test?_wrap.h' files are not removed, meaning that they are not identified
+- # by the emitter.  Mentioning the two files in the SConscript file stabilizes
+- # the runs and makes the test reliable.  When whatever that is causing this
+- # instability is chased down and cured, this hack should be removed.
+  
+  test.write(['test1.cc'], """\
+  int test1func()
+--- 59,67 ----
+      # SWIG requires the -classic flag on pre-2.0 Python versions.
+      env.Append(SWIGFLAGS = ' -classic')
+  
+! env.LoadableModule('test1.so', 'test1.i')
+! env.LoadableModule('test2.so', 'test2.i')
+  """ % locals())
+  
+  test.write(['test1.cc'], """\
+  int test1func()
+***************
+*** 116,121 ****
+--- 107,115 ----
+  
+  test.run(arguments = '.')
+  
++ # Note that both tests use directors, so a file *_wrap.h should be generated
++ # in each case. If the emitter does not correctly allow for this, the test will
++ # not be up to date.
+  test.up_to_date(arguments = '.')
+  
+  test.pass_test()
+Index: src/engine/SCons/Tool/swig.py
+===================================================================
+*** src/engine/SCons/Tool/swig.py	(revision 3873)
+--- src/engine/SCons/Tool/swig.py	(working copy)
+***************
+*** 56,67 ****
+  
+  def _find_modules(src):
+      """Find all modules referenced by %module lines in `src`, a SWIG .i file.
+!        Returns a list of all modules."""
+      mnames = []
+      matches = _reModule.findall(open(src).read())
+      for m in matches:
+          mnames.append(m[2])
+!     return mnames
+  
+  def _swigEmitter(target, source, env):
+      swigflags = env.subst("$SWIGFLAGS", target=target, source=source)
+--- 56,82 ----
+  
+  def _find_modules(src):
+      """Find all modules referenced by %module lines in `src`, a SWIG .i file.
+!        Returns a list of all modules, and a flag set if SWIG directors have
+!        been requested (SWIG will generate an additional header file in this
+!        case.)"""
+!     directors = False
+      mnames = []
+      matches = _reModule.findall(open(src).read())
+      for m in matches:
+          mnames.append(m[2])
+!         directors = directors or 'directors' in m[0]
+!     return mnames, directors
+! 
+! def _add_director_header_targets(target, env):
+!     # Directors only work with C++ code, not C
+!     suffix = env.subst(env['SWIGCXXFILESUFFIX'])
+!     # For each file ending in SWIGCXXFILESUFFIX, add a new target director
+!     # header by replacing the ending with SWIGDIRECTORSUFFIX.
+!     for x in target[:]:
+!         n = x.name
+!         d = x.dir
+!         if n.endswith(suffix):
+!             target.append(d.File(n[:-len(suffix)] + env['SWIGDIRECTORSUFFIX']))
+  
+  def _swigEmitter(target, source, env):
+      swigflags = env.subst("$SWIGFLAGS", target=target, source=source)
+***************
+*** 71,82 ****
+          mnames = None
+          if "-python" in flags and "-noproxy" not in flags:
+              if mnames is None:
+!                 mnames = _find_modules(src)
+              target.extend(map(lambda m, d=target[0].dir:
+                                       d.File(m + ".py"), mnames))
+          if "-java" in flags:
+              if mnames is None:
+!                 mnames = _find_modules(src)
+              java_files = map(lambda m: [m + ".java", m + "JNI.java"], mnames)
+              java_files = SCons.Util.flatten(java_files)
+              outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
+--- 86,101 ----
+          mnames = None
+          if "-python" in flags and "-noproxy" not in flags:
+              if mnames is None:
+!                 mnames, directors = _find_modules(src)
+!             if directors:
+!                 _add_director_header_targets(target, env)
+              target.extend(map(lambda m, d=target[0].dir:
+                                       d.File(m + ".py"), mnames))
+          if "-java" in flags:
+              if mnames is None:
+!                 mnames, directors = _find_modules(src)
+!             if directors:
+!                 _add_director_header_targets(target, env)
+              java_files = map(lambda m: [m + ".java", m + "JNI.java"], mnames)
+              java_files = SCons.Util.flatten(java_files)
+              outdir = env.subst('$SWIGOUTDIR', target=target, source=source)
+***************
+*** 110,115 ****
+--- 129,135 ----
+  
+      env['SWIG']              = 'swig'
+      env['SWIGFLAGS']         = SCons.Util.CLVar('')
++     env['SWIGDIRECTORSUFFIX'] = '_wrap.h'
+      env['SWIGCFILESUFFIX']   = '_wrap$CFILESUFFIX'
+      env['SWIGCXXFILESUFFIX'] = '_wrap$CXXFILESUFFIX'
+      env['_SWIGOUTDIR']       = '${"-outdir " + str(SWIGOUTDIR)}'
