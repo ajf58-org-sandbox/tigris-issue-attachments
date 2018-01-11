@@ -1,0 +1,103 @@
+DEBUG:root:trying to find VC 14.0
+DEBUG:root:find_vc_dir(): found VC in registry: D:\VS2015\VC\
+DEBUG:root:found VC 14.0
+DEBUG:root:trying to find VC 14.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VCExpress\\14.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 14.0Exp
+DEBUG:root:trying to find VC 12.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\12.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 12.0
+DEBUG:root:trying to find VC 12.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VCExpress\\12.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 12.0Exp
+DEBUG:root:trying to find VC 11.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\11.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 11.0
+DEBUG:root:trying to find VC 11.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VCExpress\\11.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 11.0Exp
+DEBUG:root:trying to find VC 10.0
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:found VC 10.0
+DEBUG:root:trying to find VC 10.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VCExpress\\10.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 10.0Exp
+DEBUG:root:trying to find VC 9.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\9.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 9.0
+DEBUG:root:trying to find VC 9.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VCExpress\\9.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 9.0Exp
+DEBUG:root:trying to find VC 8.0
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files\Microsoft Visual Studio 8\VC\
+DEBUG:root:found VC 8.0
+DEBUG:root:trying to find VC 8.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VCExpress\\8.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 8.0Exp
+DEBUG:root:trying to find VC 7.1
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\7.1\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 7.1
+DEBUG:root:trying to find VC 7.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\7.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 7.0
+DEBUG:root:trying to find VC 6.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\6.0\\Setup\\Microsoft Visual C++\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 6.0
+DEBUG:root:msvc_setup_env()
+DEBUG:root:get_default_version()
+DEBUG:root:get_default_version(): msvc_version:None msvs_version:None
+DEBUG:root:installed_vcs:['14.0', '10.0', '8.0']
+DEBUG:root:msvc_setup_env: using default installed MSVC version '14.0'
+
+DEBUG:root:msvc_setup_env: using specified MSVC version '14.0'
+
+DEBUG:root:vc.py:msvc_find_valid_batch_script()
+DEBUG:root:vc.py:get_host_target()
+DEBUG:root:vc.py:get_host_target() req_target_platform:None
+DEBUG:root:msvs_find_valid_batch_script(): req_target_platform None target_platform:x86
+DEBUG:root:msvs_find_valid_batch_script(): host_platform: x86 try_target_archs:['x86']
+DEBUG:root:vc.py:msvc_find_valid_batch_script() trying target_platform:x86
+DEBUG:root:find_vc_dir(): found VC in registry: D:\VS2015\VC\
+DEBUG:root:vc.py: find_batch_file() pdir:D:\VS2015\VC\
+DEBUG:root:sdk.py:get_installed_sdks()
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 7.1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v7.1\InstallationFolder
+DEBUG:root:find_sdk_dir(): Trying SDK Dir: C:\Program Files\Microsoft SDKs\Windows\v7.1\
+DEBUG:root:MSCommon/sdk.py:found SDK 7.1
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 7.0A
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v7.0A\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v7.0A\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 7.0
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v7.0\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v7.0\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.1\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.1\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.0A
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.0A\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.0A\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.0
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.0\InstallationFolder
+DEBUG:root:find_sdk_dir(): Trying SDK Dir: C:\Program Files\Microsoft SDKs\Windows\v6.0\
+DEBUG:root:MSCommon/sdk.py:found SDK 6.0
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 2003R2
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\MicrosoftSDK\InstalledSDKS\D2FF9F89-8AA2-4373-8A31-C838BF4DBBE1\Install Dir
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\D2FF9F89-8AA2-4373-8A31-C838BF4DBBE1\\Install Dir'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 2003R1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\MicrosoftSDK\InstalledSDKS\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3\Install Dir
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3\\Install Dir'
+DEBUG:root:sdk.py: get_sdk_vc_script():arch_string:x86 host_arch:x86 target_arch:x86
+DEBUG:root:sdk.py: get_sdk_vc_script():file:bin\vcvars32.bat
+DEBUG:root:vc.py:find_batch_file() sdk_bat_file_path:D:\VS2015\VC\bin\vcvars32.bat
+DEBUG:root:vc.py:msvc_find_valid_batch_script() vc_script:D:\VS2015\VC\vcvarsall.bat sdk_script:D:\VS2015\VC\bin\vcvars32.bat
+DEBUG:root:vc.py:msvc_find_valid_batch_script() use_script 2 u'D:\\VS2015\\VC\\vcvarsall.bat', args:x86
+
+DEBUG:root:PATH: C:\Windows\System32
+DEBUG:root:Calling 'D:\VS2015\VC\vcvarsall.bat x86'
+DEBUG:root:vc.py:msvc_find_valid_batch_script() Found a working script/target: u'D:\\VS2015\\VC\\bin\\vcvars32.bat' x86
+DEBUG:root:vc.py:msvc_setup_env() use_script 2 {'PATH': ['D:\\VS2015\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow', 'C:\\Program Files\\Microsoft SDKs\\F#\\4.0\\Framework\\v4.0\\', 'D:\\VS2015\\Common7\\IDE\\', 'D:\\VS2015\\VC\\BIN', 'D:\\VS2015\\Common7\\Tools', 'C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319', 'D:\\VS2015\\VC\\VCPackages', 'D:\\VS2015\\Team Tools\\Performance Tools', 'C:\\Program Files\\Windows Kits\\10\\bin\\x86', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v10.0A\\bin\\NETFX 4.6 Tools\\', 'C:\\Windows\\System32'], 'INCLUDE': ['D:\\VS2015\\VC\\INCLUDE', 'D:\\VS2015\\VC\\ATLMFC\\INCLUDE', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\ucrt', 'C:\\Program Files\\Windows Kits\\NETFXSDK\\4.6\\include\\um', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\shared', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\um', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\winrt'], 'LIB': ['D:\\VS2015\\VC\\LIB', 'D:\\VS2015\\VC\\ATLMFC\\LIB', 'C:\\Program Files\\Windows Kits\\10\\lib\\10.0.10240.0\\ucrt\\x86', 'C:\\Program Files\\Windows Kits\\NETFXSDK\\4.6\\lib\\um\\x86', 'C:\\Program Files\\Windows Kits\\10\\lib\\10.0.10240.0\\um\\x86'], 'LIBPATH': ['C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319', 'D:\\VS2015\\VC\\LIB', 'D:\\VS2015\\VC\\ATLMFC\\LIB', 'C:\\Program Files\\Windows Kits\\10\\UnionMetadata', 'C:\\Program Files\\Windows Kits\\10\\References', 'C:\\Program Files\\Windows Kits\\10\\References\\Windows.Foundation.UniversalApiContract\\1.0.0.0', 'C:\\Program Files\\Windows Kits\\10\\References\\Windows.Foundation.FoundationContract\\1.0.0.0', 'C:\\Program Files\\Windows Kits\\10\\References\\indows.Networking.Connectivity.WwanContract\\1.0.0.0', '\\Microsoft.VCLibs\\14.0\\References\\CommonConfiguration\\neutral']}
+
+DEBUG:root:vc.py:msvc_setup_env() env:PATH -> ['D:\\VS2015\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow', 'C:\\Program Files\\Microsoft SDKs\\F#\\4.0\\Framework\\v4.0\\', 'D:\\VS2015\\Common7\\IDE\\', 'D:\\VS2015\\VC\\BIN', 'D:\\VS2015\\Common7\\Tools', 'C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319', 'D:\\VS2015\\VC\\VCPackages', 'D:\\VS2015\\Team Tools\\Performance Tools', 'C:\\Program Files\\Windows Kits\\10\\bin\\x86', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v10.0A\\bin\\NETFX 4.6 Tools\\', 'C:\\Windows\\System32']
+DEBUG:root:vc.py:msvc_setup_env() env:INCLUDE -> ['D:\\VS2015\\VC\\INCLUDE', 'D:\\VS2015\\VC\\ATLMFC\\INCLUDE', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\ucrt', 'C:\\Program Files\\Windows Kits\\NETFXSDK\\4.6\\include\\um', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\shared', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\um', 'C:\\Program Files\\Windows Kits\\10\\include\\10.0.10240.0\\winrt']
+DEBUG:root:vc.py:msvc_setup_env() env:LIB -> ['D:\\VS2015\\VC\\LIB', 'D:\\VS2015\\VC\\ATLMFC\\LIB', 'C:\\Program Files\\Windows Kits\\10\\lib\\10.0.10240.0\\ucrt\\x86', 'C:\\Program Files\\Windows Kits\\NETFXSDK\\4.6\\lib\\um\\x86', 'C:\\Program Files\\Windows Kits\\10\\lib\\10.0.10240.0\\um\\x86']
+DEBUG:root:vc.py:msvc_setup_env() env:LIBPATH -> ['C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319', 'D:\\VS2015\\VC\\LIB', 'D:\\VS2015\\VC\\ATLMFC\\LIB', 'C:\\Program Files\\Windows Kits\\10\\UnionMetadata', 'C:\\Program Files\\Windows Kits\\10\\References', 'C:\\Program Files\\Windows Kits\\10\\References\\Windows.Foundation.UniversalApiContract\\1.0.0.0', 'C:\\Program Files\\Windows Kits\\10\\References\\Windows.Foundation.FoundationContract\\1.0.0.0', 'C:\\Program Files\\Windows Kits\\10\\References\\indows.Networking.Connectivity.WwanContract\\1.0.0.0', '\\Microsoft.VCLibs\\14.0\\References\\CommonConfiguration\\neutral']
