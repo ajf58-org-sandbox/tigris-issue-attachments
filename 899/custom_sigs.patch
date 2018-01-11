@@ -1,0 +1,163 @@
+diff --git a/mydev/SConstruct b/mydev/SConstruct
+new file mode 100644
+--- /dev/null
++++ b/mydev/SConstruct
+@@ -0,0 +1,56 @@
++env = Environment()
++import SCons
++
++def myDecider(dependency, target, prev_ni):
++    
++    # We always have to init the .ext_sig value...
++    dep_ext_sig = dependency.get_ext_sig()
++
++    if prev_ni is None:
++        ## No previous record -> first time looking at this -> "changed"
++        return True
++    try:
++        prev_ext_sig = prev_ni.ext_sig
++    except AttributeError:
++        ## No .ext_sig attribute -> first time looking at this (with ext_sig aware code) -> "changed"
++        return True
++
++    #Finally, compare extended signatures
++    return dep_ext_sig != prev_ext_sig
++
++env.Decider(myDecider)
++
++
++def hashImportantLines(contents):
++
++    """Takes a hash of lines that don't begin with #.  This is just an
++    example! I'm not certain that '\n'.join(X.split('\n')) == X for
++    all X.  Think about trailing newlines.  Also doesn't consider CRLF
++    line breaks, etc...    
++    """
++    reduced_contents = []
++    for line in contents.split('\n'):
++        if len(line)==0 or line[0] != '#':
++            reduced_contents.append(line)
++    return SCons.Util.MD5signature('\n'.join(reduced_contents))    
++
++
++def sigMaker(f):
++    ninfo = f.get_ninfo()    
++    #print "Executing sigMaker"
++    ext_sig = hashImportantLines(f.get_contents())
++    ninfo.ext_sig = ext_sig
++    return ext_sig
++
++SCons.Defaults.DefaultEnvironment().ExtSignature(sigMaker)
++env.ExtSignature(sigMaker)
++#print "Just set it for env %s" % repr(env)
++#print "default env is %s" % repr(SCons.Defaults.DefaultEnvironment())
++
++b=Builder(action="bash myscript.sh $SOURCE $TARGET")
++env.Append(BUILDERS={'B' : b})
++env.Export()
++
++i=File('myinput.txt')
++x=env.B(['myoutput.txt'],[i])
++print repr(i.rfile().get_ninfo().__dict__)
+diff --git a/mydev/myinput.txt b/mydev/myinput.txt
+new file mode 100644
+--- /dev/null
++++ b/mydev/myinput.txt
+@@ -0,0 +1,3 @@
++A line I care about
++#A line I don't care about -- 2012-07-30 13:34:58.761217476-04:00
++Another line I do care about
+diff --git a/mydev/myoutput.txt b/mydev/myoutput.txt
+new file mode 100644
+--- /dev/null
++++ b/mydev/myoutput.txt
+@@ -0,0 +1,1 @@
++Last changed: 2012-07-30 13:34:58.761217476-04:00
+diff --git a/mydev/myscript.sh b/mydev/myscript.sh
+new file mode 100644
+--- /dev/null
++++ b/mydev/myscript.sh
+@@ -0,0 +1,6 @@
++#!/bin/bash
++
++NOW=`date --rfc-3339=ns`
++awk "/^[^#]/{print}; /^#/{print \"#A line I don't care about -- $NOW\"}" $1 > tmp.txt
++mv tmp.txt $1
++echo "Last changed: $NOW" > $2
+\ No newline at end of file
+diff --git a/src/engine/SCons/Environment.py b/src/engine/SCons/Environment.py
+--- a/src/engine/SCons/Environment.py
++++ b/src/engine/SCons/Environment.py
+@@ -888,6 +888,10 @@
+     f = SCons.Defaults.DefaultEnvironment().copy_from_cache
+     return f(src, dst)
+ 
++def default_ext_signature(target):
++    """ Create no extended signature """
++    return None
++
+ class Base(SubstitutionEnvironment):
+     """Base class for "real" construction Environments.  These are the
+     primary objects used to communicate dependency and construction
+@@ -948,6 +952,7 @@
+         # OverrideEnvironment or what have you.
+         self.decide_target = default_decide_target
+         self.decide_source = default_decide_source
++        self.ext_signature = default_ext_signature
+ 
+         self.copy_from_cache = default_copy_from_cache
+ 
+@@ -1456,6 +1461,12 @@
+     def _copy2_from_cache(self, src, dst):
+         return self.fs.copy2(src, dst)
+ 
++    def ExtSignature(self, function):
++        if callable(function):
++            self.ext_signature=function
++        else:
++            raise UserError("ExtSignature parameter must be a function.  Don't know what to do with %s" % repr(function))
++
+     def Decider(self, function):
+         copy_function = self._copy2_from_cache
+         if function in ('MD5', 'content'):
+diff --git a/src/engine/SCons/Node/FS.py b/src/engine/SCons/Node/FS.py
+--- a/src/engine/SCons/Node/FS.py
++++ b/src/engine/SCons/Node/FS.py
+@@ -2256,7 +2256,7 @@
+ class FileNodeInfo(SCons.Node.NodeInfoBase):
+     current_version_id = 1
+ 
+-    field_list = ['csig', 'timestamp', 'size']
++    field_list = ['csig', 'ext_sig', 'timestamp', 'size']
+ 
+     # This should get reset by the FS initialization.
+     fs = None
+@@ -2733,6 +2733,9 @@
+         if csig:
+             ninfo.csig = csig
+ 
++        ext_sig = self.get_ext_sig()
++        ninfo.ext_sig = ext_sig
++
+         ninfo.timestamp = self.get_timestamp()
+         ninfo.size      = self.get_size()
+ 
+@@ -2948,6 +2951,18 @@
+ 
+         return csig
+ 
++
++    def get_ext_sig(self):
++        e = self.get_env()
++        f = e.ext_signature
++        h = hash(f.__code__)
++        v = f(self)    
++        #print "in env %s %s(self) (hash %X)=%s" % (repr(e), repr(f), h, repr(v))
++        annotated_sig = (f.__name__, h, v)
++        self.get_ninfo().ext_sig = annotated_sig
++        return annotated_sig
++
++
+     #
+     # DECISION SUBSYSTEM
+     #
