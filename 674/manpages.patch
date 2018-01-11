@@ -1,0 +1,67 @@
+Index: scons-1.2.0.d20091224/scons.1
+===================================================================
+--- scons-1.2.0.d20091224.orig/scons.1	2009-12-29 13:03:28.105283822 +0100
++++ scons-1.2.0.d20091224/scons.1	2009-12-29 13:01:50.725294000 +0100
+@@ -8994,7 +8994,7 @@
+ .IP FORTRANPPCOMSTR
+ The string displayed when a Fortran source file
+ is compiled to an object file
+-after first running the file throught the C preprocessor.
++after first running the file through the C preprocessor.
+ If this is not set, then $FORTRANPPCOM
+ (the command line) is displayed.
+ 
+@@ -9074,7 +9074,7 @@
+ general user-supplied frameworks options to be added at
+ the end of a command
+ line building a loadable module.
+-(This has been largely superceded by
++(This has been largely superseded by
+ the $FRAMEWORKPATH, $FRAMEWORKPATHPREFIX,
+ $FRAMEWORKPREFIX and $FRAMEWORKS variables
+ described above.)
+@@ -10348,7 +10348,7 @@
+ The prefix used for PostScript file names.
+ 
+ .IP QT_AUTOSCAN
+-Turn off scanning for mocable files. Use the Moc Builder to explicitely
++Turn off scanning for mocable files. Use the Moc Builder to explicitly
+ specify files to run moc on.
+ 
+ .IP QT_BINPATH
+@@ -10989,7 +10989,7 @@
+ .IP SHFORTRANPPCOMSTR
+ The string displayed when a Fortran source file
+ is compiled to a shared-library object file
+-after first running the file throught the C preprocessor.
++after first running the file through the C preprocessor.
+ If this is not set, then $SHFORTRANPPCOM
+ (the command line) is displayed.
+ 
+@@ -11003,7 +11003,7 @@
+ The linker for programs that use shared libraries.
+ 
+ .IP SHLINKCOM
+-The command line used to link programs using shared libaries.
++The command line used to link programs using shared libraries.
+ 
+ .IP SHLINKCOMSTR
+ The string displayed when programs using shared libraries are linked.
+@@ -11279,7 +11279,7 @@
+ used on other OSes as well.
+ 
+ Valid values for Windows are 'x86', 'i386' (for 32 bits); 
+-'amd64', 'emt64', 'x86_64' (64 bits);
++\&'amd64', 'emt64', 'x86_64' (64 bits);
+ and 'ia64' (Itanium).
+ For example, if you want to compile 64-bit binaries, you would set
+ TARGET_ARCH='x86_64' in your SCons environment.
+@@ -11325,7 +11325,7 @@
+ General options passed to the TeX formatter and typesetter.
+ 
+ .IP TEXINPUTS
+-List of directories that the LaTeX programm will search
++List of directories that the LaTeX program will search
+ for include directories.
+ The LaTeX implicit dependency scanner will search these
+ directories for \\include and \\import files.
