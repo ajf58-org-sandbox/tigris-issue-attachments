@@ -1,0 +1,195 @@
+Index: doc/user/file-removal.in
+===================================================================
+--- doc/user/file-removal.in	(revision 5191)
++++ doc/user/file-removal.in	(working copy)
+@@ -220,4 +220,22 @@
+         <scons_output_command>scons -Q -c</scons_output_command>
+     </scons_output>
+ 
++    <para>
++    Starting with version 2.1, &SCons; also supports <literal>glob</literal>
++    wildcards for the second argument of &Clean;. If your command
++    produced several different <filename>*.log</filename> files for the
++    target <filename>foo.out</filename>, you could use 
++    </para>
++
++    <scons_example name="clean-ex2">
++      <file name="S" printme="1">
++        t = Command('foo.out', 'foo.in', 'build -o $TARGET $SOURCE')
++        Clean(t, '*.log')
++      </file>
++    </scons_example>
++    
++    <para>
++    instead.
++    </para>
++    
+   </section>
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 5191)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -69,6 +69,7 @@
+ _warn_target_signatures_deprecated = True
+ 
+ CleanTargets = {}
++CleanPatterns = {}
+ CalculatorArgs = {}
+ 
+ semi_deepcopy = SCons.Util.semi_deepcopy
+@@ -1914,13 +1915,40 @@
+ 
+     def Clean(self, targets, files):
+         global CleanTargets
++        global CleanPatterns
++        # Convert targets to Node entries
+         tlist = self.arg2nodes(targets, self.fs.Entry)
+-        flist = self.arg2nodes(files, self.fs.Entry)
++        # Process additional entries, marked for removal
++        #
++        # For the list of files (that are about to be removed)
++        # we filter out the entries with wildcard patterns and store
++        # them as simple strings in the CleanPatterns dict.
++        # Later, in CleanTask::remove() (Script/Main.py) we pick
++        # up these strings and expand them to a list of files/directories
++        # by means of glob...
++        # This helps to clean up build tasks where a lot of files are
++        # created, side by side with the actual target. An example
++        # would be a Docbook slide, producing an apriori unknown number of
++        # additional files. Formatted to a HTML page index.html
++        # with an XSLT processor, a single foil*.html is created for each foil
++        # in the source XML file. 
++        if not SCons.Util.is_List(files):
++            files = [files]
++        patterns = [x for x in files if SCons.Util.is_String(x) and SCons.Node.FS.has_glob_magic(str(x))]
++        rentries = [x for x in files if not (SCons.Util.is_String(x) and SCons.Node.FS.has_glob_magic(str(x)))]
++        flist = self.arg2nodes(rentries, self.fs.Entry)
+         for t in tlist:
+             try:
+                 CleanTargets[t].extend(flist)
+             except KeyError:
+                 CleanTargets[t] = flist
++        if patterns:
++            for t in tlist:
++                try:
++                    CleanPatterns[t].extend(patterns)
++                except KeyError:
++                    CleanPatterns[t] = patterns
++            
+ 
+     def Configure(self, *args, **kw):
+         nargs = [self]
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 5191)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -40,6 +40,7 @@
+ 
+ import os
+ import sys
++import glob
+ import time
+ import traceback
+ 
+@@ -362,6 +363,15 @@
+             files = SCons.Environment.CleanTargets[target]
+             for f in files:
+                 self.fs_delete(f.abspath, str(f))
++        if SCons.Environment.CleanPatterns:
++            if target in SCons.Environment.CleanPatterns:
++                patterns = SCons.Environment.CleanPatterns[target]
++                for p in patterns:
++                    # Expand pattern with glob
++                    plist = glob.glob(p)
++                    for premove in plist:
++                        # Remove single entries
++                        self.fs_delete(premove, premove)
+ 
+     execute = remove
+ 
+Index: test/Clean/glob.py
+===================================================================
+--- test/Clean/glob.py	(revision 0)
++++ test/Clean/glob.py	(revision 0)
+@@ -0,0 +1,81 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++A simple test for the use of glob-like wildcards with the Clean() function.
++"""
++
++import os
++
++import TestSCons
++
++_python_ = TestSCons._python_
++
++test = TestSCons.TestSCons()
++
++test.write('build.py', r"""
++import sys
++contents = open(sys.argv[2], 'rb').read()
++file = open(sys.argv[1], 'wb')
++file.write(contents)
++file.close()
++file = open('test1.log', 'wb')
++file.write(contents)
++file.close()
++file = open('test2.log', 'wb')
++file.write(contents)
++file.close()
++""")
++
++test.write('foo.in', r"""
++test
++""")
++
++test.write('SConstruct', """
++B = Builder(action = r'%(_python_)s build.py $TARGETS $SOURCES')
++env = Environment(BUILDERS = { 'B' : B })
++t = env.B(target = 'foo.log', source = 'foo.in')
++env.Clean(t, '*.log')
++""" % locals())
++
++test.run()
++
++test.must_exist(test.workpath('foo.log'))
++test.must_exist(test.workpath('test1.log'))
++test.must_exist(test.workpath('test2.log'))
++
++test.run(arguments = '-c')
++test.must_not_exist(test.workpath('foo.log'))
++test.must_not_exist(test.workpath('test1.log'))
++test.must_not_exist(test.workpath('test2.log'))
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
