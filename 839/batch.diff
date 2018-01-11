@@ -1,0 +1,91 @@
+Index: src/engine/SCons/Executor.py
+===================================================================
+--- src/engine/SCons/Executor.py	(revision 5214)
++++ src/engine/SCons/Executor.py	(working copy)
+@@ -238,6 +238,13 @@
+             result.extend(batch.targets)
+         return result
+ 
++    def get_node_targets(self, node):
++        result = []
++        for batch in self.batches:
++            if node in batch.targets:
++                result.extend(batch.targets)
++        return result
++
+     def get_all_sources(self):
+         """Returns all sources for all batches of this Executor."""
+         result = []
+@@ -442,15 +449,19 @@
+         return 0
+ 
+     def scan_targets(self, scanner):
+-        # TODO(batch):  scan by batches
+-        self.scan(scanner, self.get_all_targets())
++        # For batch mode to work correctly each batch must be
++        # processes separately.
++        for batch in self.batches:
++            self.scan(scanner, batch.targets, batch)
+ 
+     def scan_sources(self, scanner):
+-        # TODO(batch):  scan by batches
+-        if self.batches[0].sources:
+-            self.scan(scanner, self.get_all_sources())
++        # For batch mode to work correctly each batch must be
++        # processes separately.
++        for batch in self.batches:
++            if batch.sources:
++                self.scan(scanner, batch.sources, batch)
+ 
+-    def scan(self, scanner, node_list):
++    def scan(self, scanner, node_list, batch):
+         """Scan a list of this Executor's files (targets or sources) for
+         implicit dependencies and update all of the targets with them.
+         This essentially short-circuits an N*M scan of the sources for
+@@ -458,7 +469,6 @@
+         """
+         env = self.get_build_env()
+ 
+-        # TODO(batch):  scan by batches)
+         deps = []
+         if scanner:
+             for node in node_list:
+@@ -483,7 +493,8 @@
+ 
+         deps.extend(self.get_implicit_deps())
+ 
+-        for tgt in self.get_all_targets():
++        # Add deps only to batch targets
++        for tgt in batch.targets:
+             tgt.add_to_implicit(deps)
+ 
+     def _get_unignored_sources_key(self, node, ignore=()):
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 5214)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -622,9 +622,22 @@
+                 # essentially short-circuits an N*M scan of the
+                 # sources for each individual target, which is a hell
+                 # of a lot more efficient.
+-                for tgt in executor.get_all_targets():
+-                    tgt.add_to_implicit(implicit)
+ 
++                # Coment to previous comment. Getting all targets
++                # when MSVC_BATCH is enabled causes to rebuild all
++                # targets and not only needed ones. Moreover it
++                # caused deps to be set incorrectly - deps to first
++                # target was set as deps to all targets in batch.
++                # Following fix is not the best one but should work.
++                if 'MSVC_BATCH' in build_env and build_env['MSVC_BATCH']:
++                    # batch mode
++                    for tgt in executor.get_node_targets(self):
++                        tgt.add_to_implicit(implicit)
++                else:
++                    # default mode
++                    for tgt in executor.get_all_targets():
++                        tgt.add_to_implicit(implicit)
++
+                 if implicit_deps_unchanged or self.is_up_to_date():
+                     return
+                 # one of this node's sources has changed,
