@@ -1,0 +1,175 @@
+Index: test/Libs/SharedLibraryIxes.py
+===================================================================
+--- test/Libs/SharedLibraryIxes.py	(revision 4710)
++++ test/Libs/SharedLibraryIxes.py	(working copy)
+@@ -116,7 +116,7 @@
+     kw['target'] = target
+     kw['source'] = source
+     kw['LIBS'] = LIBS
+-    build = apply(builder, (), kw)
++    build = builder(**kw)
+ 
+     # Check that the build target depends on at least one of the
+     # library target.
+@@ -194,7 +194,7 @@
+     pass
+ 
+ for i in range(200):
+-  apply(prog, tests[i])
++  prog(*tests[i])
+ 
+ """)
+ 
+Index: test/ToolSurrogate.py
+===================================================================
+--- test/ToolSurrogate.py	(revision 4710)
++++ test/ToolSurrogate.py	(working copy)
+@@ -47,7 +47,7 @@
+         else:
+             kw = kwargs or self.kwargs
+ 
+-        return apply(self.fun, self.pending + args, kw)
++        return self.fun(*self.pending + args, **kw)
+ 
+ def Str(target, source, env, cmd=""):
+     result = []
+@@ -81,7 +81,7 @@
+ }
+ 
+ platform = ARGUMENTS['platform']
+-tools = map(lambda t: apply(ToolSurrogate, t), ToolList[platform])
++tools = map(lambda t: ToolSurrogate(*t), ToolList[platform])
+ 
+ env = Environment(tools=tools, PROGSUFFIX='.exe', OBJSUFFIX='.obj')
+ env.Program('foo.c')
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 4710)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -101,7 +101,7 @@
+         if SCons.Util.is_List(tool) or type(tool)==type(()):
+             toolname = tool[0]
+             toolargs = tool[1] # should be a dict of kw args
+-            tool = apply(env.Tool, [toolname], toolargs)
++            tool = apply(env.Tool, (toolname,), toolargs)
+         else:
+             env.Tool(tool)
+ 
+@@ -286,7 +286,7 @@
+     # future, so leave it for now.
+     #def execute(self, **kw):
+     #    kw['env'] = self.env
+-    #    apply(self.builder.execute, (), kw)
++    #    self.builder.execute(**kw)
+ 
+ class BuilderDict(UserDict):
+     """This is a dictionary-like class used by an Environment to hold
+@@ -862,9 +862,9 @@
+ #             if not pathval:
+ #                 continue
+ #             if prepend:
+-#                 apply(self.PrependENVPath, (pathname, pathval))
++#                 self.PrependENVPath(pathname, pathval)
+ #             else:
+-#                 apply(self.AppendENVPath, (pathname, pathval))
++#                 self.AppendENVPath(pathname, pathval)
+ 
+ 
+ # Used by the FindSourceFiles() method, below.
+@@ -1830,7 +1830,7 @@
+ 
+     def Builder(self, **kw):
+         nkw = self.subst_kw(kw)
+-        return apply(SCons.Builder.Builder, [], nkw)
++        return apply(SCons.Builder.Builder, (), nkw)
+ 
+     def CacheDir(self, path):
+         import SCons.CacheDir
+@@ -1925,7 +1925,7 @@
+         return apply(self.fs.Entry, (s,) + args, kw)
+ 
+     def Environment(self, **kw):
+-        return apply(SCons.Environment.Environment, [], self.subst_kw(kw))
++        return apply(SCons.Environment.Environment, (), self.subst_kw(kw))
+ 
+     def Execute(self, action, *args, **kw):
+         """Directly execute an action through an Environment
+Index: src/engine/SCons/ExecutorTests.py
+===================================================================
+--- src/engine/SCons/ExecutorTests.py	(revision 4710)
++++ src/engine/SCons/ExecutorTests.py	(working copy)
+@@ -78,7 +78,7 @@
+                                            [],
+                                            [self],
+                                            ['s1', 's2'])
+-        apply(executor, (self), {})
++        apply(executor, (self,))
+     def get_env_scanner(self, env, kw):
+         return MyScanner('dep-')
+     def get_implicit_deps(self, env, scanner, path):
+Index: bin/scons-doc.py
+===================================================================
+--- bin/scons-doc.py	(revision 4710)
++++ bin/scons-doc.py	(working copy)
+@@ -229,7 +229,7 @@
+         else:
+             kw = kwargs or self.kwargs
+ 
+-        return apply(self.fun, self.pending + args, kw)
++        return self.fun(*self.pending + args, **kw)
+ 
+ def Str(target, source, env, cmd=""):
+     result = []
+@@ -382,7 +382,7 @@
+ if filter_tools:
+     toollist = filter(lambda x, ft=filter_tools: x[0] in ft, toollist)
+ 
+-toollist = map(lambda t: apply(ToolSurrogate, t), toollist)
++toollist = map(lambda t: ToolSurrogate(*t), toollist)
+ 
+ toollist.append('install')
+ 
+Index: bin/sconsexamples.py
+===================================================================
+--- bin/sconsexamples.py	(revision 4710)
++++ bin/sconsexamples.py	(working copy)
+@@ -172,7 +172,7 @@
+         else:
+             kw = kwargs or self.kwargs
+ 
+-        return apply(self.fun, self.pending + args, kw)
++        return self.fun(*self.pending + args, **kw)
+ 
+ def Str(target, source, env, cmd=""):
+     result = []
+@@ -210,7 +210,7 @@
+                  ('mslink', 'LINKCOM', Cat)]
+ }
+ 
+-tools = map(lambda t: apply(ToolSurrogate, t), ToolList[platform])
++tools = map(lambda t: ToolSurrogate(*t), ToolList[platform])
+ 
+ SCons.Defaults.ConstructionEnvironment.update({
+     'PLATFORM' : platform,
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 4710)
++++ QMTest/TestSCons.py	(working copy)
+@@ -394,7 +394,7 @@
+         # up-to-date output is okay.
+         kw['stdout'] = re.escape(stdout) + '.*'
+         kw['match'] = self.match_re_dotall
+-        apply(self.run, [], kw)
++        apply(self.run, (), kw)
+ 
+     def not_up_to_date(self, options = None, arguments = None, **kw):
+         """Asserts that none of the targets listed in arguments is
+@@ -411,7 +411,7 @@
+         stdout = re.escape(self.wrap_stdout(build_str='ARGUMENTSGOHERE'))
+         kw['stdout'] = stdout.replace('ARGUMENTSGOHERE', s)
+         kw['match'] = self.match_re_dotall
+-        apply(self.run, [], kw)
++        apply(self.run, (), kw)
+ 
+     def option_not_yet_implemented(self, option, arguments=None, **kw):
+         """
