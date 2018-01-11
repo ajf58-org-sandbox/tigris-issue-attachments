@@ -1,0 +1,52 @@
+*** SCons/Tool/packaging/__init__.py	2010-01-07 11:43:57.000000000 -0500
+--- SCons/Tool/new_packaging/__init__.py	2010-01-08 12:18:08.000000000 -0500
+***************
+*** 33,38 ****
+--- 33,39 ----
+  from SCons.Errors import *
+  from SCons.Util import is_List, make_path_relative
+  from SCons.Warnings import warn, Warning
++ from types import ModuleType
+  
+  import os, imp
+  import SCons.Defaults
+***************
+*** 113,128 ****
+              raise UserError, "No type for Package() given"
+  
+      PACKAGETYPE=kw['PACKAGETYPE']
+!     if not is_List(PACKAGETYPE):
+          PACKAGETYPE=string.split(PACKAGETYPE, ',')
+  
+      # load the needed packagers.
+!     def load_packager(type):
+          try:
+! 	    file,path,desc=imp.find_module(type, __path__)
+!             return imp.load_module(type, file, path, desc)
+          except ImportError, e:
+!             raise EnvironmentError("packager %s not available: %s"%(type,str(e)))
+  
+      packagers=map(load_packager, PACKAGETYPE)
+  
+--- 114,134 ----
+              raise UserError, "No type for Package() given"
+  
+      PACKAGETYPE=kw['PACKAGETYPE']
+!     if type(PACKAGETYPE) is ModuleType:
+!         PACKAGETYPE=[PACKAGETYPE]
+!     elif not is_List(PACKAGETYPE):
+          PACKAGETYPE=string.split(PACKAGETYPE, ',')
+  
+      # load the needed packagers.
+!     def load_packager(typ):
+! 	if type(typ) is ModuleType:
+!             # Caller wants to use a custom packager
+! 	    return typ
+          try:
+! 	    file,path,desc=imp.find_module(typ, __path__)
+!             return imp.load_module(typ, file, path, desc)
+          except ImportError, e:
+!             raise EnvironmentError("packager %s not available: %s"%(typ,str(e)))
+  
+      packagers=map(load_packager, PACKAGETYPE)
+  
