@@ -1,0 +1,13 @@
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 4198)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -59,7 +59,7 @@
+ # or outputs that require rerunning latex
+ #
+ # search for all .aux files opened by latex (recorded in the .log file)
+-openout_aux_re = re.compile(r"\\openout.*`(.*\.aux)'")
++openout_aux_re = re.compile(r"\((.*\.aux)\)")
+ 
+ #printindex_re = re.compile(r"^[^%]*\\printindex", re.MULTILINE)
+ #printnomenclature_re = re.compile(r"^[^%]*\\printnomenclature", re.MULTILINE)
