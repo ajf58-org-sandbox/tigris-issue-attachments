@@ -1,0 +1,277 @@
+Index: test/TEX/glossaries.py
+===================================================================
+--- test/TEX/glossaries.py	(revision 0)
++++ test/TEX/glossaries.py	(revision 0)
+@@ -0,0 +1,118 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Validate that use of \glossaries in TeX source files causes SCons to
++be aware of the necessary created glossary files.
++
++Test configuration contributed by Robert Managan.
++"""
++
++import os
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++latex = test.where_is('latex')
++gloss = os.system('kpsewhich glossaries.sty')
++
++if not latex:
++    test.skip_test("Could not find latex; skipping test(s).\n")
++
++if not gloss==0:
++    test.skip_test("glossaries.sty not installed; skipping test(s).\n")
++
++test.write('SConstruct', """\
++import os
++env = Environment(ENV = {'PATH' : os.environ['PATH'],
++                         'HOME' : os.environ['HOME']})
++env.PDF('glossaries', 'glossaries.tex')
++""")
++
++test.write('glossaries.tex', r"""
++\documentclass{article}
++
++\usepackage[acronym]{glossaries}
++
++\newglossaryentry{nix}{
++  name={Nix},
++  description={Version 5}
++}
++
++\newacronym{gnu}{GNU}{GNU's Not UNIX}
++
++\makeglossaries
++
++
++\begin{document}
++
++Acronyms \gls{gnu} and glossary entries \gls{nix}.
++
++\printglossary[type=acronym]
++\printglossary[type=main]
++
++\end{document}
++""")
++
++test.run(arguments = '.', stderr=None)
++
++test.must_exist(test.workpath('glossaries.acn'))
++test.must_exist(test.workpath('glossaries.acr'))
++test.must_exist(test.workpath('glossaries.alg'))
++test.must_exist(test.workpath('glossaries.aux'))
++test.must_exist(test.workpath('glossaries.fls'))
++test.must_exist(test.workpath('glossaries.glg'))
++test.must_exist(test.workpath('glossaries.glo'))
++test.must_exist(test.workpath('glossaries.ist'))
++test.must_exist(test.workpath('glossaries.log'))
++test.must_exist(test.workpath('glossaries.pdf'))
++
++test.run(arguments = '-c .')
++
++x = "Could not remove 'glossaries.aux': No such file or directory"
++test.must_not_contain_any_line(test.stdout(), [x])
++
++test.must_not_exist(test.workpath('glossaries.acn'))
++test.must_not_exist(test.workpath('glossaries.acr'))
++test.must_not_exist(test.workpath('glossaries.alg'))
++test.must_not_exist(test.workpath('glossaries.aux'))
++test.must_not_exist(test.workpath('glossaries.fls'))
++test.must_not_exist(test.workpath('glossaries.glg'))
++test.must_not_exist(test.workpath('glossaries.glo'))
++test.must_not_exist(test.workpath('glossaries.ist'))
++test.must_not_exist(test.workpath('glossaries.log'))
++test.must_not_exist(test.workpath('glossaries.pdf'))
++
++test.pass_test()
++
++
++
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 4334)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -52,7 +52,7 @@
+ check_suffixes = ['.toc', '.lof', '.lot', '.out', '.nav', '.snm']
+ 
+ # these are files that require bibtex or makeindex to be run when they change
+-all_suffixes = check_suffixes + ['.bbl', '.idx', '.nlo', '.glo']
++all_suffixes = check_suffixes + ['.bbl', '.idx', '.nlo', '.glo', '.acn']
+ 
+ #
+ # regular expressions used to search for Latex features
+@@ -87,6 +87,8 @@
+ hyperref_re = re.compile(r"^[^%\n]*\\usepackage.*\{hyperref\}", re.MULTILINE)
+ makenomenclature_re = re.compile(r"^[^%\n]*\\makenomenclature", re.MULTILINE)
+ makeglossary_re = re.compile(r"^[^%\n]*\\makeglossary", re.MULTILINE)
++makeglossaries_re = re.compile(r"^[^%\n]*\\makeglossaries", re.MULTILINE)
++makeacronyms_re = re.compile(r"^[^%\n]*\\makeglossaries", re.MULTILINE)
+ beamer_re = re.compile(r"^[^%\n]*\\documentclass\{beamer\}", re.MULTILINE)
+ 
+ # search to find all files included by Latex
+@@ -121,6 +123,9 @@
+ # An action to run MakeIndex (for glossary) on a file.
+ MakeGlossaryAction = None
+ 
++# An action to run MakeIndex (for acronyms) on a file.
++MakeAcronymsAction = None
++
+ # Used as a return value of modify_env_var if the variable is not set.
+ _null = SCons.Scanner.LaTeX._null
+ 
+@@ -206,6 +211,8 @@
+     run_makeindex = makeindex_re.search(src_content) and not os.path.exists(targetbase + '.idx')
+     run_nomenclature = makenomenclature_re.search(src_content) and not os.path.exists(targetbase + '.nlo')
+     run_glossary = makeglossary_re.search(src_content) and not os.path.exists(targetbase + '.glo')
++    run_glossaries = makeglossaries_re.search(src_content) and not os.path.exists(targetbase + '.glo')
++    run_acronyms = makeacronyms_re.search(src_content) and not os.path.exists(targetbase + '.acn')
+ 
+     saved_hashes = {}
+     suffix_nodes = {}
+@@ -324,7 +331,7 @@
+                 return result
+ 
+         # Now decide if latex will need to be run again due to glossary.
+-        if check_MD5(suffix_nodes['.glo'],'.glo') or (count == 1 and run_glossary):
++        if check_MD5(suffix_nodes['.glo'],'.glo') or (count == 1 and run_glossaries) or (count == 1 and run_glossary):
+             # We must run makeindex
+             if Verbose:
+                 print "Need to run makeindex for glossary"
+@@ -334,6 +341,17 @@
+                 print env['MAKEGLOSSARY']," (glossary) returned an error, check the glg file"
+                 return result
+ 
++        # Now decide if latex will need to be run again due to acronyms.
++        if check_MD5(suffix_nodes['.acn'],'.acn') or (count == 1 and run_acronyms):
++            # We must run makeindex
++            if Verbose:
++                print "Need to run makeindex for acronyms"
++            acrfile = suffix_nodes['.acn']
++            result = MakeAcronymsAction(acrfile, acrfile, env)
++            if result != 0:
++                print env['MAKEACRONYMS']," (acronymns) returned an error, check the alg file"
++                return result
++
+         # Now decide if latex needs to be run yet again to resolve warnings.
+         if warning_rerun_re.search(logContent):
+             must_rerun_latex = True
+@@ -485,7 +503,7 @@
+     #
+     # file names we will make use of in searching the sources and log file
+     #
+-    emit_suffixes = ['.aux', '.log', '.ilg', '.blg', '.nls', '.nlg', '.gls', '.glg'] + all_suffixes
++    emit_suffixes = ['.aux', '.log', '.ilg', '.blg', '.nls', '.nlg', '.gls', '.glg', '.alg'] + all_suffixes
+     auxfilename = targetbase + '.aux'
+     logfilename = targetbase + '.log'
+     flsfilename = targetbase + '.fls'
+@@ -493,6 +511,8 @@
+     env.SideEffect(auxfilename,target[0])
+     env.SideEffect(logfilename,target[0])
+     env.SideEffect(flsfilename,target[0])
++    if Verbose:
++        print "side effect :",auxfilename,logfilename,flsfilename
+     env.Clean(target[0],auxfilename)
+     env.Clean(target[0],logfilename)
+     env.Clean(target[0],flsfilename)
+@@ -502,6 +522,7 @@
+     idx_exists = os.path.exists(targetbase + '.idx')
+     nlo_exists = os.path.exists(targetbase + '.nlo')
+     glo_exists = os.path.exists(targetbase + '.glo')
++    acr_exists = os.path.exists(targetbase + '.acn')
+ 
+     # set up list with the regular expressions
+     # we use to find features used
+@@ -514,6 +535,8 @@
+                          hyperref_re,
+                          makenomenclature_re,
+                          makeglossary_re,
++                         makeglossaries_re,
++                         makeacronyms_re,
+                          beamer_re ]
+     # set up list with the file suffixes that need emitting
+     # when a feature is found
+@@ -526,6 +549,8 @@
+                   ['.out'],
+                   ['.nlo', '.nls', '.nlg'],
+                   ['.glo', '.gls', '.glg'],
++                  ['.glo', '.gls', '.glg'],
++                  ['.acn', '.acr', '.alg'],
+                   ['.nav', '.snm', '.out', '.toc'] ]
+     # build the list of lists
+     file_tests = []
+@@ -563,6 +588,8 @@
+         if theSearch:
+             for suffix in suffix_list:
+                 env.SideEffect(targetbase + suffix,target[0])
++                if Verbose:
++                    print "side effect :",targetbase + suffix
+                 env.Clean(target[0],targetbase + suffix)
+ 
+     # read fls file to get all other files that latex creates and will read on the next pass
+@@ -575,6 +602,8 @@
+             if filename in myfiles:
+                 out_files.remove(filename)
+         env.SideEffect(out_files,target[0])
++        if Verbose:
++            print "side effect :",out_files
+         env.Clean(target[0],out_files)
+ 
+     return (target, source)
+@@ -616,6 +645,11 @@
+     if MakeGlossaryAction is None:
+         MakeGlossaryAction = SCons.Action.Action("$MAKEGLOSSARYCOM", "$MAKEGLOSSARYCOMSTR")
+ 
++    # Define an action to run MakeIndex on a file for acronyms.
++    global MakeAcronymsAction
++    if MakeAcronymsAction is None:
++        MakeAcronymsAction = SCons.Action.Action("$MAKEACRONYMSCOM", "$MAKEACRONYMSCOMSTR")
++
+     global TeXLaTeXAction
+     if TeXLaTeXAction is None:
+         TeXLaTeXAction = SCons.Action.Action(TeXLaTeXFunction,
+@@ -653,6 +687,11 @@
+     env['MAKEGLOSSARYFLAGS'] = SCons.Util.CLVar('-s ${MAKEGLOSSARYSTYLE} -t ${SOURCE.filebase}.glg')
+     env['MAKEGLOSSARYCOM']   = 'cd ${TARGET.dir} && $MAKEGLOSSARY ${SOURCE.filebase}.glo $MAKEGLOSSARYFLAGS -o ${SOURCE.filebase}.gls'
+ 
++    env['MAKEACRONYMS']      = 'makeindex'
++    env['MAKEACRONYMSSTYLE'] = '${SOURCE.filebase}.ist'
++    env['MAKEACRONYMSFLAGS'] = SCons.Util.CLVar('-s ${MAKEACRONYMSSTYLE} -t ${SOURCE.filebase}.alg')
++    env['MAKEACRONYMSCOM']   = 'cd ${TARGET.dir} && $MAKEACRONYMS ${SOURCE.filebase}.acn $MAKEACRONYMSFLAGS -o ${SOURCE.filebase}.acr'
++
+     env['MAKENCL']      = 'makeindex'
+     env['MAKENCLSTYLE'] = '$nomencl.ist'
+     env['MAKENCLFLAGS'] = '-s ${MAKENCLSTYLE} -t ${SOURCE.filebase}.nlg'
