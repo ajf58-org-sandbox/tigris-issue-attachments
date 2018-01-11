@@ -1,0 +1,34 @@
+
+
+env = Environment()
+
+def config_file_decider(dependency, target, prev_ni):
+    import os.path
+    print 'target',target.get_content_hash()
+    print 'dependency',dependency.get_content_hash()
+    if 'csig' not in dir(prev_ni):
+        print "###### Csig not present ######"
+        print dir(prev_ni)
+        return True
+    print 'prev_ni',prev_ni.csig
+
+    if not os.path.exists(str(target.abspath)):
+        return True
+    if dependency.get_content_hash() != prev_ni.csig:
+        # some change on source file => update installed one
+        return True
+    return False
+
+def update_file():
+	f = open("test.txt","a")
+	f.write("some line\n")
+	f.close()
+update_file()
+
+# If we use custom decider prev_ni is break (no more csig)
+# Don't using the custom decider repair prev_ni
+if True:
+	env.Decider(config_file_decider)
+
+env.Install("install","test.txt")
+
