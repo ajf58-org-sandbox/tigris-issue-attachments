@@ -1,0 +1,85 @@
+diff -r 9833f2100da6 src/engine/SCons/Tool/tex.py
+--- a/src/engine/SCons/Tool/tex.py	Sat Sep 10 15:51:10 2011 +0000
++++ b/src/engine/SCons/Tool/tex.py	Sun Oct 23 15:48:01 2011 -0700
+@@ -86,6 +86,7 @@
+ makeindex_re = re.compile(r"^[^%\n]*\\makeindex", re.MULTILINE)
+ bibliography_re = re.compile(r"^[^%\n]*\\bibliography", re.MULTILINE)
+ bibunit_re = re.compile(r"^[^%\n]*\\begin\{bibunit\}", re.MULTILINE)
++multibib_re = re.compile(r"^[^%\n]*\\newcites\{([^\}]]*)\}", re.MULTILINE)
+ listoffigures_re = re.compile(r"^[^%\n]*\\listoffigures", re.MULTILINE)
+ listoftables_re = re.compile(r"^[^%\n]*\\listoftables", re.MULTILINE)
+ hyperref_re = re.compile(r"^[^%\n]*\\usepackage.*\{hyperref\}", re.MULTILINE)
+@@ -236,6 +237,9 @@
+ 
+     must_rerun_latex = True
+ 
++    # .aux files already processed by BibTex
++    already_bibtexed = []
++
+     #
+     # routine to update MD5 hash and compare
+     #
+@@ -299,8 +303,12 @@
+         # pass-independent. If we find (below) that the .bbl file is unchanged,
+         # then the last latex saw a correct bibliography.
+         # Therefore only do this on the first pass
+-        if count == 1:
+-            for auxfilename in auxfiles:
++        #if count == 1:
++        ## Patch:
++        ## Go through all .aux files and remember the files already done.
++        for auxfilename in auxfiles:
++            if auxfilename not in already_bibtexed:
++                already_bibtexed.append(auxfilename)
+                 target_aux = os.path.join(targetdir, auxfilename)
+                 if os.path.isfile(target_aux):
+                     content = open(target_aux, "rb").read()
+@@ -308,6 +316,7 @@
+                         if Verbose:
+                             print "Need to run bibtex"
+                         bibfile = env.fs.File(SCons.Util.splitext(target_aux)[0])
++                        #bibfile = env.fs.File(re.sub(r'/.*/','',auxfilename[:-4]))
+                         result = BibTeXAction(bibfile, bibfile, env)
+                         if result != 0:
+                             check_file_error_message(env['BIBTEX'], 'blg')
+@@ -621,6 +630,7 @@
+                          makeindex_re,
+                          bibliography_re,
+                          bibunit_re,
++                         multibib_re,
+                          tableofcontents_re,
+                          listoffigures_re,
+                          listoftables_re,
+@@ -636,6 +646,7 @@
+                   ['.idx', '.ind', '.ilg','makeindex'],
+                   ['.bbl', '.blg','bibliography'],
+                   ['.bbl', '.blg','bibunit'],
++                  ['.bbl', '.blg','multibib'],
+                   ['.toc','contents'],
+                   ['.lof','figures'],
+                   ['.lot','tables'],
+@@ -687,6 +698,15 @@
+                 # remove the suffix '.aux'
+                 for i in range(len(file_list)):
+                     file_list[i] = SCons.Util.splitext(file_list[i])[0]
++            # for multibib we need a list of files
++            if suffix_list[-1] == 'multibib':
++                multibibmatch = multibib_re.search(content)
++                if multibibmatch != None:
++                    baselist = multibibmatch.group(1).split(',')
++                    if Verbose:
++                        print "multibib list ", baselist
++                    for base in baselist:
++                        file_list[i] = os.path.join(targetdir, base)
+             # now define the side effects
+             for file_name in file_list:
+                 for suffix in suffix_list[:-1]:
+@@ -826,7 +846,7 @@
+     env['LATEX']        = 'latex'
+     env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+     env['LATEXCOM']     = CDCOM + '${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+-    env['LATEXRETRIES'] = 3
++    env['LATEXRETRIES'] = 4
+ 
+     env['PDFLATEX']      = 'pdflatex'
+     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
