@@ -1,0 +1,252 @@
+Index: test/Actions/actions.py
+===================================================================
+--- test/Actions/actions.py	(revision 4715)
++++ test/Actions/actions.py	(working copy)
+@@ -85,7 +85,7 @@
+ 
+ test.write('SConstruct', """
+ import os
+-assert not globals().has_key('string')
++assert 'string' not in globals()
+ class bld:
+     def __init__(self):
+         self.cmd = r'%(_python_)s build.py %%s 4 %%s'
+Index: test/Errors/UserError.py
+===================================================================
+--- test/Errors/UserError.py	(revision 4715)
++++ test/Errors/UserError.py	(working copy)
+@@ -34,7 +34,7 @@
+ test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+ 
+ test.write('SConstruct', """
+-assert not globals().has_key("UserError")
++assert "UserError" not in globals()
+ import SCons.Errors
+ raise SCons.Errors.UserError, 'Depends() requires both sources and targets.'
+ """)
+Index: test/Errors/InternalError.py
+===================================================================
+--- test/Errors/InternalError.py	(revision 4715)
++++ test/Errors/InternalError.py	(working copy)
+@@ -35,7 +35,7 @@
+ 
+ # Test InternalError.
+ test.write('SConstruct', """
+-assert not globals().has_key("InternalError")
++assert "InternalError" not in globals()
+ from SCons.Errors import InternalError
+ raise InternalError, 'error inside'
+ """)
+Index: test/SConscript/SConscript.py
+===================================================================
+--- test/SConscript/SConscript.py	(revision 4715)
++++ test/SConscript/SConscript.py	(working copy)
+@@ -83,7 +83,7 @@
+ 
+ test.write('SConscript', """\
+ # os should not be automajically imported:
+-assert not globals().has_key("os")
++assert "os" not in globals()
+ 
+ import os
+ print "SConscript " + os.getcwd()
+Index: test/Variables/Variables.py
+===================================================================
+--- test/Variables/Variables.py	(revision 4715)
++++ test/Variables/Variables.py	(working copy)
+@@ -107,10 +107,10 @@
+ print env['valid_key']
+ 
+ # unspecified variables should not be set:
+-assert not env.has_key('UNSPECIFIED')
++assert 'UNSPECIFIED' not in env
+ 
+ # undeclared variables should be ignored:
+-assert not env.has_key('UNDECLARED')
++assert 'UNDECLARED' not in env
+ 
+ # calling Update() should not effect variables that
+ # are not declared on the variables object:
+Index: test/Deprecated/Options/Options.py
+===================================================================
+--- test/Deprecated/Options/Options.py	(revision 4715)
++++ test/Deprecated/Options/Options.py	(working copy)
+@@ -107,10 +107,10 @@
+ print env['valid_key']
+ 
+ # unspecified options should not be set:
+-assert not env.has_key('UNSPECIFIED')
++assert 'UNSPECIFIED' not in env
+ 
+ # undeclared options should be ignored:
+-assert not env.has_key('UNDECLARED')
++assert 'UNDECLARED' not in env
+ 
+ # calling Update() should not effect options that
+ # are not declared on the options object:
+Index: test/QT/generated-ui.py
+===================================================================
+--- test/QT/generated-ui.py	(revision 4715)
++++ test/QT/generated-ui.py	(working copy)
+@@ -47,7 +47,7 @@
+ aa=os.getcwd()
+ 
+ env=Environment(tools=['default','expheaders','qt'],toolpath=[aa])
+-if os.environ.has_key('HOME'):
++if 'HOME' in os.environ:
+     env['ENV']['HOME'] = os.environ['HOME']
+ env["EXP_HEADER_ABS"]=os.path.join(os.getcwd(),'include')
+ if not os.access(env["EXP_HEADER_ABS"],os.F_OK):
+Index: test/QT/Tool.py
+===================================================================
+--- test/QT/Tool.py	(revision 4716)
++++ test/QT/Tool.py	(working copy)
+@@ -90,7 +90,7 @@
+     "/usr/pkg/qt3" # pkgsrc (NetBSD)
+     ]
+ 
+-  if os.environ.has_key('QTDIR'):
++  if 'QTDIR' in os.environ:
+     potential_qt_dirs.insert(0, os.environ[ 'QTDIR' ])
+   
+   if env[ 'qt_directory' ] != "/":
+Index: test/QT/installed.py
+===================================================================
+--- test/QT/installed.py	(revision 4715)
++++ test/QT/installed.py	(working copy)
+@@ -50,7 +50,7 @@
+ ENV = dummy_env['ENV']
+ try:
+     PATH=ARGUMENTS['PATH']
+-    if ENV.has_key('PATH'):
++    if 'PATH' in ENV:
+         ENV_PATH = PATH + os.pathsep + ENV['PATH']
+     else:
+         Exit(0) # this is certainly a weird system :-)
+Index: test/sconsign/ghost-entries.py
+===================================================================
+--- test/sconsign/ghost-entries.py	(revision 4715)
++++ test/sconsign/ghost-entries.py	(working copy)
+@@ -89,7 +89,7 @@
+ 
+ test.write('SConstruct', """\
+ Command("d/current.txt", [], [Touch("$TARGET")])
+-if ARGUMENTS.has_key('pass') and ARGUMENTS['pass'] == '1':
++if 'pass' in ARGUMENTS and ARGUMENTS['pass'] == '1':
+   Command("d/obsolete.txt", [], [Touch("$TARGET")])
+ Command("installer.exe", ['d'], [Touch("$TARGET")])
+ """)
+Index: src/engine/SCons/ActionTests.py
+===================================================================
+--- src/engine/SCons/ActionTests.py	(revision 4721)
++++ src/engine/SCons/ActionTests.py	(working copy)
+@@ -67,16 +67,16 @@
+ except:
+     pass
+ f.close()
+-if os.environ.has_key( 'ACTPY_PIPE' ):
+-    if os.environ.has_key( 'PIPE_STDOUT_FILE' ):
++if 'ACTPY_PIPE' in os.environ:
++    if 'PIPE_STDOUT_FILE' in os.environ:
+          stdout_msg = open(os.environ['PIPE_STDOUT_FILE'], 'r').read()
+     else:
+-         stdout_msg = "act.py: stdout: executed act.py %s\\n" % string.join(sys.argv[1:])
++         stdout_msg = "act.py: stdout: executed act.py %s\\n" % ' '.join(sys.argv[1:])
+     sys.stdout.write( stdout_msg )
+-    if os.environ.has_key( 'PIPE_STDERR_FILE' ):
++    if 'PIPE_STDERR_FILE' in os.environ:
+          stderr_msg = open(os.environ['PIPE_STDERR_FILE'], 'r').read()
+     else:
+-         stderr_msg = "act.py: stderr: executed act.py %s\\n" % string.join(sys.argv[1:])
++         stderr_msg = "act.py: stderr: executed act.py %s\\n" % ' '.join(sys.argv[1:])
+     sys.stderr.write( stderr_msg )
+ sys.exit(0)
+ """)
+Index: src/engine/SCons/BuilderTests.py
+===================================================================
+--- src/engine/SCons/BuilderTests.py	(revision 4721)
++++ src/engine/SCons/BuilderTests.py	(working copy)
+@@ -118,6 +118,8 @@
+         self.d[item] = var
+     def __getitem__(self, item):
+         return self.d[item]
++    def __contains__(self, item):
++        return self.d.__contains__(item)
+     def has_key(self, item):
+         return self.d.has_key(item)
+     def keys(self):
+Index: src/engine/SCons/Variables/VariablesTests.py
+===================================================================
+--- src/engine/SCons/Variables/VariablesTests.py	(revision 4721)
++++ src/engine/SCons/Variables/VariablesTests.py	(working copy)
+@@ -41,6 +41,8 @@
+         self.dict[key] = value
+     def __getitem__(self, key):
+         return self.dict[key]
++    def __contains__(self, key):
++        return self.dict.__contains__(key)
+     def has_key(self, key):
+         return self.dict.has_key(key)
+ 
+Index: src/engine/SCons/cpp.py
+===================================================================
+--- src/engine/SCons/cpp.py	(revision 4721)
++++ src/engine/SCons/cpp.py	(working copy)
+@@ -146,8 +146,8 @@
+ # A separate list of expressions to be evaluated and substituted
+ # sequentially, not all at once.
+ CPP_to_Python_Eval_List = [
+-    ['defined\s+(\w+)',         '__dict__.has_key("\\1")'],
+-    ['defined\s*\((\w+)\)',     '__dict__.has_key("\\1")'],
++    ['defined\s+(\w+)',         '"\\1" in __dict__'],
++    ['defined\s*\((\w+)\)',     '"\\1" in __dict__'],
+     ['/\*.*\*/',                ''],
+     ['/\*.*',                   ''],
+     ['//.*',                    ''],
+Index: src/engine/SCons/Tool/ToolTests.py
+===================================================================
+--- src/engine/SCons/Tool/ToolTests.py	(revision 4715)
++++ src/engine/SCons/Tool/ToolTests.py	(working copy)
+@@ -45,6 +45,8 @@
+                 return self.dict[key]
+             def __setitem__(self, key, val):
+                 self.dict[key] = val
++            def __contains__(self, key):
++                return self.dict.__contains__(key)
+             def has_key(self, key):
+                 return self.dict.has_key(key)
+         env = Environment()
+Index: src/engine/SCons/Tool/packaging/__init__.py
+===================================================================
+--- src/engine/SCons/Tool/packaging/__init__.py	(revision 4721)
++++ src/engine/SCons/Tool/packaging/__init__.py	(working copy)
+@@ -174,7 +174,6 @@
+         args.remove('target')
+         args.remove('source')
+         # now remove any args for which we have a value in kw.
+-        #args=[x for x in args if not kw.has_key(x)]
+         args=[x for x in args if not kw.has_key(x)]
+ 
+         if len(args)==0:
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 4715)
++++ doc/man/scons.1	(working copy)
+@@ -5532,7 +5532,7 @@
+ .ES
+ env.SetDefault(FOO = 'foo')
+ 
+-if not env.has_key('FOO'): env['FOO'] = 'foo'
++if 'FOO' not in env: env['FOO'] = 'foo'
+ .EE
+ 
+ '\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+@@ -9899,7 +9899,7 @@
+ def pf(env, dir, target, source, arg):
+     top_dir = Dir('#').abspath
+     results = []
+-    if env.has_key('MYPATH'):
++    if 'MYPATH' in env:
+         for p in env['MYPATH']:
+             results.append(top_dir + os.sep + p)
+     return results
