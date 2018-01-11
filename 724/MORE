@@ -1,0 +1,845 @@
+Only in new: MORE
+--- OLD/QMTest/TestCmd.py	2010-03-26 11:00:49.000000000 -0700
++++ NEW/QMTest/TestCmd.py	2010-03-26 21:32:31.000000000 -0700
+@@ -229,7 +229,6 @@
+ import tempfile
+ import time
+ import traceback
+-import types
+ import UserList
+ 
+ __all__ = [
+--- OLD/QMTest/TestCommon.py	2010-03-26 11:00:52.000000000 -0700
++++ NEW/QMTest/TestCommon.py	2010-03-26 21:32:40.000000000 -0700
+@@ -98,7 +98,6 @@
+ import os.path
+ import stat
+ import sys
+-import types
+ import UserList
+ 
+ from TestCmd import *
+--- OLD/QMTest/TestSCons.py	2010-03-26 11:01:02.000000000 -0700
++++ NEW/QMTest/TestSCons.py	2010-03-26 18:30:35.000000000 -0700
+@@ -515,8 +515,7 @@
+         import glob
+         result = []
+         for p in patterns:
+-            paths = sorted(glob.glob(p))
+-            result.extend(paths)
++            result.extend(sorted(glob.glob(p)))
+         return result
+ 
+ 
+--- OLD/QMTest/scons_tdb.py	2010-03-26 11:01:10.000000000 -0700
++++ NEW/QMTest/scons_tdb.py	2010-03-26 18:30:05.000000000 -0700
+@@ -397,8 +397,7 @@
+         self._outcomes[test_id] = exit_status
+     def Summarize(self):
+         self.file.write('test_result = [\n')
+-        file_names = sorted(self._outcomes.keys())
+-        for file_name in file_names:
++        for file_name in sorted(self._outcomes.keys()):
+             exit_status = self._outcomes[file_name]
+             file_name = file_name.replace('\\', '/')
+             self.file.write('    { file_name = "%s";\n' % file_name)
+--- OLD/bench/env.__setitem__.py	2010-03-24 15:42:57.000000000 -0700
++++ NEW/bench/env.__setitem__.py	2010-03-26 21:26:15.000000000 -0700
+@@ -37,13 +37,11 @@
+         t = Timing(n, num, init, s)
+         t.timeit()
+         timings.append(t)
+-    
++
+     print
+     print title
+-    l = []
+-    for i in timings: l.append((i.getResult(),i.name))
+-    l.sort()
+-    for i in l: print "  %9.3f s   %s" % i
++    for i in sorted([(i.getResult(),i.name) for i in timings]):
++        print "  %9.3f s   %s" % i
+ 
+ # Import the necessary local SCons.* modules used by some of our
+ # alternative implementations below, first manipulating sys.path so
+--- OLD/bin/SConsDoc.py	2010-03-24 15:45:10.000000000 -0700
++++ NEW/bin/SConsDoc.py	2010-03-26 17:34:26.000000000 -0700
+@@ -354,15 +354,13 @@
+     def start_uses(self, attrs):
+         self.begin_collecting([])
+     def end_uses(self):
+-        self.current_object.uses = ''.join(self.collect).split()
+-        self.current_object.uses.sort()
++        self.current_object.uses = sorted(''.join(self.collect).split())
+         self.end_collecting()
+ 
+     def start_sets(self, attrs):
+         self.begin_collecting([])
+     def end_sets(self):
+-        self.current_object.sets = ''.join(self.collect).split()
+-        self.current_object.sets.sort()
++        self.current_object.sets = sorted(''.join(self.collect).split())
+         self.end_collecting()
+ 
+     # Stuff for the ErrorHandler portion.
+--- OLD/bin/import-test.py	2010-03-26 11:01:20.000000000 -0700
++++ NEW/bin/import-test.py	2010-03-26 18:35:43.000000000 -0700
+@@ -40,10 +40,8 @@
+         self.path = path
+         self.entries = {}
+     def call_for_each_entry(self, func):
+-        entries = self.entries
+-        names = sorted(entries.keys())
+-        for name in names:
+-            func(name, entries[name])
++        for name in sorted(self.entries.keys()):
++            func(name, self.entries[name])
+ 
+ def lookup(dirname):
+     global Top, TopPath
+--- OLD/bin/objcounts.py	2010-03-26 11:01:25.000000000 -0700
++++ NEW/bin/objcounts.py	2010-03-26 18:36:44.000000000 -0700
+@@ -86,19 +86,14 @@
+           diffstr(c1[3], c2[3]) + \
+           ' ' + classname
+ 
+-keys = sorted(common.keys())
+-for k in keys:
++for k in sorted(common.keys()):
+     c = common[k]
+     printline(c[0], c[1], k)
+ 
+-keys = c1.keys()
+-keys.sort()
+-for k in keys:
++for k in sorted(list(c1.keys())):
+     printline(c1[k], ['--']*4, k)
+ 
+-keys = c2.keys()
+-keys.sort()
+-for k in keys:
++for k in sorted(list(c2.keys())):
+     printline(['--']*4, c2[k], k)
+ 
+ # Local Variables:
+--- OLD/bin/scons-diff.py	2010-03-26 11:01:27.000000000 -0700
++++ NEW/bin/scons-diff.py	2010-03-26 18:38:46.000000000 -0700
+@@ -173,8 +173,7 @@
+         u[l] = 1
+     for r in rlist:
+         u[r] = 1
+-    clist = sorted([ x for x in u.keys() if x[-4:] != '.pyc' ])
+-    for x in clist:
++    for x in sorted([ x for x in u.keys() if x[-4:] != '.pyc' ]):
+         if x in llist:
+             if x in rlist:
+                 do_diff(os.path.join(left, x),
+--- OLD/bin/scons-doc.py	2010-03-26 11:01:32.000000000 -0700
++++ NEW/bin/scons-doc.py	2010-03-26 18:40:56.000000000 -0700
+@@ -477,9 +477,7 @@
+ 
+ def command_ls(args, c, test, dict):
+     def ls(a):
+-        files = os.listdir(a)
+-        files = sorted([x for x in files if x[0] != '.'])
+-        return ['  '.join(files)]
++        return ['  '.join(sorted([x for x in os.listdir(a) if x[0] != '.']))]
+     if args:
+         l = []
+         for a in args:
+--- OLD/bin/scons-test.py	2010-03-26 11:01:38.000000000 -0700
++++ NEW/bin/scons-test.py	2010-03-26 18:42:14.000000000 -0700
+@@ -204,9 +204,7 @@
+     ]
+ 
+     print "  <environment>"
+-    #keys = os.environ.keys()
+-    keys = sorted(environ_keys)
+-    for key in keys:
++    for key in sorted(environ_keys):
+         value = os.environ.get(key)
+         if value:
+             print "    <variable>"
+--- OLD/doc/user/environments.in	2009-03-01 10:04:00.000000000 -0800
++++ NEW/doc/user/environments.in	2010-03-26 17:42:12.000000000 -0700
+@@ -672,11 +672,8 @@
+ 
+       <sconstruct>
+          env = Environment()
+-         dict = env.Dictionary()
+-         keys = dict.keys()
+-         keys.sort()
+-         for key in keys:
+-             print "construction variable = '%s', value = '%s'" % (key, dict[key])
++         for item in sorted(env.Dictionary().items()):
++             print "construction variable = '%s', value = '%s'" % item
+       </sconstruct>
+ 
+     </section>
+@@ -1559,8 +1556,7 @@
+       if len(sys.argv) > 1:
+           keys = sys.argv[1:]
+       else:
+-          keys = os.environ.keys()
+-          keys.sort()
++          keys = sorted(os.environ.keys())
+       for key in keys:
+           print "    " + key + "=" + os.environ[key]
+       </file>
+--- OLD/doc/user/environments.xml	2010-01-23 12:21:18.000000000 -0800
++++ NEW/doc/user/environments.xml	2010-03-26 17:45:25.000000000 -0700
+@@ -672,11 +672,8 @@
+ 
+       <programlisting>
+          env = Environment()
+-         dict = env.Dictionary()
+-         keys = dict.keys()
+-         keys.sort()
+-         for key in keys:
+-             print "construction variable = '%s', value = '%s'" % (key, dict[key])
++         for item in sorted(env.Dictionary().items()):
++             print "construction variable = '%s', value = '%s'" % item
+       </programlisting>
+ 
+     </section>
+@@ -1546,8 +1543,7 @@
+       if len(sys.argv) > 1:
+           keys = sys.argv[1:]
+       else:
+-          keys = os.environ.keys()
+-          keys.sort()
++          keys = sorted(os.environ.keys())
+       for key in keys:
+           print "    " + key + "=" + os.environ[key]
+       </file>
+--- OLD/doc/user/parseflags.in	2009-03-01 10:04:00.000000000 -0800
++++ NEW/doc/user/parseflags.in	2010-03-26 17:48:07.000000000 -0700
+@@ -61,9 +61,7 @@
+    <file name="SConstruct" printme="1">
+     env = Environment()
+     d = env.ParseFlags("-I/opt/include -L/opt/lib -lfoo")
+-    l = d.items()
+-    l.sort()
+-    for k,v in l:
++    for k,v in sorted(d.items()):
+         if v:
+             print k, v
+     env.MergeFlags(d)
+@@ -102,9 +100,7 @@
+    <file name="SConstruct" printme="1">
+     env = Environment()
+     d = env.ParseFlags("-whatever")
+-    l = d.items()
+-    l.sort()
+-    for k,v in l:
++    for k,v in sorted(d.items()):
+         if v:
+             print k, v
+     env.MergeFlags(d)
+@@ -130,9 +126,7 @@
+    <file name="SConstruct" printme="1">
+     env = Environment()
+     d = env.ParseFlags(["-I/opt/include", ["-L/opt/lib", "-lfoo"]])
+-    l = d.items()
+-    l.sort()
+-    for k,v in l:
++    for k,v in sorted(d.items()):
+         if v:
+             print k, v
+     env.MergeFlags(d)
+@@ -159,9 +153,7 @@
+    <file name="SConstruct" printme="1">
+     env = Environment()
+     d = env.ParseFlags(["!echo -I/opt/include", "!echo -L/opt/lib", "-lfoo"])
+-    l = d.items()
+-    l.sort()
+-    for k,v in l:
++    for k,v in sorted(d.items()):
+         if v:
+             print k, v
+     env.MergeFlags(d)
+--- OLD/doc/user/parseflags.xml	2010-01-23 12:21:18.000000000 -0800
++++ NEW/doc/user/parseflags.xml	2010-03-26 17:49:19.000000000 -0700
+@@ -60,9 +60,7 @@
+  <programlisting>
+     env = Environment()
+     d = env.ParseFlags("-I/opt/include -L/opt/lib -lfoo")
+-    l = d.items()
+-    l.sort()
+-    for k,v in l:
++    for k,v in sorted(d.items()):
+         if v:
+             print k, v
+     env.MergeFlags(d)
+@@ -106,9 +104,7 @@
+  <programlisting>
+     env = Environment()
+     d = env.ParseFlags("-whatever")
+-    l = d.items()
+-    l.sort()
+-    for k,v in l:
++    for k,v in sorted(d.items()):
+         if v:
+             print k, v
+     env.MergeFlags(d)
+@@ -132,9 +128,7 @@
+  <programlisting>
+     env = Environment()
+     d = env.ParseFlags(["-I/opt/include", ["-L/opt/lib", "-lfoo"]])
+-    l = d.items()
+-    l.sort()
+-    for k,v in l:
++    for k,v in sorted(d.items()):
+         if v:
+             print k, v
+     env.MergeFlags(d)
+@@ -161,8 +155,6 @@
+  <programlisting>
+     env = Environment()
+     d = env.ParseFlags(["!echo -I/opt/include", "!echo -L/opt/lib", "-lfoo"])
+-    l = d.items()
+-    l.sort()
+     for k,v in l:
+         if v:
+             print k, v
+--- OLD/src/engine/SCons/BuilderTests.py	2010-03-26 09:43:08.000000000 -0700
++++ NEW/src/engine/SCons/BuilderTests.py	2010-03-26 21:33:46.000000000 -0700
+@@ -35,7 +35,6 @@
+ import os.path
+ import re
+ import sys
+-import types
+ import StringIO
+ import unittest
+ import UserList
+--- OLD/src/engine/SCons/Debug.py	2010-03-26 10:47:04.000000000 -0700
++++ NEW/src/engine/SCons/Debug.py	2010-03-26 18:45:43.000000000 -0700
+@@ -55,8 +55,7 @@
+ 
+ def string_to_classes(s):
+     if s == '*':
+-        c = sorted(tracked_classes.keys())
+-        return c
++        return sorted(tracked_classes.keys())
+     else:
+         return s.split()
+ 
+@@ -147,20 +146,15 @@
+ 
+ # print a single caller and its callers, if any
+ def _dump_one_caller(key, file, level=0):
+-    l = []
+-    for c,v in caller_dicts[key].items():
+-        l.append((-v,c))
+-    l.sort()
+     leader = '      '*level
+-    for v,c in l:
++    for v,c in sorted([(-v,c) for c,v in caller_dicts[key].items()]):
+         file.write("%s  %6d %s:%d(%s)\n" % ((leader,-v) + func_shorten(c[-3:])))
+         if c in caller_dicts:
+             _dump_one_caller(c, file, level+1)
+ 
+ # print each call tree
+ def dump_caller_counts(file=sys.stdout):
+-    keys = sorted(caller_bases.keys())
+-    for k in keys:
++    for k in sorted(caller_bases.keys()):
+         file.write("Callers of %s:%d(%s), %d calls:\n"
+                     % (func_shorten(k) + (caller_bases[k],)))
+         _dump_one_caller(k, file)
+--- OLD/src/engine/SCons/Defaults.py	2010-03-26 10:47:07.000000000 -0700
++++ NEW/src/engine/SCons/Defaults.py	2010-03-26 21:39:16.000000000 -0700
+@@ -42,7 +42,6 @@
+ import shutil
+ import stat
+ import time
+-import types
+ import sys
+ 
+ import SCons.Action
+@@ -385,9 +384,7 @@
+         # Consequently, we have to sort the keys to ensure a
+         # consistent order...
+         l = []
+-        keys = sorted(defs.keys())
+-        for k in keys:
+-            v = defs[k]
++        for k,v in sorted(defs.items()):
+             if v is None:
+                 l.append(str(k))
+             else:
+--- OLD/src/engine/SCons/DefaultsTests.py	2010-03-24 15:44:30.000000000 -0700
++++ NEW/src/engine/SCons/DefaultsTests.py	2010-03-26 21:39:27.000000000 -0700
+@@ -27,7 +27,6 @@
+ import os.path
+ import StringIO
+ import sys
+-import types
+ import unittest
+ 
+ from UserDict import UserDict
+--- OLD/src/engine/SCons/Node/FS.py	2010-03-24 15:44:31.000000000 -0700
++++ NEW/src/engine/SCons/Node/FS.py	2010-03-26 18:01:26.000000000 -0700
+@@ -1682,10 +1682,7 @@
+         """Return content signatures and names of all our children
+         separated by new-lines. Ensure that the nodes are sorted."""
+         contents = []
+-        name_cmp = lambda a, b: cmp(a.name, b.name)
+-        sorted_children = self.children()[:]
+-        sorted_children.sort(name_cmp)
+-        for node in sorted_children:
++        for node in sorted(self.children(), key=lambda t: t.name):
+             contents.append('%s %s\n' % (node.get_csig(), node.name))
+         return ''.join(contents)
+ 
+@@ -1952,9 +1949,8 @@
+         """
+         dirname, basename = os.path.split(pathname)
+         if not dirname:
+-            result = self._glob1(basename, ondisk, source, strings)
+-            result.sort(lambda a, b: cmp(str(a), str(b)))
+-            return result
++            return sorted(self._glob1(basename, ondisk, source, strings),
++                          key=lambda t: str(t))
+         if has_glob_magic(dirname):
+             list = self.glob(dirname, ondisk, source, strings=False)
+         else:
+--- OLD/src/engine/SCons/Node/FSTests.py	2010-03-26 10:51:02.000000000 -0700
++++ NEW/src/engine/SCons/Node/FSTests.py	2010-03-26 18:03:18.000000000 -0700
+@@ -1772,8 +1772,7 @@
+ 
+         fs.File(os.path.join('ddd', 'f2'))
+         dir.scan()
+-        kids = [x.path for x in dir.children()]
+-        kids.sort()
++        kids = sorted([x.path for x in dir.children()])
+         assert kids == [os.path.join('ddd', 'f1'),
+                         os.path.join('ddd', 'f2')], kids
+ 
+--- OLD/src/engine/SCons/Node/NodeTests.py	2010-03-26 10:51:14.000000000 -0700
++++ NEW/src/engine/SCons/Node/NodeTests.py	2010-03-26 21:39:40.000000000 -0700
+@@ -27,7 +27,6 @@
+ import os
+ import re
+ import sys
+-import types
+ import unittest
+ import UserList
+ 
+--- OLD/src/engine/SCons/SConf.py	2010-03-26 10:48:43.000000000 -0700
++++ NEW/src/engine/SCons/SConf.py	2010-03-26 21:40:35.000000000 -0700
+@@ -33,7 +33,6 @@
+ import StringIO
+ import sys
+ import traceback
+-import types
+ 
+ import SCons.Action
+ import SCons.Builder
+@@ -154,7 +153,7 @@
+     return (str(target[0]) + ' <-\n  |' +
+             source[0].get_contents().replace( '\n', "\n  |" ) )
+ 
+-# python 2.2 introduces types.BooleanType
++# python 2.2 introduces bool
+ BooleanTypes = [int, bool]
+ 
+ class SConfBuildInfo(SCons.Node.FS.FileBuildInfo):
+--- OLD/src/engine/SCons/Scanner/DirTests.py	2010-03-24 15:44:36.000000000 -0700
++++ NEW/src/engine/SCons/Scanner/DirTests.py	2010-03-26 21:39:49.000000000 -0700
+@@ -25,7 +25,6 @@
+ 
+ import os.path
+ import sys
+-import types
+ import unittest
+ 
+ import TestCmd
+--- OLD/src/engine/SCons/Scanner/Fortran.py	2010-03-24 15:44:36.000000000 -0700
++++ NEW/src/engine/SCons/Scanner/Fortran.py	2010-03-26 18:07:01.000000000 -0700
+@@ -123,9 +123,7 @@
+                 sortkey = self.sort_key(dep)
+                 nodes.append((sortkey, n))
+ 
+-        nodes.sort()
+-        nodes = [pair[1] for pair in nodes]
+-        return nodes
++        return [pair[1] for pair in sorted(nodes)]
+ 
+ def FortranScan(path_variable="FORTRANPATH"):
+     """Return a prototype Scanner instance for scanning source files
+--- OLD/src/engine/SCons/Scanner/LaTeX.py	2010-03-24 15:44:37.000000000 -0700
++++ NEW/src/engine/SCons/Scanner/LaTeX.py	2010-03-26 18:07:49.000000000 -0700
+@@ -365,10 +365,7 @@
+                 # recurse down 
+                 queue.extend( self.scan(n) )
+ 
+-        #
+-        nodes.sort()
+-        nodes = [pair[1] for pair in nodes]
+-        return nodes
++        return [pair[1] for pair in sorted(nodes)]
+ 
+ # Local Variables:
+ # tab-width:4
+--- OLD/src/engine/SCons/Scanner/LaTeXTests.py	2010-03-26 10:51:53.000000000 -0700
++++ NEW/src/engine/SCons/Scanner/LaTeXTests.py	2010-03-26 21:39:59.000000000 -0700
+@@ -25,7 +25,6 @@
+ 
+ import os.path
+ import sys
+-import types
+ import unittest
+ import UserDict
+ 
+--- OLD/src/engine/SCons/Scanner/RCTests.py	2010-03-26 10:51:57.000000000 -0700
++++ NEW/src/engine/SCons/Scanner/RCTests.py	2010-03-26 18:09:27.000000000 -0700
+@@ -112,10 +112,8 @@
+     my_normpath = os.path.normcase
+ 
+ def deps_match(self, deps, headers):
+-    scanned = list(map(my_normpath, list(map(str, deps))))
+-    expect = list(map(my_normpath, headers))
+-    scanned.sort()
+-    expect.sort()
++    scanned = sorted(map(my_normpath, list(map(str, deps))))
++    expect = sorted(map(my_normpath, headers))
+     self.failUnless(scanned == expect, "expect %s != scanned %s" % (expect, scanned))
+ 
+ # define some tests:
+--- OLD/src/engine/SCons/Scanner/__init__.py	2010-03-24 15:44:35.000000000 -0700
++++ NEW/src/engine/SCons/Scanner/__init__.py	2010-03-26 18:06:22.000000000 -0700
+@@ -378,12 +378,9 @@
+                 SCons.Warnings.warn(SCons.Warnings.DependencyWarning,
+                                     "No dependency generated for file: %s (included from: %s) -- file not found" % (i, node))
+             else:
+-                sortkey = self.sort_key(include)
+-                nodes.append((sortkey, n))
++                nodes.append((self.sort_key(include), n))
+ 
+-        nodes.sort()
+-        nodes = [pair[1] for pair in nodes]
+-        return nodes
++        return [pair[1] for pair in sorted(nodes)]
+ 
+ class ClassicCPP(Classic):
+     """
+--- OLD/src/engine/SCons/Script/Main.py	2010-03-26 10:52:18.000000000 -0700
++++ NEW/src/engine/SCons/Script/Main.py	2010-03-26 18:56:14.000000000 -0700
+@@ -316,8 +316,7 @@
+                     display("Removed " + pathstr)
+                 elif os.path.isdir(path) and not os.path.islink(path):
+                     # delete everything in the dir
+-                    entries = sorted(os.listdir(path))
+-                    for e in entries:
++                    for e in sorted(os.listdir(path)):
+                         p = os.path.join(path, e)
+                         s = os.path.join(pathstr, e)
+                         if os.path.isfile(p):
+@@ -505,7 +504,6 @@
+             for n, c in s:
+                 stats_table[n][i] = c
+             i = i + 1
+-        keys = sorted(stats_table.keys())
+         self.outfp.write("Object counts:\n")
+         pre = ["   "]
+         post = ["   %s\n"]
+@@ -516,7 +514,7 @@
+         labels.append(("", "Class"))
+         self.outfp.write(fmt1 % tuple([x[0] for x in labels]))
+         self.outfp.write(fmt1 % tuple([x[1] for x in labels]))
+-        for k in keys:
++        for k in sorted(stats_table.keys()):
+             r = stats_table[k][:l] + [k]
+             self.outfp.write(fmt2 % tuple(r))
+ 
+--- OLD/src/engine/SCons/Script/SConscript.py	2010-03-26 10:52:30.000000000 -0700
++++ NEW/src/engine/SCons/Script/SConscript.py	2010-03-26 21:40:45.000000000 -0700
+@@ -51,7 +51,6 @@
+ import re
+ import sys
+ import traceback
+-import types
+ import UserList
+ 
+ # The following variables used to live in this module.  Some
+--- OLD/src/engine/SCons/Subst.py	2010-03-26 10:49:02.000000000 -0700
++++ NEW/src/engine/SCons/Subst.py	2010-03-26 21:40:57.000000000 -0700
+@@ -31,7 +31,6 @@
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import re
+-import types
+ import UserList
+ import UserString
+ 
+--- OLD/src/engine/SCons/SubstTests.py	2010-03-26 10:49:12.000000000 -0700
++++ NEW/src/engine/SCons/SubstTests.py	2010-03-26 21:41:05.000000000 -0700
+@@ -29,7 +29,6 @@
+ import os.path
+ import StringIO
+ import sys
+-import types
+ import unittest
+ 
+ from UserDict import UserDict
+--- OLD/src/engine/SCons/Tool/intelc.py	2010-03-24 15:45:00.000000000 -0700
++++ NEW/src/engine/SCons/Tool/intelc.py	2010-03-26 18:13:25.000000000 -0700
+@@ -243,9 +243,7 @@
+             m = re.search(r'([0-9.]+)$', d)
+             if m:
+                 versions.append(m.group(1))
+-    versions = uniquify(versions)       # remove dups
+-    versions.sort(vercmp)
+-    return versions
++    return sorted(uniquify(versions))       # remove dups
+ 
+ def get_intel_compiler_top(version, abi):
+     """
+--- OLD/src/engine/SCons/Tool/msvs.py	2010-03-26 10:53:27.000000000 -0700
++++ NEW/src/engine/SCons/Tool/msvs.py	2010-03-26 18:15:19.000000000 -0700
+@@ -291,8 +291,6 @@
+                         self.sources[t[0]].append(self.env[t[1]])
+ 
+         for n in sourcenames:
+-            # TODO(1.5):
+-            #self.sources[n].sort(lambda a, b: cmp(a.lower(), b.lower()))
+             self.sources[n].sort(lambda a, b: cmp(a.lower(), b.lower()))
+ 
+         def AddConfig(self, variant, buildtarget, outdir, runfile, cmdargs, dspfile=dspfile):
+@@ -443,8 +441,6 @@
+                       'Other Files': ''}
+ 
+         cats = categories.keys()
+-        # TODO(1.5):
+-        #cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+         cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+         for kind in cats:
+             if not self.sources[kind]:
+@@ -701,8 +697,6 @@
+ 
+     def printSources(self, hierarchy, commonprefix):
+         sorteditems = hierarchy.items()
+-        # TODO(1.5):
+-        #sorteditems.sort(lambda a, b: cmp(a[0].lower(), b[0].lower()))
+         sorteditems.sort(lambda a, b: cmp(a[0].lower(), b[0].lower()))
+ 
+         # First folders, then files
+@@ -734,8 +728,6 @@
+         self.file.write('\t<Files>\n')
+ 
+         cats = categories.keys()
+-        # TODO(1.5)
+-        #cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+         cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+         cats = [k for k in cats if self.sources[k]]
+         for kind in cats:
+--- OLD/src/engine/SCons/Variables/ListVariable.py	2010-03-24 15:44:52.000000000 -0700
++++ NEW/src/engine/SCons/Variables/ListVariable.py	2010-03-26 18:22:00.000000000 -0700
+@@ -63,8 +63,7 @@
+ class _ListVariable(UserList.UserList):
+     def __init__(self, initlist=[], allowedElems=[]):
+         UserList.UserList.__init__(self, [_f for _f in initlist if _f])
+-        self.allowedElems = allowedElems[:]
+-        self.allowedElems.sort()
++        self.allowedElems = sorted(allowedElems)
+ 
+     def __cmp__(self, other):
+         raise NotImplementedError
+--- OLD/src/engine/SCons/Variables/__init__.py	2010-03-26 10:54:26.000000000 -0700
++++ NEW/src/engine/SCons/Variables/__init__.py	2010-03-26 21:04:23.000000000 -0700
+@@ -284,8 +284,7 @@
+         """
+ 
+         if sort:
+-            options = self.options[:]
+-            options.sort(lambda x,y: sort(x.key,y.key))
++            options = sorted(self.options, cmp=lambda x,y: sort(x.key,y.key))
+         else:
+             options = self.options
+ 
+--- OLD/src/engine/SCons/compat/_scons_optparse.py	2010-03-24 15:44:45.000000000 -0700
++++ NEW/src/engine/SCons/compat/_scons_optparse.py	2010-03-26 21:37:51.000000000 -0700
+@@ -643,8 +643,7 @@
+                 else:
+                     setattr(self, attr, None)
+         if attrs:
+-            attrs = attrs.keys()
+-            attrs.sort()
++            attrs = sorted(attrs.keys())
+             raise OptionError(
+                 "invalid keyword arguments: %s" % string.join(attrs, ", "),
+                 self)
+@@ -693,7 +692,7 @@
+             if self.choices is None:
+                 raise OptionError(
+                     "must supply a list of choices for type 'choice'", self)
+-            elif type(self.choices) not in (types.TupleType, types.ListType):
++            elif type(self.choices) not in (tuple, list):
+                 raise OptionError(
+                     "choices must be a list of strings ('%s' supplied)"
+                     % string.split(str(type(self.choices)), "'")[1], self)
+@@ -737,12 +736,12 @@
+                 raise OptionError(
+                     "callback not callable: %r" % self.callback, self)
+             if (self.callback_args is not None and
+-                type(self.callback_args) is not types.TupleType):
++                type(self.callback_args) is not tuple):
+                 raise OptionError(
+                     "callback_args, if supplied, must be a tuple: not %r"
+                     % self.callback_args, self)
+             if (self.callback_kwargs is not None and
+-                type(self.callback_kwargs) is not types.DictType):
++                type(self.callback_kwargs) is not dict):
+                 raise OptionError(
+                     "callback_kwargs, if supplied, must be a dict: not %r"
+                     % self.callback_kwargs, self)
+@@ -855,14 +854,13 @@
+ except NameError:
+     (True, False) = (1, 0)
+ 
+-try:
+-    types.UnicodeType
+-except AttributeError:
++try: unicode
++except NameError:
+     def isbasestring(x):
+-        return isinstance(x, types.StringType)
++        return isinstance(x, str)
+ else:
+     def isbasestring(x):
+-        return isinstance(x, types.StringType) or isinstance(x, types.UnicodeType)
++        return isinstance(x, str) or isinstance(x, unicode)
+ 
+ class Values:
+ 
+@@ -879,7 +877,7 @@
+     def __cmp__(self, other):
+         if isinstance(other, Values):
+             return cmp(self.__dict__, other.__dict__)
+-        elif isinstance(other, types.DictType):
++        elif isinstance(other, dict):
+             return cmp(self.__dict__, other)
+         else:
+             return -1
+@@ -1040,7 +1038,7 @@
+         """add_option(Option)
+            add_option(opt_str, ..., kwarg=val, ...)
+         """
+-        if type(args[0]) is types.StringType:
++        if type(args[0]) is str:
+             option = apply(self.option_class, args, kwargs)
+         elif len(args) == 1 and not kwargs:
+             option = args[0]
+@@ -1351,7 +1349,7 @@
+ 
+     def add_option_group(self, *args, **kwargs):
+         # XXX lots of overlap with OptionContainer.add_option()
+-        if type(args[0]) is types.StringType:
++        if type(args[0]) is str:
+             group = apply(OptionGroup, (self,) + args, kwargs)
+         elif len(args) == 1 and not kwargs:
+             group = args[0]
+--- OLD/src/engine/SCons/cpp.py	2010-03-24 22:18:11.000000000 -0700
++++ NEW/src/engine/SCons/cpp.py	2010-03-26 17:52:35.000000000 -0700
+@@ -133,8 +133,7 @@
+ # re module, as late as version 2.2.2, empirically matches the
+ # "!" in "!=" first, instead of finding the longest match.
+ # What's up with that?
+-l = CPP_to_Python_Ops_Dict.keys()
+-l.sort(lambda a, b: cmp(len(b), len(a)))
++l = sorted(CPP_to_Python_Ops_Dict.keys(), cmp=lambda a, b: cmp(len(b), len(a)))
+ 
+ # Turn the list of keys into one regular expression that will allow us
+ # to substitute all of the operators at once.
+--- OLD/src/script/scons-time.py	2010-03-26 10:54:39.000000000 -0700
++++ NEW/src/script/scons-time.py	2010-03-26 19:01:24.000000000 -0700
+@@ -531,8 +531,7 @@
+         """
+         files = []
+         for a in args:
+-            g = sorted(glob.glob(a))
+-            files.extend(g)
++            files.extend(sorted(glob.glob(a)))
+ 
+         if tail:
+             files = files[-tail:]
+@@ -614,9 +613,7 @@
+         """
+         gp = Gnuplotter(self.title, self.key_location)
+ 
+-        indices = sorted(results.keys())
+-
+-        for i in indices:
++        for i in sorted(results.keys()):
+             try:
+                 t = self.run_titles[i]
+             except IndexError:
+--- OLD/src/script/sconsign.py	2010-03-26 10:54:44.000000000 -0700
++++ NEW/src/script/sconsign.py	2010-03-26 19:03:15.000000000 -0700
+@@ -335,8 +335,7 @@
+                     print nodeinfo_string(name, entry.ninfo)
+                 printfield(name, entry.binfo)
+     else:
+-        names = sorted(entries.keys())
+-        for name in names:
++        for name in sorted(entries.keys()):
+             entry = entries[name]
+             try:
+                 ninfo = entry.ninfo
+@@ -400,8 +399,7 @@
+                 else:
+                     self.printentries(dir, val)
+         else:
+-            keys = sorted(db.keys())
+-            for dir in keys:
++            for dir in sorted(db.keys()):
+                 self.printentries(dir, db[dir])
+ 
+     def printentries(self, dir, val):
+--- OLD/src/test_pychecker.py	2010-03-26 10:45:51.000000000 -0700
++++ NEW/src/test_pychecker.py	2010-03-26 19:04:03.000000000 -0700
+@@ -90,7 +90,6 @@
+         del u[file]
+     except KeyError:
+         pass
+-
+ files = sorted(u.keys())
+ 
+ mismatches = []
+--- OLD/test/Glob/source.py	2010-03-26 02:36:03.000000000 -0700
++++ NEW/test/Glob/source.py	2010-03-26 21:07:33.000000000 -0700
+@@ -66,8 +66,7 @@
+ test.write(['var2', 'SConscript'], """\
+ Import("env")
+ 
+-f_in = Glob('f[67].in')
+-f_in.sort(lambda a,b: cmp(a.name, b.name))
++f_in = sorted(Glob('f[67].in'), cmp=lambda a,b: cmp(a.name, b.name))
+ env.Concatenate('f.out', f_in)
+ """)
+ 
+--- OLD/test/ZIP/ZIP.py	2010-03-26 02:32:04.000000000 -0700
++++ NEW/test/ZIP/ZIP.py	2010-03-26 21:43:35.000000000 -0700
+@@ -117,10 +117,9 @@
+     test.write('SConstruct', """\
+ def marker(target, source, env):
+     open(r'%s', 'wb').write("marker\\n")
+-import types
+ f1 = Environment()
+ zipcom = f1.Dictionary('ZIPCOM')
+-if not type(zipcom) is types.ListType:
++if not isinstance(zipcom, list):
+     zipcom = [zipcom]
+ f2 = Environment(ZIPCOM = [Action(marker)] + zipcom)
+ f3 = Environment(ZIPSUFFIX = '.xyzzy')
+--- OLD/test/option--C.py	2010-03-26 10:55:27.000000000 -0700
++++ NEW/test/option--C.py	2010-03-26 21:41:53.000000000 -0700
+@@ -25,7 +25,6 @@
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import os
+-import types
+ 
+ import TestSCons
+ 
