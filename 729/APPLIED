@@ -1,0 +1,2082 @@
+RefactoringTool: Files that were modified:
+RefactoringTool: src/engine/SCons/Action.py
+RefactoringTool: src/engine/SCons/ActionTests.py
+RefactoringTool: src/engine/SCons/Builder.py
+RefactoringTool: src/engine/SCons/CacheDir.py
+RefactoringTool: src/engine/SCons/Defaults.py
+RefactoringTool: src/engine/SCons/Environment.py
+RefactoringTool: src/engine/SCons/ErrorsTests.py
+RefactoringTool: src/engine/SCons/Executor.py
+RefactoringTool: src/engine/SCons/ExecutorTests.py
+RefactoringTool: src/engine/SCons/JobTests.py
+RefactoringTool: src/engine/SCons/Memoize.py
+RefactoringTool: src/engine/SCons/SConf.py
+RefactoringTool: src/engine/SCons/SConfTests.py
+RefactoringTool: src/engine/SCons/Subst.py
+RefactoringTool: src/engine/SCons/SubstTests.py
+RefactoringTool: src/engine/SCons/Taskmaster.py
+RefactoringTool: src/engine/SCons/TaskmasterTests.py
+RefactoringTool: src/engine/SCons/Util.py
+RefactoringTool: src/engine/SCons/UtilTests.py
+RefactoringTool: src/engine/SCons/cpp.py
+RefactoringTool: src/engine/SCons/dblite.py
+RefactoringTool: src/engine/SCons/Node/FS.py
+RefactoringTool: src/engine/SCons/Node/FSTests.py
+RefactoringTool: src/engine/SCons/Node/__init__.py
+RefactoringTool: src/engine/SCons/Platform/__init__.py
+RefactoringTool: src/engine/SCons/Scanner/FortranTests.py
+RefactoringTool: src/engine/SCons/Scanner/IDLTests.py
+RefactoringTool: src/engine/SCons/Script/Main.py
+RefactoringTool: src/engine/SCons/Script/SConsOptions.py
+RefactoringTool: src/engine/SCons/Script/SConscript.py
+RefactoringTool: src/engine/SCons/Tool/JavaCommon.py
+RefactoringTool: src/engine/SCons/Tool/PharLapCommon.py
+RefactoringTool: src/engine/SCons/Tool/__init__.py
+RefactoringTool: src/engine/SCons/Tool/install.py
+RefactoringTool: src/engine/SCons/Tool/intelc.py
+RefactoringTool: src/engine/SCons/Tool/mingw.py
+RefactoringTool: src/engine/SCons/Tool/mslink.py
+RefactoringTool: src/engine/SCons/Tool/msvc.py
+RefactoringTool: src/engine/SCons/Tool/msvs.py
+RefactoringTool: src/engine/SCons/Tool/mwld.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/sdk.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/vs.py
+RefactoringTool: src/engine/SCons/Tool/packaging/__init__.py
+RefactoringTool: src/engine/SCons/Variables/PathVariableTests.py
+RefactoringTool: src/engine/SCons/Variables/__init__.py
+RefactoringTool: src/engine/SCons/compat/__init__.py
+RefactoringTool: src/engine/SCons/compat/_scons_hashlib.py
+RefactoringTool: src/engine/SCons/compat/_scons_optparse.py
+RefactoringTool: src/engine/SCons/compat/_scons_sets.py
+RefactoringTool: src/engine/SCons/compat/_scons_shlex.py
+RefactoringTool: QMTest/TestCmd.py
+RefactoringTool: QMTest/TestSCons.py
+RefactoringTool: QMTest/unittest.py
+RefactoringTool: bench/dependency-func.py
+RefactoringTool: bench/env.__setitem__.py
+--- src/engine/SCons/Action.py (original)
++++ src/engine/SCons/Action.py (refactored)
+@@ -302,7 +302,7 @@
+     a1 = Action(act1)
+     a2 = Action(act2)
+     if a1 is None or a2 is None:
+-        raise TypeError, "Cannot append %s to %s" % (type(act1), type(act2))
++        raise TypeError("Cannot append %s to %s" % (type(act1), type(act2)))
+     if isinstance(a1, ListAction):
+         if isinstance(a2, ListAction):
+             return ListAction(a1.list + a2.list)
+@@ -691,8 +691,8 @@
+         _ActionAction.__init__(self, **kw)
+         if is_List(cmd):
+             if list(filter(is_List, cmd)):
+-                raise TypeError, "CommandAction should be given only " \
+-                      "a single command"
++                raise TypeError("CommandAction should be given only " \
++                      "a single command")
+         self.cmd_list = cmd
+ 
+     def __str__(self):
+--- src/engine/SCons/ActionTests.py (original)
++++ src/engine/SCons/ActionTests.py (refactored)
+@@ -275,7 +275,7 @@
+             m = 'Invalid command display variable'
+             assert s.find(m) != -1, 'Unexpected string:  %s' % s
+         else:
+-            raise Exception, "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+     return act
+ 
+@@ -494,7 +494,7 @@
+             m = 'Cannot have both strfunction and cmdstr args to Action()'
+             assert s.find(m) != -1, 'Unexpected string:  %s' % s
+         else:
+-            raise Exception, "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+     def test___cmp__(self):
+         """Test Action comparison
+--- src/engine/SCons/Builder.py (original)
++++ src/engine/SCons/Builder.py (refactored)
+@@ -244,7 +244,7 @@
+     composite = None
+     if 'generator' in kw:
+         if 'action' in kw:
+-            raise UserError, "You must not specify both an action and a generator."
++            raise UserError("You must not specify both an action and a generator.")
+         kw['action'] = SCons.Action.CommandGeneratorAction(kw['generator'], {})
+         del kw['generator']
+     elif 'action' in kw:
+@@ -267,7 +267,7 @@
+             # a callable to use as the actual emitter.
+             var = SCons.Util.get_environment_var(emitter)
+             if not var:
+-                raise UserError, "Supplied emitter '%s' does not appear to refer to an Environment variable" % emitter
++                raise UserError("Supplied emitter '%s' does not appear to refer to an Environment variable" % emitter)
+             kw['emitter'] = EmitterProxy(var)
+         elif SCons.Util.is_Dict(emitter):
+             kw['emitter'] = DictEmitter(emitter)
+@@ -291,7 +291,7 @@
+     # were specified.
+     for t in tlist:
+         if t.side_effect:
+-            raise UserError, "Multiple ways to build the same target were specified for: %s" % t
++            raise UserError("Multiple ways to build the same target were specified for: %s" % t)
+         if t.has_explicit_builder():
+             if not t.env is None and not t.env is env:
+                 action = t.builder.action
+@@ -303,22 +303,22 @@
+                     SCons.Warnings.warn(SCons.Warnings.DuplicateEnvironmentWarning, msg)
+                 else:
+                     msg = "Two environments with different actions were specified for the same target: %s" % t
+-                    raise UserError, msg
++                    raise UserError(msg)
+             if builder.multi:
+                 if t.builder != builder:
+                     msg = "Two different builders (%s and %s) were specified for the same target: %s" % (t.builder.get_name(env), builder.get_name(env), t)
+-                    raise UserError, msg
++                    raise UserError(msg)
+                 # TODO(batch):  list constructed each time!
+                 if t.get_executor().get_all_targets() != tlist:
+                     msg = "Two different target lists have a target in common: %s  (from %s and from %s)" % (t, list(map(str, t.get_executor().get_all_targets())), list(map(str, tlist)))
+-                    raise UserError, msg
++                    raise UserError(msg)
+             elif t.sources != slist:
+                 msg = "Multiple ways to build the same target were specified for: %s  (from %s and from %s)" % (t, list(map(str, t.sources)), list(map(str, slist)))
+-                raise UserError, msg
++                raise UserError(msg)
+ 
+     if builder.single_source:
+         if len(slist) > 1:
+-            raise UserError, "More than one source given for single-source builder: targets=%s sources=%s" % (list(map(str,tlist)), list(map(str,slist)))
++            raise UserError("More than one source given for single-source builder: targets=%s sources=%s" % (list(map(str,tlist)), list(map(str,slist))))
+ 
+ class EmitterProxy:
+     """This is a callable class that can act as a
+@@ -429,7 +429,7 @@
+         self.src_builder = src_builder
+ 
+     def __nonzero__(self):
+-        raise InternalError, "Do not test for the Node.builder attribute directly; use Node.has_builder() instead"
++        raise InternalError("Do not test for the Node.builder attribute directly; use Node.has_builder() instead")
+ 
+     def get_name(self, env):
+         """Attempts to get the name of the Builder.
+@@ -575,8 +575,8 @@
+         if executor is None:
+             if not self.action:
+                 fmt = "Builder %s must have an action to build %s."
+-                raise UserError, fmt % (self.get_name(env or self.env),
+-                                        list(map(str,tlist)))
++                raise UserError(fmt % (self.get_name(env or self.env),
++                                        list(map(str,tlist))))
+             key = self.action.batch_key(env or self.env, tlist, slist)
+             if key:
+                 try:
+--- src/engine/SCons/CacheDir.py (original)
++++ src/engine/SCons/CacheDir.py (refactored)
+@@ -100,7 +100,7 @@
+             # has beaten us creating the directory.
+             if not fs.isdir(cachedir):
+                 msg = errfmt % (str(target), cachefile)
+-                raise SCons.Errors.EnvironmentError, msg
++                raise SCons.Errors.EnvironmentError(msg)
+ 
+     try:
+         if fs.islink(t.path):
+--- src/engine/SCons/Defaults.py (original)
++++ src/engine/SCons/Defaults.py (refactored)
+@@ -118,7 +118,7 @@
+             except AttributeError:
+                 shared = None
+             if not shared:
+-                raise SCons.Errors.UserError, "Source file: %s is static and is not compatible with shared target: %s" % (src, target[0])
++                raise SCons.Errors.UserError("Source file: %s is static and is not compatible with shared target: %s" % (src, target[0]))
+ 
+ SharedCheck = SCons.Action.Action(SharedFlagChecker, None)
+ 
+--- src/engine/SCons/Environment.py (original)
++++ src/engine/SCons/Environment.py (refactored)
+@@ -271,7 +271,7 @@
+         elif name == 'builder':
+             return self.method
+         else:
+-            raise AttributeError, name
++            raise AttributeError(name)
+ 
+     def __setattr__(self, name, value):
+         if name == 'env':
+@@ -432,7 +432,7 @@
+             # efficient than calling another function or a method.
+             if key not in self._dict \
+                and not _is_valid_var.match(key):
+-                    raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                    raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+     def get(self, key, default=None):
+@@ -1382,7 +1382,7 @@
+         copy_function = self._copy2_from_cache
+         if function in ('MD5', 'content'):
+             if not SCons.Util.md5:
+-                raise UserError, "MD5 signatures are not available in this version of Python."
++                raise UserError("MD5 signatures are not available in this version of Python.")
+             function = self._changed_content
+         elif function == 'MD5-timestamp':
+             function = self._changed_timestamp_then_content
+@@ -1392,7 +1392,7 @@
+         elif function == 'timestamp-match':
+             function = self._changed_timestamp_match
+         elif not callable(function):
+-            raise UserError, "Unknown Decider value %s" % repr(function)
++            raise UserError("Unknown Decider value %s" % repr(function))
+ 
+         # We don't use AddMethod because we don't want to turn the
+         # function, which only expects three arguments, into a bound
+@@ -2049,7 +2049,7 @@
+ 
+         for side_effect in side_effects:
+             if side_effect.multiple_side_effect_has_builder():
+-                raise SCons.Errors.UserError, "Multiple ways to build the same target were specified for: %s" % str(side_effect)
++                raise SCons.Errors.UserError("Multiple ways to build the same target were specified for: %s" % str(side_effect))
+             side_effect.add_source(targets)
+             side_effect.side_effect = 1
+             self.Precious(side_effect)
+@@ -2075,12 +2075,12 @@
+         self.src_sig_type = type
+         if type == 'MD5':
+             if not SCons.Util.md5:
+-                raise UserError, "MD5 signatures are not available in this version of Python."
++                raise UserError("MD5 signatures are not available in this version of Python.")
+             self.decide_source = self._changed_content
+         elif type == 'timestamp':
+             self.decide_source = self._changed_timestamp_match
+         else:
+-            raise UserError, "Unknown source signature type '%s'" % type
++            raise UserError("Unknown source signature type '%s'" % type)
+ 
+     def Split(self, arg):
+         """This function converts a string or list into a list of strings
+@@ -2111,7 +2111,7 @@
+         self.tgt_sig_type = type
+         if type in ('MD5', 'content'):
+             if not SCons.Util.md5:
+-                raise UserError, "MD5 signatures are not available in this version of Python."
++                raise UserError("MD5 signatures are not available in this version of Python.")
+             self.decide_target = self._changed_content
+         elif type == 'timestamp':
+             self.decide_target = self._changed_timestamp_match
+@@ -2120,7 +2120,7 @@
+         elif type == 'source':
+             self.decide_target = self._changed_source
+         else:
+-            raise UserError, "Unknown target signature type '%s'"%type
++            raise UserError("Unknown target signature type '%s'"%type)
+ 
+     def Value(self, value, built_value=None):
+         """
+@@ -2209,7 +2209,7 @@
+             return self.__dict__['__subject'].__getitem__(key)
+     def __setitem__(self, key, value):
+         if not is_valid_construction_var(key):
+-            raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++            raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+         self.__dict__['overrides'][key] = value
+     def __delitem__(self, key):
+         try:
+--- src/engine/SCons/ErrorsTests.py (original)
++++ src/engine/SCons/ErrorsTests.py (refactored)
+@@ -79,21 +79,21 @@
+     def test_InternalError(self):
+         """Test the InternalError exception."""
+         try:
+-            raise SCons.Errors.InternalError, "test internal error"
++            raise SCons.Errors.InternalError("test internal error")
+         except SCons.Errors.InternalError, e:
+             assert e.args == ("test internal error",)
+ 
+     def test_UserError(self):
+         """Test the UserError exception."""
+         try:
+-            raise SCons.Errors.UserError, "test user error"
++            raise SCons.Errors.UserError("test user error")
+         except SCons.Errors.UserError, e:
+             assert e.args == ("test user error",)
+ 
+     def test_ExplicitExit(self):
+         """Test the ExplicitExit exception."""
+         try:
+-            raise SCons.Errors.ExplicitExit, "node"
++            raise SCons.Errors.ExplicitExit("node")
+         except SCons.Errors.ExplicitExit, e:
+             assert e.node == "node"
+ 
+--- src/engine/SCons/Executor.py (original)
++++ src/engine/SCons/Executor.py (refactored)
+@@ -226,7 +226,7 @@
+         if not SCons.Util.is_List(action):
+             if not action:
+                 import SCons.Errors
+-                raise SCons.Errors.UserError, "Executor must have an action."
++                raise SCons.Errors.UserError("Executor must have an action.")
+             action = [action]
+         self.action_list = action
+ 
+@@ -394,7 +394,7 @@
+         for s in self.get_all_sources():
+             if s.missing():
+                 msg = "Source `%s' not found, needed by target `%s'."
+-                raise SCons.Errors.StopError, msg % (s, self.batches[0].targets[0])
++                raise SCons.Errors.StopError(msg % (s, self.batches[0].targets[0]))
+ 
+     def add_pre_action(self, action):
+         self.pre_actions.append(action)
+--- src/engine/SCons/ExecutorTests.py (original)
++++ src/engine/SCons/ExecutorTests.py (refactored)
+@@ -242,7 +242,7 @@
+         except SCons.Errors.BuildError:
+             pass
+         else:
+-            raise Exception, "Did not catch expected BuildError"
++            raise Exception("Did not catch expected BuildError")
+         assert result == ['pre_err'], result
+         del result[:]
+ 
+@@ -310,7 +310,7 @@
+         except SCons.Errors.StopError, e:
+             assert str(e) == "Source `s2' not found, needed by target `t1'.", e
+         else:
+-            raise AssertionError, "did not catch expected StopError: %s" % r
++            raise AssertionError("did not catch expected StopError: %s" % r)
+ 
+     def test_add_pre_action(self):
+         """Test adding pre-actions to an Executor"""
+--- src/engine/SCons/JobTests.py (original)
++++ src/engine/SCons/JobTests.py (refactored)
+@@ -398,7 +398,7 @@
+         goodnode.__init__(self)
+         self.expect_to_be = SCons.Node.failed
+     def build(self, **kw):
+-        raise Exception, 'badnode exception'
++        raise Exception('badnode exception')
+ 
+ class slowbadnode (badnode):
+     def build(self, **kw):
+@@ -407,11 +407,11 @@
+         # it is faster than slowgoodnode then these could complete
+         # while the scheduler is sleeping.
+         time.sleep(0.05)
+-        raise Exception, 'slowbadnode exception'
++        raise Exception('slowbadnode exception')
+ 
+ class badpreparenode (badnode):
+     def prepare(self):
+-        raise Exception, 'badpreparenode exception'
++        raise Exception('badpreparenode exception')
+ 
+ class _SConsTaskTest(unittest.TestCase):
+ 
+--- src/engine/SCons/Memoize.py (original)
++++ src/engine/SCons/Memoize.py (refactored)
+@@ -257,7 +257,7 @@
+     def EnableMemoization():
+         import SCons.Warnings
+         msg = 'memoization is not supported in this version of Python (%s)'
+-        raise SCons.Warnings.NoMetaclassSupportWarning, msg % reason
++        raise SCons.Warnings.NoMetaclassSupportWarning(msg % reason)
+ 
+ else:
+ 
+--- src/engine/SCons/SConf.py (original)
++++ src/engine/SCons/SConf.py (refactored)
+@@ -79,7 +79,7 @@
+     elif mode == "cache":
+         cache_mode = CACHE
+     else:
+-        raise ValueError, "SCons.SConf.SetCacheMode: Unknown mode " + mode
++        raise ValueError("SCons.SConf.SetCacheMode: Unknown mode " + mode)
+ 
+ progress_display = SCons.Util.display # will be overwritten by SCons.Script
+ def SetProgressDisplay(display):
+@@ -397,8 +397,7 @@
+             SConfFS = SCons.Node.FS.default_fs or \
+                       SCons.Node.FS.FS(env.fs.pathTop)
+         if sconf_global is not None:
+-            raise (SCons.Errors.UserError,
+-                   "Only one SConf object may be active at one time")
++            raise SCons.Errors.UserError
+         self.env = env
+         if log_file is not None:
+             log_file = SConfFS.File(env.subst(log_file))
+@@ -639,8 +638,7 @@
+             self.sconf = sconf
+         def __call__(self, *args, **kw):
+             if not self.sconf.active:
+-                raise (SCons.Errors.UserError,
+-                       "Test called after sconf.Finish()")
++                raise SCons.Errors.UserError
+             context = CheckContext(self.sconf)
+             ret = self.test(context, *args, **kw)
+             if self.sconf.config_h is not None:
+@@ -721,7 +719,7 @@
+         global sconf_global, _ac_config_hs
+ 
+         if not self.active:
+-            raise SCons.Errors.UserError, "Finish may be called only once!"
++            raise SCons.Errors.UserError("Finish may be called only once!")
+         if self.logstream is not None and not dryrun:
+             self.logstream.write("\n")
+             self.logstream.close()
+@@ -793,7 +791,7 @@
+         elif isinstance(res, str):
+             text = res
+         else:
+-            raise TypeError, "Expected string, int or bool, got " + str(type(res))
++            raise TypeError("Expected string, int or bool, got " + str(type(res)))
+ 
+         if self.did_show_result == 0:
+             # Didn't show result yet, do it now.
+@@ -821,7 +819,7 @@
+         elif( attr == 'lastTarget' ):
+             return self.sconf.lastTarget
+         else:
+-            raise AttributeError, "CheckContext instance has no attribute '%s'" % attr
++            raise AttributeError("CheckContext instance has no attribute '%s'" % attr)
+ 
+     #### Stuff used by Conftest.py (look there for explanations).
+ 
+--- src/engine/SCons/SConfTests.py (original)
++++ src/engine/SCons/SConfTests.py (refactored)
+@@ -85,7 +85,7 @@
+         if (not self.scons_env.Detect( self.scons_env.subst('$CXX') ) or
+             not self.scons_env.Detect( self.scons_env.subst('$CC') ) or
+             not self.scons_env.Detect( self.scons_env.subst('$LINK') )):
+-            raise Exception, "This test needs an installed compiler!"
++            raise Exception("This test needs an installed compiler!")
+         if self.scons_env['CXX'] == 'g++':
+             global existing_lib
+             existing_lib = 'm'
+--- src/engine/SCons/Subst.py (original)
++++ src/engine/SCons/Subst.py (refactored)
+@@ -54,9 +54,9 @@
+     name = exception.__class__.__name__
+     msg = "%s `%s' trying to evaluate `%s'" % (name, exception, s)
+     if target:
+-        raise SCons.Errors.BuildError, (target[0], msg)
++        raise SCons.Errors.BuildError(target[0], msg)
+     else:
+-        raise SCons.Errors.UserError, msg
++        raise SCons.Errors.UserError(msg)
+ 
+ 
+ 
+@@ -238,7 +238,7 @@
+         except IndexError:
+             # If there is nothing in the list, then we have no attributes to
+             # pass through, so raise AttributeError for everything.
+-            raise AttributeError, "NodeList has no attribute: %s" % attr
++            raise AttributeError("NodeList has no attribute: %s" % attr)
+         return getattr(nl0, attr)
+     def __str__(self):
+         nl = self.nl._create_nodelist()
+--- src/engine/SCons/SubstTests.py (original)
++++ src/engine/SCons/SubstTests.py (refactored)
+@@ -524,7 +524,7 @@
+             ]
+             assert str(e) in expect, e
+         else:
+-            raise AssertionError, "did not catch expected UserError"
++            raise AssertionError("did not catch expected UserError")
+ 
+     def test_subst_syntax_errors(self):
+         """Test scons_subst():  handling syntax errors"""
+@@ -542,7 +542,7 @@
+             ]
+             assert str(e) in expect, e
+         else:
+-            raise AssertionError, "did not catch expected UserError"
++            raise AssertionError("did not catch expected UserError")
+ 
+     def test_subst_type_errors(self):
+         """Test scons_subst():  handling type errors"""
+@@ -558,7 +558,7 @@
+             ]
+             assert str(e) in expect, e
+         else:
+-            raise AssertionError, "did not catch expected UserError"
++            raise AssertionError("did not catch expected UserError")
+ 
+         try:
+             def func(a, b, c):
+@@ -573,7 +573,7 @@
+             ]
+             assert str(e) in expect, repr(str(e))
+         else:
+-            raise AssertionError, "did not catch expected UserError"
++            raise AssertionError("did not catch expected UserError")
+ 
+     def test_subst_raw_function(self):
+         """Test scons_subst():  fetch function with SUBST_RAW plus conv"""
+@@ -978,7 +978,7 @@
+             ]
+             assert str(e) in expect, e
+         else:
+-            raise AssertionError, "did not catch expected UserError"
++            raise AssertionError("did not catch expected UserError")
+ 
+     def test_subst_syntax_errors(self):
+         """Test scons_subst_list():  handling syntax errors"""
+@@ -993,7 +993,7 @@
+             ]
+             assert str(e) in expect, e
+         else:
+-            raise AssertionError, "did not catch expected SyntaxError"
++            raise AssertionError("did not catch expected SyntaxError")
+ 
+     def test_subst_raw_function(self):
+         """Test scons_subst_list():  fetch function with SUBST_RAW plus conv"""
+--- src/engine/SCons/Taskmaster.py (original)
++++ src/engine/SCons/Taskmaster.py (refactored)
+@@ -1023,7 +1023,7 @@
+                     "  Internal Error: no cycle found for node %s (%s) in state %s\n" %  \
+                     (node, repr(node), StateString[node.get_state()])
+ 
+-        raise SCons.Errors.UserError, desc
++        raise SCons.Errors.UserError(desc)
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/TaskmasterTests.py (original)
++++ src/engine/SCons/TaskmasterTests.py (refactored)
+@@ -539,7 +539,7 @@
+         """
+         class MyTask(SCons.Taskmaster.Task):
+             def make_ready(self):
+-                raise MyException, "from make_ready()"
++                raise MyException("from make_ready()")
+ 
+         n1 = Node("n1")
+         tm = SCons.Taskmaster.Taskmaster(targets = [n1], tasker = MyTask)
+@@ -615,7 +615,7 @@
+         """
+         class StopNode(Node):
+             def children(self):
+-                raise SCons.Errors.StopError, "stop!"
++                raise SCons.Errors.StopError("stop!")
+         class ExitNode(Node):
+             def children(self):
+                 sys.exit(77)
+@@ -833,7 +833,7 @@
+         # Make sure we call an Executor's prepare() method.
+         class ExceptionExecutor:
+             def prepare(self):
+-                raise Exception, "Executor.prepare() exception"
++                raise Exception("Executor.prepare() exception")
+             def get_all_targets(self):
+                 return self.nodes
+             def get_all_children(self):
+@@ -856,7 +856,7 @@
+         except Exception, e:
+             assert str(e) == "Executor.prepare() exception", e
+         else:
+-            raise AssertionError, "did not catch expected exception"
++            raise AssertionError("did not catch expected exception")
+ 
+     def test_execute(self):
+         """Test executing a task
+@@ -881,7 +881,7 @@
+         except SCons.Errors.UserError:
+             pass
+         else:
+-            raise TestFailed, "did not catch expected UserError"
++            raise TestFailed("did not catch expected UserError")
+ 
+         def raise_BuildError():
+             raise SCons.Errors.BuildError
+@@ -894,7 +894,7 @@
+         except SCons.Errors.BuildError:
+             pass
+         else:
+-            raise TestFailed, "did not catch expected BuildError"
++            raise TestFailed("did not catch expected BuildError")
+ 
+         # On a generic (non-BuildError) exception from a Builder,
+         # the target should throw a BuildError exception with the
+@@ -914,7 +914,7 @@
+             exc_traceback = sys.exc_info()[2]
+             assert isinstance(e.exc_info[2], type(exc_traceback)), e.exc_info[2]
+         else:
+-            raise TestFailed, "did not catch expected BuildError"
++            raise TestFailed("did not catch expected BuildError")
+ 
+         built_text = None
+         cache_text = []
+--- src/engine/SCons/Util.py (original)
++++ src/engine/SCons/Util.py (refactored)
+@@ -1136,7 +1136,7 @@
+                         # to the same suffix.  If one suffix is literal
+                         # and a variable suffix contains this literal,
+                         # the literal wins and we don't raise an error.
+-                        raise KeyError, (s_dict[s_k][0], k, s_k)
++                        raise KeyError(s_dict[s_k][0], k, s_k)
+                     s_dict[s_k] = (k,v)
+             try:
+                 return s_dict[ext][1]
+--- src/engine/SCons/UtilTests.py (original)
++++ src/engine/SCons/UtilTests.py (refactored)
+@@ -774,7 +774,7 @@
+         r = str(nl)
+         assert r == '', r
+         for node in nl:
+-            raise Exception, "should not enter this loop"
++            raise Exception("should not enter this loop")
+ 
+ 
+ class flattenTestCase(unittest.TestCase):
+--- src/engine/SCons/cpp.py (original)
++++ src/engine/SCons/cpp.py (refactored)
+@@ -202,7 +202,7 @@
+         with the specified values.
+         """
+         if len(self.args) != len(values):
+-            raise ValueError, "Incorrect number of arguments to `%s'" % self.name
++            raise ValueError("Incorrect number of arguments to `%s'" % self.name)
+         # Create a dictionary that maps the macro arguments to the
+         # corresponding values in this "call."  We'll use this when we
+         # eval() the expansion so that arguments will get expanded to
+--- src/engine/SCons/dblite.py (original)
++++ src/engine/SCons/dblite.py (refactored)
+@@ -144,9 +144,9 @@
+   def __setitem__(self, key, value):
+     self._check_writable()
+     if (not is_string(key)):
+-      raise TypeError, "key `%s' must be a string but is %s" % (key, type(key))
++      raise TypeError("key `%s' must be a string but is %s" % (key, type(key)))
+     if (not is_string(value)):
+-      raise TypeError, "value `%s' must be a string but is %s" % (value, type(value))
++      raise TypeError("value `%s' must be a string but is %s" % (value, type(value)))
+     self._dict[key] = value
+     self._needs_sync = 0001
+ 
+@@ -198,7 +198,7 @@
+   except IOError, e:
+     assert str(e) == "Read-only database: tmp.dblite"
+   else:
+-    raise RuntimeError, "IOError expected."
++    raise RuntimeError("IOError expected.")
+   db = open("tmp", "w")
+   assert len(db) == 4
+   db["ping"] = "pong"
+@@ -208,13 +208,13 @@
+   except TypeError, e:
+     assert str(e) == "key `(1, 2)' must be a string but is <type 'tuple'>", str(e)
+   else:
+-    raise RuntimeError, "TypeError exception expected"
++    raise RuntimeError("TypeError exception expected")
+   try:
+     db["list"] = [1,2]
+   except TypeError, e:
+     assert str(e) == "value `[1, 2]' must be a string but is <type 'list'>", str(e)
+   else:
+-    raise RuntimeError, "TypeError exception expected"
++    raise RuntimeError("TypeError exception expected")
+   db = open("tmp", "r")
+   assert len(db) == 5
+   db = open("tmp", "n")
+@@ -227,7 +227,7 @@
+   except pickle.UnpicklingError:
+     pass
+   else:
+-    raise RuntimeError, "pickle exception expected."
++    raise RuntimeError("pickle exception expected.")
+   global ignore_corrupt_dbfiles
+   ignore_corrupt_dbfiles = 2
+   db = open("tmp", "r")
+@@ -238,7 +238,7 @@
+   except IOError, e:
+     assert str(e) == "[Errno 2] No such file or directory: 'tmp.dblite'", str(e)
+   else:
+-    raise RuntimeError, "IOError expected."
++    raise RuntimeError("IOError expected.")
+   print "OK"
+ 
+ if (__name__ == "__main__"):
+--- src/engine/SCons/Node/FS.py (original)
++++ src/engine/SCons/Node/FS.py (refactored)
+@@ -255,7 +255,7 @@
+     }
+ 
+     if not duplicate in Valid_Duplicates:
+-        raise SCons.Errors.InternalError, ("The argument of set_duplicate "
++        raise SCons.Errors.InternalError("The argument of set_duplicate "
+                                            "should be in Valid_Duplicates")
+     global Link_Funcs
+     Link_Funcs = []
+@@ -406,7 +406,7 @@
+     except (AttributeError, KeyError):
+         pass
+     if result:
+-        raise TypeError, errorfmt % node.abspath
++        raise TypeError(errorfmt % node.abspath)
+ 
+ def ignore_diskcheck_match(node, predicate, errorfmt):
+     pass
+@@ -619,8 +619,8 @@
+         """
+         if isinstance(self, klass) or klass is Entry:
+             return
+-        raise TypeError, "Tried to lookup %s '%s' as a %s." %\
+-              (self.__class__.__name__, self.path, klass.__name__)
++        raise TypeError("Tried to lookup %s '%s' as a %s." %\
++              (self.__class__.__name__, self.path, klass.__name__))
+ 
+     def get_dir(self):
+         return self.dir
+@@ -910,7 +910,7 @@
+                 self._morph()
+             elif must_exist:
+                 msg = "No such file or directory: '%s'" % self.abspath
+-                raise SCons.Errors.UserError, msg
++                raise SCons.Errors.UserError(msg)
+             else:
+                 self.__class__ = File
+                 self._morph()
+@@ -1293,11 +1293,11 @@
+         if not isinstance(variant_dir, SCons.Node.Node):
+             variant_dir = self.Dir(variant_dir)
+         if src_dir.is_under(variant_dir):
+-            raise SCons.Errors.UserError, "Source directory cannot be under variant directory."
++            raise SCons.Errors.UserError("Source directory cannot be under variant directory.")
+         if variant_dir.srcdir:
+             if variant_dir.srcdir == src_dir:
+                 return # We already did this.
+-            raise SCons.Errors.UserError, "'%s' already has a source directory: '%s'."%(variant_dir, variant_dir.srcdir)
++            raise SCons.Errors.UserError("'%s' already has a source directory: '%s'."%(variant_dir, variant_dir.srcdir))
+         variant_dir.link(src_dir, duplicate)
+ 
+     def Repository(self, *dirs):
+@@ -1640,7 +1640,7 @@
+             if p is None:
+                 # Don't use while: - else: for this condition because
+                 # if so, then parent is None and has no .path attribute.
+-                raise SCons.Errors.StopError, parent.path
++                raise SCons.Errors.StopError(parent.path)
+             parent = p
+         listDirs.reverse()
+         for dirnode in listDirs:
+@@ -2104,7 +2104,7 @@
+         except KeyError:
+             if not create:
+                 msg = "No such file or directory: '%s' in '%s' (and create is False)" % (p, str(self))
+-                raise SCons.Errors.UserError, msg
++                raise SCons.Errors.UserError(msg)
+             # There is no Node for this path name, and we're allowed
+             # to create it.
+             dir_name, file_name = os.path.split(p)
+@@ -2734,7 +2734,7 @@
+                     self._createDir()
+                 except SCons.Errors.StopError, drive:
+                     desc = "No drive `%s' for target `%s'." % (drive, self)
+-                    raise SCons.Errors.StopError, desc
++                    raise SCons.Errors.StopError(desc)
+ 
+     #
+     #
+@@ -2753,7 +2753,7 @@
+         e = Link(self, src, None)
+         if isinstance(e, SCons.Errors.BuildError):
+             desc = "Cannot duplicate `%s' in `%s': %s." % (src.path, self.dir.path, e.errstr)
+-            raise SCons.Errors.StopError, desc
++            raise SCons.Errors.StopError(desc)
+         self.linked = 1
+         # The Link() action may or may not have actually
+         # created the file, depending on whether the -n
+--- src/engine/SCons/Node/FSTests.py (original)
++++ src/engine/SCons/Node/FSTests.py (refactored)
+@@ -358,7 +358,7 @@
+ 
+         save_Link = SCons.Node.FS.Link
+         def Link_IOError(target, source, env):
+-            raise IOError, (17, "Link_IOError")
++            raise IOError(17, "Link_IOError")
+         SCons.Node.FS.Link = SCons.Action.Action(Link_IOError, None)
+ 
+         test.write(['work', 'src', 'IOError'], "work/src/IOError\n")
+@@ -892,7 +892,7 @@
+         except TypeError:
+             pass
+         else:
+-            raise Exception, "did not catch expected TypeError"
++            raise Exception("did not catch expected TypeError")
+ 
+         assert x1.Entry(x4) == x4
+         try:
+@@ -900,7 +900,7 @@
+         except TypeError:
+             pass
+         else:
+-            raise Exception, "did not catch expected TypeError"
++            raise Exception("did not catch expected TypeError")
+ 
+         x6 = x1.File(x6)
+         assert isinstance(x6, SCons.Node.FS.File)
+@@ -1207,7 +1207,7 @@
+             except SCons.Errors.UserError:
+                 pass
+             else:
+-                raise Exception, "did not catch expected UserError"
++                raise Exception("did not catch expected UserError")
+ 
+         nonexistent(fs.Entry, 'nonexistent')
+         nonexistent(fs.Entry, 'nonexistent/foo')
+--- src/engine/SCons/Node/__init__.py (original)
++++ src/engine/SCons/Node/__init__.py (refactored)
+@@ -350,12 +350,12 @@
+         for d in self.depends:
+             if d.missing():
+                 msg = "Explicit dependency `%s' not found, needed by target `%s'."
+-                raise SCons.Errors.StopError, msg % (d, self)
++                raise SCons.Errors.StopError(msg % (d, self))
+         if self.implicit is not None:
+             for i in self.implicit:
+                 if i.missing():
+                     msg = "Implicit dependency `%s' not found, needed by target `%s'."
+-                    raise SCons.Errors.StopError, msg % (i, self)
++                    raise SCons.Errors.StopError(msg % (i, self))
+         self.binfo = self.get_binfo()
+ 
+     def build(self, **kw):
+--- src/engine/SCons/Platform/__init__.py (original)
++++ src/engine/SCons/Platform/__init__.py (refactored)
+@@ -111,7 +111,7 @@
+                     importer = zipimport.zipimporter( sys.modules['SCons.Platform'].__path__[0] )
+                     mod = importer.load_module(full_name)
+                 except ImportError:
+-                    raise SCons.Errors.UserError, "No platform named '%s'" % name
++                    raise SCons.Errors.UserError("No platform named '%s'" % name)
+             setattr(SCons.Platform, name, mod)
+     return sys.modules[full_name]
+ 
+--- src/engine/SCons/Scanner/FortranTests.py (original)
++++ src/engine/SCons/Scanner/FortranTests.py (refactored)
+@@ -218,7 +218,7 @@
+         elif len(args) == 1 and args[0] == 'FORTRANPATH':
+             return self.path
+         else:
+-            raise KeyError, "Dummy environment only has FORTRANPATH attribute."
++            raise KeyError("Dummy environment only has FORTRANPATH attribute.")
+ 
+     def has_key(self, key):
+         return key in self.Dictionary()
+--- src/engine/SCons/Scanner/IDLTests.py (original)
++++ src/engine/SCons/Scanner/IDLTests.py (refactored)
+@@ -197,7 +197,7 @@
+         elif len(args) == 1 and args[0] == 'CPPPATH':
+             return self.path
+         else:
+-            raise KeyError, "Dummy environment only has CPPPATH attribute."
++            raise KeyError("Dummy environment only has CPPPATH attribute.")
+ 
+     def subst(self, arg, target=None, source=None, conv=None):
+         return arg
+--- src/engine/SCons/Script/Main.py (original)
++++ src/engine/SCons/Script/Main.py (refactored)
+@@ -683,7 +683,7 @@
+     site_dir = os.path.join(topdir.path, site_dir_name)
+     if not os.path.exists(site_dir):
+         if err_if_not_found:
+-            raise SCons.Errors.UserError, "site dir %s not found."%site_dir
++            raise SCons.Errors.UserError("site dir %s not found."%site_dir)
+         return
+ 
+     site_init_filename = "site_init.py"
+@@ -710,7 +710,7 @@
+                     m = sys.modules['SCons.Script']
+                 except Exception, e:
+                     fmt = 'cannot import site_init.py: missing SCons.Script module %s'
+-                    raise SCons.Errors.InternalError, fmt % repr(e)
++                    raise SCons.Errors.InternalError(fmt % repr(e))
+                 try:
+                     # This is the magic.
+                     exec fp in m.__dict__
+@@ -851,7 +851,7 @@
+             # Give them the options usage now, before we fail
+             # trying to read a non-existent SConstruct file.
+             raise SConsPrintHelpException
+-        raise SCons.Errors.UserError, "No SConstruct file found."
++        raise SCons.Errors.UserError("No SConstruct file found.")
+ 
+     if scripts[0] == "-":
+         d = fs.getcwd()
+--- src/engine/SCons/Script/SConsOptions.py (original)
++++ src/engine/SCons/Script/SConsOptions.py (refactored)
+@@ -65,7 +65,7 @@
+         elif v in diskcheck_all:
+             result.append(v)
+         else:
+-            raise ValueError, v
++            raise ValueError(v)
+     return result
+ 
+ class SConsValues(optparse.Values):
+@@ -139,7 +139,7 @@
+         Sets an option from an SConscript file.
+         """
+         if not name in self.settable:
+-            raise SCons.Errors.UserError, "This option is not settable from a SConscript file: %s"%name
++            raise SCons.Errors.UserError("This option is not settable from a SConscript file: %s"%name)
+ 
+         if name == 'num_jobs':
+             try:
+@@ -147,19 +147,19 @@
+                 if value < 1:
+                     raise ValueError
+             except ValueError:
+-                raise SCons.Errors.UserError, "A positive integer is required: %s"%repr(value)
++                raise SCons.Errors.UserError("A positive integer is required: %s"%repr(value))
+         elif name == 'max_drift':
+             try:
+                 value = int(value)
+             except ValueError:
+-                raise SCons.Errors.UserError, "An integer is required: %s"%repr(value)
++                raise SCons.Errors.UserError("An integer is required: %s"%repr(value))
+         elif name == 'duplicate':
+             try:
+                 value = str(value)
+             except ValueError:
+-                raise SCons.Errors.UserError, "A string is required: %s"%repr(value)
++                raise SCons.Errors.UserError("A string is required: %s"%repr(value))
+             if not value in SCons.Node.FS.Valid_Duplicates:
+-                raise SCons.Errors.UserError, "Not a valid duplication style: %s" % value
++                raise SCons.Errors.UserError("Not a valid duplication style: %s" % value)
+             # Set the duplicate style right away so it can affect linking
+             # of SConscript files.
+             SCons.Node.FS.set_duplicate(value)
+@@ -167,7 +167,7 @@
+             try:
+                 value = diskcheck_convert(value)
+             except ValueError, v:
+-                raise SCons.Errors.UserError, "Not a valid diskcheck value: %s"%v
++                raise SCons.Errors.UserError("Not a valid diskcheck value: %s"%v)
+             if 'diskcheck' not in self.__dict__:
+                 # No --diskcheck= option was specified on the command line.
+                 # Set this right away so it can affect the rest of the
+@@ -177,12 +177,12 @@
+             try:
+                 value = int(value)
+             except ValueError:
+-                raise SCons.Errors.UserError, "An integer is required: %s"%repr(value)
++                raise SCons.Errors.UserError("An integer is required: %s"%repr(value))
+         elif name == 'md5_chunksize':
+             try:
+                 value = int(value)
+             except ValueError:
+-                raise SCons.Errors.UserError, "An integer is required: %s"%repr(value)
++                raise SCons.Errors.UserError("An integer is required: %s"%repr(value))
+         elif name == 'warn':
+             if SCons.Util.is_String(value):
+                 value = [value]
+@@ -214,7 +214,7 @@
+     def _check_nargs_optional(self):
+         if self.nargs == '?' and self._short_opts:
+             fmt = "option %s: nargs='?' is incompatible with short options"
+-            raise SCons.Errors.UserError, fmt % self._short_opts[0]
++            raise SCons.Errors.UserError(fmt % self._short_opts[0])
+ 
+     try:
+         _orig_CONST_ACTIONS = optparse.Option.CONST_ACTIONS
+--- src/engine/SCons/Script/SConscript.py (original)
++++ src/engine/SCons/Script/SConscript.py (refactored)
+@@ -115,7 +115,7 @@
+                 except KeyError:
+                     retval[export] = glob[export]
+     except KeyError, x:
+-        raise SCons.Errors.UserError, "Export of non-existent variable '%s'"%x
++        raise SCons.Errors.UserError("Export of non-existent variable '%s'"%x)
+ 
+     return retval
+ 
+@@ -147,7 +147,7 @@
+             for v in var.split():
+                 retval.append(call_stack[-1].globals[v])
+     except KeyError, x:
+-        raise SCons.Errors.UserError, "Return of non-existent variable '%s'"%x
++        raise SCons.Errors.UserError("Return of non-existent variable '%s'"%x)
+ 
+     if len(retval) == 1:
+         call_stack[-1].retval = retval[0]
+@@ -337,7 +337,7 @@
+         tb = tb.tb_next
+     if not tb:
+         # We did not find any exec of an SConscript file: what?!
+-        raise SCons.Errors.InternalError, "could not find SConscript stack frame"
++        raise SCons.Errors.InternalError("could not find SConscript stack frame")
+     node.creator = traceback.extract_stack(tb)[0]
+ 
+ # The following line would cause each Node to be annotated using the
+@@ -390,8 +390,7 @@
+             try:
+                 dirs = kw["dirs"]
+             except KeyError:
+-                raise SCons.Errors.UserError, \
+-                      "Invalid SConscript usage - no parameters"
++                raise SCons.Errors.UserError("Invalid SConscript usage - no parameters")
+ 
+             if not SCons.Util.is_List(dirs):
+                 dirs = [ dirs ]
+@@ -412,8 +411,7 @@
+ 
+         else:
+ 
+-            raise SCons.Errors.UserError, \
+-                  "Invalid SConscript() usage - too many arguments"
++            raise SCons.Errors.UserError("Invalid SConscript() usage - too many arguments")
+ 
+         if not SCons.Util.is_List(files):
+             files = [ files ]
+@@ -424,8 +422,7 @@
+         variant_dir = kw.get('variant_dir') or kw.get('build_dir')
+         if variant_dir:
+             if len(files) != 1:
+-                raise SCons.Errors.UserError, \
+-                    "Invalid SConscript() usage - can only specify one SConscript with a variant_dir"
++                raise SCons.Errors.UserError("Invalid SConscript() usage - can only specify one SConscript with a variant_dir")
+             duplicate = kw.get('duplicate', 1)
+             src_dir = kw.get('src_dir')
+             if not src_dir:
+@@ -456,7 +453,7 @@
+ 
+     def Configure(self, *args, **kw):
+         if not SCons.Script.sconscript_reading:
+-            raise SCons.Errors.UserError, "Calling Configure from Builders is not supported."
++            raise SCons.Errors.UserError("Calling Configure from Builders is not supported.")
+         kw['_depth'] = kw.get('_depth', 0) + 1
+         return SCons.Environment.Base.Configure(self, *args, **kw)
+ 
+@@ -524,7 +521,7 @@
+                         else:
+                             globals[v] = global_exports[v]
+         except KeyError,x:
+-            raise SCons.Errors.UserError, "Import of non-existent variable '%s'"%x
++            raise SCons.Errors.UserError("Import of non-existent variable '%s'"%x)
+ 
+     def SConscript(self, *ls, **kw):
+         def subst_element(x, subst=self.subst):
+@@ -566,7 +563,7 @@
+ 
+ def Configure(*args, **kw):
+     if not SCons.Script.sconscript_reading:
+-        raise SCons.Errors.UserError, "Calling Configure from Builders is not supported."
++        raise SCons.Errors.UserError("Calling Configure from Builders is not supported.")
+     kw['_depth'] = 1
+     return SCons.SConf.SConf(*args, **kw)
+ 
+--- src/engine/SCons/Tool/JavaCommon.py (original)
++++ src/engine/SCons/Tool/JavaCommon.py (refactored)
+@@ -67,7 +67,7 @@
+             if not version in ('1.1', '1.2', '1.3','1.4', '1.5', '1.6',
+                                '5', '6'):
+                 msg = "Java version %s not supported" % version
+-                raise NotImplementedError, msg
++                raise NotImplementedError(msg)
+ 
+             self.version = version
+             self.listClasses = []
+--- src/engine/SCons/Tool/PharLapCommon.py (original)
++++ src/engine/SCons/Tool/PharLapCommon.py (refactored)
+@@ -45,7 +45,7 @@
+     be found."""
+ 
+     if not SCons.Util.can_read_reg:
+-        raise SCons.Errors.InternalError, "No Windows registry module was found"
++        raise SCons.Errors.InternalError("No Windows registry module was found")
+     try:
+         k=SCons.Util.RegOpenKeyEx(SCons.Util.HKEY_LOCAL_MACHINE,
+                                   'SOFTWARE\\Pharlap\\ETS')
+@@ -61,7 +61,7 @@
+                     
+         return os.path.normpath(val)
+     except SCons.Util.RegError:
+-        raise SCons.Errors.UserError, "Cannot find Phar Lap ETS path in the registry.  Is it installed properly?"
++        raise SCons.Errors.UserError("Cannot find Phar Lap ETS path in the registry.  Is it installed properly?")
+ 
+ REGEX_ETS_VER = re.compile(r'#define\s+ETS_VER\s+([0-9]+)')
+ 
+@@ -78,7 +78,7 @@
+ 
+     include_path = os.path.join(getPharLapPath(), os.path.normpath("include/embkern.h"))
+     if not os.path.exists(include_path):
+-        raise SCons.Errors.UserError, "Cannot find embkern.h in ETS include directory.\nIs Phar Lap ETS installed properly?"
++        raise SCons.Errors.UserError("Cannot find embkern.h in ETS include directory.\nIs Phar Lap ETS installed properly?")
+     mo = REGEX_ETS_VER.search(open(include_path, 'r').read())
+     if mo:
+         return int(mo.group(1))
+--- src/engine/SCons/Tool/__init__.py (original)
++++ src/engine/SCons/Tool/__init__.py (refactored)
+@@ -114,7 +114,7 @@
+                         file.close()
+             except ImportError, e:
+                 if str(e)!="No module named %s"%self.name:
+-                    raise SCons.Errors.EnvironmentError, e
++                    raise SCons.Errors.EnvironmentError(e)
+                 try:
+                     import zipimport
+                 except ImportError:
+@@ -144,7 +144,7 @@
+                     return module
+                 except ImportError, e:
+                     if str(e)!="No module named %s"%self.name:
+-                        raise SCons.Errors.EnvironmentError, e
++                        raise SCons.Errors.EnvironmentError(e)
+                     try:
+                         import zipimport
+                         importer = zipimport.zipimporter( sys.modules['SCons.Tool'].__path__[0] )
+@@ -153,10 +153,10 @@
+                         return module
+                     except ImportError, e:
+                         m = "No tool named '%s': %s" % (self.name, e)
+-                        raise SCons.Errors.EnvironmentError, m
++                        raise SCons.Errors.EnvironmentError(m)
+             except ImportError, e:
+                 m = "No tool named '%s': %s" % (self.name, e)
+-                raise SCons.Errors.EnvironmentError, m
++                raise SCons.Errors.EnvironmentError(m)
+ 
+     def __call__(self, env, *args, **kw):
+         if self.init_kw is not None:
+--- src/engine/SCons/Tool/install.py (original)
++++ src/engine/SCons/Tool/install.py (refactored)
+@@ -54,7 +54,7 @@
+     if os.path.isdir(source):
+         if os.path.exists(dest):
+             if not os.path.isdir(dest):
+-                raise SCons.Errors.UserError, "cannot overwrite non-directory `%s' with a directory `%s'" % (str(dest), str(source))
++                raise SCons.Errors.UserError("cannot overwrite non-directory `%s' with a directory `%s'" % (str(dest), str(source)))
+         else:
+             parent = os.path.split(dest)[0]
+             if not os.path.exists(parent):
+@@ -135,7 +135,7 @@
+ def InstallBuilderWrapper(env, target=None, source=None, dir=None, **kw):
+     if target and dir:
+         import SCons.Errors
+-        raise SCons.Errors.UserError, "Both target and dir defined for Install(), only one may be defined."
++        raise SCons.Errors.UserError("Both target and dir defined for Install(), only one may be defined.")
+     if not dir:
+         dir=target
+ 
+@@ -149,7 +149,7 @@
+     try:
+         dnodes = env.arg2nodes(dir, target_factory.Dir)
+     except TypeError:
+-        raise SCons.Errors.UserError, "Target `%s' of Install() is a file, but should be a directory.  Perhaps you have the Install() arguments backwards?" % str(dir)
++        raise SCons.Errors.UserError("Target `%s' of Install() is a file, but should be a directory.  Perhaps you have the Install() arguments backwards?" % str(dir))
+     sources = env.arg2nodes(source, env.fs.Entry)
+     tgt = []
+     for dnode in dnodes:
+--- src/engine/SCons/Tool/intelc.py (original)
++++ src/engine/SCons/Tool/intelc.py (refactored)
+@@ -117,9 +117,8 @@
+     try:
+         abi = valid_abis[abi]
+     except KeyError:
+-        raise SCons.Errors.UserError, \
+-              "Intel compiler: Invalid ABI %s, valid values are %s"% \
+-              (abi, valid_abis.keys())
++        raise SCons.Errors.UserError("Intel compiler: Invalid ABI %s, valid values are %s"% \
++              (abi, valid_abis.keys()))
+     return abi
+ 
+ def vercmp(a, b):
+@@ -156,16 +155,14 @@
+     try:
+         k = SCons.Util.RegOpenKeyEx(SCons.Util.HKEY_LOCAL_MACHINE, K)
+     except SCons.Util.RegError:
+-        raise MissingRegistryError, \
+-              "%s was not found in the registry, for Intel compiler version %s, abi='%s'"%(K, version,abi)
++        raise MissingRegistryError("%s was not found in the registry, for Intel compiler version %s, abi='%s'"%(K, version,abi))
+ 
+     # Get the value:
+     try:
+         v = SCons.Util.RegQueryValueEx(k, valuename)[0]
+         return v  # or v.encode('iso-8859-1', 'replace') to remove unicode?
+     except SCons.Util.RegError:
+-        raise MissingRegistryError, \
+-              "%s\\%s was not found in the registry."%(K, valuename)
++        raise MissingRegistryError("%s\\%s was not found in the registry."%(K, valuename))
+ 
+ 
+ def get_all_compiler_versions():
+@@ -255,13 +252,12 @@
+ 
+     if is_windows:
+         if not SCons.Util.can_read_reg:
+-            raise NoRegistryModuleError, "No Windows registry module was found"
++            raise NoRegistryModuleError("No Windows registry module was found")
+         top = get_intel_registry_value('ProductDir', version, abi)
+         # pre-11, icl was in Bin.  11 and later, it's in Bin/<abi> apparently.
+         if not os.path.exists(os.path.join(top, "Bin", "icl.exe")) \
+               and not os.path.exists(os.path.join(top, "Bin", abi, "icl.exe")):
+-            raise MissingDirError, \
+-                  "Can't find Intel compiler in %s"%(top)
++            raise MissingDirError("Can't find Intel compiler in %s"%(top))
+     elif is_mac or is_linux:
+         # first dir is new (>=9.0) style, second is old (8.0) style.
+         dirs=('/opt/intel/cc/%s', '/opt/intel_cc_%s')
+@@ -273,8 +269,7 @@
+                 top = d%version
+                 break
+         if not top:
+-            raise MissingDirError, \
+-                  "Can't find version %s Intel compiler in %s (abi='%s')"%(version,top, abi)
++            raise MissingDirError("Can't find version %s Intel compiler in %s (abi='%s')"%(version,top, abi))
+     return top
+ 
+ 
+@@ -310,9 +305,8 @@
+         # get_version_from_list does that mapping.
+         v = get_version_from_list(version, vlist)
+         if not v:
+-            raise SCons.Errors.UserError, \
+-                  "Invalid Intel compiler version %s: "%version + \
+-                  "installed versions are %s"%(', '.join(vlist))
++            raise SCons.Errors.UserError("Invalid Intel compiler version %s: "%version + \
++                  "installed versions are %s"%(', '.join(vlist)))
+         version = v
+ 
+     # if abi is unspecified, use ia32
+--- src/engine/SCons/Tool/mingw.py (original)
++++ src/engine/SCons/Tool/mingw.py (refactored)
+@@ -72,7 +72,7 @@
+     no_import_lib = env.get('no_import_lib', 0)
+ 
+     if not dll:
+-        raise SCons.Errors.UserError, "A shared library should have exactly one target with the suffix: %s" % env.subst("$SHLIBSUFFIX")
++        raise SCons.Errors.UserError("A shared library should have exactly one target with the suffix: %s" % env.subst("$SHLIBSUFFIX"))
+     
+     if not no_import_lib and \
+        not env.FindIxes(target, 'LIBPREFIX', 'LIBSUFFIX'):
+--- src/engine/SCons/Tool/mslink.py (original)
++++ src/engine/SCons/Tool/mslink.py (refactored)
+@@ -103,7 +103,7 @@
+     no_import_lib = env.get('no_import_lib', 0)
+ 
+     if not dll:
+-        raise SCons.Errors.UserError, 'A shared library should have exactly one target with the suffix: %s' % env.subst('$%sSUFFIX' % paramtp)
++        raise SCons.Errors.UserError('A shared library should have exactly one target with the suffix: %s' % env.subst('$%sSUFFIX' % paramtp))
+ 
+     insert_def = env.subst("$WINDOWS_INSERT_DEF")
+     if not insert_def in ['', '0', 0] and \
+@@ -161,7 +161,7 @@
+ 
+     exe = env.FindIxes(target, "PROGPREFIX", "PROGSUFFIX")
+     if not exe:
+-        raise SCons.Errors.UserError, "An executable should have exactly one target with the suffix: %s" % env.subst("$PROGSUFFIX")
++        raise SCons.Errors.UserError("An executable should have exactly one target with the suffix: %s" % env.subst("$PROGSUFFIX"))
+ 
+     version_num, suite = SCons.Tool.msvs.msvs_parse_version(env.get('MSVS_VERSION', '6.0'))
+     if version_num >= 8.0 and env.get('WINDOWS_INSERT_MANIFEST', 0):
+@@ -182,7 +182,7 @@
+     if 'register' in env and env['register']:
+         ret = regServerAction([target[0]], [source[0]], env)
+         if ret:
+-            raise SCons.Errors.UserError, "Unable to register %s" % target[0]
++            raise SCons.Errors.UserError("Unable to register %s" % target[0])
+         else:
+             print "Registered %s sucessfully" % target[0]
+         return ret
+--- src/engine/SCons/Tool/msvc.py (original)
++++ src/engine/SCons/Tool/msvc.py (refactored)
+@@ -56,9 +56,9 @@
+     """Validate the PCH and PCHSTOP construction variables."""
+     if 'PCH' in env and env['PCH']:
+         if 'PCHSTOP' not in env:
+-            raise SCons.Errors.UserError, "The PCHSTOP construction must be defined if PCH is defined."
++            raise SCons.Errors.UserError("The PCHSTOP construction must be defined if PCH is defined.")
+         if not SCons.Util.is_String(env['PCHSTOP']):
+-            raise SCons.Errors.UserError, "The PCHSTOP construction variable must be a string: %r"%env['PCHSTOP']
++            raise SCons.Errors.UserError("The PCHSTOP construction variable must be a string: %r"%env['PCHSTOP'])
+ 
+ def pch_emitter(target, source, env):
+     """Adds the object file target."""
+--- src/engine/SCons/Tool/msvs.py (original)
++++ src/engine/SCons/Tool/msvs.py (refactored)
+@@ -177,9 +177,8 @@
+             self.dspabs = get_abspath()
+ 
+         if 'variant' not in env:
+-            raise SCons.Errors.InternalError, \
+-                  "You must specify a 'variant' argument (i.e. 'Debug' or " +\
+-                  "'Release') to create an MSVSProject."
++            raise SCons.Errors.InternalError("You must specify a 'variant' argument (i.e. 'Debug' or " +\
++                  "'Release') to create an MSVSProject.")
+         elif SCons.Util.is_String(env['variant']):
+             variants = [env['variant']]
+         elif SCons.Util.is_List(env['variant']):
+@@ -191,8 +190,7 @@
+             buildtarget = [env['buildtarget']]
+         elif SCons.Util.is_List(env['buildtarget']):
+             if len(env['buildtarget']) != len(variants):
+-                raise SCons.Errors.InternalError, \
+-                    "Sizes of 'buildtarget' and 'variant' lists must be the same."
++                raise SCons.Errors.InternalError("Sizes of 'buildtarget' and 'variant' lists must be the same.")
+             buildtarget = []
+             for bt in env['buildtarget']:
+                 if SCons.Util.is_String(bt):
+@@ -213,8 +211,7 @@
+             outdir = [env['outdir']]
+         elif SCons.Util.is_List(env['outdir']):
+             if len(env['outdir']) != len(variants):
+-                raise SCons.Errors.InternalError, \
+-                    "Sizes of 'outdir' and 'variant' lists must be the same."
++                raise SCons.Errors.InternalError("Sizes of 'outdir' and 'variant' lists must be the same.")
+             outdir = []
+             for s in env['outdir']:
+                 if SCons.Util.is_String(s):
+@@ -235,8 +232,7 @@
+             runfile = [env['runfile']]
+         elif SCons.Util.is_List(env['runfile']):
+             if len(env['runfile']) != len(variants):
+-                raise SCons.Errors.InternalError, \
+-                    "Sizes of 'runfile' and 'variant' lists must be the same."
++                raise SCons.Errors.InternalError("Sizes of 'runfile' and 'variant' lists must be the same.")
+             runfile = []
+             for s in env['runfile']:
+                 if SCons.Util.is_String(s):
+@@ -521,7 +517,7 @@
+         try:
+             self.file = open(self.dspabs,'w')
+         except IOError, detail:
+-            raise SCons.Errors.InternalError, 'Unable to open "' + self.dspabs + '" for writing:' + str(detail)
++            raise SCons.Errors.InternalError('Unable to open "' + self.dspabs + '" for writing:' + str(detail))
+         else:
+             self.PrintHeader()
+             self.PrintProject()
+@@ -825,7 +821,7 @@
+         try:
+             self.file = open(self.dspabs,'w')
+         except IOError, detail:
+-            raise SCons.Errors.InternalError, 'Unable to open "' + self.dspabs + '" for writing:' + str(detail)
++            raise SCons.Errors.InternalError('Unable to open "' + self.dspabs + '" for writing:' + str(detail))
+         else:
+             self.PrintHeader()
+             self.PrintProject()
+@@ -838,16 +834,13 @@
+         self.env = env
+ 
+         if 'projects' not in env:
+-            raise SCons.Errors.UserError, \
+-                "You must specify a 'projects' argument to create an MSVSSolution."
++            raise SCons.Errors.UserError("You must specify a 'projects' argument to create an MSVSSolution.")
+         projects = env['projects']
+         if not SCons.Util.is_List(projects):
+-            raise SCons.Errors.InternalError, \
+-                "The 'projects' argument must be a list of nodes."
++            raise SCons.Errors.InternalError("The 'projects' argument must be a list of nodes.")
+         projects = SCons.Util.flatten(projects)
+         if len(projects) < 1:
+-            raise SCons.Errors.UserError, \
+-                "You must specify at least one project to create an MSVSSolution."
++            raise SCons.Errors.UserError("You must specify at least one project to create an MSVSSolution.")
+         self.dspfiles = list(map(str, projects))
+ 
+         if 'name' in self.env:
+@@ -904,9 +897,8 @@
+             print "Adding '" + self.name + ' - ' + config.variant + '|' + config.platform + "' to '" + str(dswfile) + "'"
+ 
+         if 'variant' not in env:
+-            raise SCons.Errors.InternalError, \
+-                  "You must specify a 'variant' argument (i.e. 'Debug' or " +\
+-                  "'Release') to create an MSVS Solution File."
++            raise SCons.Errors.InternalError("You must specify a 'variant' argument (i.e. 'Debug' or " +\
++                  "'Release') to create an MSVS Solution File.")
+         elif SCons.Util.is_String(env['variant']):
+             AddConfig(self, env['variant'])
+         elif SCons.Util.is_List(env['variant']):
+@@ -1053,7 +1045,7 @@
+         try:
+             self.file = open(self.dswfile,'w')
+         except IOError, detail:
+-            raise SCons.Errors.InternalError, 'Unable to open "' + self.dswfile + '" for writing:' + str(detail)
++            raise SCons.Errors.InternalError('Unable to open "' + self.dswfile + '" for writing:' + str(detail))
+         else:
+             self.PrintSolution()
+             self.file.close()
+@@ -1102,7 +1094,7 @@
+         try:
+             self.file = open(self.dswfile,'w')
+         except IOError, detail:
+-            raise SCons.Errors.InternalError, 'Unable to open "' + self.dswfile + '" for writing:' + str(detail)
++            raise SCons.Errors.InternalError('Unable to open "' + self.dswfile + '" for writing:' + str(detail))
+         else:
+             self.PrintWorkspace()
+             self.file.close()
+@@ -1210,12 +1202,10 @@
+                         source = source + ' "%s"' % bt
+                     else:
+                         try: source = source + ' "%s"' % bt.get_abspath()
+-                        except AttributeError: raise SCons.Errors.InternalError, \
+-                            "buildtarget can be a string, a node, a list of strings or nodes, or None"
++                        except AttributeError: raise SCons.Errors.InternalError("buildtarget can be a string, a node, a list of strings or nodes, or None")
+             else:
+                 try: source = source + ' "%s"' % env['buildtarget'].get_abspath()
+-                except AttributeError: raise SCons.Errors.InternalError, \
+-                    "buildtarget can be a string, a node, a list of strings or nodes, or None"
++                except AttributeError: raise SCons.Errors.InternalError("buildtarget can be a string, a node, a list of strings or nodes, or None")
+ 
+         if 'outdir' in env and env['outdir'] != None:
+             if SCons.Util.is_String(env['outdir']):
+@@ -1226,18 +1216,16 @@
+                         source = source + ' "%s"' % s
+                     else:
+                         try: source = source + ' "%s"' % s.get_abspath()
+-                        except AttributeError: raise SCons.Errors.InternalError, \
+-                            "outdir can be a string, a node, a list of strings or nodes, or None"
++                        except AttributeError: raise SCons.Errors.InternalError("outdir can be a string, a node, a list of strings or nodes, or None")
+             else:
+                 try: source = source + ' "%s"' % env['outdir'].get_abspath()
+-                except AttributeError: raise SCons.Errors.InternalError, \
+-                    "outdir can be a string, a node, a list of strings or nodes, or None"
++                except AttributeError: raise SCons.Errors.InternalError("outdir can be a string, a node, a list of strings or nodes, or None")
+ 
+         if 'name' in env:
+             if SCons.Util.is_String(env['name']):
+                 source = source + ' "%s"' % env['name']
+             else:
+-                raise SCons.Errors.InternalError, "name must be a string"
++                raise SCons.Errors.InternalError("name must be a string")
+ 
+         if 'variant' in env:
+             if SCons.Util.is_String(env['variant']):
+@@ -1247,11 +1235,11 @@
+                     if SCons.Util.is_String(variant):
+                         source = source + ' "%s"' % variant
+                     else:
+-                        raise SCons.Errors.InternalError, "name must be a string or a list of strings"
++                        raise SCons.Errors.InternalError("name must be a string or a list of strings")
+             else:
+-                raise SCons.Errors.InternalError, "variant must be a string or a list of strings"
+-        else:
+-            raise SCons.Errors.InternalError, "variant must be specified"
++                raise SCons.Errors.InternalError("variant must be a string or a list of strings")
++        else:
++            raise SCons.Errors.InternalError("variant must be specified")
+ 
+         for s in _DSPGenerator.srcargs:
+             if s in env:
+@@ -1262,9 +1250,9 @@
+                         if SCons.Util.is_String(t):
+                             source = source + ' "%s"' % t
+                         else:
+-                            raise SCons.Errors.InternalError, s + " must be a string or a list of strings"
++                            raise SCons.Errors.InternalError(s + " must be a string or a list of strings")
+                 else:
+-                    raise SCons.Errors.InternalError, s + " must be a string or a list of strings"
++                    raise SCons.Errors.InternalError(s + " must be a string or a list of strings")
+ 
+         source = source + ' "%s"' % str(target[0])
+         source = [SCons.Node.Python.Value(source)]
+@@ -1300,7 +1288,7 @@
+             if SCons.Util.is_String(env['name']):
+                 source = source + ' "%s"' % env['name']
+             else:
+-                raise SCons.Errors.InternalError, "name must be a string"
++                raise SCons.Errors.InternalError("name must be a string")
+ 
+         if 'variant' in env:
+             if SCons.Util.is_String(env['variant']):
+@@ -1310,17 +1298,17 @@
+                     if SCons.Util.is_String(variant):
+                         source = source + ' "%s"' % variant
+                     else:
+-                        raise SCons.Errors.InternalError, "name must be a string or a list of strings"
++                        raise SCons.Errors.InternalError("name must be a string or a list of strings")
+             else:
+-                raise SCons.Errors.InternalError, "variant must be a string or a list of strings"
+-        else:
+-            raise SCons.Errors.InternalError, "variant must be specified"
++                raise SCons.Errors.InternalError("variant must be a string or a list of strings")
++        else:
++            raise SCons.Errors.InternalError("variant must be specified")
+ 
+         if 'slnguid' in env:
+             if SCons.Util.is_String(env['slnguid']):
+                 source = source + ' "%s"' % env['slnguid']
+             else:
+-                raise SCons.Errors.InternalError, "slnguid must be a string"
++                raise SCons.Errors.InternalError("slnguid must be a string")
+ 
+         if 'projects' in env:
+             if SCons.Util.is_String(env['projects']):
+--- src/engine/SCons/Tool/mwld.py (original)
++++ src/engine/SCons/Tool/mwld.py (refactored)
+@@ -85,7 +85,7 @@
+     no_import_lib = env.get('no_import_lib', 0)
+ 
+     if not dll:
+-        raise SCons.Errors.UserError, "A shared library should have exactly one target with the suffix: %s" % env.subst("$SHLIBSUFFIX")
++        raise SCons.Errors.UserError("A shared library should have exactly one target with the suffix: %s" % env.subst("$SHLIBSUFFIX"))
+ 
+     if not no_import_lib and \
+        not env.FindIxes(target, 'LIBPREFIX', 'LIBSUFFIX'):
+--- src/engine/SCons/Tool/MSCommon/sdk.py (original)
++++ src/engine/SCons/Tool/MSCommon/sdk.py (refactored)
+@@ -312,7 +312,7 @@
+ def get_sdk_by_version(mssdk):
+     if mssdk not in SupportedSDKMap:
+         msg = "SDK version %s is not supported" % repr(mssdk)
+-        raise SCons.Errors.UserError, msg
++        raise SCons.Errors.UserError(msg)
+     get_installed_sdks()
+     return InstalledSDKMap.get(mssdk)
+ 
+@@ -338,7 +338,7 @@
+         sdk_version = env['MSSDK_VERSION']
+         if sdk_version is None:
+             msg = "SDK version %s is not installed" % repr(mssdk)
+-            raise SCons.Errors.UserError, msg
++            raise SCons.Errors.UserError(msg)
+         sdk_version = env.subst(sdk_version)
+         mssdk = get_sdk_by_version(sdk_version)
+         sdk_dir = mssdk.get_sdk_dir()
+--- src/engine/SCons/Tool/MSCommon/vs.py (original)
++++ src/engine/SCons/Tool/MSCommon/vs.py (refactored)
+@@ -387,7 +387,7 @@
+     debug('vs.py:get_vs_by_version()')
+     if msvs not in SupportedVSMap:
+         msg = "Visual Studio version %s is not supported" % repr(msvs)
+-        raise SCons.Errors.UserError, msg
++        raise SCons.Errors.UserError(msg)
+     get_installed_visual_studios()
+     vs = InstalledVSMap.get(msvs)
+     debug('InstalledVSMap:%s'%InstalledVSMap)
+@@ -451,7 +451,7 @@
+         arch = 'x86'
+     elif not arch in msvs.get_supported_arch():
+         fmt = "Visual Studio version %s does not support architecture %s"
+-        raise SCons.Errors.UserError, fmt % (env['MSVS_VERSION'], arch)
++        raise SCons.Errors.UserError(fmt % (env['MSVS_VERSION'], arch))
+ 
+     return arch
+ 
+--- src/engine/SCons/Tool/packaging/__init__.py (original)
++++ src/engine/SCons/Tool/packaging/__init__.py (refactored)
+@@ -59,7 +59,7 @@
+         kw_tags[first_tag[0]] = ''
+ 
+     if len(kw_tags) == 0 and len(more_tags) == 0:
+-        raise UserError, "No tags given."
++        raise UserError("No tags given.")
+ 
+     # XXX: sanity checks
+     for x in more_tags:
+@@ -92,7 +92,7 @@
+         source = env.FindInstalledFiles()
+ 
+     if len(source)==0:
+-        raise UserError, "No source for Package() given"
++        raise UserError("No source for Package() given")
+ 
+     # decide which types of packages shall be built. Can be defined through
+     # four mechanisms: command line argument, keyword argument,
+@@ -111,7 +111,7 @@
+         elif 'Zip' in env['BUILDERS']:
+             kw['PACKAGETYPE']='zip'
+         else:
+-            raise UserError, "No type for Package() given"
++            raise UserError("No type for Package() given")
+ 
+     PACKAGETYPE=kw['PACKAGETYPE']
+     if not is_List(PACKAGETYPE):
+--- src/engine/SCons/Variables/PathVariableTests.py (original)
++++ src/engine/SCons/Variables/PathVariableTests.py (refactored)
+@@ -205,7 +205,7 @@
+             raise Exception("did not catch expected UserError")
+ 
+         def my_validator(key, val, env):
+-            raise Exception, "my_validator() got called for %s, %s!" % (key, val)
++            raise Exception("my_validator() got called for %s, %s!" % (key, val))
+ 
+         opts = SCons.Variables.Variables()
+         opts.Add(SCons.Variables.PathVariable('test2',
+--- src/engine/SCons/Variables/__init__.py (original)
++++ src/engine/SCons/Variables/__init__.py (refactored)
+@@ -129,7 +129,7 @@
+ 
+         if not SCons.Util.is_String(key) or \
+            not SCons.Environment.is_valid_construction_var(key):
+-            raise SCons.Errors.UserError, "Illegal Variables.Add() key `%s'" % str(key)
++            raise SCons.Errors.UserError("Illegal Variables.Add() key `%s'" % str(key))
+ 
+         self._do_add(key, help, default, validator, converter)
+ 
+@@ -211,7 +211,7 @@
+                     except TypeError:
+                         env[option.key] = option.converter(value, env)
+                 except ValueError, x:
+-                    raise SCons.Errors.UserError, 'Error converting option: %s\n%s'%(option.key, x)
++                    raise SCons.Errors.UserError('Error converting option: %s\n%s'%(option.key, x))
+ 
+ 
+         # Finally validate the values:
+@@ -273,7 +273,7 @@
+                 fh.close()
+ 
+         except IOError, x:
+-            raise SCons.Errors.UserError, 'Error writing options to file: %s\n%s' % (filename, x)
++            raise SCons.Errors.UserError('Error writing options to file: %s\n%s' % (filename, x))
+ 
+     def GenerateHelpText(self, env, sort=None):
+         """
+--- src/engine/SCons/compat/__init__.py (original)
++++ src/engine/SCons/compat/__init__.py (refactored)
+@@ -308,7 +308,7 @@
+         except OSError:
+             if os.path.isdir(src):
+                 if shutil.destinsrc(src, dst):
+-                    raise Error, "Cannot move a directory '%s' into itself '%s'." % (src, dst)
++                    raise Error("Cannot move a directory '%s' into itself '%s'." % (src, dst))
+                 shutil.copytree(src, dst, symlinks=True)
+                 shutil.rmtree(src)
+             else:
+--- src/engine/SCons/compat/_scons_hashlib.py (original)
++++ src/engine/SCons/compat/_scons_hashlib.py (refactored)
+@@ -42,7 +42,7 @@
+ 
+     def __init__(self, name, string=''):
+         if not name in ('MD5', 'md5'):
+-            raise ValueError, "unsupported hash type"
++            raise ValueError("unsupported hash type")
+         self.name = 'md5'
+         self.m = self.md5_module.md5()
+ 
+--- src/engine/SCons/compat/_scons_optparse.py (original)
++++ src/engine/SCons/compat/_scons_optparse.py (refactored)
+@@ -257,10 +257,10 @@
+         self.level = self.level - 1
+ 
+     def format_usage(self, usage):
+-        raise NotImplementedError, "subclasses must implement"
++        raise NotImplementedError("subclasses must implement")
+ 
+     def format_heading(self, heading):
+-        raise NotImplementedError, "subclasses must implement"
++        raise NotImplementedError("subclasses must implement")
+ 
+     def _format_text(self, text):
+         """
+@@ -831,7 +831,7 @@
+             parser.print_version()
+             parser.exit()
+         else:
+-            raise RuntimeError, "unknown action %r" % self.action
++            raise RuntimeError("unknown action %r" % self.action)
+ 
+         return 1
+ 
+@@ -902,7 +902,7 @@
+         elif mode == "loose":
+             self._update_loose(dict)
+         else:
+-            raise ValueError, "invalid update mode: %r" % mode
++            raise ValueError("invalid update mode: %r" % mode)
+ 
+     def read_module(self, modname, mode="careful"):
+         __import__(modname)
+@@ -981,7 +981,7 @@
+ 
+     def set_conflict_handler(self, handler):
+         if handler not in ("error", "resolve"):
+-            raise ValueError, "invalid conflict_resolution value %r" % handler
++            raise ValueError("invalid conflict_resolution value %r" % handler)
+         self.conflict_handler = handler
+ 
+     def set_description(self, description):
+@@ -1036,9 +1036,9 @@
+         elif len(args) == 1 and not kwargs:
+             option = args[0]
+             if not isinstance(option, Option):
+-                raise TypeError, "not an Option instance: %r" % option
+-        else:
+-            raise TypeError, "invalid arguments"
++                raise TypeError("not an Option instance: %r" % option)
++        else:
++            raise TypeError("invalid arguments")
+ 
+         self._check_conflict(option)
+ 
+@@ -1347,11 +1347,11 @@
+         elif len(args) == 1 and not kwargs:
+             group = args[0]
+             if not isinstance(group, OptionGroup):
+-                raise TypeError, "not an OptionGroup instance: %r" % group
++                raise TypeError("not an OptionGroup instance: %r" % group)
+             if group.parser is not self:
+-                raise ValueError, "invalid OptionGroup (wrong parser)"
+-        else:
+-            raise TypeError, "invalid arguments"
++                raise ValueError("invalid OptionGroup (wrong parser)")
++        else:
++            raise TypeError("invalid arguments")
+ 
+         self.option_groups.append(group)
+         return group
+--- src/engine/SCons/compat/_scons_sets.py (original)
++++ src/engine/SCons/compat/_scons_sets.py (refactored)
+@@ -91,7 +91,7 @@
+         """This is an abstract class."""
+         # Don't call this from a concrete subclass!
+         if self.__class__ is BaseSet:
+-            raise TypeError, ("BaseSet is an abstract class.  "
++            raise TypeError("BaseSet is an abstract class.  "
+                               "Use Set or ImmutableSet.")
+ 
+     # Standard protocols: __len__, __repr__, __str__, __iter__
+@@ -130,7 +130,7 @@
+     # case).
+ 
+     def __cmp__(self, other):
+-        raise TypeError, "can't compare sets using cmp()"
++        raise TypeError("can't compare sets using cmp()")
+ 
+     # Equality comparisons using the underlying dicts.  Mixed-type comparisons
+     # are allowed here, where Set == z for non-Set z always returns False,
+@@ -341,7 +341,7 @@
+         # Check that the other argument to a binary operation is also
+         # a set, raising a TypeError otherwise.
+         if not isinstance(other, BaseSet):
+-            raise TypeError, "Binary operation only permitted between sets"
++            raise TypeError("Binary operation only permitted between sets")
+ 
+     def _compute_hash(self):
+         # Calculate hash code for a set by xor'ing the hash codes of
+@@ -439,7 +439,7 @@
+     def __hash__(self):
+         """A Set cannot be hashed."""
+         # We inherit object.__hash__, so we must deny this explicitly
+-        raise TypeError, "Can't hash a Set, only an ImmutableSet."
++        raise TypeError("Can't hash a Set, only an ImmutableSet.")
+ 
+     # In-place union, intersection, differences.
+     # Subtle:  The xyz_update() functions deliberately return None,
+--- src/engine/SCons/compat/_scons_shlex.py (original)
++++ src/engine/SCons/compat/_scons_shlex.py (refactored)
+@@ -196,7 +196,7 @@
+                     if self.debug >= 2:
+                         print "shlex: I see EOF in quotes state"
+                     # XXX what error should be raised here?
+-                    raise ValueError, "No closing quotation"
++                    raise ValueError("No closing quotation")
+                 if nextchar == self.state:
+                     if not self.posix:
+                         self.token = self.token + nextchar
+@@ -215,7 +215,7 @@
+                     if self.debug >= 2:
+                         print "shlex: I see EOF in escape state"
+                     # XXX what error should be raised here?
+-                    raise ValueError, "No escaped character"
++                    raise ValueError("No escaped character")
+                 # In posix shells, only the quote itself or the escape
+                 # character may be escaped within quotes.
+                 if escapedstate in self.quotes and \
+--- QMTest/TestCmd.py (original)
++++ QMTest/TestCmd.py (refactored)
+@@ -438,7 +438,7 @@
+             expr = re.compile(s)
+         except re.error, e:
+             msg = "Regular expression error in %s: %s"
+-            raise re.error, msg % (repr(s), e[0])
++            raise re.error(msg % (repr(s), e[0]))
+         if not expr.search(lines[i]):
+             return
+     return 1
+@@ -455,7 +455,7 @@
+         expr = re.compile(s, re.DOTALL)
+     except re.error, e:
+         msg = "Regular expression error in %s: %s"
+-        raise re.error, msg % (repr(s), e[0])
++        raise re.error(msg % (repr(s), e[0]))
+     if expr.match(lines):
+         return 1
+ 
+@@ -511,7 +511,7 @@
+             expr = re.compile(s)
+         except re.error, e:
+             msg = "Regular expression error in %s: %s"
+-            raise re.error, msg % (repr(s), e[0])
++            raise re.error(msg % (repr(s), e[0]))
+         if not expr.search(bline):
+             result.append("%sc%s" % (i+1, i+1))
+             result.append('< ' + repr(a[i]))
+@@ -1128,7 +1128,7 @@
+         """
+         file = self.canonicalize(file)
+         if mode[0] != 'r':
+-            raise ValueError, "mode must begin with 'r'"
++            raise ValueError("mode must begin with 'r'")
+         return open(file, mode).read()
+ 
+     def rmdir(self, dir):
+@@ -1586,7 +1586,7 @@
+         """
+         file = self.canonicalize(file)
+         if mode[0] != 'w':
+-            raise ValueError, "mode must begin with 'w'"
++            raise ValueError("mode must begin with 'w'")
+         open(file, mode).write(content)
+ 
+ # Local Variables:
+--- QMTest/TestSCons.py (original)
++++ QMTest/TestSCons.py (refactored)
+@@ -813,7 +813,7 @@
+         def matchPart(log, logfile, lastEnd, NoMatch=NoMatch):
+             m = re.match(log, logfile[lastEnd:])
+             if not m:
+-                raise NoMatch, lastEnd
++                raise NoMatch(lastEnd)
+             return m.end() + lastEnd
+         try:
+             #print len(os.linesep)
+@@ -888,7 +888,7 @@
+                 log = ""
+             if doCheckLog: lastEnd = matchPart(ls, logfile, lastEnd)
+             if doCheckLog and lastEnd != len(logfile):
+-                raise NoMatch, lastEnd
++                raise NoMatch(lastEnd)
+             
+         except NoMatch, m:
+             print "Cannot match log file against log regexp."
+--- QMTest/unittest.py (original)
++++ QMTest/unittest.py (refactored)
+@@ -124,8 +124,8 @@
+         try:
+             self.__testMethod = getattr(self,methodName)
+         except AttributeError:
+-            raise ValueError, "no such test method in %s: %s" % \
+-                  (self.__class__, methodName)
++            raise ValueError("no such test method in %s: %s" % \
++                  (self.__class__, methodName))
+ 
+     def setUp(self):
+         "Hook method for setting up the test fixture before exercising it."
+@@ -199,7 +199,7 @@
+            __debug__ is false.
+         """
+         if not expr:
+-            raise AssertionError, msg
++            raise AssertionError(msg)
+ 
+     failUnless = assert_
+ 
+@@ -222,11 +222,11 @@
+         else:
+             if hasattr(excClass,'__name__'): excName = excClass.__name__
+             else: excName = str(excClass)
+-            raise AssertionError, excName
++            raise AssertionError(excName)
+ 
+     def fail(self, msg=None):
+         """Fail immediately, with the given message."""
+-        raise AssertionError, msg
++        raise AssertionError(msg)
+                                    
+     def __exc_info(self):
+         """Return a version of sys.exc_info() with the traceback frame
+@@ -376,7 +376,7 @@
+     """
+           
+     spec = name.split(':')
+-    if len(spec) > 2: raise ValueError, "illegal test name: %s" % name
++    if len(spec) > 2: raise ValueError("illegal test name: %s" % name)
+     if len(spec) == 1:
+         testName = spec[0]
+         caseName = None
+@@ -385,7 +385,7 @@
+     parts = testName.split('.')
+     if module is None:
+         if len(parts) < 2:
+-            raise ValueError, "incomplete test name: %s" % name
++            raise ValueError("incomplete test name: %s" % name)
+         constructor = __import__('.'.join(parts[:-1]))
+         parts = parts[1:]
+     else:
+@@ -393,20 +393,19 @@
+     for part in parts:
+         constructor = getattr(constructor, part)
+     if not callable(constructor):
+-        raise ValueError, "%s is not a callable object" % constructor
++        raise ValueError("%s is not a callable object" % constructor)
+     if caseName:
+         if caseName[-1] == '-':
+             prefix = caseName[:-1]
+             if not prefix:
+-                raise ValueError, "prefix too short: %s" % name
++                raise ValueError("prefix too short: %s" % name)
+             test = makeSuite(constructor, prefix=prefix)
+         else:
+             test = constructor(caseName)
+     else:
+         test = constructor()
+     if not hasattr(test,"countTestCases"):
+-        raise TypeError, \
+-              "object %s found with spec %s is not a test" % (test, name)
++        raise TypeError("object %s found with spec %s is not a test" % (test, name))
+     return test
+ 
+ 
+@@ -662,7 +661,7 @@
+                 if opt in ('-h','-H','--help'):
+                     self.usageExit()
+             if len(args) == 0 and self.defaultTest is None:
+-                raise getopt.error, "No default test is defined."
++                raise getopt.error("No default test is defined.")
+             if len(args) > 0:
+                 self.testNames = args
+             else:
+--- bench/dependency-func.py (original)
++++ bench/dependency-func.py (refactored)
+@@ -26,7 +26,7 @@
+     elif t == '4444':
+         func = dep.func4
+     else:
+-        raise Exception, "bad key %s" % t
++        raise Exception("bad key %s" % t)
+     return func(arg)
+ 
+ 
+--- bench/env.__setitem__.py (original)
++++ bench/env.__setitem__.py (refactored)
+@@ -115,7 +115,7 @@
+             special(self, key, value)
+         else:
+             if not SCons.Environment.is_valid_construction_var(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_Global_is_valid(Environment):
+@@ -126,7 +126,7 @@
+             special(self, key, value)
+         else:
+             if not is_valid_construction_var(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_Method_is_valid(Environment):
+@@ -143,7 +143,7 @@
+             special(self, key, value)
+         else:
+             if not self.is_valid_construction_var(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_regex_attribute_is_valid(Environment):
+@@ -154,7 +154,7 @@
+             special(self, key, value)
+         else:
+             if not self._valid_var.match(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_global_regex_is_valid(Environment):
+@@ -165,7 +165,7 @@
+             special(self, key, value)
+         else:
+             if not global_valid_var.match(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_special_set_has_key(Environment):
+@@ -175,7 +175,7 @@
+             self._special_set[key](self, key, value)
+         else:
+             if not SCons.Environment.is_valid_construction_var(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_key_in_tuple(Environment):
+@@ -185,7 +185,7 @@
+             self._special_set[key](self, key, value)
+         else:
+             if not SCons.Environment.is_valid_construction_var(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_key_in_list(Environment):
+@@ -195,7 +195,7 @@
+             self._special_set[key](self, key, value)
+         else:
+             if not SCons.Environment.is_valid_construction_var(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_key_in_attribute(Environment):
+@@ -205,7 +205,7 @@
+             self._special_set[key](self, key, value)
+         else:
+             if not SCons.Environment.is_valid_construction_var(key):
+-                raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_try_except(Environment):
+@@ -219,7 +219,7 @@
+                 self._dict[key]
+             except KeyError:
+                 if not SCons.Environment.is_valid_construction_var(key):
+-                    raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                    raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_not_has_key(Environment):
+@@ -231,7 +231,7 @@
+         else:
+             if key not in self._dict \
+                 and not SCons.Environment.is_valid_construction_var(key):
+-                    raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                    raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_Best_attribute(Environment):
+@@ -242,7 +242,7 @@
+         else:
+             if key not in self._dict \
+                and not global_valid_var.match(key):
+-                    raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                    raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_Best_has_key(Environment):
+@@ -253,7 +253,7 @@
+         else:
+             if key not in self._dict \
+                and not global_valid_var.match(key):
+-                    raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                    raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ class env_Best_list(Environment):
+@@ -264,7 +264,7 @@
+         else:
+             if key not in self._dict \
+                and not global_valid_var.match(key):
+-                    raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                    raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+             self._dict[key] = value
+ 
+ try:
+@@ -279,7 +279,7 @@
+                 self._special_set[key](self, key, value)
+             else:
+                 if not key.isalnum() and not global_valid_var.match(key):
+-                    raise SCons.Errors.UserError, "Illegal construction variable `%s'" % key
++                    raise SCons.Errors.UserError("Illegal construction variable `%s'" % key)
+                 self._dict[key] = value
+ 
+ # We'll use the names of all the env_* classes we find later to build
