@@ -1,0 +1,37 @@
+--- a/scons/scons-1.2.0/engine/SCons/Node/FS.py
++++ b/scons/scons-1.2.0/engine/SCons/Node/FS.py
+@@ -252,6 +252,13 @@ LocalCopy = SCons.Action.Action(LinkFunc, LocalString)
+ 
+ def UnlinkFunc(target, source, env):
+     t = target[0]
++    if not t.fs.islink(t.abspath) and not t.fs.access(t.abspath,
++                                                      os.W_OK):
++
++        # File not writable. Make it so.
++        # Otherwise removing existing read-only files on Windows fails.
++        # See PR 614182.
++        t.fs.chmod(t.abspath, stat.S_IWRITE)
+     t.fs.unlink(t.abspath)
+     return 0
+ 
+@@ -1017,6 +1024,8 @@ class LocalFS:
+         return os.rename(old, new)
+     def stat(self, path):
+         return os.stat(path)
++    def access(self, path, mode):
++        return os.access(path, mode)
+     def symlink(self, src, dst):
+         return os.symlink(src, dst)
+     def open(self, path):
+@@ -2622,11 +2631,6 @@ class File(Base):
+ 
+     def _rmv_existing(self):
+         self.clear_memoized_values()
+-        if not os.access(self.abspath, os.W_OK):
+-            # File not writable. Make it so.
+-            # Otherwise removing existing read-only files on Windows fails.
+-            # See PR 614182.
+-            os.chmod(self.abspath, stat.S_IWRITE)
+         e = Unlink(self, [], None)
+         if isinstance(e, SCons.Errors.BuildError):
+             raise e
