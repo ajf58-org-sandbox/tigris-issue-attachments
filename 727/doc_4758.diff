@@ -1,0 +1,412 @@
+Index: doc/design/engine.xml
+===================================================================
+--- doc/design/engine.xml	(revision 4758)
++++ doc/design/engine.xml	(working copy)
+@@ -85,7 +85,7 @@
+ 
+ 
+ <section id="sect-envs">
+- <title>&ConsEnvs</title>
++ <title>&ConsEnvs;</title>
+ 
+  <para>
+ 
+@@ -129,7 +129,7 @@
+    <footnote>
+     <para>
+      It would be nice if we could avoid re-inventing the wheel here by
+-     using some other Python-based tool &Autoconf replacement--like what
++     using some other Python-based tool &Autoconf; replacement--like what
+      was supposed to come out of the Software Carpentry configuration
+      tool contest.  It will probably be most efficient to roll our own
+      logic initially and convert if something better does come along.
+@@ -283,7 +283,7 @@
+ 	MyBuilder = Builder(command = "$XX $XXFLAGS -c $_INPUTS -o $target")
+ 
+ 	env.Command(targets = 'bar.out', sources = 'bar.in',
+-	            command = "sed '1d' < $source > $target")
++	            command = "sed '1d' &lt; $source > $target")
+ 	</programlisting>
+ 
+   <para>
+@@ -317,7 +317,7 @@
+ 	<programlisting>
+ 	env = Environment(FUNC = myfunc)
+ 	env.Command(target = 'foo.out', source = 'foo.in',
+-	            command = "${FUNC($<)}")
++	            command = "${FUNC($&lt;)}")
+ 	</programlisting>
+ 
+   <para>
+@@ -1678,8 +1678,8 @@
+      <literal>target</literal> (that is, one passed to the
+      &Build; or &Clean; method).  Objects which a top-level
+      <literal>target</literal> is directly dependent upon have a
+-     <literal>level</literal> of <1>, their direct dependencies have a
+-     <literal>level</literal> of <2>, etc.  Typically used to indent
++     <literal>level</literal> of &lt;1>, their direct dependencies have a
++     <literal>level</literal> of &lt;2>, etc.  Typically used to indent
+      output to reflect the recursive levels.
+ 
+     </para>
+Index: doc/design/goals.xml
+===================================================================
+--- doc/design/goals.xml	(revision 4758)
++++ doc/design/goals.xml	(working copy)
+@@ -26,7 +26,7 @@
+  <para>
+ 
+    As a next-generation build tool,
+-   &SCons should fundamentally
++   &SCons; should fundamentally
+    improve on its predecessors.
+    Rather than simply being driven by trying to
+    <emphasis>not</emphasis> be like previous tools,
+Index: doc/design/native.xml
+===================================================================
+--- doc/design/native.xml	(revision 4758)
++++ doc/design/native.xml	(working copy)
+@@ -52,7 +52,7 @@
+  <para>
+ 
+   By default, the &SCons; utility searches for a file named
+-  &SConstruct;, &Sconstruct; or &sconstruct (in that order) in the
++  &SConstruct;, &Sconstruct; or &sconstruct; (in that order) in the
+   current directory, and reads its configuration from the first file
+   found.  A <option>-f</option> command-line option exists to read a
+   different file name.
+@@ -175,7 +175,7 @@
+ 
+   Any variables (not just &SCons; objects) that are to be shared between configuration files must be
+   explicitly passed in the &SConscript; call
+-  using the &Export method:
++  using the &Export; method:
+ 
+  </para>
+ 
+@@ -261,7 +261,7 @@
+ 
+  <para>
+ 
+-  &SCons; will allow users to share &consenvs, as well as other &SCons;
++  &SCons; will allow users to share &consenvs;, as well as other &SCons;
+   objects and Python variables, by importing them from a central, shared
+   repository using normal Python syntax:
+ 
+Index: doc/design/overview.xml
+===================================================================
+--- doc/design/overview.xml	(revision 4758)
++++ doc/design/overview.xml	(working copy)
+@@ -409,7 +409,7 @@
+   <para>
+ 
+    An alternate &SCons; interface would provide backwards
+-   compatibility with the classic &Make utility.
++   compatibility with the classic &Make; utility.
+    This would be done by embedding the &SCons; Build Engine
+    in a Python script that can translate existing
+    &Makefile;s into the underlying calls to the
+Index: doc/developer/preface.xml
+===================================================================
+--- doc/developer/preface.xml	(revision 4758)
++++ doc/developer/preface.xml	(working copy)
+@@ -36,7 +36,7 @@
+     <para>
+ 
+     There are a few overriding principles
+-    we try to live up to in designing and implementing &SCons:
++    we try to live up to in designing and implementing &SCons;:
+ 
+     </para>
+ 
+Index: doc/python10/abstract.xml
+===================================================================
+--- doc/python10/abstract.xml	(revision 4758)
++++ doc/python10/abstract.xml	(working copy)
+@@ -3,7 +3,7 @@
+   &SCons; is a software construction tool (build tool, or make tool)
+   implemented in Python, which uses Python scripts as "configuration
+   files" for software builds. Based on the design which won the
+-  Software Carpentry build tool competition, &SCons solves a number of
++  Software Carpentry build tool competition, &SCons; solves a number of
+   problems associated with other build tools, especially including the
+   classic and ubiquitous &Make; itself.
+ 
+Index: doc/python10/design.xml
+===================================================================
+--- doc/python10/design.xml	(revision 4758)
++++ doc/python10/design.xml	(working copy)
+@@ -6,14 +6,14 @@
+ 
+ <mediaobject>
+   <imageobject>
+-    <imagedata fileref="arch" format="eps" align="center">
++    <imagedata fileref="arch" format="eps" align="center"/>
+   </imageobject>
+   <imageobject>
+-    <imagedata fileref="arch.jpg" format="jpg" align="center">
++    <imagedata fileref="arch.jpg" format="jpg" align="center"/>
+   </imageobject>
+   <!--  PDF files?
+   <imageobject>
+-    <imagedata fileref="arch.pdf" align="center">
++    <imagedata fileref="arch.pdf" align="center"/>
+   </imageobject>
+   -->
+ </mediaobject>
+@@ -166,14 +166,14 @@
+ 
+     <mediaobject>
+       <imageobject>
+-        <imagedata fileref="node" format="eps" align="center">
++        <imagedata fileref="node" format="eps" align="center"/>
+       </imageobject>
+       <imageobject>
+-        <imagedata fileref="node.jpg" format="jpg" align="center">
++        <imagedata fileref="node.jpg" format="jpg" align="center"/>
+       </imageobject>
+       <!--  PDF files?
+       <imageobject>
+-        <imagedata fileref="node.pdf" align="center">
++        <imagedata fileref="node.pdf" align="center"/>
+       </imageobject>
+       -->
+     </mediaobject>
+@@ -230,14 +230,14 @@
+ 
+     <mediaobject>
+       <imageobject>
+-        <imagedata fileref="scanner" format="eps" align="center">
++        <imagedata fileref="scanner" format="eps" align="center"/>
+       </imageobject>
+       <imageobject>
+-        <imagedata fileref="scanner.jpg" format="jpg" align="center">
++        <imagedata fileref="scanner.jpg" format="jpg" align="center"/>
+       </imageobject>
+       <!--  PDF files?
+       <imageobject>
+-        <imagedata fileref="scanner.pdf" align="center">
++        <imagedata fileref="scanner.pdf" align="center"/>
+       </imageobject>
+       -->
+     </mediaobject>
+@@ -264,7 +264,7 @@
+       signature information for &Node; objects.
+       The signature subsystem in &SCons;
+       supports multiple ways to
+-      determine whether a &Node is up-to-date
++      determine whether a &Node; is up-to-date
+       by using an abstract &Sig; class
+       as a strategy wrapper:
+ 
+@@ -272,14 +272,14 @@
+ 
+     <mediaobject>
+       <imageobject>
+-        <imagedata fileref="sig" format="eps" align="center">
++        <imagedata fileref="sig" format="eps" align="center"/>
+       </imageobject>
+       <imageobject>
+-        <imagedata fileref="sig.jpg" format="jpg" align="center">
++        <imagedata fileref="sig.jpg" format="jpg" align="center"/>
+       </imageobject>
+       <!--  PDF files?
+       <imageobject>
+-        <imagedata fileref="sig.pdf" align="center">
++        <imagedata fileref="sig.pdf" align="center"/>
+       </imageobject>
+       -->
+     </mediaobject>
+@@ -328,14 +328,14 @@
+ 
+     <mediaobject>
+       <imageobject>
+-        <imagedata fileref="builder" format="eps" align="center">
++        <imagedata fileref="builder" format="eps" align="center"/>
+       </imageobject>
+       <imageobject>
+-        <imagedata fileref="builder.jpg" format="jpg" align="center">
++        <imagedata fileref="builder.jpg" format="jpg" align="center"/>
+       </imageobject>
+       <!--  PDF files?
+       <imageobject>
+-        <imagedata fileref="builder.pdf" align="center">
++        <imagedata fileref="builder.pdf" align="center"/>
+       </imageobject>
+       -->
+     </mediaobject>
+@@ -391,14 +391,14 @@
+ 
+     <mediaobject>
+       <imageobject>
+-        <imagedata fileref="job-task" format="eps" align="center">
++        <imagedata fileref="job-task" format="eps" align="center"/>
+       </imageobject>
+       <imageobject>
+-        <imagedata fileref="job-task.jpg" format="jpg" align="center">
++        <imagedata fileref="job-task.jpg" format="jpg" align="center"/>
+       </imageobject>
+       <!--  PDF files?
+       <imageobject>
+-        <imagedata fileref="job-task.pdf" align="center">
++        <imagedata fileref="job-task.pdf" align="center"/>
+       </imageobject>
+       -->
+     </mediaobject>
+@@ -435,7 +435,7 @@
+ 
+     <para>
+ 
+-      The &Taskmaster uses the node subsystem's
++      The &Taskmaster; uses the node subsystem's
+       &Walker; class to walk the dependency tree,
+       and the &Sig; class to use the
+       appropriate method
+@@ -629,8 +629,8 @@
+     <para>
+ 
+       &Builder; objects are associated with a &consenv; through a
+-      &consvar; named &BUILDERS;, a list of the &Builder objects that
+-      will be available for execution through the &consenv:
++      &consvar; named &BUILDERS;, a list of the &Builder; objects that
++      will be available for execution through the &consenv;:
+ 
+     </para>
+ 
+@@ -679,7 +679,7 @@
+ 
+       &Scanner; objects are associated with a &consenv; through a
+       &consvar; named &SCANNERS;, a list of the &Scanner; objects that
+-      will be available through the &consenv:
++      will be available through the &consenv;:
+ 
+     </para>
+ 
+@@ -818,10 +818,10 @@
+     The most noticeable difference between &scons; and &Make;, or most
+     other build tools, is that the configuration files are actually
+     Python scripts, generically called "SConscripts" (although the
+-    top-level "Makefile" is named &SConstruct). Users do not have to
++    top-level "Makefile" is named &SConstruct;). Users do not have to
+     learn a new language syntax, but instead configure dependency
+     information by making direct calls to the Python API of the
+-    &SCons; Build Engine. Here is an example &SConstruct file which
++    &SCons; Build Engine. Here is an example &SConstruct; file which
+     builds a program in side-by-side normal and debug versions:
+ 
+   </para>
+Index: doc/python10/main.xml
+===================================================================
+--- doc/python10/main.xml	(revision 4758)
++++ doc/python10/main.xml	(working copy)
+@@ -182,7 +182,7 @@
+         <holder>O'Reilly &amp; Associates, Inc.</holder>
+       </copyright>
+       <publisher>
+-        <publishername>O'Reilly & Associates, Inc.</publishername>
++        <publishername>O'Reilly &amp; Associates, Inc.</publishername>
+       </publisher>
+       <title>Managing Projects with Make, 2nd Ed.</title>
+     </biblioentry>
+Index: doc/python10/process.xml
+===================================================================
+--- doc/python10/process.xml	(revision 4758)
++++ doc/python10/process.xml	(working copy)
+@@ -181,7 +181,7 @@
+ 
+     <para>
+ 
+-      In practice, these restrictions can be overridden as necessary�for
++      In practice, these restrictions can be overridden as necessary for
+       example, when changing comments or documentation.
+ 
+     </para>
+Index: doc/user/builders-writing.xml
+===================================================================
+--- doc/user/builders-writing.xml	(revision 4758)
++++ doc/user/builders-writing.xml	(working copy)
+@@ -129,7 +129,7 @@
+     </para>
+ 
+     <programlisting>
+-       bld = Builder(action = 'foobuild < $SOURCE > $TARGET')
++       bld = Builder(action = 'foobuild &lt; $SOURCE > $TARGET')
+     </programlisting>
+ 
+     <para>
+@@ -166,7 +166,7 @@
+     
+ 
+     <programlisting>
+-       bld = Builder(action = 'foobuild < $SOURCE > $TARGET')
++       bld = Builder(action = 'foobuild &lt; $SOURCE > $TARGET')
+        env = Environment(BUILDERS = {'Foo' : bld})
+     </programlisting>
+ 
+@@ -251,7 +251,7 @@
+ 
+     <programlisting>
+        env = Environment()
+-       bld = Builder(action = 'foobuild < $SOURCE > $TARGET')
++       bld = Builder(action = 'foobuild &lt; $SOURCE > $TARGET')
+        env.Append(BUILDERS = {'Foo' : bld})
+        env.Foo('file.foo', 'file.input')
+        env.Program('hello.c')
+@@ -266,7 +266,7 @@
+ 
+     <programlisting>
+        env = Environment()
+-       bld = Builder(action = 'foobuild < $SOURCE > $TARGET')
++       bld = Builder(action = 'foobuild &lt; $SOURCE > $TARGET')
+        env['BUILDERS']['Foo'] = bld
+        env.Foo('file.foo', 'file.input')
+        env.Program('hello.c')
+@@ -313,7 +313,7 @@
+     
+ 
+     <programlisting>
+-       bld = Builder(action = 'foobuild < $SOURCE > $TARGET',
++       bld = Builder(action = 'foobuild &lt; $SOURCE > $TARGET',
+                      suffix = '.foo',
+                      src_suffix = '.input')
+        env = Environment(BUILDERS = {'Foo' : bld})
+@@ -482,7 +482,7 @@
+ 
+     <programlisting>
+        def generate_actions(source, target, env, for_signature):
+-           return 'foobuild < %s > %s' % (target[0], source[0])
++           return 'foobuild &lt; %s > %s' % (target[0], source[0])
+     </programlisting>
+ 
+     <para>
+@@ -586,7 +586,7 @@
+ 
+     <programlisting>
+        def generate_actions(source, target, env, for_signature):
+-           return 'foobuild < %s > %s' % (source[0], target[0])
++           return 'foobuild &lt; %s > %s' % (source[0], target[0])
+        bld = Builder(generator = generate_actions,
+                      suffix = '.foo',
+                      src_suffix = '.input')
+Index: doc/user/command-line.xml
+===================================================================
+--- doc/user/command-line.xml	(revision 4758)
++++ doc/user/command-line.xml	(working copy)
+@@ -1208,7 +1208,7 @@
+         choices to a specific set of allowed colors.
+         This can be set up quite easily
+         using the &EnumVariable;,
+-        which takes a list of &allowed_values
++        which takes a list of &allowed_values;
+         in addition to the variable name,
+         default value,
+         and help text arguments:
+@@ -2064,7 +2064,7 @@
+ 
+         &SCons; supports a &DEFAULT_TARGETS; variable
+         that lets you get at the current list of default targets.
+-        The &DEFAULT_TARGETS variable has
++        The &DEFAULT_TARGETS; variable has
+         two important differences from the &COMMAND_LINE_TARGETS; variable.
+         First, the &DEFAULT_TARGETS; variable is a list of
+         internal &SCons; nodes,
