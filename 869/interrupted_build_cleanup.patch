@@ -1,0 +1,25 @@
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 5353)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -233,6 +233,7 @@
+         # Handle the failure of a build task.  The primary purpose here
+         # is to display the various types of Errors and Exceptions
+         # appropriately.
++
+         exc_info = self.exc_info()
+         try:
+             t, e, tb = exc_info
+@@ -240,6 +241,12 @@
+             t, e = exc_info
+             tb = None
+ 
++        for t in self.targets:
++            try:
++                t.remove()
++            except:
++                pass
++
+         if t is None:
+             # The Taskmaster didn't record an exception for this Task;
+             # see if the sys module has one.
