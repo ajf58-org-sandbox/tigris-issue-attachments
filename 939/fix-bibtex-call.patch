@@ -1,0 +1,50 @@
+diff -urNp scons-2.3.1.orig/engine/SCons/Tool/tex.py scons-2.3.1/engine/SCons/Tool/tex.py
+--- scons-2.3.1.orig/engine/SCons/Tool/tex.py	2014-03-02 20:19:50.000000000 +0100
++++ scons-2.3.1/engine/SCons/Tool/tex.py	2014-06-23 15:12:51.100738449 +0200
+@@ -336,15 +336,13 @@ def InternalLaTeXAuxAction(XXXLaTeXActio
+                 already_bibtexed.append(auxfilename)
+                 target_aux = os.path.join(targetdir, auxfilename)
+                 if os.path.isfile(target_aux):
+-                    content = open(target_aux, "rb").read()
+-                    if content.find("bibdata") != -1:
+-                        if Verbose:
+-                            print "Need to run bibtex on ",auxfilename
+-                        bibfile = env.fs.File(SCons.Util.splitext(target_aux)[0])
+-                        result = BibTeXAction(bibfile, bibfile, env)
+-                        if result != 0:
+-                            check_file_error_message(env['BIBTEX'], 'blg')
+-                        must_rerun_latex = True
++                    if Verbose:
++                        print "Need to run bibtex on ",auxfilename
++                    bibfile = env.fs.File(SCons.Util.splitext(target_aux)[0])
++                    result = BibTeXAction(bibfile, bibfile, env)
++                    if result != 0:
++                        check_file_error_message(env['BIBTEX'], 'blg')
++                    must_rerun_latex = True
+ 
+         # Now decide if biber will need to be run.
+         # When the backend for biblatex is biber (by choice or default) the
+@@ -359,15 +357,13 @@ def InternalLaTeXAuxAction(XXXLaTeXActio
+                 already_bibtexed.append(bcffilename)
+                 target_bcf = os.path.join(targetdir, bcffilename)
+                 if os.path.isfile(target_bcf):
+-                    content = open(target_bcf, "rb").read()
+-                    if content.find("bibdata") != -1:
+-                        if Verbose:
+-                            print "Need to run biber on ",bcffilename
+-                        bibfile = env.fs.File(SCons.Util.splitext(target_bcf)[0])
+-                        result = BiberAction(bibfile, bibfile, env)
+-                        if result != 0:
+-                            check_file_error_message(env['BIBER'], 'blg')
+-                        must_rerun_latex = True
++                    if Verbose:
++                        print "Need to run biber on ",bcffilename
++                    bibfile = env.fs.File(SCons.Util.splitext(target_bcf)[0])
++                    result = BiberAction(bibfile, bibfile, env)
++                    if result != 0:
++                        check_file_error_message(env['BIBER'], 'blg')
++                    must_rerun_latex = True
+ 
+         # Now decide if latex will need to be run again due to index.
+         if check_MD5(suffix_nodes['.idx'],'.idx') or (count == 1 and run_makeindex):
+
