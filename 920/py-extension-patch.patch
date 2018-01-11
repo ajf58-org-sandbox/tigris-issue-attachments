@@ -1,0 +1,12 @@
+diff -r 0c9c8aff8f46 src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Sat May 04 16:28:50 2013 -0400
++++ b/src/engine/SCons/Script/Main.py	Sat Jun 01 21:29:40 2013 -0700
+@@ -605,7 +605,7 @@
+     current directory.
+     """
+     if not filelist:
+-        filelist = ['SConstruct', 'Sconstruct', 'sconstruct']
++        filelist = ['SConstruct', 'Sconstruct', 'sconstruct', 'SConstruct.py']
+     for file in filelist:
+         sfile = os.path.join(dirname, file)
+         if os.path.isfile(sfile):
