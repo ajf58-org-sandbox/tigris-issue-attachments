@@ -1,0 +1,396 @@
+Index: doc/user/builders-commands.in
+===================================================================
+--- doc/user/builders-commands.in	(revision 5062)
++++ doc/user/builders-commands.in	(working copy)
+@@ -72,7 +72,7 @@
+   <scons_example name="ex1">
+      <file name="SConstruct" printme="1">
+      env = Environment()
+-     env.Command('foo.out', 'foo.in', "sed 's/x/y/' < $SOURCE > $TARGET")
++     env.Command('foo.out', 'foo.in', "sed 's/x/y/' &lt; $SOURCE > $TARGET")
+      </file>
+      <file name="foo.in">
+      foo.in
+Index: doc/user/builders-writing.in
+===================================================================
+--- doc/user/builders-writing.in	(revision 5062)
++++ doc/user/builders-writing.in	(working copy)
+@@ -823,7 +823,6 @@
+         <file name="my_command" chmod="0755">
+         cat
+         </file>
+-      </file>
+ 
+     </scons_example>
+ 
+@@ -842,7 +841,6 @@
+                          MY_EMITTER = modify2)
+       env1.Foo('file1')
+       env2.Foo('file2')
+-      </file>
+     </sconstruct>
+ 
+     <para>
+@@ -931,7 +929,7 @@
+     </para>
+ 
+     <scons_example name="site1">
+-      <file name="site_scons/site_init.py" printme=1>
++      <file name="site_scons/site_init.py" printme="1">
+         def TOOL_ADD_HEADER(env):
+            """A Tool to add a header from $HEADER to the source file"""
+            add_header = Builder(action=['echo "$HEADER" &gt; $TARGET',
+@@ -998,7 +996,7 @@
+     </para>
+       
+     <scons_example name="site2">
+-      <file name="site_scons/my_utils.py" printme=1>
++      <file name="site_scons/my_utils.py" printme="1">
+         from SCons.Script import *   # for Execute and Mkdir
+         def build_id():
+            """Return a build ID (stub version)"""
+Index: doc/user/command-line.in
+===================================================================
+--- doc/user/command-line.in	(revision 5062)
++++ doc/user/command-line.in	(working copy)
+@@ -221,7 +221,7 @@
+ 
+       </para>
+ 
+-      <sconstruct)
++      <sconstruct>
+         if not GetOption('help'):
+             SConscript('src/SConscript', export='env')
+       </sconstruct>
+@@ -2195,7 +2195,7 @@
+ 
+         Second,
+         the contents of the &DEFAULT_TARGETS; list change
+-        in response to calls to the &Default: function,
++        in response to calls to the &Default; function,
+         as you can see from the following &SConstruct; file:
+ 
+         </para>
+Index: doc/user/depends.in
+===================================================================
+--- doc/user/depends.in	(revision 5062)
++++ doc/user/depends.in	(working copy)
+@@ -386,7 +386,7 @@
+ 
+       <para>
+ 
+-      So configured, &SCons will still behave like
++      So configured, &SCons; will still behave like
+       it does when using <literal>Decider('MD5')</literal>:
+ 
+       </para>
+Index: doc/user/environments.in
+===================================================================
+--- doc/user/environments.in	(revision 5062)
++++ doc/user/environments.in	(working copy)
+@@ -347,7 +347,7 @@
+ 
+     The <literal>external environment</literal>
+     is the set of variables in the user's environment
+-    at the time the user runs &SCons.
++    at the time the user runs &SCons;.
+     These variables are available within the &SConscript; files
+     through the Python <literal>os.environ</literal> dictionary.
+     See <xref linkend="sect-external-environments"></xref>, below.
+@@ -406,7 +406,7 @@
+ 
+   Unlike &Make;,  &SCons; does not automatically
+   copy or import values between different environments
+-  (with the exception of explicit clones of &consenvs,
++  (with the exception of explicit clones of &consenvs;,
+   which inherit values from their parent).
+   This is a deliberate design choice
+   to make sure that builds are,
+@@ -638,7 +638,7 @@
+          for key in ['OBJSUFFIX', 'LIBSUFFIX', 'PROGSUFFIX']:
+              print "key = %s, value = %s" % (key, dict[key])
+          </file>
+-      </scons_Example>
++      </scons_example>
+ 
+       <para>
+ 
+@@ -779,18 +779,18 @@
+       If a problem occurs when expanding a construction variable,
+       by default it is expanded to <literal>''</literal>
+       (a null string), and will not cause scons to fail. 
+-      
++      </para>
+        <scons_example name="missing1">
+          <file name="SConstruct" printme="1">
+           env = Environment()
+-          print "value is:", env.subst( '->$MISSING<-' )
++          print "value is:", env.subst( '->$MISSING&lt;-' )
+         </file>
+       </scons_example>
+ 
+        <scons_output example="missing1">
+           <scons_output_command>scons -Q</scons_output_command>
+        </scons_output>
+-      
++      <para>
+       This default behaviour can be changed using the &AllowSubstExceptions;
+       function.
+       When a problem occurs with a variable expansion it generates
+@@ -810,7 +810,7 @@
+          <file name="SConstruct" printme="1">
+           AllowSubstExceptions()
+           env = Environment()
+-          print "value is:", env.subst( '->$MISSING<-' )
++          print "value is:", env.subst( '->$MISSING&lt;-' )
+         </file>
+       </scons_example>
+ 
+@@ -830,7 +830,7 @@
+          <file name="SConstruct" printme="1">
+           AllowSubstExceptions(IndexError, NameError, ZeroDivisionError)
+           env = Environment()
+-          print "value is:", env.subst( '->${1 / 0}<-' )
++          print "value is:", env.subst( '->${1 / 0}&lt;-' )
+         </file>
+       </scons_example>
+ 
+Index: doc/user/factories.in
+===================================================================
+--- doc/user/factories.in	(revision 5062)
++++ doc/user/factories.in	(working copy)
+@@ -209,7 +209,7 @@
+     <para>
+ 
+     Of course, like all of these &Action; factories,
+-    the &Delete factory also expands
++    the &Delete; factory also expands
+     &cv-link-TARGET; and &cv-link-SOURCE; variables appropriately.
+     For example:
+ 
+Index: doc/user/hierarchy.in
+===================================================================
+--- doc/user/hierarchy.in	(revision 5062)
++++ doc/user/hierarchy.in	(working copy)
+@@ -688,7 +688,7 @@
+ 
+       Sometimes, you would like to be able to
+       use information from a subsidiary
+-      &SConscript file in some way.
++      &SConscript; file in some way.
+       For example,
+       suppose that you want to create one
+       library from source files
+Index: doc/user/java.in
+===================================================================
+--- doc/user/java.in	(revision 5062)
++++ doc/user/java.in	(working copy)
+@@ -390,7 +390,7 @@
+     You can generate C header and source files
+     for implementing native methods,
+     by using the &b-link-JavaH; Builder.
+-    There are several ways of using the &JavaH Builder.
++    There are several ways of using the &JavaH; Builder.
+     One typical invocation might look like:
+ 
+     </para>
+@@ -636,7 +636,7 @@
+     As it did with the &b-link-JavaH; Builder,
+     &SCons; remembers the class directory
+     and passes it as the <option>-classpath</option> option
+-    to &rmic:
++    to &rmic;:
+ 
+     </para>
+ 
+Index: doc/user/misc.in
+===================================================================
+--- doc/user/misc.in	(revision 5062)
++++ doc/user/misc.in	(working copy)
+@@ -82,7 +82,7 @@
+ 
+     <para>
+ 
+-    And then &SCons will exit with the following error
++    And then &SCons; will exit with the following error
+     message when a user runs it with an unsupported
+     earlier version of Python:
+ 
+@@ -151,7 +151,7 @@
+ 
+     <para>
+ 
+-    And then &SCons will exit with the following error
++    And then &SCons; will exit with the following error
+     message when a user runs it with an unsupported
+     earlier version of &SCons;:
+ 
+@@ -274,13 +274,13 @@
+       </file>
+       <directory name="src"></directory>
+       <directory name="src/include"></directory>
+-      </file>
+       <file name="src/include/private.h">
+         exists
+-      <directory name="include"></directory>
+       </file>
++      <directory name="include"></directory>
+       <file name="include/dist.h">
+         exists
++      </file>
+     </scons_example>
+ 
+     <scons_output example="FindFile1b" os="posix">
+Index: doc/user/output.in
+===================================================================
+--- doc/user/output.in	(revision 5062)
++++ doc/user/output.in	(working copy)
+@@ -490,7 +490,7 @@
+     over how to print each evaluated node
+     by passing a Python function
+     (or other Python callable)
+-    to the &Progress function.
++    to the &Progress; function.
+     Your function will be called
+     for each evaluated node,
+     allowing you to
+Index: doc/user/preface.in
+===================================================================
+--- doc/user/preface.in	(revision 5062)
++++ doc/user/preface.in	(working copy)
+@@ -104,7 +104,7 @@
+     <para>
+ 
+     There are a few overriding principles
+-    we try to live up to in designing and implementing &SCons:
++    we try to live up to in designing and implementing &SCons;:
+ 
+     </para>
+ 
+@@ -418,7 +418,7 @@
+ 
+     <para>
+ 
+-    If you want to receive announcements about &SCons,
++    If you want to receive announcements about &SCons;,
+     join the low-volume &scons-announce; mailing list.
+ 
+     </para>
+Index: doc/user/repositories.in
+===================================================================
+--- doc/user/repositories.in	(revision 5062)
++++ doc/user/repositories.in	(working copy)
+@@ -210,9 +210,9 @@
+     in the repository trees, though,
+     it will be unable to find the <literal>#include</literal> files.
+     If, for example, the &hello_c; file in
+-    our previous example includes the &hello.h;
++    our previous example includes the &hello_h;
+     in its current directory,
+-    and the &hello.h; only exists in the repository:
++    and the &hello_h; only exists in the repository:
+ 
+     </para>
+ 
+Index: doc/user/sconf.in
+===================================================================
+--- doc/user/sconf.in	(revision 5062)
++++ doc/user/sconf.in	(working copy)
+@@ -31,7 +31,7 @@
+   figuring out what libraries or header files
+   are available on the local system.
+   This section describes how to use
+-  this &SCons feature.
++  this &SCons; feature.
+ 
+   </para>
+ 
+@@ -446,7 +446,7 @@
+     when removing targets doesn't hurt anything,
+     it's usually unnecessary.
+     You can avoid this by using the
+-    &GetOption(); method to
++    &GetOption; method to
+     check whether the <option>-c</option> (clean)
+     option has been invoked on the command line:
+ 
+Index: doc/user/simple.in
+===================================================================
+--- doc/user/simple.in	(revision 5062)
++++ doc/user/simple.in	(working copy)
+@@ -360,7 +360,7 @@
+ 
+      One important way in which the &SConstruct;
+      file is not exactly like a normal Python script,
+-     and is more like a &Makefile,
++     and is more like a &Makefile;,
+      is that the order in which
+      the &SCons; functions are called in
+      the &SConstruct; file
+@@ -453,7 +453,7 @@
+      <para>
+ 
+      Notice also that &SCons; built the &goodbye; program first,
+-     even though the "reading &SConscript" output
++     even though the "reading &SConscript;" output
+      shows that we called <literal>Program('hello.c')</literal>
+      first in the &SConstruct; file.
+ 
+Index: doc/user/tasks.in
+===================================================================
+--- doc/user/tasks.in	(revision 5062)
++++ doc/user/tasks.in	(working copy)
+@@ -99,14 +99,14 @@
+ 
+ ## Header example
+ env.Append(BUILDERS =
+-   {'Copy1' : Builder(action = 'cat < $SOURCE > $TARGET',
++   {'Copy1' : Builder(action = 'cat &lt; $SOURCE > $TARGET',
+                       suffix='.h', src_suffix='.bar')})
+ env.Copy1('test.bar') # produces test.h from test.bar. 
+ env.Program('app','main.cpp') # indirectly depends on test.bar
+ 
+ ## Source file example
+ env.Append(BUILDERS =
+-  {'Copy2' : Builder(action = 'cat < $SOURCE > $TARGET',
++  {'Copy2' : Builder(action = 'cat &lt; $SOURCE > $TARGET',
+                      suffix='.cpp', src_suffix='.bar2')})
+ foo = env.Copy2('foo.bar2') # produces foo.cpp from foo.bar2. 
+ env.Program('app2',['main2.cpp'] + foo) # compiles main2.cpp and foo.cpp into app2.
+Index: doc/user/troubleshoot.in
+===================================================================
+--- doc/user/troubleshoot.in	(revision 5062)
++++ doc/user/troubleshoot.in	(working copy)
+@@ -34,7 +34,7 @@
+   &SCons; is no different.
+   This appendix contains a number of
+   different ways in which you can
+-  get some additional insight into &SCons' behavior.
++  get some additional insight into &SCons;' behavior.
+ 
+   </para>
+ 
+@@ -410,12 +410,12 @@
+ 
+     <para>
+ 
+-    The <literaL>--tree</literal> option only prints
++    The <literal>--tree</literal> option only prints
+     the dependency graph for the specified targets
+     (or the default target(s) if none are specified on the command line).
+     So if you specify a target like <filename>f2.o</filename>
+     on the command line,
+-    the <literaL>--tree</literal> option will only
++    the <literal>--tree</literal> option will only
+     print the dependency graph for that file:
+ 
+     </para>
+@@ -722,7 +722,7 @@
+ 
+     <para>
+ 
+-    For example, the following &SConstruct file:
++    For example, the following &SConstruct; file:
+ 
+     </para>
+ 
