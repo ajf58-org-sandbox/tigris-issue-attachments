@@ -1,0 +1,98 @@
+diff -ruN -x '*.pyc' original/Node/__init__.py new/Node/__init__.py
+--- original/Node/__init__.py	2008-11-25 22:06:04.000000000 -0800
++++ new/Node/__init__.py	2008-12-31 12:48:12.000000000 -0800
+@@ -71,7 +71,8 @@
+ executing = 2
+ up_to_date = 3
+ executed = 4
+-failed = 5
++not_executed = 5
++failed = 6
+ 
+ StateString = {
+     0 : "no_state",
+@@ -79,7 +80,8 @@
+     2 : "executing",
+     3 : "up_to_date",
+     4 : "executed",
+-    5 : "failed",
++    5 : "not_executed",
++    6 : "failed",
+ }
+ 
+ # controls whether implicit dependencies are cached:
+diff -ruN -x '*.pyc' original/Taskmaster.py new/Taskmaster.py
+--- original/Taskmaster.py	2008-11-25 22:06:05.000000000 -0800
++++ new/Taskmaster.py	2008-12-31 12:47:37.000000000 -0800
+@@ -65,6 +65,7 @@
+ NODE_EXECUTING = SCons.Node.executing
+ NODE_UP_TO_DATE = SCons.Node.up_to_date
+ NODE_EXECUTED = SCons.Node.executed
++NODE_NOT_EXECUTED = SCons.Node.not_executed
+ NODE_FAILED = SCons.Node.failed
+ 
+ 
+@@ -529,7 +530,7 @@
+         while self.candidates:
+             candidates = self.candidates
+             self.candidates = []
+-            self.will_not_build(candidates, lambda n: n.state < NODE_UP_TO_DATE)
++            self.will_not_build(candidates, lambda n: n.state < NODE_UP_TO_DATE, NODE_NOT_EXECUTED)
+         return None
+ 
+     def _find_next_ready_node(self):
+@@ -580,7 +581,15 @@
+             if T: T.write('Taskmaster:     Considering node <%-10s %-3s %s> and its children:\n' % 
+                           (StateString[node.get_state()], node.ref_count, repr(str(node))))
+ 
+-            if state == NODE_NO_STATE:
++            # If any node has state NODE_NOT_EXECUTED, it is considered here to
++            # have state NODE_NO_STATE. A state of NODE_NOT_EXECUTED means that
++            # a previous Taskmaster instance that could have executed it failed
++            # or was stopped first, but this node was not dependent on the
++            # any failed node. If this Taskmaster had not seen the node, its
++            # status of NODE_NOT_EXECUTED would have been considered to be
++            # equivalent to NODE_FAILED, but now it gets another chance.
++
++            if state == NODE_NO_STATE or state == NODE_NOT_EXECUTED:
+                 # Mark this node as being on the execution stack:
+                 node.set_state(NODE_PENDING)
+             elif state > NODE_PENDING:
+@@ -618,6 +627,10 @@
+                 if T: T.write('Taskmaster:        <%-10s %-3s %s>\n' % 
+                               (StateString[childstate], child.ref_count, repr(str(child))))
+ 
++                if childstate == NODE_NOT_EXECUTED:
++                    child.set_state(NODE_NO_STATE)
++                    childstate = NODE_NO_STATE
++
+                 if childstate == NODE_NO_STATE:
+                     children_not_visited.append(child)
+                 elif childstate == NODE_PENDING:
+@@ -734,7 +747,7 @@
+ 
+         return task
+ 
+-    def will_not_build(self, nodes, mark_fail=lambda n: n.state != NODE_FAILED):
++    def will_not_build(self, nodes, mark_fail=lambda n: n.state != NODE_FAILED, failed_state = NODE_FAILED):
+         """
+         Perform clean-up about nodes that will never be built.
+         """
+@@ -746,7 +759,7 @@
+             # Set failure state on all of the parents that were dependent
+             # on this failed build.
+             if mark_fail(node):
+-                node.set_state(NODE_FAILED)
++                node.set_state(failed_state)
+                 parents = node.waiting_parents
+                 to_visit = to_visit | parents
+                 pending_children = pending_children - parents
+@@ -763,7 +776,7 @@
+                     else:
+                         break
+                 if mark_fail(node):
+-                    node.set_state(NODE_FAILED)
++                    node.set_state(failed_state)
+                     parents = node.waiting_parents
+                     to_visit = to_visit | parents
+                     pending_children = pending_children - parents
