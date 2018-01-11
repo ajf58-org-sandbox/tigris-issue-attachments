@@ -1,0 +1,571 @@
+Index: test/TEX/subdir_variantdir_input.py
+===================================================================
+--- test/TEX/subdir_variantdir_input.py	(revision 5349)
++++ test/TEX/subdir_variantdir_input.py	(working copy)
+@@ -53,7 +53,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(TOOLS = ['tex', 'pdftex'],ENV = {'PATH' : os.environ['PATH']})
++env = Environment(TOOLS = ['tex', 'pdftex'])
+ 
+ env.VariantDir('build', 'docs',duplicate=0)
+ env.SConscript('build/SConscript', exports = ['env'])
+Index: test/TEX/variant_dir_dup0.py
+===================================================================
+--- test/TEX/variant_dir_dup0.py	(revision 5349)
++++ test/TEX/variant_dir_dup0.py	(working copy)
+@@ -51,8 +51,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] },
+-                  TOOLS = ['tex', 'latex', 'dvipdf'])
++env = Environment(TOOLS = ['tex', 'latex', 'dvipdf'])
+ Export(['env'])
+ 
+ SConscript(os.path.join('docs', 'SConscript'),
+Index: test/TEX/multi-run.py
+===================================================================
+--- test/TEX/multi-run.py	(revision 5349)
++++ test/TEX/multi-run.py	(working copy)
+@@ -135,8 +135,7 @@
+ 
+     test.write(['work1', 'SConstruct'], """\
+ import os
+-env = Environment(tools = ['pdftex', 'dvipdf', 'tex', 'latex'],
+-                  ENV = {'PATH' : os.environ['PATH']})
++env = Environment(tools = ['pdftex', 'dvipdf', 'tex', 'latex'])
+ env.DVI( "foo.tex" )
+ env.PDF( "foo.tex" )
+ """)
+Index: test/TEX/multiple_include.py
+===================================================================
+--- test/TEX/multiple_include.py	(revision 5349)
++++ test/TEX/multiple_include.py	(working copy)
+@@ -49,7 +49,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ 
+ env.PDF('Fig1.ps')
+ test = env.PDF(source='test.tex')
+Index: test/TEX/LATEX2.py
+===================================================================
+--- test/TEX/LATEX2.py	(revision 5349)
++++ test/TEX/LATEX2.py	(working copy)
+@@ -41,10 +41,8 @@
+ 
+     test.write('SConstruct', """
+ import os
+-ENV = { 'PATH' : os.environ['PATH'],
+-        'TEXINPUTS' : [ os.environ.get('TEXINPUTS', '') ] }
+-foo = Environment(ENV = ENV)
+-foo['TEXINPUTS'] = ['subdir',]
++foo = Environment()
++foo['TEXINPUTS'] = ['subdir',os.environ.get('TEXINPUTS', '')]
+ foo.PDF(source = ['foo.ltx','bar.latex','makeindex.tex','latexi.tex'])
+ """ % locals())
+ 
+Index: test/TEX/variant_dir.py
+===================================================================
+--- test/TEX/variant_dir.py	(revision 5349)
++++ test/TEX/variant_dir.py	(working copy)
+@@ -45,8 +45,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] },
+-                  TOOLS = ['tex', 'latex', 'dvipdf'])
++env = Environment(TOOLS = ['tex', 'latex', 'dvipdf'])
+ Export(['env'])
+ 
+ SConscript(os.path.join('docs', 'SConscript'),
+Index: test/TEX/rename_result.py
+===================================================================
+--- test/TEX/rename_result.py	(revision 5349)
++++ test/TEX/rename_result.py	(working copy)
+@@ -42,9 +42,8 @@
+ 
+ test.write('SConstruct', """
+ import os
+-ENV = { 'PATH' : os.environ['PATH'],
+-        'TEXINPUTS' : [ 'subdir', os.environ.get('TEXINPUTS', '') ] }
+-foo = Environment(ENV = ENV)
++foo = Environment()
++foo['TEXINPUTS'] = [ 'subdir', os.environ.get('TEXINPUTS', '') ]
+ foo.DVI(target = 'foobar.dvi', source = 'foo.ltx')
+ foo.PDF(target = 'bar.xyz', source = 'bar.ltx')
+ """ % locals())
+Index: test/TEX/multiple_include_subdir.py
+===================================================================
+--- test/TEX/multiple_include_subdir.py	(revision 5349)
++++ test/TEX/multiple_include_subdir.py	(working copy)
+@@ -49,7 +49,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ 
+ env.PDF('docs/Fig1.eps')
+ test = env.PDF(source='docs/test.tex')
+Index: test/TEX/input_docClass.py
+===================================================================
+--- test/TEX/input_docClass.py	(revision 5349)
++++ test/TEX/input_docClass.py	(working copy)
+@@ -43,7 +43,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ 
+ test = env.PDF(source='test.tex')
+ """)
+Index: test/TEX/glossaries.py
+===================================================================
+--- test/TEX/glossaries.py	(revision 5349)
++++ test/TEX/glossaries.py	(working copy)
+@@ -47,8 +47,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(ENV = {'PATH' : os.environ['PATH'],
+-                         'HOME' : os.environ['HOME']})
++env = Environment()
+ env.PDF('glossaries', 'glossaries.tex')
+ """)
+ 
+Index: test/TEX/lstinputlisting.py
+===================================================================
+--- test/TEX/lstinputlisting.py	(revision 5349)
++++ test/TEX/lstinputlisting.py	(working copy)
+@@ -43,7 +43,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-DefaultEnvironment(ENV={'PATH':os.environ['PATH']})
++DefaultEnvironment()
+ 
+ PDF("test.tex")
+ """)
+Index: test/TEX/variant_dir_bibunit.py
+===================================================================
+--- test/TEX/variant_dir_bibunit.py	(revision 5349)
++++ test/TEX/variant_dir_bibunit.py	(working copy)
+@@ -54,7 +54,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ Export(['env'])
+ 
+ env.SConscript(os.path.join('src', 'SConscript'),
+Index: test/TEX/subdir_variantdir_include.py
+===================================================================
+--- test/TEX/subdir_variantdir_include.py	(revision 5349)
++++ test/TEX/subdir_variantdir_include.py	(working copy)
+@@ -54,7 +54,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(TOOLS = ['tex', 'pdftex'],ENV = {'PATH' : os.environ['PATH']})
++env = Environment(TOOLS = ['tex', 'pdftex'])
+ 
+ env.VariantDir('build', 'docs',duplicate=0)
+ env.SConscript('build/SConscript', exports = ['env'])
+Index: test/TEX/configure.py
+===================================================================
+--- test/TEX/configure.py	(revision 5349)
++++ test/TEX/configure.py	(working copy)
+@@ -69,8 +69,7 @@
+     return is_ok
+ 
+ import os
+-ENV = { 'PATH' : os.environ['PATH'] }
+-env = Environment(ENV = ENV)
++env = Environment()
+ env['TEXINPUTS'] = '.'
+ conf = Configure( env, custom_tests={'CheckLModern' : CheckLModern} )
+ conf.CheckLModern()
+Index: test/TEX/bibtex-latex-rerun.py
+===================================================================
+--- test/TEX/bibtex-latex-rerun.py	(revision 5349)
++++ test/TEX/bibtex-latex-rerun.py	(working copy)
+@@ -43,7 +43,7 @@
+ 
+ test.write(['SConstruct'], """\
+ import os
+-env = Environment(tools=['pdftex', 'tex'],ENV = {'PATH' : os.environ['PATH']})
++env = Environment(tools=['pdftex', 'tex'])
+ env.PDF( 'bibtest.tex' )
+ """)
+ 
+Index: test/TEX/clean.py
+===================================================================
+--- test/TEX/clean.py	(revision 5349)
++++ test/TEX/clean.py	(working copy)
+@@ -68,8 +68,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(tools = ['tex', 'latex'],
+-                  ENV = {'PATH' : os.environ['PATH']})
++env = Environment(tools = ['tex', 'latex'])
+ env.DVI( "foo.ltx" )
+ """)
+ 
+Index: test/TEX/eps_graphics2.py
+===================================================================
+--- test/TEX/eps_graphics2.py	(revision 5349)
++++ test/TEX/eps_graphics2.py	(working copy)
+@@ -50,7 +50,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ 
+ env.PDF('docs/Fig1.eps')
+ test = env.PDF(source='docs/test.tex')
+Index: test/TEX/nomencl.py
+===================================================================
+--- test/TEX/nomencl.py	(revision 5349)
++++ test/TEX/nomencl.py	(working copy)
+@@ -47,7 +47,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(tools = ['pdftex'], ENV = {'PATH' : os.environ['PATH']})
++env = Environment(tools = ['pdftex'])
+ env.PDF('nomencl', 'nomencl.tex')
+ """)
+ 
+Index: test/TEX/multi-line_include_options.py
+===================================================================
+--- test/TEX/multi-line_include_options.py	(revision 5349)
++++ test/TEX/multi-line_include_options.py	(working copy)
+@@ -48,7 +48,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ env.DVI('root.tex')
+ """)
+ 
+Index: test/TEX/subdir_variantdir_include2.py
+===================================================================
+--- test/TEX/subdir_variantdir_include2.py	(revision 5349)
++++ test/TEX/subdir_variantdir_include2.py	(working copy)
+@@ -55,7 +55,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(TOOLS = ['tex', 'pdftex'],ENV = {'PATH' : os.environ['PATH']})
++env = Environment(TOOLS = ['tex', 'pdftex'])
+ 
+ env.VariantDir('build', 'docs', duplicate=0)
+ pdf = env.PDF('build/main.tex')
+Index: test/TEX/makeindex.py
+===================================================================
+--- test/TEX/makeindex.py	(revision 5349)
++++ test/TEX/makeindex.py	(working copy)
+@@ -43,8 +43,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(tools = ['pdftex', 'dvipdf', 'tex', 'latex'],
+-                  ENV = {'PATH' : os.environ['PATH']})
++env = Environment(tools = ['pdftex', 'dvipdf', 'tex', 'latex'])
+ env.PDF( "no_index.tex" )
+ env.PDF( "simple.tex" )
+ """)
+Index: test/TEX/eps_graphics.py
+===================================================================
+--- test/TEX/eps_graphics.py	(revision 5349)
++++ test/TEX/eps_graphics.py	(working copy)
+@@ -49,7 +49,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ 
+ test = env.DVI(source='docs/test.tex')
+ """)
+Index: test/TEX/usepackage.py
+===================================================================
+--- test/TEX/usepackage.py	(revision 5349)
++++ test/TEX/usepackage.py	(working copy)
+@@ -43,9 +43,8 @@
+ 
+ test.write('SConstruct', """
+ import os
+-ENV = { 'PATH' : os.environ['PATH'],
+-        'TEXINPUTS' : [ 'subdir', os.environ.get('TEXINPUTS', '') ] }
+-foo = Environment(ENV = ENV)
++foo = Environment()
++foo['TEXINPUTS'] = [ 'subdir', os.environ.get('TEXINPUTS', '') ]
+ foo.DVI(target = 'foo.dvi', source = 'foo.ltx')
+ """ % locals())
+ 
+Index: test/TEX/variant_dir_style_dup0.py
+===================================================================
+--- test/TEX/variant_dir_style_dup0.py	(revision 5349)
++++ test/TEX/variant_dir_style_dup0.py	(working copy)
+@@ -54,8 +54,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] },
+-                  TOOLS = ['tex', 'latex', 'dvipdf'])
++env = Environment(tools = ['tex', 'latex', 'dvipdf'])
+ copy_latex = Builder(action=Copy('$TARGET', '$SOURCE'),
+                      suffix='.tex',
+                      src_suffix='.src')
+Index: test/TEX/subdir-as-include.py
+===================================================================
+--- test/TEX/subdir-as-include.py	(revision 5349)
++++ test/TEX/subdir-as-include.py	(working copy)
+@@ -49,10 +49,7 @@
+ test.write('SConstruct', """\
+ import os
+ 
+-# I need PATH to allow TeX tools to be found on my desktop Mac
+-# and HOME to let them work properly on my work mainframe
+-env = Environment(ENV = {'PATH' : '/usr/texbin:/usr/local/bin:/opt/bin:/bin:/usr/bin:/sw/bin',
+-                         'HOME' : os.environ['HOME']})
++env = Environment()
+ env.DVI('root.tex')
+ """)
+ 
+Index: test/TEX/bibliography.py
+===================================================================
+--- test/TEX/bibliography.py	(revision 5349)
++++ test/TEX/bibliography.py	(working copy)
+@@ -43,7 +43,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(tools = ['tex', 'latex', 'dvips'],ENV = {'PATH' : os.environ['PATH']})
++env = Environment(tools = ['tex', 'latex', 'dvips'])
+ env.PostScript('simple', 'simple.tex')
+ """)
+ 
+Index: test/TEX/auxiliaries.py
+===================================================================
+--- test/TEX/auxiliaries.py	(revision 5349)
++++ test/TEX/auxiliaries.py	(working copy)
+@@ -54,7 +54,6 @@
+ test.write(['SConstruct'], """\
+ import os
+ env = Environment(tools = ['pdftex', 'dvipdf', 'dvips', 'tex', 'latex'],
+-                  ENV = {'PATH' : os.environ['PATH']},
+                   BUILD_DIR = '#build/docs')
+ 
+ # Use 'duplicate=1' because LaTeX toolchain does not work properly for
+Index: test/TEX/generated_files.py
+===================================================================
+--- test/TEX/generated_files.py	(revision 5349)
++++ test/TEX/generated_files.py	(working copy)
+@@ -47,7 +47,7 @@
+ test.write(['SConstruct'], """\
+ import os
+ 
+-env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
++env = Environment()
+ 
+ copy_latex = Builder(action=Copy('$TARGET', '$SOURCE'),
+                      suffix='.tex',
+Index: test/TEX/dryrun.py
+===================================================================
+--- test/TEX/dryrun.py	(revision 5349)
++++ test/TEX/dryrun.py	(working copy)
+@@ -43,8 +43,7 @@
+ 
+ test.write('SConstruct', """
+ import os
+-ENV = { 'PATH' : os.environ['PATH'] }
+-foo = Environment(ENV = ENV)
++foo = Environment()
+ foo.DVI(target = 'foo.dvi', source = 'foo.ltx')
+ """ % locals())
+ 
+Index: test/TEX/subdir-input.py
+===================================================================
+--- test/TEX/subdir-input.py	(revision 5349)
++++ test/TEX/subdir-input.py	(working copy)
+@@ -50,7 +50,7 @@
+ 
+ test.write('SConstruct', """\
+ import os
+-env = Environment(TOOLS = ['tex', 'pdftex'], ENV = {'PATH' : os.environ['PATH']})
++env = Environment(TOOLS = ['tex', 'pdftex'])
+ env.PDF( 'sub/x.tex' )
+ env.DVI( 'sub/x.tex' )
+ """)
+Index: src/engine/SCons/Platform/darwin.py
+===================================================================
+--- src/engine/SCons/Platform/darwin.py	(revision 5349)
++++ src/engine/SCons/Platform/darwin.py	(working copy)
+@@ -33,11 +33,33 @@
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ import posix
++import os
+ 
+ def generate(env):
+     posix.generate(env)
+     env['SHLIBSUFFIX'] = '.dylib'
+-    env['ENV']['PATH'] = env['ENV']['PATH'] + ':/sw/bin'
++    # put macports paths at front to override Apple's versions, fink path is after
++    # For now let people who want Macports or Fink tools specify it!
++    # env['ENV']['PATH'] = '/opt/local/bin:/opt/local/sbin:' + env['ENV']['PATH'] + ':/sw/bin'
++    
++    filelist = ['/etc/paths',]
++    # make sure this works on Macs with Tiger or earlier
++    try:
++        dirlist = os.listdir('/etc/paths.d')
++    except:
++        dirlist = []
++
++    for file in dirlist:
++        filelist.append('/etc/paths.d/'+file)
++
++    for file in filelist:
++        if os.path.isfile(file):
++            f = open(file, 'r')
++            lines = f.readlines()
++            for line in lines:
++                if line:
++                    env.AppendENVPath('PATHOSX', line.strip('\n'))
++            f.close()
+ 
+ # Local Variables:
+ # tab-width:4
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 5349)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -99,6 +99,7 @@
+     SCons.Tool.tex.generate_common(env)
+ 
+ def exists(env):
++    SCons.Tool.tex.generate_darwin(env)
+     return env.Detect('pdftex')
+ 
+ # Local Variables:
+Index: src/engine/SCons/Tool/dvipdf.py
+===================================================================
+--- src/engine/SCons/Tool/dvipdf.py	(revision 5349)
++++ src/engine/SCons/Tool/dvipdf.py	(working copy)
+@@ -115,6 +115,7 @@
+     env['PDFCOM']      = ['$DVIPDFCOM']
+ 
+ def exists(env):
++    SCons.Tool.tex.generate_darwin(env)
+     return env.Detect('dvipdf')
+ 
+ # Local Variables:
+Index: src/engine/SCons/Tool/dvips.py
+===================================================================
+--- src/engine/SCons/Tool/dvips.py	(revision 5349)
++++ src/engine/SCons/Tool/dvips.py	(working copy)
+@@ -85,6 +85,7 @@
+     env['PSSUFFIX'] = '.ps'
+ 
+ def exists(env):
++    SCons.Tool.tex.generate_darwin(env)
+     return env.Detect('dvips')
+ 
+ # Local Variables:
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 5349)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -74,6 +74,7 @@
+     SCons.Tool.tex.generate_common(env)
+ 
+ def exists(env):
++    SCons.Tool.tex.generate_darwin(env)
+     return env.Detect('pdflatex')
+ 
+ # Local Variables:
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 5349)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -739,9 +739,28 @@
+     bld.add_action('.tex', TeXLaTeXAction)
+     bld.add_emitter('.tex', tex_eps_emitter)
+ 
++def generate_darwin(env):
++    try:
++        environ = env['ENV']
++    except KeyError:
++        environ = {}
++        env['ENV'] = environ
++    
++    if (platform.system() == 'Darwin'):
++        try:
++            ospath = env['ENV']['PATHOSX']
++        except:
++            ospath = None
++        if ospath:
++            env.AppendENVPath('PATH', ospath)
++            pathlist = env['ENV']['PATH']
++
+ def generate_common(env):
+     """Add internal Builders and construction variables for LaTeX to an Environment."""
+ 
++    # Add OSX system paths so TeX tools can be found
++    generate_darwin(env)
++
+     # A generic tex file Action, sufficient for all tex files.
+     global TeXAction
+     if TeXAction is None:
+@@ -778,6 +797,19 @@
+     if MakeAcronymsAction is None:
+         MakeAcronymsAction = SCons.Action.Action("$MAKEACRONYMSCOM", "$MAKEACRONYMSCOMSTR")
+ 
++    try:
++        environ = env['ENV']
++    except KeyError:
++        environ = {}
++        env['ENV'] = environ
++
++    # Some Linux platforms have pdflatex set up in a way
++    # that requires that the HOME environment variable be set.
++    # Add it here if defined.
++    v = os.environ.get('HOME')
++    if v:
++        environ['HOME'] = v
++
+     CDCOM = 'cd '
+     if platform.system() == 'Windows':
+         # allow cd command to change drives on Windows
+@@ -824,6 +856,7 @@
+     env['MAKENCLCOM']   = CDCOM + '${TARGET.dir} && $MAKENCL ${SOURCE.filebase}.nlo $MAKENCLFLAGS -o ${SOURCE.filebase}.nls'
+ 
+ def exists(env):
++    generate_darwin(env)
+     return env.Detect('tex')
+ 
+ # Local Variables:
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 5349)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -70,6 +70,7 @@
+     SCons.Tool.tex.generate_common(env)
+ 
+ def exists(env):
++    SCons.Tool.tex.generate_darwin(env)
+     return env.Detect('latex')
+ 
+ # Local Variables:
