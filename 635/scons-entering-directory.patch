@@ -1,0 +1,81 @@
+Index: test/option--C.py
+===================================================================
+--- test/option--C.py	(revision 4377)
++++ test/option--C.py	(working copy)
+@@ -68,24 +68,28 @@
+ """)
+ 
+ test.run(arguments = '-C sub .',
+-         stdout = test.wrap_stdout(read_str = '%s\n' % wpath,
+-                                   build_str = "scons: `.' is up to date.\n"))
++         stdout = "scons: Entering directory `%s'\n" % wpath_sub \
++             + test.wrap_stdout(read_str = '%s\n' % wpath,
++                                build_str = "scons: `.' is up to date.\n"))
+ 
+ test.run(arguments = '-C sub -C dir .',
+-         stdout = test.wrap_stdout(read_str = '%s\n' % wpath_sub_foo_bar,
+-                                   build_str = "scons: `.' is up to date.\n"))
++         stdout = "scons: Entering directory `%s'\n" % wpath_sub_dir \
++             + test.wrap_stdout(read_str = '%s\n' % wpath_sub_foo_bar,
++                                build_str = "scons: `.' is up to date.\n"))
+ 
+ test.run(arguments = ".",
+          stdout = test.wrap_stdout(read_str = 'SConstruct %s\n' % wpath,
+                                    build_str = "scons: `.' is up to date.\n"))
+ 
+ test.run(arguments = '--directory=sub/dir .',
+-         stdout = test.wrap_stdout(read_str = '%s\n' % wpath_sub_foo_bar,
+-                                   build_str = "scons: `.' is up to date.\n"))
++         stdout = "scons: Entering directory `%s'\n" % wpath_sub_dir \
++             + test.wrap_stdout(read_str = '%s\n' % wpath_sub_foo_bar,
++                                build_str = "scons: `.' is up to date.\n"))
+ 
+ test.run(arguments = '-C %s -C %s .' % (wpath_sub_dir, wpath_sub),
+-         stdout = test.wrap_stdout(read_str = '%s\n' % wpath,
+-                                   build_str = "scons: `.' is up to date.\n"))
++         stdout = "scons: Entering directory `%s'\n" % wpath_sub \
++             + test.wrap_stdout(read_str = '%s\n' % wpath,
++                                build_str = "scons: `.' is up to date.\n"))
+ 
+ test.pass_test()
+ 
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 4377)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -804,16 +804,13 @@
+     # want to start everything, which means first handling any relevant
+     # options that might cause us to chdir somewhere (-C, -D, -U, -u).
+     if options.directory:
+-        cdir = _create_path(options.directory)
+-        try:
+-            os.chdir(cdir)
+-        except OSError:
+-            sys.stderr.write("Could not change directory to %s\n" % cdir)
++        script_dir = os.path.abspath(_create_path(options.directory))
++    else:
++        script_dir = os.getcwd()
+ 
+     target_top = None
+     if options.climb_up:
+         target_top = '.'  # directory to prepend to targets
+-        script_dir = os.getcwd()  # location of script
+         while script_dir and not _SConstruct_exists(script_dir,
+                                                     options.repository,
+                                                     options.file):
+@@ -822,9 +819,13 @@
+                 target_top = os.path.join(last_part, target_top)
+             else:
+                 script_dir = ''
+-        if script_dir and script_dir != os.getcwd():
+-            display("scons: Entering directory `%s'" % script_dir)
++
++    if script_dir and script_dir != os.getcwd():
++        display("scons: Entering directory `%s'" % script_dir)
++        try:
+             os.chdir(script_dir)
++        except OSError:
++            sys.stderr.write("Could not change directory to %s\n" % script_dir)
+ 
+     # Now that we're in the top-level SConstruct directory, go ahead
+     # and initialize the FS object that represents the file system,
