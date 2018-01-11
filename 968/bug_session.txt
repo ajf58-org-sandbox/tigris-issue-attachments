@@ -1,0 +1,32 @@
+c:\Users\mg\src\scons>scons mylib
+scons:Reading SConscript files ...
+scons:done reading SConscript files.
+scons:Building targets ...
+cl /Fosrc\myunit.obj /c src\myunit.cpp /TP /nologo /EHsc /Iinclude
+myunit.cpp
+cl /Fosrc\otherunit.obj /c src\otherunit.cpp /TP /nologo /EHsc /Iinclude
+otherunit.cpp
+lib /nologo /OUT:mylib.lib src\myunit.obj src\otherunit.obj
+scons:done building targets.
+
+c:\Users\mg\src\scons>scons --interactive
+scons:Reading SConscript files ...
+scons:done reading SConscript files.
+
+scons>>>c mylib
+scons:Cleaning targets ...
+Removed src\myunit.obj
+Removed src\otherunit.obj
+Removed mylib.lib
+scons:done cleaning targets.
+scons:Clearing cached node information ...
+scons:done clearing node information.
+
+scons>>>b mylib
+scons:Building targets ...
+cl /Fosrc\myunit.obj /c /TP /nologo /EHsc /Iinclude
+cl: Command line error D8003 : missing source filename
+scons:*** [src\myunit.obj] Error 2
+scons:building terminated because of errors.
+scons:Clearing cached node information ...
+scons:done clearing node information.
