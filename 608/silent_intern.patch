@@ -1,0 +1,116 @@
+Index: src/engine/SCons/Util.py
+===================================================================
+--- src/engine/SCons/Util.py	(revision 4198)
++++ src/engine/SCons/Util.py	(working copy)
+@@ -1569,6 +1569,27 @@
+ 
+ 
+ 
++# Wrap the intern() function so it doesn't throw exceptions if ineligible
++# arguments are passed. The intern() function was moved into the sys module in
++# Python 3.
++try:
++    intern
++except NameError:
++    from sys import intern
++
++def silent_intern(x):
++    """
++    Perform intern() on the passed argument and return the result.
++    If the input is ineligible (e.g. a unicode string) the original argument is
++    returned and no exception is thrown.
++    """
++    try:
++        return intern(x)
++    except TypeError:
++        return x
++
++
++
+ # From Dinu C. Gherman,
+ # Python Cookbook, second edition, recipe 6.17, p. 277.
+ # Also:
+Index: src/engine/SCons/UtilTests.py
+===================================================================
+--- src/engine/SCons/UtilTests.py	(revision 4198)
++++ src/engine/SCons/UtilTests.py	(working copy)
+@@ -695,6 +695,14 @@
+             'bling\n',
+         ], lines
+ 
++    def test_intern(self):
++        s1 = silent_intern("spam")
++        s2 = silent_intern(u"unicode spam")
++        s3 = silent_intern(42)
++        s4 = silent_intern("spam")
++        assert id(s1) == id(s4)
++
++
+ class MD5TestCase(unittest.TestCase):
+ 
+     def test_collect(self):
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 4198)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -588,22 +588,22 @@
+ 
+         # Filenames and paths are probably reused and are intern'ed to
+         # save some memory.
+-        self.name = intern(name)
+-        self.suffix = intern(SCons.Util.splitext(name)[1])
++        self.name = SCons.Util.silent_intern(name)
++        self.suffix = SCons.Util.silent_intern(SCons.Util.splitext(name)[1])
+         self.fs = fs
+ 
+         assert directory, "A directory must be provided"
+ 
+-        self.abspath = intern(directory.entry_abspath(name))
+-        self.labspath = intern(directory.entry_labspath(name))
++        self.abspath = SCons.Util.silent_intern(directory.entry_abspath(name))
++        self.labspath = SCons.Util.silent_intern(directory.entry_labspath(name))
+         if directory.path == '.':
+-            self.path = intern(name)
++            self.path = SCons.Util.silent_intern(name)
+         else:
+-            self.path = intern(directory.entry_path(name))
++            self.path = SCons.Util.silent_intern(directory.entry_path(name))
+         if directory.tpath == '.':
+-            self.tpath = intern(name)
++            self.tpath = SCons.Util.silent_intern(name)
+         else:
+-            self.tpath = intern(directory.entry_tpath(name))
++            self.tpath = SCons.Util.silent_intern(directory.entry_tpath(name))
+         self.path_elements = directory.path_elements + [self]
+ 
+         self.dir = directory
+Index: src/engine/SCons/Scanner/__init__.py
+===================================================================
+--- src/engine/SCons/Scanner/__init__.py	(revision 4198)
++++ src/engine/SCons/Scanner/__init__.py	(working copy)
+@@ -358,10 +358,7 @@
+             includes = self.find_include_names (node)
+             # Intern the names of the include files. Saves some memory
+             # if the same header is included many times.
+-            try:
+-                node.includes = map(intern, includes)
+-            except TypeError:
+-                node.includes = includes
++            node.includes = map(SCons.Util.silent_intern, includes)
+ 
+         # This is a hand-coded DSU (decorate-sort-undecorate, or
+         # Schwartzian transform) pattern.  The sort key is the raw name
+@@ -405,12 +402,7 @@
+ 
+         n = SCons.Node.FS.find_file(include[1], paths)
+ 
+-        i = include[1]
+-        try:
+-            i = intern(i)
+-        except TypeError:
+-            # Probably a unicode object; just don't worry about intern().
+-            pass
++        i = SCons.Util.silent_intern(include[1])
+         return n, i
+ 
+     def sort_key(self, include):
