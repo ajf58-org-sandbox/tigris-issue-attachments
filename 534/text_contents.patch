@@ -1,0 +1,729 @@
+Index: test/srcchange.py
+===================================================================
+--- test/srcchange.py	(revision 3778)
++++ test/srcchange.py	(working copy)
+@@ -53,10 +53,10 @@
+ import string
+ 
+ def subrevision(target, source ,env):
+-    orig = target[0].get_contents()
++    orig = target[0].get_text_contents()
+     new = re.sub('\$REV.*?\$',
+-                 '$REV: %%s$'%%string.strip(source[0].get_contents()),
+-                 target[0].get_contents())
++                 '$REV: %%s$'%%string.strip(source[0].get_text_contents()),
++                 target[0].get_text_contents())
+     outf = open(str(target[0]),'wb')
+     outf.write(new)
+     outf.close()
+Index: test/explain/basic.py
+===================================================================
+--- test/explain/basic.py	(revision 3778)
++++ test/explain/basic.py	(working copy)
+@@ -83,7 +83,7 @@
+ include_re = re.compile(r'^include\s+(\S+)$', re.M)
+ 
+ def kfile_scan(node, env, target, arg):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include_re.findall(contents)
+     return includes
+ 
+Index: test/explain/save-info.py
+===================================================================
+--- test/explain/save-info.py	(revision 3778)
++++ test/explain/save-info.py	(working copy)
+@@ -75,7 +75,7 @@
+ include_re = re.compile(r'^include\s+(\S+)$', re.M)
+ 
+ def kfile_scan(node, env, target, arg):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include_re.findall(contents)
+     return includes
+ 
+Index: test/Scanner/Scanner.py
+===================================================================
+--- test/Scanner/Scanner.py	(revision 3778)
++++ test/Scanner/Scanner.py	(working copy)
+@@ -65,7 +65,7 @@
+ include_re = re.compile(r'^include\s+(\S+)$', re.M)
+ 
+ def kfile_scan(node, env, scanpaths, arg):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include_re.findall(contents)
+     return includes
+ 
+@@ -117,7 +117,7 @@
+ 
+ def blork(env, target, source):
+     open(str(target[0]), 'wb').write(
+-        string.replace(source[0].get_contents(), 'getfile', 'MISSEDME'))
++        string.replace(source[0].get_text_contents(), 'getfile', 'MISSEDME'))
+ 
+ kbld = Builder(action=r'%(_python_)s build.py $SOURCES $TARGET',
+                src_suffix='.lork',
+Index: test/Scanner/source_scanner-dict.py
+===================================================================
+--- test/Scanner/source_scanner-dict.py	(revision 3778)
++++ test/Scanner/source_scanner-dict.py	(working copy)
+@@ -73,17 +73,17 @@
+ include3_re = re.compile(r'^include3\s+(\S+)$', re.M)
+ 
+ def k1_scan(node, env, scanpaths, arg=None):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include1_re.findall(contents)
+     return includes
+ 
+ def k2_scan(node, env, scanpaths, arg=None):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include2_re.findall(contents)
+     return includes
+ 
+ def k3_scan(node, env, scanpaths, arg=None):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include3_re.findall(contents)
+     return includes
+ 
+Index: test/Scanner/exception.py
+===================================================================
+--- test/Scanner/exception.py	(revision 3778)
++++ test/Scanner/exception.py	(working copy)
+@@ -46,7 +46,7 @@
+ exception_re = re.compile(r'^exception\s+(.+)$', re.M)
+ 
+ def kfile_scan(node, env, target, arg):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     exceptions = exception_re.findall(contents)
+     if exceptions:
+         raise Exception, "kfile_scan error:  %s" % exceptions[0]
+Index: test/Scanner/FindPathDirs.py
+===================================================================
+--- test/Scanner/FindPathDirs.py	(revision 3778)
++++ test/Scanner/FindPathDirs.py	(working copy)
+@@ -79,7 +79,7 @@
+ include_re = re.compile(r'^include\s+(\S+)$', re.M)
+ 
+ def kfile_scan(node, env, path, arg):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include_re.findall(contents)
+     if includes == []:
+          return []
+Index: test/Scanner/multi-env.py
+===================================================================
+--- test/Scanner/multi-env.py	(revision 3778)
++++ test/Scanner/multi-env.py	(working copy)
+@@ -44,12 +44,12 @@
+ input_re = re.compile(r'^input\s+(\S+)$', re.M)
+ 
+ scan1 = Scanner(name = 'Include',
+-                function = lambda N,E,P,A: A.findall(N.get_contents()),
++                function = lambda N,E,P,A: A.findall(N.get_text_contents()),
+                 argument = include_re,
+                 skeys = ['.inp'])
+ 
+ scan2 = Scanner(name = 'Input',
+-                function = lambda N,E,P,A: A.findall(N.get_contents()),
++                function = lambda N,E,P,A: A.findall(N.get_text_contents()),
+                 argument = input_re,
+                 skeys = ['.inp'])
+ 
+Index: test/Scanner/dictionary.py
+===================================================================
+--- test/Scanner/dictionary.py	(revision 3778)
++++ test/Scanner/dictionary.py	(working copy)
+@@ -69,17 +69,17 @@
+ include3_re = re.compile(r'^include3\s+(\S+)$', re.M)
+ 
+ def kfile_scan1(node, env, scanpaths, arg=None):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include1_re.findall(contents)
+     return includes
+ 
+ def kfile_scan2(node, env, scanpaths, arg=None):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include2_re.findall(contents)
+     return includes
+ 
+ def kfile_scan3(node, env, scanpaths, arg=None):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include3_re.findall(contents)
+     return includes
+ 
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 3778)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -35,8 +35,10 @@
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
++from itertools import izip
++import cStringIO
++import codecs
+ import fnmatch
+-from itertools import izip
+ import os
+ import os.path
+ import re
+@@ -45,7 +47,6 @@
+ import string
+ import sys
+ import time
+-import cStringIO
+ 
+ import SCons.Action
+ from SCons.Debug import logInstanceCreation
+@@ -864,11 +865,8 @@
+         return self.get_suffix()
+ 
+     def get_contents(self):
+-        """Fetch the contents of the entry.
+-
+-        Since this should return the real contents from the file
+-        system, we check to see into what sort of subclass we should
+-        morph this Entry."""
++        """Fetch the contents of the entry.  Returns the exact binary
++        contents of the file."""
+         try:
+             self = self.disambiguate(must_exist=1)
+         except SCons.Errors.UserError:
+@@ -881,6 +879,24 @@
+         else:
+             return self.get_contents()
+ 
++    def get_text_contents(self):
++        """Fetch the decoded text contents of a Unicode encoded Entry.
++
++        Since this should return the text contents from the file
++        system, we check to see into what sort of subclass we should
++        morph this Entry."""
++        try:
++            self = self.disambiguate(must_exist=1)
++        except SCons.Errors.UserError:
++            # There was nothing on disk with which to disambiguate
++            # this entry.  Leave it as an Entry, but return a null
++            # string so calls to get_text_contents() in emitters and
++            # the like (e.g. in qt.py) don't have to disambiguate by
++            # hand or catch the exception.
++            return ''
++        else:
++            return self.get_text_contents()
++
+     def must_be_same(self, klass):
+         """Called to make sure a Node is a Dir.  Since we're an
+         Entry, we can morph into one."""
+@@ -1586,13 +1606,18 @@
+         """A directory does not get scanned."""
+         return None
+ 
++    def get_text_contents(self):
++        """We already emit things in text, so just return the binary
++        version."""
++        return self.get_contents()
++
+     def get_contents(self):
+         """Return content signatures and names of all our children
+         separated by new-lines. Ensure that the nodes are sorted."""
+         contents = []
+         name_cmp = lambda a, b: cmp(a.name, b.name)
+         sorted_children = self.children()[:]
+-        sorted_children.sort(name_cmp)        
++        sorted_children.sort(name_cmp)
+         for node in sorted_children:
+             contents.append('%s %s\n' % (node.get_csig(), node.name))
+         return string.join(contents, '')
+@@ -2215,17 +2240,28 @@
+     def scanner_key(self):
+         return self.get_suffix()
+ 
++    # This attempts to figure out what the encoding of the text is
++    # based upon the BOM bytes, and then decodes the contents so that
++    # it's a valid python string.
++    def get_text_contents(self):
++        contents = self.get_contents()
++        if contents.startswith(codecs.BOM_UTF8):
++            contents = contents.decode('utf-8')
++        elif contents.startswith(codecs.BOM_UTF16):
++            contents = contents.decode('utf-16')
++        return contents
++
+     def get_contents(self):
+         if not self.rexists():
+             return ''
+         fname = self.rfile().abspath
+         try:
+-            r = open(fname, "rb").read()
++            contents = open(fname, "rb").read()
+         except EnvironmentError, e:
+             if not e.filename:
+                 e.filename = fname
+             raise
+-        return r
++        return contents
+ 
+     def get_content_hash(self):
+         """
+Index: src/engine/SCons/Node/FSTests.py
+===================================================================
+--- src/engine/SCons/Node/FSTests.py	(revision 3778)
++++ src/engine/SCons/Node/FSTests.py	(working copy)
+@@ -23,6 +23,7 @@
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
++import codecs
+ import os
+ import os.path
+ import string
+@@ -1192,6 +1193,17 @@
+         f1 = fs.File(test.workpath("binary_file"))
+         assert f1.get_contents() == "Foo\x1aBar", f1.get_contents()
+ 
++        test_string = u"Foo\x1aBar"
++        # This tests to make sure we can decode UTF-8 text files.
++        test.write("utf8_file", test_string.encode('utf-8'))
++        f1 = fs.File(test.workpath("utf8_file"))
++        assert f1.get_text_contents() == u"Foo\x1aBar", f1.get_text_contents()
++
++        # This tests to make sure we can decode UTF-16 text files.
++        test.write("utf16_file", test_string.encode('utf-16'))
++        f1 = fs.File(test.workpath("utf16_file"))
++        assert f1.get_text_contents() == test_string, f1.get_text_contents()
++
+         def nonexistent(method, s):
+             try:
+                 x = method(s, create = 0)
+@@ -1257,18 +1269,38 @@
+         finally:
+             test.unlink("file")
+ 
++        # test Entry.get_text_contents()
++        e = fs.Entry('does_not_exist')
++        c = e.get_text_contents()
++        assert c == "", c
++        assert e.__class__ == SCons.Node.FS.Entry
++
++        test.write("file", "file\n")
++        try:
++            e = fs.Entry('file')
++            c = e.get_text_contents()
++            assert c == "file\n", c
++            assert e.__class__ == SCons.Node.FS.File
++        finally:
++            test.unlink("file")
++
+         test.subdir("dir")
+         e = fs.Entry('dir')
+         c = e.get_contents()
+         assert c == "", c
+         assert e.__class__ == SCons.Node.FS.Dir
+ 
++        c = e.get_text_contents()
++        assert c == u"", c
++
+         if hasattr(os, 'symlink'):
+             os.symlink('nonexistent', test.workpath('dangling_symlink'))
+             e = fs.Entry('dangling_symlink')
+             c = e.get_contents()
+             assert e.__class__ == SCons.Node.FS.Entry, e.__class__
+             assert c == "", c
++            c = e.get_text_contents()
++            assert c == u"", c
+ 
+         test.write("tstamp", "tstamp\n")
+         try:
+@@ -1712,6 +1744,7 @@
+         files = string.split(d.get_contents(), '\n')
+ 
+         assert e.get_contents() == '', e.get_contents()
++        assert e.get_text_contents() == '', e.get_text_contents()
+         assert e.get_csig()+" empty" == files[0], files
+         assert f.get_csig()+" f" == files[1], files
+         assert g.get_csig()+" g" == files[2], files
+@@ -2739,6 +2772,42 @@
+         finally:
+             test.unlink(["rep3", "contents"])
+ 
++    def test_get_text_contents(self):
++        """Ensure get_text_contents() returns text contents from
++        Repositories"""
++        fs = self.fs
++        test = self.test
++
++        # Use a test string that has a file terminator in it to make
++        # sure we read the entire file, regardless of its contents.
++        test_string = u"Con\x1aTents\n"
++
++        c = u""
++
++        # Test with ASCII.
++        test.write(["rep3", "contents"], test_string.encode('ascii'))
++        try:
++            c = fs.File("contents").get_text_contents()
++            assert c == test_string, "got '%s'" % c
++        finally:
++            test.unlink(["rep3", "contents"])
++
++        # Test with utf-8
++        test.write(["rep3", "contents"], test_string.encode('utf-8'))
++        try:
++            c = fs.File("contents").get_text_contents()
++            assert c == test_string, "got '%s'" % c
++        finally:
++            test.unlink(["rep3", "contents"])
++
++        # Test with utf-16
++        test.write(["rep3", "contents"], test_string.encode('utf-16'))
++        try:
++            c = fs.File("contents").get_text_contents()
++            assert c == test_string, "got '%s'" % c
++        finally:
++            test.unlink(["rep3", "contents"])
++
+     #def test_is_up_to_date(self):
+ 
+ 
+Index: src/engine/SCons/Scanner/__init__.py
+===================================================================
+--- src/engine/SCons/Scanner/__init__.py	(revision 3778)
++++ src/engine/SCons/Scanner/__init__.py	(working copy)
+@@ -347,7 +347,7 @@
+         return SCons.Node.FS._my_normcase(include)
+ 
+     def find_include_names(self, node):
+-        return self.cre.findall(node.get_contents())
++        return self.cre.findall(node.get_text_contents())
+ 
+     def scan(self, node, path=()):
+ 
+Index: src/engine/SCons/Scanner/Fortran.py
+===================================================================
+--- src/engine/SCons/Scanner/Fortran.py	(revision 3778)
++++ src/engine/SCons/Scanner/Fortran.py	(working copy)
+@@ -84,11 +84,11 @@
+             mods_and_includes = node.includes
+         else:
+             # retrieve all included filenames
+-            includes = self.cre_incl.findall(node.get_contents())
++            includes = self.cre_incl.findall(node.get_text_contents())
+             # retrieve all USE'd module names
+-            modules = self.cre_use.findall(node.get_contents())
++            modules = self.cre_use.findall(node.get_text_contents())
+             # retrieve all defined module names
+-            defmodules = self.cre_def.findall(node.get_contents())
++            defmodules = self.cre_def.findall(node.get_text_contents())
+ 
+             # Remove all USE'd module names that are defined in the same file
+             d = {}
+Index: src/engine/SCons/Scanner/ScannerTests.py
+===================================================================
+--- src/engine/SCons/Scanner/ScannerTests.py	(revision 3778)
++++ src/engine/SCons/Scanner/ScannerTests.py	(working copy)
+@@ -481,6 +481,8 @@
+                 return self._exists
+             def get_contents(self):
+                 return self._contents
++            def get_text_contents(self):
++                return self._contents
+             def get_dir(self):
+                 return self._dir
+ 
+Index: src/engine/SCons/Scanner/LaTeX.py
+===================================================================
+--- src/engine/SCons/Scanner/LaTeX.py	(revision 3778)
++++ src/engine/SCons/Scanner/LaTeX.py	(working copy)
+@@ -282,7 +282,7 @@
+         if node.includes != None:
+             includes = node.includes
+         else:
+-            includes = self.cre.findall(node.get_contents())
++            includes = self.cre.findall(node.get_text_contents())
+             # 1. Split comma-separated lines, e.g.
+             #      ('bibliography', 'phys,comp')
+             #    should become two entries
+Index: src/engine/SCons/Scanner/D.py
+===================================================================
+--- src/engine/SCons/Scanner/D.py	(revision 3778)
++++ src/engine/SCons/Scanner/D.py	(working copy)
+@@ -63,6 +63,6 @@
+ 
+     def find_include_names(self, node):
+         includes = []
+-        for i in self.cre.findall(node.get_contents()):
++        for i in self.cre.findall(node.get_text_contents()):
+             includes = includes + self.cre2.findall(i)
+         return includes
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 3778)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -335,7 +335,7 @@
+         self.scons_env[comp] = oldcomp
+         self.scons_env['%sFLAGS' % comp] = 'qwertyuiop'
+         r = func()
+-        assert not r, "%s worked with %sFLAGS = qwertyuiop ?" % name
++        assert not r, "%s worked with %sFLAGS = qwertyuiop ?" % (name, comp)
+ 
+     def test_CheckCC(self):
+         """Test SConf.CheckCC()
+Index: src/engine/SCons/Environment.py
+===================================================================
+--- src/engine/SCons/Environment.py	(revision 3778)
++++ src/engine/SCons/Environment.py	(working copy)
+@@ -393,7 +393,7 @@
+             self._dict[key] = value
+ 
+     def get(self, key, default=None):
+-        "Emulates the get() method of dictionaries."""
++        """Emulates the get() method of dictionaries."""
+         return self._dict.get(key, default)
+ 
+     def has_key(self, key):
+Index: src/engine/SCons/Tool/FortranCommon.py
+===================================================================
+--- src/engine/SCons/Tool/FortranCommon.py	(revision 3778)
++++ src/engine/SCons/Tool/FortranCommon.py	(working copy)
+@@ -67,7 +67,7 @@
+     mod_regex = """(?i)^\s*MODULE\s+(?!PROCEDURE)(\w+)"""
+     cre = re.compile(mod_regex,re.M)
+     # Retrieve all USE'd module names
+-    modules = cre.findall(node.get_contents())
++    modules = cre.findall(node.get_text_contents())
+     # Remove unique items from the list
+     modules = SCons.Util.unique(modules)
+     # Convert module name to a .mod filename
+Index: src/engine/SCons/Tool/jar.py
+===================================================================
+--- src/engine/SCons/Tool/jar.py	(revision 3778)
++++ src/engine/SCons/Tool/jar.py	(working copy)
+@@ -49,7 +49,7 @@
+             jarchdir = env.fs.Dir(jarchdir)
+     result = []
+     for src in source:
+-        contents = src.get_contents()
++        contents = src.get_text_contents()
+         if contents[:16] != "Manifest-Version":
+             if jarchdir_set:
+                 _chdir = jarchdir
+@@ -70,7 +70,7 @@
+ def jarManifest(target, source, env, for_signature):
+     """Look in sources for a manifest file, if any."""
+     for src in source:
+-        contents = src.get_contents()
++        contents = src.get_text_contents()
+         if contents[:16] == "Manifest-Version":
+             return src
+     return ''
+@@ -80,7 +80,7 @@
+     flag is specified."""
+     jarflags = env.subst('$JARFLAGS', target=target, source=source)
+     for src in source:
+-        contents = src.get_contents()
++        contents = src.get_text_contents()
+         if contents[:16] == "Manifest-Version":
+             if not 'm' in jarflags:
+                 return jarflags + 'm'
+Index: src/engine/SCons/Tool/qt.py
+===================================================================
+--- src/engine/SCons/Tool/qt.py	(revision 3778)
++++ src/engine/SCons/Tool/qt.py	(working copy)
+@@ -138,8 +138,8 @@
+                     print "scons: qt: '%s' is no cxx file. Discarded." % str(cpp) 
+                 # c or fortran source
+                 continue
+-            #cpp_contents = comment.sub('', cpp.get_contents())
+-            cpp_contents = cpp.get_contents()
++            #cpp_contents = comment.sub('', cpp.get_text_contents())
++            cpp_contents = cpp.get_text_contents()
+             h=None
+             for h_ext in header_extensions:
+                 # try to find the header file in the corresponding source
+@@ -149,8 +149,8 @@
+                 if h:
+                     if debug:
+                         print "scons: qt: Scanning '%s' (header of '%s')" % (str(h), str(cpp))
+-                    #h_contents = comment.sub('', h.get_contents())
+-                    h_contents = h.get_contents()
++                    #h_contents = comment.sub('', h.get_text_contents())
++                    h_contents = h.get_text_contents()
+                     break
+             if not h and debug:
+                 print "scons: qt: no header for '%s'." % (str(cpp))
+@@ -221,7 +221,7 @@
+     lookout = []
+     lookout.extend(env['CPPPATH'])
+     lookout.append(str(node.rfile().dir))
+-    includes = re.findall("<include.*?>(.*?)</include>", node.get_contents())
++    includes = re.findall("<include.*?>(.*?)</include>", node.get_text_contents())
+     result = []
+     for incFile in includes:
+         dep = env.FindFile(incFile,lookout)
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 3778)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -196,7 +196,7 @@
+     # we have to run makeindex at least once to keep the build
+     # happy even if there is no index.
+     # Same for glossaries and nomenclature
+-    src_content = source[0].get_contents()
++    src_content = source[0].get_text_contents()
+     run_makeindex = makeindex_re.search(src_content) and not os.path.exists(targetbase + '.idx')
+     run_nomenclature = makenomenclature_re.search(src_content) and not os.path.exists(targetbase + '.nlo')
+     run_glossary = makeglossary_re.search(src_content) and not os.path.exists(targetbase + '.glo')
+@@ -370,7 +370,7 @@
+ def is_LaTeX(flist):
+     # Scan a file list to decide if it's TeX- or LaTeX-flavored.
+     for f in flist:
+-        content = f.get_contents()
++        content = f.get_text_contents()
+         if LaTeX_re.search(content):
+             return 1
+     return 0
+@@ -419,7 +419,7 @@
+ def ScanFiles(theFile, target, paths, file_tests, file_tests_search, env, graphics_extensions, targetdir):
+     # for theFile (a Node) update any file_tests and search for graphics files
+     # then find all included files and call ScanFiles for each of them
+-    content = theFile.get_contents()
++    content = theFile.get_text_contents()
+     if Verbose:
+         print " scanning ",str(theFile)
+ 
+@@ -486,7 +486,7 @@
+     env.Clean(target[0],auxfilename)
+     env.Clean(target[0],logfilename)
+ 
+-    content = source[0].get_contents()
++    content = source[0].get_text_contents()
+ 
+     idx_exists = os.path.exists(targetbase + '.idx')
+     nlo_exists = os.path.exists(targetbase + '.nlo')
+Index: doc/SConscript
+===================================================================
+--- doc/SConscript	(revision 3778)
++++ doc/SConscript	(working copy)
+@@ -76,7 +76,7 @@
+ def scanxml(node, env, target):
+     includes = []
+ 
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+ 
+     includes.extend(entity_re.findall(contents))
+ 
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 3778)
++++ doc/man/scons.1	(working copy)
+@@ -9371,7 +9371,7 @@
+ 
+ .ES
+ def xyz_scan(node, env, path):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     # Scan the contents and return the included files.
+ 
+ XYZScanner = Scanner(xyz_scan)
+@@ -9643,7 +9643,7 @@
+ include_re = re.compile(r'^include\\s+(\\S+)$', re.M)
+ 
+ def kfile_scan(node, env, path, arg):
+-    contents = node.get_contents()
++    contents = node.get_text_contents()
+     includes = include_re.findall(contents)
+     return includes
+ 
+@@ -9672,7 +9672,7 @@
+ include_re = re.compile(r'^include\\s+(\\S+)$', re.M)
+ 
+ def my_scan(node, env, path, arg):
+-   contents = node.get_contents()
++   contents = node.get_text_contents()
+    includes = include_re.findall(contents)
+    if includes == []:
+         return []
+Index: doc/user/scanners.in
+===================================================================
+--- doc/user/scanners.in	(revision 3778)
++++ doc/user/scanners.in	(working copy)
+@@ -170,7 +170,7 @@
+       include_re = re.compile(r'^include\s+(\S+)$', re.M)
+       
+       def kfile_scan(node, env, path, arg):
+-          contents = node.get_contents()
++          contents = node.get_text_contents()
+           return include_re.findall(contents)
+     </programlisting>
+ 
+@@ -199,7 +199,7 @@
+       The path name to the file can be
+       used by converting the node to a string
+       using the <literal>str()</literal> function,
+-      or an internal &SCons; <literal>get_contents()</literal>
++      or an internal &SCons; <literal>get_text_contents()</literal>
+       object method can be used to fetch the contents.
+ 
+       </para>
+@@ -281,7 +281,7 @@
+         include_re = re.compile(r'^include\s+(\S+)$', re.M)
+ 
+         def kfile_scan(node, env, path):
+-            contents = node.get_contents()
++            contents = node.get_text_contents()
+             includes = include_re.findall(contents)
+             return includes
+ 
+Index: doc/user/scanners.xml
+===================================================================
+--- doc/user/scanners.xml	(revision 3778)
++++ doc/user/scanners.xml	(working copy)
+@@ -170,7 +170,7 @@
+       include_re = re.compile(r'^include\s+(\S+)$', re.M)
+       
+       def kfile_scan(node, env, path, arg):
+-          contents = node.get_contents()
++          contents = node.get_text_contents()
+           return include_re.findall(contents)
+     </programlisting>
+ 
+@@ -199,7 +199,7 @@
+       The path name to the file can be
+       used by converting the node to a string
+       using the <literal>str()</literal> function,
+-      or an internal &SCons; <literal>get_contents()</literal>
++      or an internal &SCons; <literal>get_text_contents()</literal>
+       object method can be used to fetch the contents.
+ 
+       </para>
+@@ -280,7 +280,7 @@
+         include_re = re.compile(r'^include\s+(\S+)$', re.M)
+ 
+         def kfile_scan(node, env, path):
+-            contents = node.get_contents()
++            contents = node.get_text_contents()
+             includes = include_re.findall(contents)
+             return includes
+ 
+Index: SConstruct
+===================================================================
+--- SConstruct	(revision 3778)
++++ SConstruct	(working copy)
+@@ -377,7 +377,7 @@
+     tfp.close()
+ 
+ def soscan(node, env, path):
+-    c = node.get_contents()
++    c = node.get_text_contents()
+     return re.compile(r"^[\.']so\s+(\S+)", re.M).findall(c)
+ 
+ soelimbuilder = Builder(action = Action(soelim),
