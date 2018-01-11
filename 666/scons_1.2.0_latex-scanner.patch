@@ -1,0 +1,82 @@
+diff -ru SCons.orig/Scanner/LaTeX.py SCons/Scanner/LaTeX.py
+--- SCons.orig/Scanner/LaTeX.py	2009-09-20 01:00:01.000000000 +0200
++++ SCons/Scanner/LaTeX.py	2009-12-18 20:08:26.000000000 +0100
+@@ -180,7 +180,7 @@
+             node = node.rfile()
+             if not node.exists():
+                 return []
+-            return self.scan(node, path)
++            return self.scan_recurse(node, path)
+ 
+         class FindMultiPathDirs:
+             """The stock FindPathDirs function has the wrong granularity:
+@@ -224,7 +224,7 @@
+ 
+         kw['function'] = _scan
+         kw['path_function'] = FindMultiPathDirs(LaTeX.keyword_paths)
+-        kw['recursive'] = 1
++        kw['recursive'] = 0
+         kw['skeys'] = suffixes
+         kw['scan_check'] = LaTeXScanCheck(suffixes)
+         kw['name'] = name
+@@ -276,14 +276,13 @@
+             if i:
+                 return i, include
+         return i, include
+-
+-    def scan(self, node, path=()):
++    
++    def scan(self, node):
+         # Modify the default scan function to allow for the regular
+         # expression to return a comma separated list of file names
+         # as can be the case with the bibliography keyword.
+ 
+         # Cache the includes list in node so we only scan it once:
+-        path_dict = dict(list(path))
+         noopt_cre = re.compile('\[.*$')
+         if node.includes != None:
+             includes = node.includes
+@@ -308,6 +307,16 @@
+             includes = split_includes
+             node.includes = includes
+ 
++	return includes
++
++    def scan_recurse(self, node, path=()):
++
++        path_dict = dict(list(path))
++	
++	queue = [] 
++	queue.extend( self.scan(node) )
++	seen = {}
++
+         # This is a hand-coded DSU (decorate-sort-undecorate, or
+         # Schwartzian transform) pattern.  The sort key is the raw name
+         # of the file as specifed on the \include, \input, etc. line.
+@@ -317,7 +326,15 @@
+         # is actually found in a Repository or locally."""
+         nodes = []
+         source_dir = node.get_dir()
+-        for include in includes:
++        while queue:
++	    
++	    include = queue.pop()
++	    try:
++		if seen[include[1]] == 1:
++		    continue
++	    except KeyError:
++		seen[include[1]] = 1
++
+             #
+             # Handle multiple filenames in include[1]
+             #
+@@ -331,6 +348,9 @@
+             else:
+                 sortkey = self.sort_key(n)
+                 nodes.append((sortkey, n))
++		# recurse down 
++		queue.extend( self.scan(n) )
++
+         #
+         nodes.sort()
+         nodes = map(lambda pair: pair[1], nodes)
