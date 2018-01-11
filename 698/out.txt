@@ -1,0 +1,55 @@
+trying to find VC 10.0
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\10.0\\Setup\\VC\\ProductDir'
+find_vc_pdir return None for ver 10.0
+trying to find VC 9.0
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\9.0\\Setup\\VC\\ProductDir'
+find_vc_dir(): found VC in registry: C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\
+found VC 9.0
+trying to find VC 8.0
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\8.0\\Setup\\VC\\ProductDir'
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VCExpress\\8.0\\Setup\\VC\\ProductDir'
+find_vc_pdir return None for ver 8.0
+trying to find VC 7.1
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\7.1\\Setup\\VC\\ProductDir'
+find_vc_pdir return None for ver 7.1
+trying to find VC 7.0
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\7.0\\Setup\\VC\\ProductDir'
+find_vc_pdir return None for ver 7.0
+trying to find VC 6.0
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\6.0\\Setup\\Microsoft Visual C++\\ProductDir'
+find_vc_pdir return None for ver 6.0
+msvc_setup_env()
+get_default_version()
+installed_vcs:['9.0']
+msvc_setup_env: using default installed MSVC version '9.0'
+
+msvc_setup_env: using specified MSVC version '9.0'
+
+find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\9.0\\Setup\\VC\\ProductDir'
+find_vc_dir(): found VC in registry: C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\
+vc.py: find_batch_file() pdir:C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\
+MSCommon/sdk.py: trying to find SDK 7.0
+find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v7.0\\InstallationFolder'
+MSCommon/sdk.py: trying to find SDK 6.1
+find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.1\\InstallationFolder'
+MSCommon/sdk.py: trying to find SDK 6.0A
+MSCommon/sdk.py:found SDK 6.0A
+MSCommon/sdk.py: trying to find SDK 6.0
+find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.0\\InstallationFolder'
+MSCommon/sdk.py: trying to find SDK 2003R2
+find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\D2FF9F89-8AA2-4373-8A31-C838BF4DBBE1\\Install Dir'
+MSCommon/sdk.py: trying to find SDK 2003R1
+find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3\\Install Dir'
+sdk.py: get_sdk_vc_script():arch_string:amd64 host_arch:amd64 target_arch:amd64
+sdk.py: get_sdk_vc_script():file:bin\vcvarsamd64.bat
+vc.py:find_batch_file() sdk_bat_file_path:C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvarsamd64.bat
+vc.py:find_batch_file() not found:C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvarsamd64.bat
+vc.py:msvc_setup_env() vc_script:C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat sdk_script:None
+vc.py:msvc_setup_env() vc_script:C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat sdk_script:None
+use_script 2 u'C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\vcvarsall.bat', args:amd64
+
+Calling 'C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat amd64'
+use_script 3: failed running VC script u'C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\vcvarsall.bat': amd64: Error:The specified configuration type is missing.  The tools for the
+configuration might not be installed.
+use_script 6: Neither VC script nor SDK script found
+cl /Fohello.obj /c hello.c /nologo
