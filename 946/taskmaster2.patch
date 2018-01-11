@@ -1,0 +1,74 @@
+diff -r 023b335b70db src/engine/SCons/Environment.py
+--- a/src/engine/SCons/Environment.py	Sun Aug 31 20:50:05 2014 +0200
++++ b/src/engine/SCons/Environment.py	Mon Sep 01 09:24:12 2014 +0200
+@@ -1854,7 +1854,8 @@
+         action = SCons.Action.Action(action)
+         uniq = {}
+         for executor in [n.get_executor() for n in nodes]:
+-            uniq[executor] = 1
++            if executor is not None:
++                uniq[executor] = 1
+         for executor in uniq.keys():
+             executor.add_pre_action(action)
+         return nodes
+@@ -1864,7 +1865,8 @@
+         action = SCons.Action.Action(action)
+         uniq = {}
+         for executor in [n.get_executor() for n in nodes]:
+-            uniq[executor] = 1
++            if executor is not None:
++                uniq[executor] = 1
+         for executor in uniq.keys():
+             executor.add_post_action(action)
+         return nodes
+diff -r 023b335b70db src/engine/SCons/Taskmaster.py
+--- a/src/engine/SCons/Taskmaster.py	Sun Aug 31 20:50:05 2014 +0200
++++ b/src/engine/SCons/Taskmaster.py	Mon Sep 01 09:24:12 2014 +0200
+@@ -803,7 +803,10 @@
+             executor = node.get_executor()
+ 
+             try:
+-                children = executor.get_all_children()
++                if executor is not None:
++                    children = executor.get_all_children()
++                else:
++                    children = []
+             except SystemExit:
+                 exc_value = sys.exc_info()[1]
+                 e = SCons.Errors.ExplicitExit(node, exc_value.code)
+@@ -825,7 +828,10 @@
+             children_not_ready = []
+             children_failed = False
+ 
+-            for child in chain(executor.get_all_prerequisites(), children):
++            prereqs = []
++            if executor is not None:
++                prereqs = executor.get_all_prerequisites()
++            for child in chain(prereqs, children):
+                 childstate = child.get_state()
+ 
+                 if T: T.write(self.trace_message(u'       ' + self.trace_node(child)))
+@@ -869,7 +875,10 @@
+             # added the other children to the list of candidate nodes
+             # to keep on building (--keep-going).
+             if children_failed:
+-                for n in executor.get_action_targets():
++                failed = [node]
++                if executor is not None:
++                    failed = executor.get_action_targets()
++                for n in failed:
+                     n.set_state(NODE_FAILED)
+ 
+                 if S: S.child_failed = S.child_failed + 1
+@@ -901,7 +910,10 @@
+             # Skip this node if it has side-effects that are
+             # currently being built:
+             wait_side_effects = False
+-            for se in executor.get_action_side_effects():
++            sides = []
++            if executor is not None:
++                sides = executor.get_action_side_effects()
++            for se in sides:
+                 if se.get_state() == NODE_EXECUTING:
+                     se.add_to_waiting_s_e(node)
+                     wait_side_effects = True
