@@ -1,0 +1,13 @@
+=== modified file 'engine/SCons/Node/FS.py'
+--- engine/SCons/Node/FS.py	2010-02-03 15:22:00 +0000
++++ engine/SCons/Node/FS.py	2010-02-04 16:00:06 +0000
+@@ -2922,7 +2922,7 @@
+             fd = self.default_filedir
+         dir, name = os.path.split(fd)
+         drive, d = os.path.splitdrive(dir)
+-        if d in ('/', os.sep):
++        if d in ('/','\\\\', os.sep):
+             return p.fs.get_root(drive).dir_on_disk(name)
+         if dir:
+             p = self.filedir_lookup(p, dir)
+
