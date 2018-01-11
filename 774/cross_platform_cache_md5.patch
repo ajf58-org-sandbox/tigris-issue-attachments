@@ -1,0 +1,13 @@
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 5102)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -2943,7 +2943,7 @@
+         # sigs = [n.get_cachedir_csig() for n in children]
+         sigs = [n.get_cachedir_csig() for n in children]
+         sigs.append(SCons.Util.MD5signature(executor.get_contents()))
+-        sigs.append(self.path)
++        sigs.append(self.path.replace("\\", "/"))
+         result = self.cachesig = SCons.Util.MD5collect(sigs)
+         return result
+ 
