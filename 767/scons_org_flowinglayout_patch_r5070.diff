@@ -1,0 +1,383 @@
+Index: contact.php
+===================================================================
+--- contact.php	(revision 5070)
++++ contact.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Contact", "contact");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle">Contact</h2>
+ 
+ <h3>Mailing lists</h3>
+@@ -73,7 +72,6 @@
+ <a href="mailto:dev@scons.tigris.org">dev@scons</a>
+ mailing list as described above.</p>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: css/scons.css
+===================================================================
+--- css/scons.css	(revision 5070)
++++ css/scons.css	(working copy)
+@@ -23,15 +23,14 @@
+ 	border: 1px solid;
+ 	border-color: black;
+ 	background-color: white;
+-	background-image: url(../images/sconsback.png);
+-	background-repeat: repeat-y 50% 0;
+-	background-position: right top;
+ 	margin: 30px auto;
+-	width: 750px;
++	margin-left: 20px;
++	margin-right: 20px;
+ 	}
+ 
+ #banner {
+ 	background-image: url(../images/scons-banner.jpg);
++	background-repeat: no-repeat;
+ 	border-bottom: 1px solid;
+ 	height: 95px;
+ 	}
+@@ -41,11 +40,21 @@
+ 	font-size: small;
+ 	line-height: 0.9em;
+ 	float: right;
+-	width: 220px;
++	width: 25%;
+ 	clear: both;
+-	margin-top: 10px;
++	margin-top: 55px;
+ 	}
+ 
++#leftmenu {
++	font-family: sans-serif;
++	font-size: small;
++	line-height: 0.9em;
++	float: left;
++	width: 5%;
++	clear: both;
++	margin-top: 55px;
++ 	}
++
+ #menu li {
+ 	margin-bottom: 7px;
+ 	}
+@@ -106,8 +115,8 @@
+ 	}
+ 
+ #bodycontent {
+-	margin: 15px;
+-	width: 520px;
++	margin-left: 7%;
++	margin-right: 27%;
+ 	font-size: small;
+ 	line-height: 1.5em;
+ 	}
+@@ -177,8 +186,13 @@
+ 
+ #osrating {
+ 	margin-left: 35px;
++    margin-top: 20px;
+ 	}
+ 
++#hostedby {
++    margin-left: 35px;
++    margin-top: 20px;
++    }
+ 
+ h2 {
+ 	color: #272;
+Index: dev.php
+===================================================================
+--- dev.php	(revision 5070)
++++ dev.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Development", "dev");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2> Development </h2>
+ 
+ <p> <span class="sconslogo">SCons</span> is actively looking for developers.
+@@ -206,7 +205,6 @@
+ </div>
+ </div>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: documentation.php
+===================================================================
+--- documentation.php	(revision 5070)
++++ documentation.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Documentation", "docs");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Documentation </h2>
+ 
+ <p>
+@@ -121,7 +120,6 @@
+ mailing list to receive news and announcements about new documentation.
+ </p>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: docversions.php
+===================================================================
+--- docversions.php	(revision 5070)
++++ docversions.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Version-Specific SCons Documentation", "docs");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle">Version-Specific SCons Documentation</h2>
+ 
+ <p>
+@@ -126,7 +125,6 @@
+ </sconsversiontable>
+ </div>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: donate.php
+===================================================================
+--- donate.php	(revision 5070)
++++ donate.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Donate", "donate");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Donate </h2>
+ 
+ <p> Thank you for considering a donation to support <span
+@@ -57,7 +56,6 @@
+ 
+ <p> Thanks again for consideration a donation.  </p>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: download.php
+===================================================================
+--- download.php	(revision 5070)
++++ download.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Download", "download");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Download </h2>
+ 
+ <!-- INTRO PARAGRAPH -->
+@@ -177,7 +176,6 @@
+ do_tables("dl_src");
+ ?>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: guidelines.php
+===================================================================
+--- guidelines.php	(revision 5070)
++++ guidelines.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Developer's Guidelines", "guidelines");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2> SCons Developer's Guidelines </h2>
+ 
+ <center>6 February 2010</center>
+@@ -266,7 +265,6 @@
+ 
+ </ol>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: includes/templates.php
+===================================================================
+--- includes/templates.php	(revision 5070)
++++ includes/templates.php	(working copy)
+@@ -32,15 +32,8 @@
+ 
+ <div id="main">
+ 
+-<div id="banner">
+-
+-&nbsp;
+-&nbsp;
+-&nbsp;
+-&nbsp;
+-&nbsp;
+-
+-</div> 
++<div id="leftmenu">
++</div>
+ 
+ <?
+ function tmpl_version($title, $rel)
+@@ -157,13 +150,15 @@
+ </form>
+ </div>
+ 
+-<div id="menu">
+-<ul class="menuitems">
+-<li>Hosting provided by:  <a href="http://www.pair.com/">pair.com</a></li>
+-</ul>
++<div id="hostedby">
++Hosting provided by:  <a href="http://www.pair.com/">pair.com</a>
+ </div>
+ 
+ </div> <!-- menu -->
++<div id="bodycontent">
++<div id="banner"></div>
++
++
+ <?
+ 
+ } // End make_top
+@@ -171,6 +166,7 @@
+ function make_bottom()
+ {
+ 	?>
++</div> <!-- End bodycontent -->
+ <div id="footer">
+ &copy; 2004-2010 <a href="http://www.scons.org">The SCons Foundation</a>
+ </div>
+Index: index.php
+===================================================================
+--- index.php	(revision 5070)
++++ index.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("A software construction tool", "home");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Latest News </h2>
+ 
+ <h3> SCons 2.0.1.beta.20100627 is available </h3>
+@@ -140,8 +139,6 @@
+ it is no longer directly connected with Software Carpentry (well, that, and to
+ make it slightly easier to type...).  </p>
+ 
+-</div> <!-- End bodycontent -->
+-
+ <?
+ 	make_bottom();
+ ?>
+Index: links.php
+===================================================================
+--- links.php	(revision 5070)
++++ links.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Links", "links");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> Links </h2>
+ 
+ <?
+@@ -16,7 +15,6 @@
+ 
+ ?>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: lists.php
+===================================================================
+--- lists.php	(revision 5070)
++++ lists.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Mailing Lists", "lists");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 id="lists">Mailing Lists</h2>
+ 
+ <p>These are the major <span class="sconslogo">SCons</span> mailing lists
+@@ -120,7 +119,6 @@
+ href="<?echo $listpage;?>?listName=issues">Tigris.org forum interface</a></li>
+ </ul>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: logos.php
+===================================================================
+--- logos.php	(revision 5070)
++++ logos.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("Logos", "logos");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> SCons Logos </h2>
+ 
+ You are welcome to use these SCons logos
+@@ -39,7 +38,6 @@
+ is the Creative Commons Attribution-Noncommercial-Share Alike 3.0
+ Unported license.
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: news.php
+===================================================================
+--- news.php	(revision 5070)
++++ news.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("News", "news");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> News </h2>
+ 
+ <?
+@@ -16,7 +15,6 @@
+ 
+ ?>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
+Index: refer.php
+===================================================================
+--- refer.php	(revision 5070)
++++ refer.php	(working copy)
+@@ -7,7 +7,6 @@
+ 	make_top("References", "references");
+ ?>
+ 
+-<div id="bodycontent">
+ <h2 class="pagetitle"> References </h2>
+ 
+ There are lots of people
+@@ -21,7 +20,6 @@
+ 
+ ?>
+ 
+-</div> <!-- End bodycontent -->
+ <?
+ 	make_bottom();
+ ?>
