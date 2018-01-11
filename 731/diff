@@ -1,0 +1,108 @@
+Index: test/Glob/source.py
+===================================================================
+--- test/Glob/source.py	(revision 4788)
++++ test/Glob/source.py	(working copy)
+@@ -66,7 +66,7 @@
+ test.write(['var2', 'SConscript'], """\
+ Import("env")
+ 
+-f_in = sorted(Glob('f[67].in'), cmp=lambda a,b: cmp(a.name, b.name))
++f_in = sorted(Glob('f[67].in'), key=lambda a: a.name)
+ env.Concatenate('f.out', f_in)
+ """)
+ 
+Index: test/GetBuildFailures/option-k.py
+===================================================================
+--- test/GetBuildFailures/option-k.py	(revision 4788)
++++ test/GetBuildFailures/option-k.py	(working copy)
+@@ -64,8 +64,7 @@
+ 
+ def print_build_failures():
+     from SCons.Script import GetBuildFailures
+-    for bf in sorted(GetBuildFailures(),
+-                     cmp=lambda a,b: cmp(a.filename, b.filename)):
++    for bf in sorted(GetBuildFailures(), key=lambda a: a.filename):
+         print "%%s failed:  %%s" %% (bf.node, bf.errstr)
+ 
+ try:
+Index: src/script/scons-time.py
+===================================================================
+--- src/script/scons-time.py	(revision 4788)
++++ src/script/scons-time.py	(working copy)
+@@ -38,7 +38,6 @@
+ import getopt
+ import glob
+ import os
+-import os.path
+ import re
+ import shutil
+ import sys
+@@ -82,6 +81,20 @@
+             result.reverse()
+         return result
+ 
++if os.environ.get('SCONS_HORRIBLE_REGRESSION_TEST_HACK') is not None:
++    # We can't apply the 'callable' fixer until the floor is 2.6, but the
++    # '-3' option to Python 2.6 and 2.7 generates almost ten thousand
++    # warnings.  This hack allows us to run regression tests with the '-3'
++    # option by replacing the callable() built-in function with a hack
++    # that performs the same function but doesn't generate the warning.
++    # Note that this hack is ONLY intended to be used for regression
++    # testing, and should NEVER be used for real runs.
++    from types import ClassType
++    def callable(obj):
++        if hasattr(obj, '__call__'): return True
++        if isinstance(obj, (ClassType, type)): return True
++        return False
++
+ def make_temp_file(**kw):
+     try:
+         result = tempfile.mktemp(**kw)
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+--- src/engine/SCons/Tool/msvs.py	(revision 4788)
++++ src/engine/SCons/Tool/msvs.py	(working copy)
+@@ -290,7 +290,9 @@
+                         self.sources[t[0]].append(self.env[t[1]])
+ 
+         for n in sourcenames:
+-            self.sources[n].sort(lambda a, b: cmp(a.lower(), b.lower()))
++            #TODO 2.4: compat layer supports sorted(key=) but not sort(key=)
++            #TODO 2.4: self.sources[n].sort(key=lambda a: a.lower())
++            self.sources[n] = sorted(self.sources[n], key=lambda a: a.lower())
+ 
+         def AddConfig(self, variant, buildtarget, outdir, runfile, cmdargs, dspfile=dspfile):
+             config = Config()
+@@ -439,9 +441,7 @@
+                       'Resource Files': 'r|rc|ico|cur|bmp|dlg|rc2|rct|bin|cnt|rtf|gif|jpg|jpeg|jpe',
+                       'Other Files': ''}
+ 
+-        cats = categories.keys()
+-        cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+-        for kind in cats:
++        for kind in sorted(categories.keys(), key=lambda a: a.lower()):
+             if not self.sources[kind]:
+                 continue # skip empty groups
+ 
+@@ -695,8 +695,7 @@
+             self.file.write(pdata + '-->\n')
+ 
+     def printSources(self, hierarchy, commonprefix):
+-        sorteditems = hierarchy.items()
+-        sorteditems.sort(lambda a, b: cmp(a[0].lower(), b[0].lower()))
++        sorteditems = sorted(hierarchy.items(), key=lambda a: a[0].lower())
+ 
+         # First folders, then files
+         for key, value in sorteditems:
+@@ -726,9 +725,8 @@
+ 
+         self.file.write('\t<Files>\n')
+ 
+-        cats = categories.keys()
+-        cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+-        cats = [k for k in cats if self.sources[k]]
++        cats = sorted([k for k in categories.keys() if self.sources[k]],
++                      key=lambda a: a.lower())
+         for kind in cats:
+             if len(cats) > 1:
+                 self.file.write('\t\t<Filter\n'
