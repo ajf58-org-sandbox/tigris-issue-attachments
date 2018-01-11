@@ -1,0 +1,60 @@
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   '.'> and its children:
+Taskmaster:        <no_state   0   'SConstruct'>
+Taskmaster:        <no_state   0   'test.c'>
+Taskmaster:        <no_state   0   'test.o'>
+Taskmaster:        <no_state   0   'testapp'>
+Taskmaster:        <no_state   0   'tools'>
+Taskmaster:      adjusted ref count: <pending    1   '.'>, child 'SConstruct'
+Taskmaster:      adjusted ref count: <pending    2   '.'>, child 'test.c'
+Taskmaster:      adjusted ref count: <pending    3   '.'>, child 'test.o'
+Taskmaster:      adjusted ref count: <pending    4   '.'>, child 'testapp'
+Taskmaster:      adjusted ref count: <pending    5   '.'>, child 'tools'
+Taskmaster:     Considering node <no_state   0   'SConstruct'> and its children:
+Taskmaster: Evaluating <pending    0   'SConstruct'>
+
+Task.make_ready_current(): node <pending    0   'SConstruct'>
+Task.prepare():      node <up_to_date 0   'SConstruct'>
+Task.executed_with_callbacks(): node <up_to_date 0   'SConstruct'>
+Task.postprocess():  node <up_to_date 0   'SConstruct'>
+Task.postprocess():  removing <up_to_date 0   'SConstruct'>
+Task.postprocess():  adjusted parent ref count <pending    4   '.'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'test.c'> and its children:
+Taskmaster: Evaluating <pending    0   'test.c'>
+
+Task.make_ready_current(): node <pending    0   'test.c'>
+Task.prepare():      node <up_to_date 0   'test.c'>
+Task.executed_with_callbacks(): node <up_to_date 0   'test.c'>
+Task.postprocess():  node <up_to_date 0   'test.c'>
+Task.postprocess():  removing <up_to_date 0   'test.c'>
+Task.postprocess():  adjusted parent ref count <pending    3   '.'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'test.o'> and its children:
+Taskmaster:        <up_to_date 0   'test.c'>
+Taskmaster: Evaluating <pending    0   'test.o'>
+
+Task.make_ready_current(): node <pending    0   'test.o'>
+Task.prepare():      node <executing  0   'test.o'>
+Task.execute():      node <executing  0   'test.o'>
+Task.failed_stop():  node <executing  0   'test.o'>
+Taskmaster:        removing node <executing  0   'test.o'> from the pending children set
+
+Taskmaster:        removing parent <pending    2   '.'> from the pending children set
+
+Task.postprocess():  node <failed     0   'test.o'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:        removing node <no_state   0   'tools'> from the pending children set
+
+Taskmaster:        removing node <no_state   0   'testapp'> from the pending children set
+
+Taskmaster:        removing parent <failed     1   '.'> from the pending children set
+
+Taskmaster:        removing parent <failed     0   '.'> from the pending children set
+
+Taskmaster: No candidate anymore.
+
