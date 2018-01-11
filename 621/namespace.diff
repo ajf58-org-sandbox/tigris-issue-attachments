@@ -1,0 +1,65 @@
+Index: src/engine/SCons/Defaults.py
+===================================================================
+--- src/engine/SCons/Defaults.py	(revision 4322)
++++ src/engine/SCons/Defaults.py	(working copy)
+@@ -463,7 +463,7 @@
+     'DSUFFIXES'     : SCons.Tool.DSuffixes,
+     'ENV'           : {},
+     'IDLSUFFIXES'   : SCons.Tool.IDLSuffixes,
+-    'LATEXSUFFIXES' : SCons.Tool.LaTeXSuffixes,
++#    'LATEXSUFFIXES' : SCons.Tool.LaTeXSuffixes, # moved to the TeX tools generate functions
+     '_concat'       : _concat,
+     '_defines'      : _defines,
+     '_stripixes'    : _stripixes,
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 4322)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -78,6 +78,8 @@
+         PDFTeXLaTeXAction = SCons.Action.Action(PDFTeXLaTeXFunction,
+                               strfunction=SCons.Tool.tex.TeXLaTeXStrFunction)
+ 
++    env.AppendUnique(LATEXSUFFIXES=SCons.Tool.LaTeXSuffixes)
++
+     import pdf
+     pdf.generate(env)
+ 
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 4322)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -59,6 +59,8 @@
+         PDFLaTeXAuxAction = SCons.Action.Action(PDFLaTeXAuxFunction,
+                               strfunction=SCons.Tool.tex.TeXLaTeXStrFunction)
+ 
++    env.AppendUnique(LATEXSUFFIXES=SCons.Tool.LaTeXSuffixes)
++
+     import pdf
+     pdf.generate(env)
+ 
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 4322)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -621,6 +621,8 @@
+         TeXLaTeXAction = SCons.Action.Action(TeXLaTeXFunction,
+                               strfunction=TeXLaTeXStrFunction)
+ 
++    env.AppendUnique(LATEXSUFFIXES=SCons.Tool.LaTeXSuffixes)
++
+     import dvi
+     dvi.generate(env)
+ 
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 4322)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -57,6 +57,8 @@
+     if LaTeXAction is None:
+         LaTeXAction = SCons.Action.Action('$LATEXCOM', '$LATEXCOMSTR')
+ 
++    env.AppendUnique(LATEXSUFFIXES=SCons.Tool.LaTeXSuffixes)
++
+     import dvi
+     dvi.generate(env)
+ 
