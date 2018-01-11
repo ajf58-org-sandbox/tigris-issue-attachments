@@ -1,0 +1,166 @@
+# HG changeset patch
+# User edA-qa mort-ora-y <edA-qa@disemia.com>
+# Date 1336288271 -7200
+# Branch mortoray-issue2821-better
+# Node ID 2e71d37ccc6f2a753e4c7a5aac3a073dca0b832c
+# Parent  bb48d69e9db5e4991db9500bd3ebbaed6e718854
+better fix for issue 2821 -- avoid direct copies of the BuilderDict as it is ambiguous/corrupts the original environment
+
+diff -r bb48d69e9db5 -r 2e71d37ccc6f src/engine/SCons/Environment.py
+--- a/src/engine/SCons/Environment.py	Sun May 06 05:42:37 2012 +0200
++++ b/src/engine/SCons/Environment.py	Sun May 06 09:11:11 2012 +0200
+@@ -72,6 +72,7 @@
+ CalculatorArgs = {}
+ 
+ semi_deepcopy = SCons.Util.semi_deepcopy
++semi_deepcopy_dict = SCons.Util.semi_deepcopy_dict
+ 
+ # Pull UserError into the global name space for the benefit of
+ # Environment().SourceSignatures(), which has some import statements
+@@ -303,7 +304,9 @@
+         UserDict.__init__(self, dict)
+ 
+     def __semi_deepcopy__(self):
+-        return self.__class__(self.data, self.env)
++        # These cannot be copied since they would both modify the same builder object, and indeed
++        # just copying would modify the original builder
++        raise TypeError( 'cannot semi_deepcopy a BuilderDict' )
+ 
+     def __setitem__(self, item, val):
+         try:
+@@ -1374,15 +1377,15 @@
+         (like a function).  There are no references to any mutable
+         objects in the original Environment.
+         """
+-        clone = copy.copy(self)
+-        clone._dict = semi_deepcopy(self._dict)
+-
+         try:
+-            cbd = clone._dict['BUILDERS']
++            builders = self._dict['BUILDERS']
+         except KeyError:
+             pass
+-        else:
+-            clone._dict['BUILDERS'] = BuilderDict(cbd, clone)
++            
++        clone = copy.copy(self)
++        # BUILDERS is not safe to do a simple copy
++        clone._dict = semi_deepcopy_dict(self._dict, ['BUILDERS'])
++        clone._dict['BUILDERS'] = BuilderDict(builders, clone)
+ 
+         # Check the methods added via AddMethod() and re-bind them to
+         # the cloned environment.  Only do this if the attribute hasn't
+@@ -1733,7 +1736,7 @@
+         except KeyError:
+             pass
+         else:
+-            kwbd = semi_deepcopy(kwbd)
++            kwbd = BuilderDict(kwbd,self)
+             del kw['BUILDERS']
+             self.__setitem__('BUILDERS', kwbd)
+         kw = copy_non_reserved_keywords(kw)
+diff -r bb48d69e9db5 -r 2e71d37ccc6f src/engine/SCons/Util.py
+--- a/src/engine/SCons/Util.py	Sun May 06 05:42:37 2012 +0200
++++ b/src/engine/SCons/Util.py	Sun May 06 09:11:11 2012 +0200
+@@ -430,15 +430,15 @@
+ # references to anything else it finds.
+ #
+ # A special case is any object that has a __semi_deepcopy__() method,
+-# which we invoke to create the copy, which is used by the BuilderDict
+-# class because of its extra initialization argument.
++# which we invoke to create the copy. Currently only used by
++# BuilderDict to actually prevent the copy operation (as invalid on that object)
+ #
+ # The dispatch table approach used here is a direct rip-off from the
+ # normal Python copy module.
+ 
+ _semi_deepcopy_dispatch = d = {}
+ 
+-def _semi_deepcopy_dict(x):
++def semi_deepcopy_dict(x, exclude = [] ):
+     copy = {}
+     for key, val in x.items():
+         # The regular Python copy.deepcopy() also deepcopies the key,
+@@ -447,9 +447,10 @@
+         #    copy[semi_deepcopy(key)] = semi_deepcopy(val)
+         #
+         # Doesn't seem like we need to, but we'll comment it just in case.
+-        copy[key] = semi_deepcopy(val)
++        if key not in exclude:
++            copy[key] = semi_deepcopy(val)
+     return copy
+-d[dict] = _semi_deepcopy_dict
++d[dict] = semi_deepcopy_dict
+ 
+ def _semi_deepcopy_list(x):
+     return list(map(semi_deepcopy, x))
+@@ -467,14 +468,13 @@
+         if hasattr(x, '__semi_deepcopy__') and callable(x.__semi_deepcopy__):
+             return x.__semi_deepcopy__()
+         elif isinstance(x, UserDict):
+-            return x.__class__(_semi_deepcopy_dict(x))
++            return x.__class__(semi_deepcopy_dict(x))
+         elif isinstance(x, UserList):
+             return x.__class__(_semi_deepcopy_list(x))
+         
+         return x
+ 
+ 
+-
+ class Proxy(object):
+     """A simple generic Proxy class, forwarding all calls to
+     subject.  So, for the benefit of the python newbie, what does
+diff -r bb48d69e9db5 -r 2e71d37ccc6f test/issue2821.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/issue2821.py	Sun May 06 09:11:11 2012 +0200
+@@ -0,0 +1,50 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++test.write('SConstruct', """
++test = Environment()
++def blub():
++    pass
++
++test.Library.__call__ = blub
++test.Clone()
++assert test.Library.__call__ == blub
++""")
++
++test.run()
++
++test.pass_test()
++ 
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
