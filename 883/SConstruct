@@ -1,0 +1,13 @@
+print ARGUMENTS
+from SCons.Variables import *
+'''vars = Variables()
+vars.Add('XX', 'xx desc', 0)
+env = Environment(variables = vars, CPPDEFINES={'ABC' : '$XX'})
+'''
+vars = Variables()
+vars.Add(BoolVariable('RELEASE', 'Set to build for release', 0))
+env = Environment(variables = vars,
+        CPPDEFINES={'RELEASE_BUILD' : '${RELEASE}'})
+
+print env['CPPDEFINES']
+print vars.GenerateHelpText(env)
