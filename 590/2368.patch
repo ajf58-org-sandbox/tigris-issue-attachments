@@ -1,0 +1,12 @@
+diff -ruN src.orig/engine/SCons/Script/Main.py src/engine/SCons/Script/Main.py
+--- src.orig/engine/SCons/Script/Main.py	2009-03-06 00:42:41.967132100 +0100
++++ src/engine/SCons/Script/Main.py	2009-03-06 00:43:08.371132952 +0100
+@@ -868,6 +868,8 @@
+     targets = []
+     xmit_args = []
+     for a in parser.largs:
++        if not len(a):
++            continue
+         if a[0] == '-':
+             continue
+         if '=' in a:
