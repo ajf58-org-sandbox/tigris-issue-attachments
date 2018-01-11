@@ -1,0 +1,47 @@
+--- src/engine/SCons/Tool/swig_orig.py	2008-12-19 19:32:39.000000000 +0100
++++ src/engine/SCons/Tool/swig.py	2008-12-19 19:32:57.000000000 +0100
+@@ -142,7 +142,7 @@
+     env['SWIGFLAGS']         = SCons.Util.CLVar('')
+     env['SWIGCFILESUFFIX']   = '_wrap$CFILESUFFIX'
+     env['SWIGCXXFILESUFFIX'] = '_wrap$CXXFILESUFFIX'
+-    env['_SWIGOUTDIR']       = '${"-outdir " + str(SWIGOUTDIR)}'
++    env['_SWIGOUTDIR']       = r'${"-outdir \"%s\"" % SWIGOUTDIR}'
+     env['SWIGPATH']          = []
+     env['SWIGINCPREFIX']     = '-I'
+     env['SWIGINCSUFFIX']     = ''
+--- test/SWIG/SWIGOUTDIR_orig.py	2008-12-19 19:16:19.000000000 +0100
++++ test/SWIG/SWIGOUTDIR.py	2008-12-19 19:31:17.000000000 +0100
+@@ -77,12 +77,12 @@
+ """ % locals())
+ 
+ def _check_build(generated):
+-    # SCons should realize that it needs to create the output directory to hold the
+-    # generated files.
++    # SCons should realize that it needs to create the output directory to hold
++    # the generated files.
+     test.run(arguments = '.')
+ 
+     # SCons should remove the generated files
+-    test.run(arguments = '-c %s' % string.join(generated, ' '))
++    test.run(arguments=["-c"] + generated)
+     for f in generated:
+         test.must_not_exist(f)
+ 
+@@ -94,14 +94,15 @@
+     print 'Can not find installed Java include files, not testing Java aspect.'
+ else:
+     _write_sconstruct('java', where_java_include)
+-    _check_build(['java/build/foopackJNI.java', 'java/build/foopack.java'])
++    _check_build(['java/build dir/foopackJNI.java',
++            'java/build dir/foopack.java'])
+ 
+ py_inc = test.get_python_inc()
+ if not py_inc:
+     print 'Can not find installed Python include files, not testing Python aspect.'
+ else:
+     _write_sconstruct('python', py_inc)
+-    _check_build(['python/build/foopack.py'])
++    _check_build(['python/build dir/foopack.py'])
+ 
+ 
+ test.pass_test()
