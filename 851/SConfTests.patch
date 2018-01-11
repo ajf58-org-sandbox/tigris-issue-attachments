@@ -1,0 +1,13 @@
+--- src/engine/SCons/SConfTests.py.orig 2011-05-12 22:56:16.000000000 +0300
++++ src/engine/SCons/SConfTests.py  2011-05-12 23:34:39.000000000 +0300
+@@ -74,8 +74,8 @@ class SConfTestCase(unittest.TestCase):
+         self.SConf = SCons.SConf
+         # and we need a new environment, cause references may point to
+         # old modules (well, at least this is safe ...)
+-        self.scons_env = self.Environment.Environment()
+-        self.scons_env.AppendENVPath('PATH', os.environ['PATH'])
++        self.scons_env = self.Environment.Environment(
++            ENV={'PATH': os.environ['PATH']})
+ 
+         # we want to do some autodetection here
+         # this stuff works with
