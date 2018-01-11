@@ -1,0 +1,105 @@
+DEBUG:root:trying to find VC 10.0Exp
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:found VC 10.0Exp
+DEBUG:root:trying to find VC 10.0
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:found VC 10.0
+DEBUG:root:trying to find VC 9.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\9.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 9.0
+DEBUG:root:trying to find VC 9.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VCExpress\\9.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 9.0Exp
+DEBUG:root:trying to find VC 8.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\8.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 8.0
+DEBUG:root:trying to find VC 8.0Exp
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VCExpress\\8.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 8.0Exp
+DEBUG:root:trying to find VC 7.1
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\7.1\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 7.1
+DEBUG:root:trying to find VC 7.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\7.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 7.0
+DEBUG:root:trying to find VC 6.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Wow6432Node\\Microsoft\\VisualStudio\\6.0\\Setup\\Microsoft Visual C++\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 6.0
+DEBUG:root:msvc_setup_env()
+DEBUG:root:get_default_version()
+DEBUG:root:get_default_version(): msvc_version:None msvs_version:None
+DEBUG:root:installed_vcs:['10.0Exp', '10.0']
+DEBUG:root:msvc_setup_env: using default installed MSVC version '10.0Exp'
+
+DEBUG:root:msvc_setup_env: using specified MSVC version '10.0Exp'
+
+DEBUG:root:vc.py:msvc_find_valid_batch_script()
+DEBUG:root:vc.py:get_host_target()
+DEBUG:root:vc.py:get_host_target() req_target_platform:x86_64
+DEBUG:root:vc.py:msvc_find_valid_batch_script() trying target_platform:amd64
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:vc.py: find_batch_file() pdir:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:sdk.py:get_installed_sdks()
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 7.1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v7.1\InstallationFolder
+DEBUG:root:find_sdk_dir(): Trying SDK Dir: C:\Program Files\Microsoft SDKs\Windows\v7.1\
+DEBUG:root:MSCommon/sdk.py:found SDK 7.1
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 7.0
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v7.0\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v7.0\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.1\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.1\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.0A
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.0A\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.0A\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.0
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.0\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.0\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 2003R2
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\MicrosoftSDK\InstalledSDKS\D2FF9F89-8AA2-4373-8A31-C838BF4DBBE1\Install Dir
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\D2FF9F89-8AA2-4373-8A31-C838BF4DBBE1\\Install Dir'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 2003R1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\MicrosoftSDK\InstalledSDKS\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3\Install Dir
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3\\Install Dir'
+DEBUG:root:sdk.py: get_sdk_vc_script():arch_string:amd64 host_arch:amd64 target_arch:amd64
+DEBUG:root:sdk.py: get_sdk_vc_script():file:bin\vcvars64.bat
+DEBUG:root:vc.py:find_batch_file() sdk_bat_file_path:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars64.bat
+DEBUG:root:vc.py:find_batch_file() not found:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars64.bat
+DEBUG:root:vc.py:msvc_find_valid_batch_script() vc_script:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat sdk_script:None
+DEBUG:root:vc.py:msvc_find_valid_batch_script() use_script 2 u'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\vcvarsall.bat', args:amd64
+
+DEBUG:root:Calling 'C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat amd64'
+DEBUG:root:vc.py:msvc_find_valid_batch_script() use_script 3: failed running VC script u'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\vcvarsall.bat': amd64: Error:The specified configuration type is missing.  The tools for the
+configuration might not be installed.
+DEBUG:root:vc.py:msvc_find_valid_batch_script() use_script 6: Neither VC script nor SDK script found
+DEBUG:root:vc.py:msvc_setup_env() use_script 2 None
+
+DEBUG:root:msvc_setup_env()
+DEBUG:root:get_default_version()
+DEBUG:root:get_default_version(): msvc_version:None msvs_version:None
+DEBUG:root:installed_vcs:['10.0Exp', '10.0']
+DEBUG:root:msvc_setup_env: using default installed MSVC version '10.0Exp'
+
+DEBUG:root:msvc_setup_env: using specified MSVC version '10.0Exp'
+
+DEBUG:root:vc.py:msvc_find_valid_batch_script()
+DEBUG:root:vc.py:get_host_target()
+DEBUG:root:vc.py:get_host_target() req_target_platform:x86_64
+DEBUG:root:vc.py:msvc_find_valid_batch_script() trying target_platform:amd64
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:vc.py: find_batch_file() pdir:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:sdk.py:get_installed_sdks()
+DEBUG:root:sdk.py: get_sdk_vc_script():arch_string:amd64 host_arch:amd64 target_arch:amd64
+DEBUG:root:sdk.py: get_sdk_vc_script():file:bin\vcvars64.bat
+DEBUG:root:vc.py:find_batch_file() sdk_bat_file_path:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars64.bat
+DEBUG:root:vc.py:find_batch_file() not found:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars64.bat
+DEBUG:root:vc.py:msvc_find_valid_batch_script() vc_script:C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat sdk_script:None
+DEBUG:root:vc.py:msvc_find_valid_batch_script() use_script 2 u'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\vcvarsall.bat', args:amd64
+
+DEBUG:root:Calling 'C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat amd64'
+DEBUG:root:vc.py:msvc_find_valid_batch_script() use_script 3: failed running VC script u'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\vcvarsall.bat': amd64: Error:The specified configuration type is missing.  The tools for the
+configuration might not be installed.
+DEBUG:root:vc.py:msvc_find_valid_batch_script() use_script 6: Neither VC script nor SDK script found
+DEBUG:root:vc.py:msvc_setup_env() use_script 2 None
+
