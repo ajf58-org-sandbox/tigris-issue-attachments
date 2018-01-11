@@ -1,0 +1,112 @@
+Index: test/TEX/eps_graphics2.py
+===================================================================
+--- test/TEX/eps_graphics2.py	(revision 4781)
++++ test/TEX/eps_graphics2.py	(working copy)
+@@ -159,7 +159,9 @@
+ 
+ \begin{figure}[htbp]
+ \begin{center}
+-\includegraphics{Fig1}
++\includegraphics 
++ [width=.5\textwidth] 
++ {Fig1}
+ \caption{Zone and Node indexing}
+ \label{fig1}
+ \end{center}
+@@ -171,7 +173,7 @@
+ """)
+ 
+ # makeindex will write status messages to stderr (grrr...), so ignore it.
+-test.run(arguments = '.', stderr=None)
++test.run(arguments = 'docs/test.pdf', stderr=None)
+ 
+ 
+ # All (?) the files we expect will get created in the docs directory
+Index: src/engine/SCons/Scanner/LaTeX.py
+===================================================================
+--- src/engine/SCons/Scanner/LaTeX.py	(revision 4781)
++++ src/engine/SCons/Scanner/LaTeX.py	(working copy)
+@@ -173,7 +173,8 @@
+         # Without the \n,  the ^ could match the beginning of a *previous*
+         # line followed by one or more newline characters (i.e. blank
+         # lines), interfering with a match on the next line.
+-        regex = r'^[^%\n]*\\(include|includegraphics(?:\[[^\]]+\])?|lstinputlisting(?:\[[^\]]+\])?|input|bibliography|usepackage){([^}]*)}'
++        # add option for whitespace before the '[options]' or the '{filename}'
++        regex = r'^[^%\n]*\\(include|includegraphics(?:\s*\[[^\]]+\])?|lstinputlisting(?:\[[^\]]+\])?|input|bibliography|usepackage)\s*{([^}]*)}'
+         self.cre = re.compile(regex, re.M)
+         self.graphics_extensions = graphics_extensions
+ 
+@@ -285,7 +286,8 @@
+ 
+         # Cache the includes list in node so we only scan it once:
+         # path_dict = dict(list(path))
+-        noopt_cre = re.compile('\[.*$')
++        # add option for whitespace (\s) before the '['
++        noopt_cre = re.compile('\s*\[.*$')
+         if node.includes != None:
+             includes = node.includes
+         else:
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 4781)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -762,45 +762,50 @@
+     if MakeAcronymsAction is None:
+         MakeAcronymsAction = SCons.Action.Action("$MAKEACRONYMSCOM", "$MAKEACRONYMSCOMSTR")
+ 
++    CDCOM = 'cd '
++    if platform.system() == 'Windows':
++        # allow cd command to change drives on Windows
++        CDCOM = 'cd /D '
++
+     env['TEX']      = 'tex'
+     env['TEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['TEXCOM']   = 'cd ${TARGET.dir} && $TEX $TEXFLAGS ${SOURCE.file}'
++    env['TEXCOM']   = CDCOM + '${TARGET.dir} && $TEX $TEXFLAGS ${SOURCE.file}'
+ 
+     env['PDFTEX']      = 'pdftex'
+     env['PDFTEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['PDFTEXCOM']   = 'cd ${TARGET.dir} && $PDFTEX $PDFTEXFLAGS ${SOURCE.file}'
++    env['PDFTEXCOM']   = CDCOM + '${TARGET.dir} && $PDFTEX $PDFTEXFLAGS ${SOURCE.file}'
+ 
+     env['LATEX']        = 'latex'
+     env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
++    env['LATEXCOM']     = CDCOM + '${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
+     env['PDFLATEX']      = 'pdflatex'
+     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
++    env['PDFLATEXCOM']   = CDCOM + '${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+ 
+     env['BIBTEX']      = 'bibtex'
+     env['BIBTEXFLAGS'] = SCons.Util.CLVar('')
+-    env['BIBTEXCOM']   = 'cd ${TARGET.dir} && $BIBTEX $BIBTEXFLAGS ${SOURCE.filebase}'
++    env['BIBTEXCOM']   = CDCOM + '${TARGET.dir} && $BIBTEX $BIBTEXFLAGS ${SOURCE.filebase}'
+ 
+     env['MAKEINDEX']      = 'makeindex'
+     env['MAKEINDEXFLAGS'] = SCons.Util.CLVar('')
+-    env['MAKEINDEXCOM']   = 'cd ${TARGET.dir} && $MAKEINDEX $MAKEINDEXFLAGS ${SOURCE.file}'
++    env['MAKEINDEXCOM']   = CDCOM + '${TARGET.dir} && $MAKEINDEX $MAKEINDEXFLAGS ${SOURCE.file}'
+ 
+     env['MAKEGLOSSARY']      = 'makeindex'
+     env['MAKEGLOSSARYSTYLE'] = '${SOURCE.filebase}.ist'
+     env['MAKEGLOSSARYFLAGS'] = SCons.Util.CLVar('-s ${MAKEGLOSSARYSTYLE} -t ${SOURCE.filebase}.glg')
+-    env['MAKEGLOSSARYCOM']   = 'cd ${TARGET.dir} && $MAKEGLOSSARY ${SOURCE.filebase}.glo $MAKEGLOSSARYFLAGS -o ${SOURCE.filebase}.gls'
++    env['MAKEGLOSSARYCOM']   = CDCOM + '${TARGET.dir} && $MAKEGLOSSARY ${SOURCE.filebase}.glo $MAKEGLOSSARYFLAGS -o ${SOURCE.filebase}.gls'
+ 
+     env['MAKEACRONYMS']      = 'makeindex'
+     env['MAKEACRONYMSSTYLE'] = '${SOURCE.filebase}.ist'
+     env['MAKEACRONYMSFLAGS'] = SCons.Util.CLVar('-s ${MAKEACRONYMSSTYLE} -t ${SOURCE.filebase}.alg')
+-    env['MAKEACRONYMSCOM']   = 'cd ${TARGET.dir} && $MAKEACRONYMS ${SOURCE.filebase}.acn $MAKEACRONYMSFLAGS -o ${SOURCE.filebase}.acr'
++    env['MAKEACRONYMSCOM']   = CDCOM + '${TARGET.dir} && $MAKEACRONYMS ${SOURCE.filebase}.acn $MAKEACRONYMSFLAGS -o ${SOURCE.filebase}.acr'
+ 
+     env['MAKENCL']      = 'makeindex'
+     env['MAKENCLSTYLE'] = 'nomencl.ist'
+     env['MAKENCLFLAGS'] = '-s ${MAKENCLSTYLE} -t ${SOURCE.filebase}.nlg'
+-    env['MAKENCLCOM']   = 'cd ${TARGET.dir} && $MAKENCL ${SOURCE.filebase}.nlo $MAKENCLFLAGS -o ${SOURCE.filebase}.nls'
++    env['MAKENCLCOM']   = CDCOM + '${TARGET.dir} && $MAKENCL ${SOURCE.filebase}.nlo $MAKENCLFLAGS -o ${SOURCE.filebase}.nls'
+ 
+ def exists(env):
+     return env.Detect('tex')
