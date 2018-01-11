@@ -1,0 +1,14 @@
+263c263
+< def set_sdk_by_directory(env, sdk_dir, lib_subdirs):
+---
+> def set_sdk_by_directory(env, sdk_dir):
+282,283c282
+<         for lsd in lib_subdirs:
+<             env_tuple_list.append(('LIB', os.path.join(sdk_dir, lsd)))
+---
+>         env_tuple_list.append(('LIB', os.path.join(sdk_dir, 'lib')))
+378,379c377
+<     
+<     set_sdk_by_directory(env, sdk_dir, mssdk.lib_subdir[env['HOST_ARCH']])
+---
+>     set_sdk_by_directory(env, sdk_dir)
