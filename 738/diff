@@ -1,0 +1,4433 @@
+Index: bench/timeit.py
+===================================================================
+*** bench/timeit.py	(revision 4810)
+--- bench/timeit.py	(working copy)
+***************
+*** 43,54 ****
+  Note: there is a certain baseline overhead associated with executing a
+  pass statement.  The code here doesn't try to hide it, but you should
+  be aware of it.  The baseline overhead can be measured by invoking the
+! program without arguments.
+! 
+! The baseline overhead differs between Python versions!  Also, to
+! fairly compare older Python versions to Python 2.3, you may want to
+! use python -O for the older versions to avoid timing SET_LINENO
+! instructions.
+  """
+  
+  try:
+--- 43,50 ----
+  Note: there is a certain baseline overhead associated with executing a
+  pass statement.  The code here doesn't try to hide it, but you should
+  be aware of it.  The baseline overhead can be measured by invoking the
+! program without arguments.  The baseline overhead differs between
+! Python versions!
+  """
+  
+  try:
+Index: bench/is_types.py
+===================================================================
+*** bench/is_types.py	(revision 4810)
+--- bench/is_types.py	(working copy)
+***************
+*** 7,63 ****
+  import types
+  from UserDict import UserDict
+  from UserList import UserList
+! 
+! try:
+!     from UserString import UserString
+! except ImportError:
+!     # "Borrowed" from the Python 2.2 UserString module
+!     # and modified slightly for use with SCons.
+!     class UserString:
+!         def __init__(self, seq):
+!             if isinstance(seq, str):
+!                 self.data = seq
+!             elif isinstance(seq, UserString):
+!                 self.data = seq.data[:]
+!             else:
+!                 self.data = str(seq)
+!         def __str__(self): return str(self.data)
+!         def __repr__(self): return repr(self.data)
+!         def __int__(self): return int(self.data)
+!         def __long__(self): return long(self.data)
+!         def __float__(self): return float(self.data)
+!         def __complex__(self): return complex(self.data)
+!         def __hash__(self): return hash(self.data)
+! 
+!         def __cmp__(self, s):
+!             if isinstance(s, UserString):
+!                 return cmp(self.data, s.data)
+!             else:
+!                 return cmp(self.data, s)
+!         def __contains__(self, char):
+!             return char in self.data
+! 
+!         def __len__(self): return len(self.data)
+!         def __getitem__(self, index): return self.__class__(self.data[index])
+!         def __getslice__(self, start, end):
+!             start = max(start, 0); end = max(end, 0)
+!             return self.__class__(self.data[start:end])
+! 
+!         def __add__(self, other):
+!             if isinstance(other, UserString):
+!                 return self.__class__(self.data + other.data)
+!             elif is_String(other):
+!                 return self.__class__(self.data + other)
+!             else:
+!                 return self.__class__(self.data + str(other))
+!         def __radd__(self, other):
+!             if is_String(other):
+!                 return self.__class__(other + self.data)
+!             else:
+!                 return self.__class__(str(other) + self.data)
+!         def __mul__(self, n):
+!             return self.__class__(self.data*n)
+!         __rmul__ = __mul__
+  
+  InstanceType = types.InstanceType
+  DictType = dict
+--- 7,13 ----
+  import types
+  from UserDict import UserDict
+  from UserList import UserList
+! from UserString import UserString
+  
+  InstanceType = types.InstanceType
+  DictType = dict
+Index: bench/bench.py
+===================================================================
+*** bench/bench.py	(revision 4810)
+--- bench/bench.py	(working copy)
+***************
+*** 23,29 ****
+  #
+  # This will allow (as much as possible) us to time just the code itself,
+  # not Python function call overhead.
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  import getopt
+  import sys
+--- 23,28 ----
+Index: test/AddOption/help.py
+===================================================================
+*** test/AddOption/help.py	(revision 4810)
+--- test/AddOption/help.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/TAR/TAR.py
+===================================================================
+*** test/TAR/TAR.py	(revision 4810)
+--- test/TAR/TAR.py	(working copy)
+***************
+*** 44,50 ****
+      if opt == '-f': out = arg
+  def process(outfile, name):
+      if os.path.isdir(name):
+!         ## TODO 2.5: the next three lines can be replaced by
+          #for entry in sorted(os.listdir(name)):
+          list = os.listdir(name)
+          list.sort()
+--- 44,50 ----
+      if opt == '-f': out = arg
+  def process(outfile, name):
+      if os.path.isdir(name):
+!         ## TODO 2.4: the next three lines can be replaced by
+          #for entry in sorted(os.listdir(name)):
+          list = os.listdir(name)
+          list.sort()
+Index: test/SWIG/subdir.py
+===================================================================
+*** test/SWIG/subdir.py	(revision 4810)
+--- test/SWIG/subdir.py	(working copy)
+***************
+*** 68,78 ****
+                    LIBS='%(python_lib)s',
+                    )
+  
+- import sys
+- if sys.version[0] == '1':
+-     # SWIG requires the -classic flag on pre-2.0 Python versions.
+-     env.Append(SWIGFLAGS = ' -classic')
+- 
+  env.LoadableModule('sub/_foo',
+                     ['sub/foo.i', 'sub/foo.c'],
+                     LDMODULEPREFIX='')
+--- 68,73 ----
+Index: test/SWIG/live.py
+===================================================================
+*** test/SWIG/live.py	(revision 4810)
+--- test/SWIG/live.py	(working copy)
+***************
+*** 72,82 ****
+                    LIBS='%(python_lib)s',
+                    )
+  
+- import sys
+- if sys.version[0] == '1':
+-     # SWIG requires the -classic flag on pre-2.0 Python versions.
+-     foo.Append(SWIGFLAGS = ' -classic')
+- 
+  swig = foo.Dictionary('SWIG')
+  bar = foo.Clone(SWIG = [r'%(python)s', 'wrapper.py', swig])
+  foo.LoadableModule(target = 'foo', source = ['foo.c', 'foo.i'])
+--- 72,77 ----
+Index: test/SWIG/remove-modules.py
+===================================================================
+*** test/SWIG/remove-modules.py	(revision 4810)
+--- test/SWIG/remove-modules.py	(working copy)
+***************
+*** 71,81 ****
+                    LIBS='%(python_lib)s',
+                    )
+  
+- import sys
+- if sys.version[0] == '1':
+-     # SWIG requires the -classic flag on pre-2.0 Python versions.
+-     foo.Append(SWIGFLAGS = ' -classic')
+- 
+  foo.LoadableModule(target = 'modulename', source = ['module.i'])
+  """ % locals())
+  
+--- 71,76 ----
+Index: test/SWIG/build-dir.py
+===================================================================
+*** test/SWIG/build-dir.py	(revision 4810)
+--- test/SWIG/build-dir.py	(working copy)
+***************
+*** 71,81 ****
+                    LIBS='%(python_lib)s',
+                    )
+  
+- import sys
+- if sys.version[0] == '1':
+-     # SWIG requires the -classic flag on pre-2.0 Python versions.
+-     env.Append(SWIGFLAGS = '-classic')
+- 
+  Export("env")
+  
+  #
+--- 71,76 ----
+Index: test/SWIG/module-parens.py
+===================================================================
+*** test/SWIG/module-parens.py	(revision 4810)
+--- test/SWIG/module-parens.py	(working copy)
+***************
+*** 52,62 ****
+                    LIBS='%(python_lib)s',
+                    )
+  
+- import sys
+- if sys.version[0] == '1':
+-     # SWIG requires the -classic flag on pre-2.0 Python versions.
+-     env.Append(SWIGFLAGS = ' -classic')
+- 
+  env.LoadableModule('test1.so', ['test1.i', 'test1.cc'])
+  env.LoadableModule('test2.so', ['test2.i', 'test2.cc'])
+  """ % locals())
+--- 52,57 ----
+Index: test/SWIG/SWIGOUTDIR-python.py
+===================================================================
+*** test/SWIG/SWIGOUTDIR-python.py	(revision 4810)
+--- test/SWIG/SWIGOUTDIR-python.py	(working copy)
+***************
+*** 53,63 ****
+                    LIBS='%(python_lib)s',
+                   )
+  
+- import sys
+- if sys.version[0] == '1':
+-     # SWIG requires the -classic flag on pre-2.0 Python versions.
+-     env.Append(SWIGFLAGS = ' -classic')
+- 
+  env.LoadableModule('python_foo_interface', 'python_foo_interface.i')
+  """ % locals())
+  
+--- 53,58 ----
+Index: test/SWIG/module-quoted.py
+===================================================================
+*** test/SWIG/module-quoted.py	(revision 4810)
+--- test/SWIG/module-quoted.py	(working copy)
+***************
+*** 52,62 ****
+                    LIBS='%(python_lib)s',
+  		  )
+  
+- import sys
+- if sys.version[0] == '1':
+-     # SWIG requires the -classic flag on pre-2.0 Python versions.
+-     env.Append(SWIGFLAGS = ' -classic')
+- 
+  env.LoadableModule('test1.so', ['test1.i', 'test1.cc'])
+  """ % locals())
+  
+--- 52,57 ----
+Index: test/Java/Java-1.4.py
+===================================================================
+*** test/Java/Java-1.4.py	(revision 4810)
+--- test/Java/Java-1.4.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/Java/Java-1.5.py
+===================================================================
+*** test/Java/Java-1.5.py	(revision 4810)
+--- test/Java/Java-1.5.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/Java/Java-1.6.py
+===================================================================
+*** test/Java/Java-1.6.py	(revision 4810)
+--- test/Java/Java-1.6.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/Actions/function.py
+===================================================================
+*** test/Actions/function.py	(revision 4810)
+--- test/Actions/function.py	(working copy)
+***************
+*** 158,182 ****
+  scons: done building targets.
+  """
+  
+! import sys
+! if sys.version[:3] == '2.1':
+!     expectedStderr = """\
+! %s:79: SyntaxWarning: local name 'x' in 'a' shadows use of 'x' as global in nested scope 'b'
+!   def a():
+! """ % test.workpath('SConstruct')
+! else:
+!     expectedStderr = ""
+! 
+! def runtest(arguments, expectedOutFile, expectedRebuild=True, stderr=expectedStderr):
+      test.run(arguments=arguments,
+               stdout=expectedRebuild and rebuildstr or nobuildstr,
+!              stderr=expectedStderr)
+      test.must_match('Out.gen.h', expectedOutFile)
+  
+      # Should not be rebuild when ran a second time with the same
+      # arguments.
+  
+!     test.run(arguments = arguments, stdout=nobuildstr, stderr=expectedStderr)
+      test.must_match('Out.gen.h', expectedOutFile)
+  
+  
+--- 158,173 ----
+  scons: done building targets.
+  """
+  
+! def runtest(arguments, expectedOutFile, expectedRebuild=True, stderr=""):
+      test.run(arguments=arguments,
+               stdout=expectedRebuild and rebuildstr or nobuildstr,
+!              stderr="")
+      test.must_match('Out.gen.h', expectedOutFile)
+  
+      # Should not be rebuild when ran a second time with the same
+      # arguments.
+  
+!     test.run(arguments = arguments, stdout=nobuildstr, stderr="")
+      test.must_match('Out.gen.h', expectedOutFile)
+  
+  
+Index: test/Errors/SyntaxError.py
+===================================================================
+*** test/Errors/SyntaxError.py	(revision 4810)
+--- test/Errors/SyntaxError.py	(working copy)
+***************
+*** 37,46 ****
+  a ! x
+  """)
+  
+- # It looks like vanilla Python 2.2 is the only version that
+- # puts "<string>" here in place of the file name.
+  test.run(stdout = "scons: Reading SConscript files ...\n",
+!          stderr = """  File "(.+SConstruct|<string>)", line 2
+  
+      a ! x
+  
+--- 37,44 ----
+  a ! x
+  """)
+  
+  test.run(stdout = "scons: Reading SConscript files ...\n",
+!          stderr = """  File ".+SConstruct", line 2
+  
+      a ! x
+  
+Index: test/LoadableModule.py
+===================================================================
+*** test/LoadableModule.py	(revision 4810)
+--- test/LoadableModule.py	(working copy)
+***************
+*** 41,47 ****
+  
+  dlopen_line = {
+      'darwin' : no_dl_lib,
+-     'darwin8' : no_dl_lib,   # ONLY NEEDED FOR 1.5.2
+      'freebsd4' : no_dl_lib,
+      'linux2' : use_dl_lib,
+  }
+--- 41,46 ----
+Index: test/VariantDir/VariantDir.py
+===================================================================
+*** test/VariantDir/VariantDir.py	(revision 4810)
+--- test/VariantDir/VariantDir.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/TEX/TEX.py
+===================================================================
+*** test/TEX/TEX.py	(revision 4810)
+--- test/TEX/TEX.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/Deprecated/BuildDir.py
+===================================================================
+*** test/Deprecated/BuildDir.py	(revision 4810)
+--- test/Deprecated/BuildDir.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/ZIP/ZIP.py
+===================================================================
+*** test/ZIP/ZIP.py	(revision 4810)
+--- test/ZIP/ZIP.py	(working copy)
+***************
+*** 49,55 ****
+  import sys
+  def process(outfile, name):
+      if os.path.isdir(name):
+!         ## TODO 2.5: the next three lines can be replaced by
+          #for entry in sorted(os.listdir(name)):
+          list = os.listdir(name)
+          list.sort()
+--- 49,55 ----
+  import sys
+  def process(outfile, name):
+      if os.path.isdir(name):
+!         ## TODO 2.4: the next three lines can be replaced by
+          #for entry in sorted(os.listdir(name)):
+          list = os.listdir(name)
+          list.sort()
+Index: test/option/profile.py
+===================================================================
+*** test/option/profile.py	(revision 4810)
+--- test/option/profile.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/option/debug-count.py
+===================================================================
+*** test/option/debug-count.py	(revision 4810)
+--- test/option/debug-count.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/option/help-options.py
+===================================================================
+*** test/option/help-options.py	(revision 4810)
+--- test/option/help-options.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/builderrors.py
+===================================================================
+*** test/builderrors.py	(revision 4810)
+--- test/builderrors.py	(working copy)
+***************
+*** 133,141 ****
+  
+  test.must_not_contain_any_line(test.stderr(), ['Exception', 'Traceback'])
+  
+! # Python 1.5.2 on a FC3 system doesn't even get to the exitvalmap
+! # because it fails with "No such file or directory."  Just comment
+! # this out for now, there are plenty of other good tests below.
+  #expected = [
+  #    "too long", # posix
+  #    "nvalid argument", # win32
+--- 133,140 ----
+  
+  test.must_not_contain_any_line(test.stderr(), ['Exception', 'Traceback'])
+  
+! #TODO: This was originally commented out because of a problem with 1.5.2,
+! # but it doesn't work on later Pythons, either.
+  #expected = [
+  #    "too long", # posix
+  #    "nvalid argument", # win32
+Index: test/Execute.py
+===================================================================
+*** test/Execute.py	(revision 4810)
+--- test/Execute.py	(working copy)
+***************
+*** 90,106 ****
+  scons: *** nonexistent.in/*.*: The system cannot find the path specified
+  """
+  else:
+!     # TODO(1.5):  the underlying shutil.copytree() call doesn't
+!     # add the nonexistent file name to the exception it throws.
+!     # This goes away soon, so just accomodate the difference.
+!     if sys.version[:3] == '1.5':
+!         expect = """\
+! scons: *** Error 1
+! scons: *** Error 2
+! scons: *** No such file or directory
+! """
+!     else:
+!         expect = """\
+  scons: *** Error 1
+  scons: *** Error 2
+  scons: *** nonexistent.in: No such file or directory
+--- 90,96 ----
+  scons: *** nonexistent.in/*.*: The system cannot find the path specified
+  """
+  else:
+!     expect = """\
+  scons: *** Error 1
+  scons: *** Error 2
+  scons: *** nonexistent.in: No such file or directory
+Index: test/scons-time/run/archive/zip.py
+===================================================================
+*** test/scons-time/run/archive/zip.py	(revision 4810)
+--- test/scons-time/run/archive/zip.py	(working copy)
+***************
+*** 39,66 ****
+  
+  test.write_sample_project('foo.zip')
+  
+- try:
+-     import zipfile
+-     # There's a bug in the Python 2.1 zipfile library that makes it blow
+-     # up on 64-bit architectures, when trying to read normal 32-bit zip
+-     # files.  Check for it by trying to read the archive we just created,
+-     # and skipping the test gracefully if there's a problem.
+-     zf = zipfile.ZipFile('foo.zip', 'r')
+-     for name in zf.namelist():
+-         zf.read(name)
+- except ImportError:
+-     # This "shouldn't happen" because the early Python versions that
+-     # have no zipfile module don't support the scons-time script,
+-     # so the initialization above should short-circuit this test.
+-     # But just in case...
+-     fmt = "Python %s has no zipfile module.  Skipping test.\n"
+-     test.skip_test(fmt % sys.version[:3])
+- except zipfile.BadZipfile, e:
+-     if str(e)[:11] == 'Bad CRC-32 ':
+-         fmt = "Python %s zipfile module doesn't work on 64-bit architectures.  Skipping test.\n"
+-         test.skip_test(fmt % sys.version[:3])
+-     raise
+- 
+  test.run(arguments = 'run foo.zip')
+  
+  test.must_exist('foo-000-0.log',
+--- 39,44 ----
+Index: test/scons-time/help/all-subcommands.py
+===================================================================
+*** test/scons-time/help/all-subcommands.py	(revision 4810)
+--- test/scons-time/help/all-subcommands.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/QT/copied-env.py
+===================================================================
+*** test/QT/copied-env.py	(revision 4810)
+--- test/QT/copied-env.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: test/Scanner/unicode.py
+===================================================================
+*** test/Scanner/unicode.py	(revision 4810)
+--- test/Scanner/unicode.py	(working copy)
+***************
+*** 48,103 ****
+  import codecs
+  import sys
+  
+- # TODO(2.2):  Remove when 2.3 becomes the minimal supported version.
+- try:
+-     codecs.BOM_UTF8
+- except AttributeError:
+-     codecs.BOM_UTF8 = '\xef\xbb\xbf'
+- try:
+-     codecs.BOM_UTF16_LE
+-     codecs.BOM_UTF16_BE
+- except AttributeError:
+-     codecs.BOM_UTF16_LE = '\xff\xfe'
+-     codecs.BOM_UTF16_BE = '\xfe\xff'
+- 
+- try:
+-     ''.decode
+- except AttributeError:
+-     # 2.0 through 2.2:  strings have no .decode() method
+-     try:
+-         codecs.lookup('ascii').decode
+-     except AttributeError:
+-         # 2.0 and 2.1:  encodings are a tuple of functions, and the
+-         # decode() function returns a (result, length) tuple.
+-         def my_decode(contents, encoding):
+-             return codecs.lookup(encoding)[1](contents)[0]
+-     else:
+-         # 2.2:  encodings are an object with methods, and the .decode()
+-         # and .decode() returns just the decoded bytes.
+-         def my_decode(contents, encoding):
+-             return codecs.lookup(encoding).decode(contents)
+- else:
+-     # 2.3 or later:  use the .decode() string method
+-     def my_decode(contents, encoding):
+-         return contents.decode(encoding)
+- 
+  def process(outfp, infile):
+      contents = open(infile, 'rb').read()
+      if contents.startswith(codecs.BOM_UTF8):
+!         contents = contents[len(codecs.BOM_UTF8):]
+!         # TODO(2.2):  Remove when 2.3 becomes the minimal supported version.
+!         #contents = contents.decode('utf-8')
+!         contents = my_decode(contents, 'utf-8')
+      elif contents.startswith(codecs.BOM_UTF16_LE):
+!         contents = contents[len(codecs.BOM_UTF16_LE):]
+!         # TODO(2.2):  Remove when 2.3 becomes the minimal supported version.
+!         #contents = contents.decode('utf-16-le')
+!         contents = my_decode(contents, 'utf-16-le')
+      elif contents.startswith(codecs.BOM_UTF16_BE):
+!         contents = contents[len(codecs.BOM_UTF16_BE):]
+!         # TODO(2.2):  Remove when 2.3 becomes the minimal supported version.
+!         #contents = contents.decode('utf-16-be')
+!         contents = my_decode(contents, 'utf-16-be')
+      for line in contents.split('\n')[:-1]:
+          if line[:8] == 'include ':
+              process(outfp, line[8:])
+--- 48,61 ----
+  import codecs
+  import sys
+  
+  def process(outfp, infile):
+      contents = open(infile, 'rb').read()
+      if contents.startswith(codecs.BOM_UTF8):
+!         contents = contents[len(codecs.BOM_UTF8):].decode('utf-8')
+      elif contents.startswith(codecs.BOM_UTF16_LE):
+!         contents = contents[len(codecs.BOM_UTF16_LE):].decode('utf-16-le')
+      elif contents.startswith(codecs.BOM_UTF16_BE):
+!         contents = contents[len(codecs.BOM_UTF16_BE):].decode('utf-16-be')
+      for line in contents.split('\n')[:-1]:
+          if line[:8] == 'include ':
+              process(outfp, line[8:])
+Index: debian/control
+===================================================================
+*** debian/control	(revision 4810)
+--- debian/control	(working copy)
+***************
+*** 2,13 ****
+  Section: devel
+  Priority: optional
+  Maintainer: Moshe Zadka <moshez@debian.org>
+! Build-Depends-Indep: debhelper (>> 2.0.0), python-dev (>> 2.2)
+  Standards-Version: 3.5.6
+  
+  Package: scons
+  Architecture: all
+! Depends: python (>> 2.2)
+  Description: A replacement for Make
+   SCons is an Open Source software construction tool--that is, a build
+   tool; an improved substitute for the classic Make utility; a better
+--- 2,13 ----
+  Section: devel
+  Priority: optional
+  Maintainer: Moshe Zadka <moshez@debian.org>
+! Build-Depends-Indep: debhelper (>> 2.0.0), python-dev (>> 2.4)
+  Standards-Version: 3.5.6
+  
+  Package: scons
+  Architecture: all
+! Depends: python (>> 2.4)
+  Description: A replacement for Make
+   SCons is an Open Source software construction tool--that is, a build
+   tool; an improved substitute for the classic Make utility; a better
+Index: README-local
+===================================================================
+*** README-local	(revision 4810)
+--- README-local	(working copy)
+***************
+*** 44,50 ****
+  EXECUTION REQUIREMENTS
+  ======================
+  
+! Running SCons requires Python version 1.5.2 or later.  There should be
+  no other dependencies or requirements to run SCons.
+  
+  The default SCons configuration assumes use of the Microsoft Visual C++
+--- 44,50 ----
+  EXECUTION REQUIREMENTS
+  ======================
+  
+! Running SCons requires Python version 2.4 or later.  There should be
+  no other dependencies or requirements to run SCons.
+  
+  The default SCons configuration assumes use of the Microsoft Visual C++
+Index: src/setup.py
+===================================================================
+*** src/setup.py	(revision 4810)
+--- src/setup.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 19,24 ----
+Index: src/test_aegistests.py
+===================================================================
+*** src/test_aegistests.py	(revision 4810)
+--- src/test_aegistests.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: src/test_pychecker.py
+===================================================================
+*** src/test_pychecker.py	(revision 4810)
+--- src/test_pychecker.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: src/script/scons-time.py
+===================================================================
+*** src/script/scons-time.py	(revision 4810)
+--- src/script/scons-time.py	(working copy)
+***************
+*** 31,37 ****
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  #
+  from __future__ import nested_scopes
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 31,36 ----
+Index: src/script/sconsign.py
+===================================================================
+*** src/script/sconsign.py	(revision 4810)
+--- src/script/sconsign.py	(working copy)
+***************
+*** 22,29 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 22,27 ----
+Index: src/engine/SCons/Node/NodeTests.py
+===================================================================
+*** src/engine/SCons/Node/NodeTests.py	(revision 4810)
+--- src/engine/SCons/Node/NodeTests.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 19,24 ----
+***************
+*** 1280,1294 ****
+  
+          l = [1]
+          ul = collections.UserList([2])
+!         try:
+!             l.extend(ul)
+!         except TypeError:
+!             # An older version of Python (*cough* 1.5.2 *cough*)
+!             # that doesn't allow UserList objects to extend lists.
+!             pass
+!         else:
+!             s = str(nl)
+!             assert s == "['n3', 'n2', 'n1']", s
+  
+          r = repr(nl)
+          r = re.sub('at (0[xX])?[0-9a-fA-F]+', 'at 0x', r)
+--- 1278,1285 ----
+  
+          l = [1]
+          ul = collections.UserList([2])
+!         s = str(nl)
+!         assert s == "['n3', 'n2', 'n1']", s
+  
+          r = repr(nl)
+          r = re.sub('at (0[xX])?[0-9a-fA-F]+', 'at 0x', r)
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+*** src/engine/SCons/Node/FS.py	(revision 4810)
+--- src/engine/SCons/Node/FS.py	(working copy)
+***************
+*** 31,38 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 31,36 ----
+***************
+*** 43,100 ****
+  import stat
+  import sys
+  import time
+! 
+! try:
+!     import codecs
+! except ImportError:
+!     pass
+! else:
+!     # TODO(2.2):  Remove when 2.3 becomes the minimal supported version.
+!     try:
+!         codecs.BOM_UTF8
+!     except AttributeError:
+!         codecs.BOM_UTF8 = '\xef\xbb\xbf'
+!     try:
+!         codecs.BOM_UTF16_LE
+!         codecs.BOM_UTF16_BE
+!     except AttributeError:
+!         codecs.BOM_UTF16_LE = '\xff\xfe'
+!         codecs.BOM_UTF16_BE = '\xfe\xff'
+! 
+!     # Provide a wrapper function to handle decoding differences in
+!     # different versions of Python.  Normally, we'd try to do this in the
+!     # compat layer (and maybe it still makes sense to move there?) but
+!     # that doesn't provide a way to supply the string class used in
+!     # pre-2.3 Python versions with a .decode() method that all strings
+!     # naturally have.  Plus, the 2.[01] encodings behave differently
+!     # enough that we have to settle for a lowest-common-denominator
+!     # wrapper approach.
+!     #
+!     # Note that the 2.[012] implementations below may be inefficient
+!     # because they perform an explicit look up of the encoding for every
+!     # decode, but they're old enough (and we want to stop supporting
+!     # them soon enough) that it's not worth complicating the interface.
+!     # Think of it as additional incentive for people to upgrade...
+!     try:
+!         ''.decode
+!     except AttributeError:
+!         # 2.0 through 2.2:  strings have no .decode() method
+!         try:
+!             codecs.lookup('ascii').decode
+!         except AttributeError:
+!             # 2.0 and 2.1:  encodings are a tuple of functions, and the
+!             # decode() function returns a (result, length) tuple.
+!             def my_decode(contents, encoding):
+!                 return codecs.lookup(encoding)[1](contents)[0]
+!         else:
+!             # 2.2:  encodings are an object with methods, and the
+!             # .decode() method returns just the decoded bytes.
+!             def my_decode(contents, encoding):
+!                 return codecs.lookup(encoding).decode(contents)
+!     else:
+!         # 2.3 or later:  use the .decode() string method
+!         def my_decode(contents, encoding):
+!             return contents.decode(encoding)
+  
+  import SCons.Action
+  from SCons.Debug import logInstanceCreation
+--- 41,47 ----
+  import stat
+  import sys
+  import time
+! import codecs
+  
+  import SCons.Action
+  from SCons.Debug import logInstanceCreation
+***************
+*** 2276,2283 ****
+      def Dirs(self, pathlist):
+          """Create a list of directories relative to the SConscript
+          directory of this file."""
+-         # TODO(1.5)
+-         # return [self.Dir(p) for p in pathlist]
+          return [self.Dir(p) for p in pathlist]
+  
+      def File(self, name):
+--- 2223,2228 ----
+***************
+*** 2326,2363 ****
+              raise
+          return contents
+  
+!     try:
+!         import codecs
+!     except ImportError:
+!         get_text_contents = get_contents
+!     else:
+!         # This attempts to figure out what the encoding of the text is
+!         # based upon the BOM bytes, and then decodes the contents so that
+!         # it's a valid python string.
+!         def get_text_contents(self):
+!             contents = self.get_contents()
+!             # The behavior of various decode() methods and functions
+!             # w.r.t. the initial BOM bytes is different for different
+!             # encodings and/or Python versions.  ('utf-8' does not strip
+!             # them, but has a 'utf-8-sig' which does; 'utf-16' seems to
+!             # strip them; etc.)  Just side step all the complication by
+!             # explicitly stripping the BOM before we decode().
+!             if contents.startswith(codecs.BOM_UTF8):
+!                 contents = contents[len(codecs.BOM_UTF8):]
+!                 # TODO(2.2):  Remove when 2.3 becomes floor.
+!                 #contents = contents.decode('utf-8')
+!                 contents = my_decode(contents, 'utf-8')
+!             elif contents.startswith(codecs.BOM_UTF16_LE):
+!                 contents = contents[len(codecs.BOM_UTF16_LE):]
+!                 # TODO(2.2):  Remove when 2.3 becomes floor.
+!                 #contents = contents.decode('utf-16-le')
+!                 contents = my_decode(contents, 'utf-16-le')
+!             elif contents.startswith(codecs.BOM_UTF16_BE):
+!                 contents = contents[len(codecs.BOM_UTF16_BE):]
+!                 # TODO(2.2):  Remove when 2.3 becomes floor.
+!                 #contents = contents.decode('utf-16-be')
+!                 contents = my_decode(contents, 'utf-16-be')
+!             return contents
+  
+      def get_content_hash(self):
+          """
+--- 2271,2294 ----
+              raise
+          return contents
+  
+!     # This attempts to figure out what the encoding of the text is
+!     # based upon the BOM bytes, and then decodes the contents so that
+!     # it's a valid python string.
+!     def get_text_contents(self):
+!         contents = self.get_contents()
+!         # The behavior of various decode() methods and functions
+!         # w.r.t. the initial BOM bytes is different for different
+!         # encodings and/or Python versions.  ('utf-8' does not strip
+!         # them, but has a 'utf-8-sig' which does; 'utf-16' seems to
+!         # strip them; etc.)  Just sidestep all the complication by
+!         # explicitly stripping the BOM before we decode().
+!         if contents.startswith(codecs.BOM_UTF8):
+!             return contents[len(codecs.BOM_UTF8):].decode('utf-8')
+!         if contents.startswith(codecs.BOM_UTF16_LE):
+!             return contents[len(codecs.BOM_UTF16_LE):].decode('utf-16-le')
+!         if contents.startswith(codecs.BOM_UTF16_BE):
+!             return contents[len(codecs.BOM_UTF16_BE):].decode('utf-16-be')
+!         return contents
+  
+      def get_content_hash(self):
+          """
+***************
+*** 3140,3146 ****
+              #    if isinstance(node, Dir) or isinstance(node, Entry):
+              #        return node
+              #    return None
+!             #paths = filter(None, map(filedir_lookup, paths))
+  
+              self.default_filedir = filedir
+              paths = [_f for _f in map(self.filedir_lookup, paths) if _f]
+--- 3071,3077 ----
+              #    if isinstance(node, Dir) or isinstance(node, Entry):
+              #        return node
+              #    return None
+!             #paths = [_f for _f in map(filedir_lookup, paths) if _f]
+  
+              self.default_filedir = filedir
+              paths = [_f for _f in map(self.filedir_lookup, paths) if _f]
+Index: src/engine/SCons/Node/FSTests.py
+===================================================================
+*** src/engine/SCons/Node/FSTests.py	(revision 4810)
+--- src/engine/SCons/Node/FSTests.py	(working copy)
+***************
+*** 1189,1205 ****
+          f1 = fs.File(test.workpath("binary_file"))
+          assert f1.get_contents() == "Foo\x1aBar", f1.get_contents()
+  
+!         try:
+!             # TODO(1.5)
+!             eval('test_string = u"Foo\x1aBar"')
+!         except SyntaxError:
+!             pass
+!         else:
+!             # This tests to make sure we can decode UTF-8 text files.
+!             test.write("utf8_file", test_string.encode('utf-8'))
+!             f1 = fs.File(test.workpath("utf8_file"))
+!             assert eval('f1.get_text_contents() == u"Foo\x1aBar"'), \
+!                    f1.get_text_contents()
+  
+          def nonexistent(method, s):
+              try:
+--- 1189,1200 ----
+          f1 = fs.File(test.workpath("binary_file"))
+          assert f1.get_contents() == "Foo\x1aBar", f1.get_contents()
+  
+!         # This tests to make sure we can decode UTF-8 text files.
+!         test_string = u"Foo\x1aBar"
+!         test.write("utf8_file", test_string.encode('utf-8'))
+!         f1 = fs.File(test.workpath("utf8_file"))
+!         assert eval('f1.get_text_contents() == u"Foo\x1aBar"'), \
+!                f1.get_text_contents()
+  
+          def nonexistent(method, s):
+              try:
+***************
+*** 1749,1755 ****
+          e = self.fs.Dir(os.path.join('d', 'empty'))
+          s = self.fs.Dir(os.path.join('d', 'sub'))
+  
+-         #TODO(1.5) files = d.get_contents().split('\n')
+          files = d.get_contents().split('\n')
+  
+          assert e.get_contents() == '', e.get_contents()
+--- 1744,1749 ----
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+*** src/engine/SCons/Node/__init__.py	(revision 4810)
+--- src/engine/SCons/Node/__init__.py	(working copy)
+***************
+*** 40,47 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 40,45 ----
+***************
+*** 1254,1271 ****
+              lines = ["%s:\n" % preamble] + lines
+              return ( ' '*11).join(lines)
+  
+! try:
+!     [].extend(collections.UserList([]))
+! except TypeError:
+!     # Python 1.5.2 doesn't allow a list to be extended by list-like
+!     # objects (such as UserList instances), so just punt and use
+!     # real lists.
+!     def NodeList(l):
+!         return l
+! else:
+!     class NodeList(collections.UserList):
+!         def __str__(self):
+!             return str(list(map(str, self.data)))
+  
+  def get_children(node, parent): return node.children()
+  def ignore_cycle(node, stack): pass
+--- 1252,1260 ----
+              lines = ["%s:\n" % preamble] + lines
+              return ( ' '*11).join(lines)
+  
+! class NodeList(collections.UserList):
+!     def __str__(self):
+!         return str(list(map(str, self.data)))
+  
+  def get_children(node, parent): return node.children()
+  def ignore_cycle(node, stack): pass
+Index: src/engine/SCons/Executor.py
+===================================================================
+*** src/engine/SCons/Executor.py	(revision 4810)
+--- src/engine/SCons/Executor.py	(working copy)
+***************
+*** 26,33 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 26,31 ----
+***************
+*** 237,252 ****
+          """Returns all targets for all batches of this Executor."""
+          result = []
+          for batch in self.batches:
+!             # TODO(1.5):  remove the list() cast
+!             result.extend(list(batch.targets))
+          return result
+  
+      def get_all_sources(self):
+          """Returns all sources for all batches of this Executor."""
+          result = []
+          for batch in self.batches:
+!             # TODO(1.5):  remove the list() cast
+!             result.extend(list(batch.sources))
+          return result
+  
+      def get_all_children(self):
+--- 235,248 ----
+          """Returns all targets for all batches of this Executor."""
+          result = []
+          for batch in self.batches:
+!             result.extend(batch.targets)
+          return result
+  
+      def get_all_sources(self):
+          """Returns all sources for all batches of this Executor."""
+          result = []
+          for batch in self.batches:
+!             result.extend(batch.sources)
+          return result
+  
+      def get_all_children(self):
+***************
+*** 271,278 ****
+          """
+          result = SCons.Util.UniqueList([])
+          for target in self.get_all_targets():
+!             # TODO(1.5):  remove the list() cast
+!             result.extend(list(target.prerequisites))
+          return result
+  
+      def get_action_side_effects(self):
+--- 267,273 ----
+          """
+          result = SCons.Util.UniqueList([])
+          for target in self.get_all_targets():
+!             result.extend(target.prerequisites)
+          return result
+  
+      def get_action_side_effects(self):
+Index: src/engine/SCons/Subst.py
+===================================================================
+*** src/engine/SCons/Subst.py	(revision 4810)
+--- src/engine/SCons/Subst.py	(working copy)
+***************
+*** 25,32 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 25,30 ----
+***************
+*** 254,262 ****
+  class NullNodeList(SCons.Util.NullSeq):
+    def __call__(self, *args, **kwargs): return ''
+    def __str__(self): return ''
+-   # TODO(1.5):  unneeded after new-style classes introduce iterators
+-   def __getitem__(self, i):
+-       raise IndexError
+  
+  NullNodesList = NullNodeList()
+  
+--- 252,257 ----
+***************
+*** 505,512 ****
+              if is_String(args) and not isinstance(args, CmdStringHolder):
+                  args = str(args)        # In case it's a UserString.
+                  try:
+!                     def sub_match(match, conv=self.conv, expand=self.expand, lvars=lvars):
+!                         return conv(expand(match.group(1), lvars))
+                      result = _dollar_exps.sub(sub_match, args)
+                  except TypeError:
+                      # If the internal conversion routine doesn't return
+--- 500,507 ----
+              if is_String(args) and not isinstance(args, CmdStringHolder):
+                  args = str(args)        # In case it's a UserString.
+                  try:
+!                     def sub_match(match):
+!                         return self.conv(self.expand(match.group(1), lvars))
+                      result = _dollar_exps.sub(sub_match, args)
+                  except TypeError:
+                      # If the internal conversion routine doesn't return
+Index: src/engine/SCons/ActionTests.py
+===================================================================
+*** src/engine/SCons/ActionTests.py	(revision 4810)
+--- src/engine/SCons/ActionTests.py	(working copy)
+***************
+*** 1506,1514 ****
+          def f_global(target, source, env, for_signature):
+              return SCons.Action.Action(GlobalFunc)
+  
+!         # TODO(1.5):
+!         #def f_local(target, source, env, for_signature):
+!         def f_local(target, source, env, for_signature, LocalFunc=LocalFunc):
+              return SCons.Action.Action(LocalFunc)
+  
+          env = Environment(XYZ = 'foo')
+--- 1506,1512 ----
+          def f_global(target, source, env, for_signature):
+              return SCons.Action.Action(GlobalFunc)
+  
+!         def f_local(target, source, env, for_signature):
+              return SCons.Action.Action(LocalFunc)
+  
+          env = Environment(XYZ = 'foo')
+***************
+*** 1524,1532 ****
+          def f_global(target, source, env, for_signature):
+              return SCons.Action.Action(GlobalFunc, varlist=['XYZ'])
+  
+!         # TODO(1.5):
+!         #def f_local(target, source, env, for_signature):
+!         def f_local(target, source, env, for_signature, LocalFunc=LocalFunc):
+              return SCons.Action.Action(LocalFunc, varlist=['XYZ'])
+  
+          matches_foo = [x + "foo" for x in func_matches]
+--- 1522,1528 ----
+          def f_global(target, source, env, for_signature):
+              return SCons.Action.Action(GlobalFunc, varlist=['XYZ'])
+  
+!         def f_local(target, source, env, for_signature):
+              return SCons.Action.Action(LocalFunc, varlist=['XYZ'])
+  
+          matches_foo = [x + "foo" for x in func_matches]
+Index: src/engine/SCons/UtilTests.py
+===================================================================
+*** src/engine/SCons/UtilTests.py	(revision 4810)
+--- src/engine/SCons/UtilTests.py	(working copy)
+***************
+*** 700,706 ****
+  
+      def test_intern(self):
+          s1 = silent_intern("spam")
+!         # Python 1.5 and 3.x do not have a unicode() built-in
+          if sys.version[0] == '2': 
+              s2 = silent_intern(unicode("unicode spam"))
+          s3 = silent_intern(42)
+--- 700,706 ----
+  
+      def test_intern(self):
+          s1 = silent_intern("spam")
+!         # Python 3.x does not have a unicode() global function
+          if sys.version[0] == '2': 
+              s2 = silent_intern(unicode("unicode spam"))
+          s3 = silent_intern(42)
+Index: src/engine/SCons/Scanner/Fortran.py
+===================================================================
+*** src/engine/SCons/Scanner/Fortran.py	(revision 4810)
+--- src/engine/SCons/Scanner/Fortran.py	(working copy)
+***************
+*** 25,32 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 25,30 ----
+Index: src/engine/SCons/Scanner/ScannerTests.py
+===================================================================
+*** src/engine/SCons/Scanner/ScannerTests.py	(revision 4810)
+--- src/engine/SCons/Scanner/ScannerTests.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 19,24 ----
+***************
+*** 571,584 ****
+              assert n == 'path/bbb', n
+              assert i == 'bbb', i
+  
+!             # TODO(1.5):  remove when 2.2 is minimal; replace ccc
+!             # variable in find_include() call below with in-line u'ccc'.
+!             try:
+!                 ccc = eval("u'ccc'")
+!             except SyntaxError:
+!                 ccc = 'ccc'
+! 
+!             n, i = s.find_include(('<', ccc), 'foo', ('path',))
+              assert n == 'path/ccc', n
+              assert i == 'ccc', i
+  
+--- 569,575 ----
+              assert n == 'path/bbb', n
+              assert i == 'bbb', i
+  
+!             n, i = s.find_include(('<', u'ccc'), 'foo', ('path',))
+              assert n == 'path/ccc', n
+              assert i == 'ccc', i
+  
+Index: src/engine/SCons/Scanner/LaTeX.py
+===================================================================
+*** src/engine/SCons/Scanner/LaTeX.py	(revision 4810)
+--- src/engine/SCons/Scanner/LaTeX.py	(working copy)
+***************
+*** 57,68 ****
+      env.PrependENVPath(var, abspath)
+      try:
+          if SCons.Util.is_List(env[var]):
+-             #TODO(1.5)
+-             #env.PrependENVPath(var, [os.path.abspath(str(p)) for p in env[var]])
+              env.PrependENVPath(var, [os.path.abspath(str(p)) for p in env[var]])
+          else:
+              # Split at os.pathsep to convert into absolute path
+-             #TODO(1.5) env.PrependENVPath(var, [os.path.abspath(p) for p in str(env[var]).split(os.pathsep)])
+              env.PrependENVPath(var, [os.path.abspath(p) for p in str(env[var]).split(os.pathsep)])
+      except KeyError:
+          pass
+--- 57,65 ----
+***************
+*** 72,79 ****
+      # does not work, refuses to append ":" (os.pathsep).
+  
+      if SCons.Util.is_List(env['ENV'][var]):
+-         # TODO(1.5)
+-         #env['ENV'][var] = os.pathsep.join(env['ENV'][var])
+          env['ENV'][var] = os.pathsep.join(env['ENV'][var])
+      # Append the trailing os.pathsep character here to catch the case with no env[var]
+      env['ENV'][var] = env['ENV'][var] + os.pathsep
+--- 69,74 ----
+***************
+*** 251,260 ****
+          if include[0] == 'includegraphics':
+              base, ext = os.path.splitext( filename )
+              if ext == "":
+!                 #TODO(1.5) return [filename + e for e in self.graphics_extensions]
+!                 #return map(lambda e: filename+e, self.graphics_extensions + TexGraphics)
+!                 # use the line above to find dependency for PDF builder when only .eps figure is present
+!                 # Since it will be found if the user tell scons how to make the pdf figure leave it out for now.
+                  return [filename+e for e in self.graphics_extensions]
+          return [filename]
+  
+--- 246,256 ----
+          if include[0] == 'includegraphics':
+              base, ext = os.path.splitext( filename )
+              if ext == "":
+!                 #return [filename+e for e in self.graphics_extensions + TexGraphics]
+!                 # use the line above to find dependencies for the PDF builder
+!                 # when only an .eps figure is present.  Since it will be found
+!                 # if the user tells scons how to make the pdf figure, leave
+!                 # it out for now.
+                  return [filename+e for e in self.graphics_extensions]
+          return [filename]
+  
+***************
+*** 335,353 ****
+          while queue:
+              
+              include = queue.pop()
+-             # TODO(1.5):  more compact:
+-             #try:
+-             #    if seen[include[1]] == 1:
+-             #        continue
+-             #except KeyError:
+-             #    seen[include[1]] = 1
+              try:
+!                 already_seen = seen[include[1]]
+              except KeyError:
+                  seen[include[1]] = 1
+-                 already_seen = False
+-             if already_seen:
+-                 continue
+  
+              #
+              # Handle multiple filenames in include[1]
+--- 331,341 ----
+          while queue:
+              
+              include = queue.pop()
+              try:
+!                 if seen[include[1]] == 1:
+!                     continue
+              except KeyError:
+                  seen[include[1]] = 1
+  
+              #
+              # Handle multiple filenames in include[1]
+Index: src/engine/SCons/Scanner/Dir.py
+===================================================================
+*** src/engine/SCons/Scanner/Dir.py	(revision 4810)
+--- src/engine/SCons/Scanner/Dir.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 19,24 ----
+Index: src/engine/SCons/Errors.py
+===================================================================
+*** src/engine/SCons/Errors.py	(revision 4810)
+--- src/engine/SCons/Errors.py	(working copy)
+***************
+*** 157,165 ****
+              status=status,      # might be 0, OK here
+              exitstatus=status,      # might be 0, OK here
+              exc_info=exc_info)
+!     # TODO(1.5):
+!     #elif isinstance(status, (StopError, UserError)):
+!     elif isinstance(status, StopError) or isinstance(status, UserError):
+          buildError = BuildError(
+              errstr=str(status),
+              status=2,
+--- 157,163 ----
+              status=status,      # might be 0, OK here
+              exitstatus=status,      # might be 0, OK here
+              exc_info=exc_info)
+!     elif isinstance(status, (StopError, UserError)):
+          buildError = BuildError(
+              errstr=str(status),
+              status=2,
+Index: src/engine/SCons/Script/Interactive.py
+===================================================================
+*** src/engine/SCons/Script/Interactive.py	(revision 4810)
+--- src/engine/SCons/Script/Interactive.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 19,24 ----
+Index: src/engine/SCons/Script/__init__.py
+===================================================================
+*** src/engine/SCons/Script/__init__.py	(revision 4810)
+--- src/engine/SCons/Script/__init__.py	(working copy)
+***************
+*** 64,72 ****
+      try:
+          SCons.Memoize.EnableMemoization()
+      except SCons.Warnings.Warning:
+!         # Some warning was thrown (inability to --debug=memoizer on
+!         # Python 1.5.2 because it doesn't have metaclasses).  Arrange
+!         # for it to be displayed or not after warnings are configured.
+          import Main
+          exc_type, exc_value, tb = sys.exc_info()
+          Main.delayed_warnings.append((exc_type, exc_value))
+--- 64,71 ----
+      try:
+          SCons.Memoize.EnableMemoization()
+      except SCons.Warnings.Warning:
+!         # Some warning was thrown.  Arrange for it to be displayed
+!         # or not after warnings are configured.
+          import Main
+          exc_type, exc_value, tb = sys.exc_info()
+          Main.delayed_warnings.append((exc_type, exc_value))
+Index: src/engine/SCons/Script/SConsOptions.py
+===================================================================
+*** src/engine/SCons/Script/SConsOptions.py	(revision 4810)
+--- src/engine/SCons/Script/SConsOptions.py	(working copy)
+***************
+*** 28,39 ****
+  import sys
+  import textwrap
+  
+! try:
+!     no_hyphen_re = re.compile(r'(\s+|(?<=[\w\!\"\'\&\.\,\?])-{2,}(?=\w))')
+! except re.error:
+!     # Pre-2.0 Python versions don't have the (?<= negative
+!     # look-behind assertion.
+!     no_hyphen_re = re.compile(r'(\s+|-*\w{2,}-(?=\w{2,}))')
+  
+  try:
+      from gettext import gettext
+--- 28,34 ----
+  import sys
+  import textwrap
+  
+! no_hyphen_re = re.compile(r'(\s+|(?<=[\w\!\"\'\&\.\,\?])-{2,}(?=\w))')
+  
+  try:
+      from gettext import gettext
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+*** src/engine/SCons/Script/Main.py	(revision 4810)
+--- src/engine/SCons/Script/Main.py	(working copy)
+***************
+*** 32,39 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 32,37 ----
+***************
+*** 270,282 ****
+          sys.stderr.write(errfmt % (nodename, buildError))
+  
+          if (buildError.exc_info[2] and buildError.exc_info[1] and 
+!            # TODO(1.5)
+!            #not isinstance(
+!            #    buildError.exc_info[1], 
+!            #    (EnvironmentError, SCons.Errors.StopError, SCons.Errors.UserError))):
+!            not isinstance(buildError.exc_info[1], EnvironmentError) and
+!            not isinstance(buildError.exc_info[1], SCons.Errors.StopError) and
+!            not isinstance(buildError.exc_info[1], SCons.Errors.UserError)):
+              type, value, trace = buildError.exc_info
+              traceback.print_exception(type, value, trace)
+          elif tb and print_stacktrace:
+--- 268,277 ----
+          sys.stderr.write(errfmt % (nodename, buildError))
+  
+          if (buildError.exc_info[2] and buildError.exc_info[1] and 
+!            not isinstance(
+!                buildError.exc_info[1], 
+!                (EnvironmentError, SCons.Errors.StopError,
+!                             SCons.Errors.UserError))):
+              type, value, trace = buildError.exc_info
+              traceback.print_exception(type, value, trace)
+          elif tb and print_stacktrace:
+Index: src/engine/SCons/Script/SConscript.py
+===================================================================
+*** src/engine/SCons/Script/SConscript.py	(revision 4810)
+--- src/engine/SCons/Script/SConscript.py	(working copy)
+***************
+*** 26,33 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 26,31 ----
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+*** src/engine/SCons/Taskmaster.py	(revision 4810)
+--- src/engine/SCons/Taskmaster.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __doc__ = """
+  Generic Taskmaster module for the SCons build engine.
+--- 19,24 ----
+***************
+*** 952,967 ****
+                          self.trace_node(n)))
+          try:
+              while True:
+!                 try:
+!                     node = to_visit.pop()
+!                 except AttributeError:
+!                     # Python 1.5.2
+!                     if len(to_visit):
+!                         node = to_visit[0]
+!                         to_visit.remove(node)
+!                     else:
+!                         break
+! 
+                  node_func(node)
+  
+                  # Prune recursion by flushing the waiting children
+--- 950,956 ----
+                          self.trace_node(n)))
+          try:
+              while True:
+!                 node = to_visit.pop()
+                  node_func(node)
+  
+                  # Prune recursion by flushing the waiting children
+***************
+*** 981,987 ****
+              pass
+  
+          # We have the stick back the pending_children list into the
+!         # task master because the python 1.5.2 compatibility does not
+          # allow us to use in-place updates
+          self.pending_children = pending_children
+  
+--- 970,976 ----
+              pass
+  
+          # We have the stick back the pending_children list into the
+!         # taskmaster because the python 1.5.2 compatibility does not
+          # allow us to use in-place updates
+          self.pending_children = pending_children
+  
+***************
+*** 998,1013 ****
+          if not self.pending_children:
+              return
+  
+-         # TODO(1.5)
+-         #nclist = [ (n, find_cycle([n], set())) for n in self.pending_children ]
+          nclist = [(n, find_cycle([n], set())) for n in self.pending_children]
+  
+!         # TODO(1.5)
+!         #genuine_cycles = [
+!         #    node for node, cycle in nclist
+!         #             if cycle or node.get_state() != NODE_EXECUTED
+!         #]
+!         genuine_cycles = [t for t in nclist if t[1] or t[0].get_state() != NODE_EXECUTED]
+          if not genuine_cycles:
+              # All of the "cycles" found were single nodes in EXECUTED state,
+              # which is to say, they really weren't cycles.  Just return.
+--- 987,998 ----
+          if not self.pending_children:
+              return
+  
+          nclist = [(n, find_cycle([n], set())) for n in self.pending_children]
+  
+!         genuine_cycles = [
+!             node for node,cycle in nclist
+!                      if cycle or node.get_state() != NODE_EXECUTED
+!         ]
+          if not genuine_cycles:
+              # All of the "cycles" found were single nodes in EXECUTED state,
+              # which is to say, they really weren't cycles.  Just return.
+Index: src/engine/SCons/Debug.py
+===================================================================
+*** src/engine/SCons/Debug.py	(revision 4810)
+--- src/engine/SCons/Debug.py	(working copy)
+***************
+*** 1,7 ****
+  """SCons.Debug
+  
+! Code for debugging SCons internal things.  Not everything here is
+! guaranteed to work all the way back to Python 1.5.2, and shouldn't be
+  needed by most users.
+  
+  """
+--- 1,6 ----
+  """SCons.Debug
+  
+! Code for debugging SCons internal things.  Shouldn't be
+  needed by most users.
+  
+  """
+***************
+*** 34,58 ****
+  import os
+  import sys
+  import time
+! 
+! # Recipe 14.10 from the Python Cookbook.
+! try:
+!     import weakref
+! except ImportError:
+!     def logInstanceCreation(instance, name=None):
+!         pass
+! else:
+!     def logInstanceCreation(instance, name=None):
+!         if name is None:
+!             name = instance.__class__.__name__
+!         if name not in tracked_classes:
+!             tracked_classes[name] = []
+!         tracked_classes[name].append(weakref.ref(instance))
+! 
+! 
+  
+  tracked_classes = {}
+  
+  def string_to_classes(s):
+      if s == '*':
+          return sorted(tracked_classes.keys())
+--- 33,49 ----
+  import os
+  import sys
+  import time
+! import weakref
+  
+  tracked_classes = {}
+  
++ def logInstanceCreation(instance, name=None):
++     if name is None:
++         name = instance.__class__.__name__
++     if name not in tracked_classes:
++         tracked_classes[name] = []
++     tracked_classes[name].append(weakref.ref(instance))
++ 
+  def string_to_classes(s):
+      if s == '*':
+          return sorted(tracked_classes.keys())
+***************
+*** 93,98 ****
+--- 84,93 ----
+          mstr = open('/proc/self/stat').read()
+          mstr = mstr.split()[22]
+          return int(mstr)
++ elif sys.platform[:6] == 'darwin':
++     #TODO really get memory stats for OS X
++     def memory():
++         return 0
+  else:
+      try:
+          import resource
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+*** src/engine/SCons/EnvironmentTests.py	(revision 4810)
+--- src/engine/SCons/EnvironmentTests.py	(working copy)
+***************
+*** 234,250 ****
+      def test_contains(self):
+          """Test the SubstitutionEnvironment __contains__() method
+          """
+!         try:
+!             'x' in {'x':1}
+!         except TypeError:
+!             # TODO(1.5)
+!             # An early version of Python that doesn't support "in"
+!             # on dictionaries.  Just pass the test.
+!             pass
+!         else:
+!             env = SubstitutionEnvironment(XXX = 'x')
+!             assert 'XXX' in env
+!             assert not 'YYY' in env
+  
+      def test_items(self):
+          """Test the SubstitutionEnvironment items() method
+--- 234,242 ----
+      def test_contains(self):
+          """Test the SubstitutionEnvironment __contains__() method
+          """
+!         env = SubstitutionEnvironment(XXX = 'x')
+!         assert 'XXX' in env
+!         assert not 'YYY' in env
+  
+      def test_items(self):
+          """Test the SubstitutionEnvironment items() method
+***************
+*** 1706,1722 ****
+          env['CLVar'] = CLVar([])
+          env.AppendUnique(CLVar = 'bar')
+          result = env['CLVar']
+!         if sys.version[0] == '1' or sys.version[:3] == '2.0':
+!             # Python 2.0 and before have a quirky behavior where CLVar([])
+!             # actually matches '' and [] due to different __coerce__()
+!             # semantics in the UserList implementation.  It isn't worth a
+!             # lot of effort to get this corner case to work identically
+!             # (support for Python 1.5 support will die soon anyway),
+!             # so just treat it separately for now.
+!             assert result == 'bar', result
+!         else:
+!             assert isinstance(result, CLVar), repr(result)
+!             assert result == ['bar'], result
+  
+          env['CLVar'] = CLVar(['abc'])
+          env.AppendUnique(CLVar = 'bar')
+--- 1698,1705 ----
+          env['CLVar'] = CLVar([])
+          env.AppendUnique(CLVar = 'bar')
+          result = env['CLVar']
+!         assert isinstance(result, CLVar), repr(result)
+!         assert result == ['bar'], result
+  
+          env['CLVar'] = CLVar(['abc'])
+          env.AppendUnique(CLVar = 'bar')
+***************
+*** 2356,2372 ****
+          env['CLVar'] = CLVar([])
+          env.PrependUnique(CLVar = 'bar')
+          result = env['CLVar']
+!         if sys.version[0] == '1' or sys.version[:3] == '2.0':
+!             # Python 2.0 and before have a quirky behavior where CLVar([])
+!             # actually matches '' and [] due to different __coerce__()
+!             # semantics in the UserList implementation.  It isn't worth a
+!             # lot of effort to get this corner case to work identically
+!             # (support for Python 1.5 support will die soon anyway),
+!             # so just treat it separately for now.
+!             assert result == 'bar', result
+!         else:
+!             assert isinstance(result, CLVar), repr(result)
+!             assert result == ['bar'], result
+  
+          env['CLVar'] = CLVar(['abc'])
+          env.PrependUnique(CLVar = 'bar')
+--- 2339,2346 ----
+          env['CLVar'] = CLVar([])
+          env.PrependUnique(CLVar = 'bar')
+          result = env['CLVar']
+!         assert isinstance(result, CLVar), repr(result)
+!         assert result == ['bar'], result
+  
+          env['CLVar'] = CLVar(['abc'])
+          env.PrependUnique(CLVar = 'bar')
+***************
+*** 3624,3647 ****
+  
+      def test_contains(self):
+          """Test the OverrideEnvironment __contains__() method"""
+!         try:
+!             'x' in {'x':1}
+!         except TypeError:
+!             # TODO(1.5)
+!             # An early version of Python that doesn't support "in"
+!             # on dictionaries.  Just pass the test.
+!             pass
+!         else:
+!             env, env2, env3 = self.envs
+!             assert 'XXX' in env
+!             assert 'XXX' in env2
+!             assert 'XXX' in env3
+!             assert 'YYY' in env
+!             assert 'YYY' in env2
+!             assert 'YYY' in env3
+!             assert not 'ZZZ' in env
+!             assert not 'ZZZ' in env2
+!             assert 'ZZZ' in env3
+  
+      def test_items(self):
+          """Test the OverrideEnvironment Dictionary() method"""
+--- 3598,3613 ----
+  
+      def test_contains(self):
+          """Test the OverrideEnvironment __contains__() method"""
+!         env, env2, env3 = self.envs
+!         assert 'XXX' in env
+!         assert 'XXX' in env2
+!         assert 'XXX' in env3
+!         assert 'YYY' in env
+!         assert 'YYY' in env2
+!         assert 'YYY' in env3
+!         assert not 'ZZZ' in env
+!         assert not 'ZZZ' in env2
+!         assert 'ZZZ' in env3
+  
+      def test_items(self):
+          """Test the OverrideEnvironment Dictionary() method"""
+Index: src/engine/SCons/compat/_scons_hashlib.py
+===================================================================
+*** src/engine/SCons/compat/_scons_hashlib.py	(revision 4810)
+--- src/engine/SCons/compat/_scons_hashlib.py	(working copy)
+***************
+*** 61,83 ****
+      def update(self, arg):
+          return self.m.update(arg)
+  
+!     if hasattr(md5.md5(), 'hexdigest'):
+! 
+!         def hexdigest(self):
+!             return self.m.hexdigest()
+! 
+!     else:
+! 
+!         # Objects created by the underlying md5 module have no native
+!         # hexdigest() method (*cough* 1.5.2 *cough*), so provide an
+!         # equivalent lifted from elsewhere.
+!         def hexdigest(self):
+!             h = hexdigits
+!             r = ''
+!             for c in self.digest():
+!                 i = ord(c)
+!                 r = r + h[(i >> 4) & 0xF] + h[i & 0xF]
+!             return r
+  
+  new = md5obj
+  
+--- 61,68 ----
+      def update(self, arg):
+          return self.m.update(arg)
+  
+!     def hexdigest(self):
+!         return self.m.hexdigest()
+  
+  new = md5obj
+  
+Index: src/engine/SCons/JobTests.py
+===================================================================
+*** src/engine/SCons/JobTests.py	(revision 4810)
+--- src/engine/SCons/JobTests.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 19,24 ----
+Index: src/engine/SCons/Environment.py
+===================================================================
+*** src/engine/SCons/Environment.py	(revision 4810)
+--- src/engine/SCons/Environment.py	(working copy)
+***************
+*** 30,37 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 30,35 ----
+***************
+*** 419,425 ****
+          # list works a little better in Python 2.5, but that has the
+          # disadvantage of maybe getting out of sync if we ever add more
+          # variable names.  Using self._special_set.has_key() works a
+!         # little better in Python 2.4, but is worse then this test.
+          # So right now it seems like a good trade-off, but feel free to
+          # revisit this with bench/env.__setitem__.py as needed (and
+          # as newer versions of Python come out).
+--- 417,423 ----
+          # list works a little better in Python 2.5, but that has the
+          # disadvantage of maybe getting out of sync if we ever add more
+          # variable names.  Using self._special_set.has_key() works a
+!         # little better in Python 2.4, but is worse than this test.
+          # So right now it seems like a good trade-off, but feel free to
+          # revisit this with bench/env.__setitem__.py as needed (and
+          # as newer versions of Python come out).
+***************
+*** 586,592 ****
+          # othewise force a shell
+          if not SCons.Util.is_List(command): kw['shell'] = True
+          # run constructed command
+-         #TODO(1.5) p = SCons.Action._subproc(self, command, **kw)
+          p = SCons.Action._subproc(self, command, **kw)
+          out,err = p.communicate()
+          status = p.wait()
+--- 584,589 ----
+***************
+*** 663,677 ****
+              'RPATH'         : [],
+          }
+  
+!         # The use of the "me" parameter to provide our own name for
+!         # recursion is an egregious hack to support Python 2.1 and before.
+!         def do_parse(arg, me, self = self, dict = dict):
+              # if arg is a sequence, recurse with each element
+              if not arg:
+                  return
+  
+              if not SCons.Util.is_String(arg):
+!                 for t in arg: me(t, me)
+                  return
+  
+              # if arg is a command, execute it
+--- 660,672 ----
+              'RPATH'         : [],
+          }
+  
+!         def do_parse(arg):
+              # if arg is a sequence, recurse with each element
+              if not arg:
+                  return
+  
+              if not SCons.Util.is_String(arg):
+!                 for t in arg: do_parse(t)
+                  return
+  
+              # if arg is a command, execute it
+***************
+*** 790,796 ****
+                      dict['CCFLAGS'].append(arg)
+      
+          for arg in flags:
+!             do_parse(arg, do_parse)
+          return dict
+  
+      def MergeFlags(self, args, unique=1, dict=None):
+--- 785,791 ----
+                      dict['CCFLAGS'].append(arg)
+      
+          for arg in flags:
+!             do_parse(arg)
+          return dict
+  
+      def MergeFlags(self, args, unique=1, dict=None):
+***************
+*** 870,886 ****
+  #                 self.AppendENVPath(pathname, pathval)
+  
+  
+- # Used by the FindSourceFiles() method, below.
+- # Stuck here for support of pre-2.2 Python versions.
+- def build_source(ss, result):
+-     for s in ss:
+-         if isinstance(s, SCons.Node.FS.Dir):
+-             build_source(s.all_children(), result)
+-         elif s.has_builder():
+-             build_source(s.sources, result)
+-         elif isinstance(s.disambiguate(), SCons.Node.FS.File):
+-             result.append(s)
+- 
+  def default_decide_source(dependency, target, prev_ni):
+      f = SCons.Defaults.DefaultEnvironment().decide_source
+      return f(dependency, target, prev_ni)
+--- 865,870 ----
+***************
+*** 1498,1508 ****
+          for line in lines:
+              try:
+                  target, depends = line.split(':', 1)
+!             except (AttributeError, TypeError, ValueError):
+!                 # Python 1.5.2 throws TypeError if line isn't a string,
+!                 # Python 2.x throws AttributeError because it tries
+!                 # to call line.split().  Either can throw ValueError
+!                 # if the line doesn't split into two or more elements.
+                  pass
+              else:
+                  tdlist.append((target.split(), depends.split()))
+--- 1482,1490 ----
+          for line in lines:
+              try:
+                  target, depends = line.split(':', 1)
+!             except (AttributeError, ValueError):
+!                 # Throws AttributeError if line isn't a string.  Can throw
+!                 # ValueError if line doesn't split into two or more elements.
+                  pass
+              else:
+                  tdlist.append((target.split(), depends.split()))
+***************
+*** 2140,2156 ****
+          node = self.arg2nodes(node, self.fs.Entry)[0]
+  
+          sources = []
+!         # Uncomment this and get rid of the global definition when we
+!         # drop support for pre-2.2 Python versions.
+!         #def build_source(ss, result):
+!         #    for s in ss:
+!         #        if isinstance(s, SCons.Node.FS.Dir):
+!         #            build_source(s.all_children(), result)
+!         #        elif s.has_builder():
+!         #            build_source(s.sources, result)
+!         #        elif isinstance(s.disambiguate(), SCons.Node.FS.File):
+!         #            result.append(s)
+!         build_source(node.all_children(), sources)
+  
+      # THIS CODE APPEARS TO HAVE NO EFFECT
+      #    # get the final srcnode for all nodes, this means stripping any
+--- 2122,2136 ----
+          node = self.arg2nodes(node, self.fs.Entry)[0]
+  
+          sources = []
+!         def build_source(ss):
+!             for s in ss:
+!                 if isinstance(s, SCons.Node.FS.Dir):
+!                     build_source(s.all_children())
+!                 elif s.has_builder():
+!                     build_source(s.sources)
+!                 elif isinstance(s.disambiguate(), SCons.Node.FS.File):
+!                     sources.append(s)
+!         build_source(node.all_children())
+  
+      # THIS CODE APPEARS TO HAVE NO EFFECT
+      #    # get the final srcnode for all nodes, this means stripping any
+Index: src/engine/SCons/SConf.py
+===================================================================
+*** src/engine/SCons/SConf.py	(revision 4810)
+--- src/engine/SCons/SConf.py	(working copy)
+***************
+*** 155,163 ****
+      return (str(target[0]) + ' <-\n  |' +
+              source[0].get_contents().replace( '\n', "\n  |" ) )
+  
+- # python 2.2 introduces bool
+- BooleanTypes = [int, bool]
+- 
+  class SConfBuildInfo(SCons.Node.FS.FileBuildInfo):
+      """
+      Special build info for targets of configure tests. Additional members
+--- 155,160 ----
+***************
+*** 783,789 ****
+          string. In case of an integer, the written text will be 'yes' or 'no'.
+          The result is only displayed when self.did_show_result is not set.
+          """
+!         if type(res) in BooleanTypes:
+              if res:
+                  text = "yes"
+              else:
+--- 780,786 ----
+          string. In case of an integer, the written text will be 'yes' or 'no'.
+          The result is only displayed when self.did_show_result is not set.
+          """
+!         if isinstance(res, (int, bool)):
+              if res:
+                  text = "yes"
+              else:
+Index: src/engine/SCons/BuilderTests.py
+===================================================================
+*** src/engine/SCons/BuilderTests.py	(revision 4810)
+--- src/engine/SCons/BuilderTests.py	(working copy)
+***************
+*** 706,726 ****
+          tgt.build()
+          assert env['CNT'][0] == 2
+          tgts = builder(env, None, infiles[2:4])
+!         try:
+!             [].extend(collections.UserList())
+!         except TypeError:
+!             # Old Python version (1.5.2) that can't handle extending
+!             # a list with list-like objects.  That means the return
+!             # value from the builder call is a real list with Nodes,
+!             # and doesn't have a __str__() method that stringifies
+!             # the individual elements.  Since we're gong to drop 1.5.2
+!             # support anyway, don't bother trying to test for it.
+!             pass
+!         else:
+!             s = list(map(str, tgts))
+!             expect = [test.workpath('2.out'), test.workpath('3.out')]
+!             expect = list(map(os.path.normcase, expect))
+!             assert list(map(os.path.normcase, s)) == expect, s
+          for t in tgts: t.prepare()
+          tgts[0].build()
+          tgts[1].build()
+--- 706,715 ----
+          tgt.build()
+          assert env['CNT'][0] == 2
+          tgts = builder(env, None, infiles[2:4])
+!         s = list(map(str, tgts))
+!         expect = [test.workpath('2.out'), test.workpath('3.out')]
+!         expect = list(map(os.path.normcase, expect))
+!         assert list(map(os.path.normcase, s)) == expect, s
+          for t in tgts: t.prepare()
+          tgts[0].build()
+          tgts[1].build()
+Index: src/engine/SCons/Job.py
+===================================================================
+*** src/engine/SCons/Job.py	(revision 4810)
+--- src/engine/SCons/Job.py	(working copy)
+***************
+*** 295,303 ****
+                  worker = Worker(self.requestQueue, self.resultsQueue, interrupted)
+                  self.workers.append(worker)
+  
+!             # Once we drop Python 1.5 we can change the following to:
+!             #if 'prev_size' in locals():
+!             if 'prev_size' in locals().keys():
+                  threading.stack_size(prev_size)
+  
+          def put(self, task):
+--- 295,301 ----
+                  worker = Worker(self.requestQueue, self.resultsQueue, interrupted)
+                  self.workers.append(worker)
+  
+!             if 'prev_size' in locals():
+                  threading.stack_size(prev_size)
+  
+          def put(self, task):
+Index: src/engine/SCons/Util.py
+===================================================================
+*** src/engine/SCons/Util.py	(revision 4810)
+--- src/engine/SCons/Util.py	(working copy)
+***************
+*** 304,575 ****
+  # exception, but handling the exception when it's not the right type is
+  # often too slow.
+  
+! try:
+!     class mystr(str):
+!         pass
+! except TypeError:
+!     # An older Python version without new-style classes.
+!     #
+!     # The actual implementations here have been selected after timings
+!     # coded up in in bench/is_types.py (from the SCons source tree,
+!     # see the scons-src distribution), mostly against Python 1.5.2.
+!     # Key results from those timings:
+!     #
+!     #   --  Storing the type of the object in a variable (t = type(obj))
+!     #       slows down the case where it's a native type and the first
+!     #       comparison will match, but nicely speeds up the case where
+!     #       it's a different native type.  Since that's going to be
+!     #       common, it's a good tradeoff.
+!     #
+!     #   --  The data show that calling isinstance() on an object that's
+!     #       a native type (dict, list or string) is expensive enough
+!     #       that checking up front for whether the object is of type
+!     #       InstanceType is a pretty big win, even though it does slow
+!     #       down the case where it really *is* an object instance a
+!     #       little bit.
+!     def is_Dict(obj):
+!         t = type(obj)
+!         return t is DictType or \
+!                (t is InstanceType and isinstance(obj, UserDict))
+! 
+!     def is_List(obj):
+!         t = type(obj)
+!         return t is ListType \
+!             or (t is InstanceType and isinstance(obj, UserList))
+! 
+!     def is_Sequence(obj):
+!         t = type(obj)
+!         return t is ListType \
+!             or t is TupleType \
+!             or (t is InstanceType and isinstance(obj, UserList))
+! 
+!     def is_Tuple(obj):
+!         t = type(obj)
+!         return t is TupleType
+! 
+!     if UnicodeType is not None:
+!         def is_String(obj):
+!             t = type(obj)
+!             return t is StringType \
+!                 or t is UnicodeType \
+!                 or (t is InstanceType and isinstance(obj, UserString))
+!     else:
+!         def is_String(obj):
+!             t = type(obj)
+!             return t is StringType \
+!                 or (t is InstanceType and isinstance(obj, UserString))
+! 
+!     def is_Scalar(obj):
+!         return is_String(obj) or not is_Sequence(obj)
+! 
+!     def flatten(obj, result=None):
+!         """Flatten a sequence to a non-nested list.
+! 
+!         Flatten() converts either a single scalar or a nested sequence
+!         to a non-nested list. Note that flatten() considers strings
+!         to be scalars instead of sequences like Python would.
+!         """
+!         if is_Scalar(obj):
+!             return [obj]
+!         if result is None:
+!             result = []
+!         for item in obj:
+!             if is_Scalar(item):
+!                 result.append(item)
+!             else:
+!                 flatten_sequence(item, result)
+!         return result
+! 
+!     def flatten_sequence(sequence, result=None):
+!         """Flatten a sequence to a non-nested list.
+! 
+!         Same as flatten(), but it does not handle the single scalar
+!         case. This is slightly more efficient when one knows that
+!         the sequence to flatten can not be a scalar.
+!         """
+!         if result is None:
+!             result = []
+!         for item in sequence:
+!             if is_Scalar(item):
+!                 result.append(item)
+!             else:
+!                 flatten_sequence(item, result)
+!         return result
+! 
+!     #
+!     # Generic convert-to-string functions that abstract away whether or
+!     # not the Python we're executing has Unicode support.  The wrapper
+!     # to_String_for_signature() will use a for_signature() method if the
+!     # specified object has one.
+!     #
+!     if UnicodeType is not None:
+!         def to_String(s):
+!             if isinstance(s, UserString):
+!                 t = type(s.data)
+!             else:
+!                 t = type(s)
+!             if t is UnicodeType:
+!                 return unicode(s)
+!             else:
+!                 return str(s)
+!     else:
+!         to_String = str
+! 
+!     def to_String_for_signature(obj):
+!         try:
+!             f = obj.for_signature
+!         except AttributeError:
+!             return to_String_for_subst(obj)
+          else:
+!             return f()
+! 
+!     def to_String_for_subst(s):
+!         if is_Sequence( s ):
+!             return ' '.join( map(to_String_for_subst, s) )
+! 
+!         return to_String( s )
+! 
+! else:
+!     # A modern Python version with new-style classes, so we can just use
+!     # isinstance().
+!     #
+!     # We are using the following trick to speed-up these
+!     # functions. Default arguments are used to take a snapshot of the
+!     # the global functions and constants used by these functions. This
+!     # transforms accesses to global variable into local variables
+!     # accesses (i.e. LOAD_FAST instead of LOAD_GLOBAL).
+! 
+!     DictTypes = (dict, UserDict)
+!     ListTypes = (list, UserList)
+!     SequenceTypes = (list, tuple, UserList)
+! 
+!     # Empirically, Python versions with new-style classes all have
+!     # unicode.
+!     #
+!     # Note that profiling data shows a speed-up when comparing
+!     # explicitely with str and unicode instead of simply comparing
+!     # with basestring. (at least on Python 2.5.1)
+!     StringTypes = (str, unicode, UserString)
+! 
+!     # Empirically, it is faster to check explicitely for str and
+!     # unicode than for basestring.
+!     BaseStringTypes = (str, unicode)
+! 
+!     def is_Dict(obj, isinstance=isinstance, DictTypes=DictTypes):
+!         return isinstance(obj, DictTypes)
+! 
+!     def is_List(obj, isinstance=isinstance, ListTypes=ListTypes):
+!         return isinstance(obj, ListTypes)
+! 
+!     def is_Sequence(obj, isinstance=isinstance, SequenceTypes=SequenceTypes):
+!         return isinstance(obj, SequenceTypes)
+! 
+!     def is_Tuple(obj, isinstance=isinstance, tuple=tuple):
+!         return isinstance(obj, tuple)
+! 
+!     def is_String(obj, isinstance=isinstance, StringTypes=StringTypes):
+!         return isinstance(obj, StringTypes)
+! 
+!     def is_Scalar(obj, isinstance=isinstance, StringTypes=StringTypes, SequenceTypes=SequenceTypes):
+!         # Profiling shows that there is an impressive speed-up of 2x
+!         # when explicitely checking for strings instead of just not
+!         # sequence when the argument (i.e. obj) is already a string.
+!         # But, if obj is a not string then it is twice as fast to
+!         # check only for 'not sequence'. The following code therefore
+!         # assumes that the obj argument is a string must of the time.
+!         return isinstance(obj, StringTypes) or not isinstance(obj, SequenceTypes)
+! 
+!     def do_flatten(sequence, result, isinstance=isinstance, 
+!                    StringTypes=StringTypes, SequenceTypes=SequenceTypes):
+!         for item in sequence:
+!             if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
+!                 result.append(item)
+!             else:
+!                 do_flatten(item, result)
+! 
+!     def flatten(obj, isinstance=isinstance, StringTypes=StringTypes, 
+!                 SequenceTypes=SequenceTypes, do_flatten=do_flatten):
+!         """Flatten a sequence to a non-nested list.
+! 
+!         Flatten() converts either a single scalar or a nested sequence
+!         to a non-nested list. Note that flatten() considers strings
+!         to be scalars instead of sequences like Python would.
+!         """
+!         if isinstance(obj, StringTypes) or not isinstance(obj, SequenceTypes):
+!             return [obj]
+!         result = []
+!         for item in obj:
+!             if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
+!                 result.append(item)
+!             else:
+!                 do_flatten(item, result)
+!         return result
+! 
+!     def flatten_sequence(sequence, isinstance=isinstance, StringTypes=StringTypes, 
+!                          SequenceTypes=SequenceTypes, do_flatten=do_flatten):
+!         """Flatten a sequence to a non-nested list.
+! 
+!         Same as flatten(), but it does not handle the single scalar
+!         case. This is slightly more efficient when one knows that
+!         the sequence to flatten can not be a scalar.
+!         """
+!         result = []
+!         for item in sequence:
+!             if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
+!                 result.append(item)
+!             else:
+!                 do_flatten(item, result)
+!         return result
+  
+! 
+!     #
+!     # Generic convert-to-string functions that abstract away whether or
+!     # not the Python we're executing has Unicode support.  The wrapper
+!     # to_String_for_signature() will use a for_signature() method if the
+!     # specified object has one.
+!     #
+!     def to_String(s, 
+!                   isinstance=isinstance, str=str,
+!                   UserString=UserString, BaseStringTypes=BaseStringTypes):
+!         if isinstance(s,BaseStringTypes):
+!             # Early out when already a string!
+!             return s
+!         elif isinstance(s, UserString):
+!             # s.data can only be either a unicode or a regular
+!             # string. Please see the UserString initializer.
+!             return s.data
+          else:
+!             return str(s)
+  
+!     def to_String_for_subst(s, 
+!                             isinstance=isinstance, str=str, to_String=to_String,
+!                             BaseStringTypes=BaseStringTypes, SequenceTypes=SequenceTypes,
+!                             UserString=UserString):
+!                             
+!         # Note that the test cases are sorted by order of probability.
+!         if isinstance(s, BaseStringTypes):
+!             return s
+!         elif isinstance(s, SequenceTypes):
+!             l = []
+!             for e in s:
+!                 l.append(to_String_for_subst(e))
+!             return ' '.join( s )
+!         elif isinstance(s, UserString):
+!             # s.data can only be either a unicode or a regular
+!             # string. Please see the UserString initializer.
+!             return s.data
+          else:
+!             return str(s)
+  
+!     def to_String_for_signature(obj, to_String_for_subst=to_String_for_subst, 
+!                                 AttributeError=AttributeError):
+!         try:
+!             f = obj.for_signature
+!         except AttributeError:
+!             return to_String_for_subst(obj)
+!         else:
+!             return f()
+  
+  
+  
+  # The SCons "semi-deep" copy.
+--- 304,440 ----
+  # exception, but handling the exception when it's not the right type is
+  # often too slow.
+  
+! # We are using the following trick to speed up these
+! # functions. Default arguments are used to take a snapshot of the
+! # the global functions and constants used by these functions. This
+! # transforms accesses to global variable into local variables
+! # accesses (i.e. LOAD_FAST instead of LOAD_GLOBAL).
+! 
+! DictTypes = (dict, UserDict)
+! ListTypes = (list, UserList)
+! SequenceTypes = (list, tuple, UserList)
+! 
+! # Note that profiling data shows a speed-up when comparing
+! # explicitely with str and unicode instead of simply comparing
+! # with basestring. (at least on Python 2.5.1)
+! StringTypes = (str, unicode, UserString)
+! 
+! # Empirically, it is faster to check explicitely for str and
+! # unicode than for basestring.
+! BaseStringTypes = (str, unicode)
+! 
+! def is_Dict(obj, isinstance=isinstance, DictTypes=DictTypes):
+!     return isinstance(obj, DictTypes)
+! 
+! def is_List(obj, isinstance=isinstance, ListTypes=ListTypes):
+!     return isinstance(obj, ListTypes)
+! 
+! def is_Sequence(obj, isinstance=isinstance, SequenceTypes=SequenceTypes):
+!     return isinstance(obj, SequenceTypes)
+! 
+! def is_Tuple(obj, isinstance=isinstance, tuple=tuple):
+!     return isinstance(obj, tuple)
+! 
+! def is_String(obj, isinstance=isinstance, StringTypes=StringTypes):
+!     return isinstance(obj, StringTypes)
+! 
+! def is_Scalar(obj, isinstance=isinstance, StringTypes=StringTypes, SequenceTypes=SequenceTypes):
+!     # Profiling shows that there is an impressive speed-up of 2x
+!     # when explicitely checking for strings instead of just not
+!     # sequence when the argument (i.e. obj) is already a string.
+!     # But, if obj is a not string then it is twice as fast to
+!     # check only for 'not sequence'. The following code therefore
+!     # assumes that the obj argument is a string must of the time.
+!     return isinstance(obj, StringTypes) or not isinstance(obj, SequenceTypes)
+! 
+! def do_flatten(sequence, result, isinstance=isinstance, 
+!                StringTypes=StringTypes, SequenceTypes=SequenceTypes):
+!     for item in sequence:
+!         if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
+!             result.append(item)
+          else:
+!             do_flatten(item, result)
+  
+! def flatten(obj, isinstance=isinstance, StringTypes=StringTypes, 
+!             SequenceTypes=SequenceTypes, do_flatten=do_flatten):
+!     """Flatten a sequence to a non-nested list.
+! 
+!     Flatten() converts either a single scalar or a nested sequence
+!     to a non-nested list. Note that flatten() considers strings
+!     to be scalars instead of sequences like Python would.
+!     """
+!     if isinstance(obj, StringTypes) or not isinstance(obj, SequenceTypes):
+!         return [obj]
+!     result = []
+!     for item in obj:
+!         if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
+!             result.append(item)
+          else:
+!             do_flatten(item, result)
+!     return result
+  
+! def flatten_sequence(sequence, isinstance=isinstance, StringTypes=StringTypes, 
+!                      SequenceTypes=SequenceTypes, do_flatten=do_flatten):
+!     """Flatten a sequence to a non-nested list.
+! 
+!     Same as flatten(), but it does not handle the single scalar
+!     case. This is slightly more efficient when one knows that
+!     the sequence to flatten can not be a scalar.
+!     """
+!     result = []
+!     for item in sequence:
+!         if isinstance(item, StringTypes) or not isinstance(item, SequenceTypes):
+!             result.append(item)
+          else:
+!             do_flatten(item, result)
+!     return result
+  
+! # Generic convert-to-string functions that abstract away whether or
+! # not the Python we're executing has Unicode support.  The wrapper
+! # to_String_for_signature() will use a for_signature() method if the
+! # specified object has one.
+! #
+! def to_String(s, 
+!               isinstance=isinstance, str=str,
+!               UserString=UserString, BaseStringTypes=BaseStringTypes):
+!     if isinstance(s,BaseStringTypes):
+!         # Early out when already a string!
+!         return s
+!     elif isinstance(s, UserString):
+!         # s.data can only be either a unicode or a regular
+!         # string. Please see the UserString initializer.
+!         return s.data
+!     else:
+!         return str(s)
+  
++ def to_String_for_subst(s, 
++                         isinstance=isinstance, str=str, to_String=to_String,
++                         BaseStringTypes=BaseStringTypes, SequenceTypes=SequenceTypes,
++                         UserString=UserString):
++                         
++     # Note that the test cases are sorted by order of probability.
++     if isinstance(s, BaseStringTypes):
++         return s
++     elif isinstance(s, SequenceTypes):
++         l = []
++         for e in s:
++             l.append(to_String_for_subst(e))
++         return ' '.join( s )
++     elif isinstance(s, UserString):
++         # s.data can only be either a unicode or a regular
++         # string. Please see the UserString initializer.
++         return s.data
++     else:
++         return str(s)
++ 
++ def to_String_for_signature(obj, to_String_for_subst=to_String_for_subst, 
++                             AttributeError=AttributeError):
++     try:
++         f = obj.for_signature
++     except AttributeError:
++         return to_String_for_subst(obj)
++     else:
++         return f()
+  
+  
+  # The SCons "semi-deep" copy.
+***************
+*** 1505,1521 ****
+      Returns a function identical to the specified function, but with
+      the specified name.
+      """
+-     # Compatibility for Python 1.5 and 2.1.  Can be removed in favor of
+-     # passing function.func_defaults directly to new.function() once
+-     # we base on Python 2.2 or later.
+-     func_defaults = function.func_defaults
+-     if func_defaults is None:
+-         func_defaults = ()
+- 
+      return types.FunctionType(function.func_code,
+                                function.func_globals,
+                                name,
+!                               func_defaults)
+  
+  
+  md5 = False
+--- 1370,1379 ----
+      Returns a function identical to the specified function, but with
+      the specified name.
+      """
+      return types.FunctionType(function.func_code,
+                                function.func_globals,
+                                name,
+!                               function.func_defaults)
+  
+  
+  md5 = False
+***************
+*** 1584,1591 ****
+  # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/68205
+  # ASPN: Python Cookbook: Null Object Design Pattern
+  
+! # TODO(1.5):
+! #class Null(object):
+  class Null:
+      """ Null objects always and reliably "do nothing." """
+      def __new__(cls, *args, **kwargs):
+--- 1442,1448 ----
+  # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/68205
+  # ASPN: Python Cookbook: Null Object Design Pattern
+  
+! #TODO??? class Null(object):
+  class Null:
+      """ Null objects always and reliably "do nothing." """
+      def __new__(cls, *args, **kwargs):
+Index: src/engine/SCons/Action.py
+===================================================================
+*** src/engine/SCons/Action.py	(revision 4810)
+--- src/engine/SCons/Action.py	(working copy)
+***************
+*** 96,102 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 96,101 ----
+***************
+*** 356,362 ****
+          return act
+  
+      if is_List(act):
+-         #TODO(1.5) return CommandAction(act, **kw)
+          return CommandAction(act, **kw)
+  
+      if callable(act):
+--- 355,360 ----
+***************
+*** 383,389 ****
+              return LazyAction(var, kw)
+          commands = str(act).split('\n')
+          if len(commands) == 1:
+-             #TODO(1.5) return CommandAction(commands[0], **kw)
+              return CommandAction(commands[0], **kw)
+          # The list of string commands may include a LazyAction, so we
+          # reprocess them via _do_create_list_action.
+--- 381,386 ----
+***************
+*** 687,693 ****
+          # variables.
+          if __debug__: logInstanceCreation(self, 'Action.CommandAction')
+  
+-         #TODO(1.5) _ActionAction.__init__(self, **kw)
+          _ActionAction.__init__(self, **kw)
+          if is_List(cmd):
+              if list(filter(is_List, cmd)):
+--- 684,689 ----
+***************
+*** 862,868 ****
+                               source=source,
+                               env=env,
+                               for_signature=for_signature)
+-         #TODO(1.5) gen_cmd = Action(ret, **self.gen_kw)
+          gen_cmd = Action(ret, **self.gen_kw)
+          if not gen_cmd:
+              raise SCons.Errors.UserError("Object returned from command generator: %s cannot be used to create an Action." % repr(ret))
+--- 858,863 ----
+***************
+*** 950,956 ****
+              c = env.get(self.var, '')
+          else:
+              c = ''
+-         #TODO(1.5) gen_cmd = Action(c, **self.gen_kw)
+          gen_cmd = Action(c, **self.gen_kw)
+          if not gen_cmd:
+              raise SCons.Errors.UserError("$%s value %s cannot be used to create an Action." % (self.var, repr(c)))
+--- 945,950 ----
+***************
+*** 989,995 ****
+                  # This is weird, just do the best we can.
+                  self.funccontents = _object_contents(execfunction)
+  
+-         #TODO(1.5) _ActionAction.__init__(self, **kw)
+          _ActionAction.__init__(self, **kw)
+  
+      def function_name(self):
+--- 983,988 ----
+***************
+*** 1212,1228 ****
+      def __call__(self, target, source, env, executor=None):
+          args = self.subst_args(target, source, env)
+          kw = self.subst_kw(target, source, env)
+-         #TODO(1.5) return self.parent.actfunc(*args, **kw)
+          return self.parent.actfunc(*args, **kw)
+  
+      def strfunction(self, target, source, env):
+          args = self.subst_args(target, source, env)
+          kw = self.subst_kw(target, source, env)
+-         #TODO(1.5) return self.parent.strfunc(*args, **kw)
+          return self.parent.strfunc(*args, **kw)
+  
+      def __str__(self):
+-         #TODO(1.5) return self.parent.strfunc(*self.args, **self.kw)
+          return self.parent.strfunc(*self.args, **self.kw)
+  
+  class ActionFactory:
+--- 1205,1218 ----
+Index: src/engine/SCons/Variables/__init__.py
+===================================================================
+*** src/engine/SCons/Variables/__init__.py	(revision 4810)
+--- src/engine/SCons/Variables/__init__.py	(working copy)
+***************
+*** 25,32 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 25,30 ----
+***************
+*** 84,94 ****
+          # if we get a list or a tuple, we take the first element as the
+          # option key and store the remaining in aliases.
+          if SCons.Util.is_List(key) or SCons.Util.is_Tuple(key):
+!           option.key     = key[0]
+!           option.aliases = key[1:]
+          else:
+!           option.key     = key
+!           option.aliases = [ key ]
+          option.help = help
+          option.default = default
+          option.validator = validator
+--- 82,92 ----
+          # if we get a list or a tuple, we take the first element as the
+          # option key and store the remaining in aliases.
+          if SCons.Util.is_List(key) or SCons.Util.is_Tuple(key):
+!             option.key     = key[0]
+!             option.aliases = key[1:]
+          else:
+!             option.key     = key
+!             option.aliases = [ key ]
+          option.help = help
+          option.default = default
+          option.validator = validator
+***************
+*** 99,108 ****
+          # options might be added after the 'unknown' dict has been set up,
+          # so we remove the key and all its aliases from that dict
+          for alias in list(option.aliases) + [ option.key ]:
+!           # TODO(1.5)
+!           #if alias in self.unknown:
+!           if alias in self.unknown.keys():
+!             del self.unknown[alias]
+  
+      def keys(self):
+          """
+--- 97,104 ----
+          # options might be added after the 'unknown' dict has been set up,
+          # so we remove the key and all its aliases from that dict
+          for alias in list(option.aliases) + [ option.key ]:
+!             if alias in self.unknown:
+!                 del self.unknown[alias]
+  
+      def keys(self):
+          """
+***************
+*** 128,135 ****
+              return
+  
+          if not SCons.Util.is_String(key) or \
+!            not SCons.Environment.is_valid_construction_var(key):
+!             raise SCons.Errors.UserError("Illegal Variables.Add() key `%s'" % str(key))
+  
+          self._do_add(key, help, default, validator, converter)
+  
+--- 124,131 ----
+              return
+  
+          if not SCons.Util.is_String(key) or \
+!             not SCons.Environment.is_valid_construction_var(key):
+!                 raise SCons.Errors.UserError("Illegal Variables.Add() key `%s'" % str(key))
+  
+          self._do_add(key, help, default, validator, converter)
+  
+Index: src/engine/SCons/Variables/ListVariable.py
+===================================================================
+*** src/engine/SCons/Variables/ListVariable.py	(revision 4810)
+--- src/engine/SCons/Variables/ListVariable.py	(working copy)
+***************
+*** 45,52 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 45,50 ----
+Index: src/engine/SCons/cpp.py
+===================================================================
+*** src/engine/SCons/cpp.py	(revision 4810)
+--- src/engine/SCons/cpp.py	(working copy)
+***************
+*** 26,36 ****
+  __doc__ = """
+  SCons C Pre-Processor module
+  """
+! 
+! # TODO(1.5):  remove this import
+! # This module doesn't use anything from SCons by name, but we import SCons
+! # here to pull in zip() from the SCons.compat layer for early Pythons.
+! import SCons
+  
+  import os
+  import re
+--- 26,33 ----
+  __doc__ = """
+  SCons C Pre-Processor module
+  """
+! #TODO 2.3 and before has no sorted()
+! import SCons.compat
+  
+  import os
+  import re
+***************
+*** 191,199 ****
+          self.args = function_arg_separator.split(args)
+          try:
+              expansion = expansion.split('##')
+!         except (AttributeError, TypeError):
+!             # Python 1.5 throws TypeError if "expansion" isn't a string,
+!             # later versions throw AttributeError.
+              pass
+          self.expansion = expansion
+      def __call__(self, *values):
+--- 188,194 ----
+          self.args = function_arg_separator.split(args)
+          try:
+              expansion = expansion.split('##')
+!         except AttributeError:
+              pass
+          self.expansion = expansion
+      def __call__(self, *values):
+Index: src/engine/SCons/SubstTests.py
+===================================================================
+*** src/engine/SCons/SubstTests.py	(revision 4810)
+--- src/engine/SCons/SubstTests.py	(working copy)
+***************
+*** 533,541 ****
+              scons_subst('$foo.bar.3.0', env)
+          except SCons.Errors.UserError, e:
+              expect = [
+!                 # Python 1.5
+!                 "SyntaxError `invalid syntax' trying to evaluate `$foo.bar.3.0'",
+!                 # Python 2.2, 2.3, 2.4
+                  "SyntaxError `invalid syntax (line 1)' trying to evaluate `$foo.bar.3.0'",
+                  # Python 2.5
+                  "SyntaxError `invalid syntax (<string>, line 1)' trying to evaluate `$foo.bar.3.0'",
+--- 533,539 ----
+              scons_subst('$foo.bar.3.0', env)
+          except SCons.Errors.UserError, e:
+              expect = [
+!                 # Python 2.3, 2.4
+                  "SyntaxError `invalid syntax (line 1)' trying to evaluate `$foo.bar.3.0'",
+                  # Python 2.5
+                  "SyntaxError `invalid syntax (<string>, line 1)' trying to evaluate `$foo.bar.3.0'",
+***************
+*** 551,557 ****
+              scons_subst("${NONE[2]}", env, gvars={'NONE':None})
+          except SCons.Errors.UserError, e:
+              expect = [
+!                 # Python 1.5, 2.2, 2.3, 2.4
+                  "TypeError `unsubscriptable object' trying to evaluate `${NONE[2]}'",
+                  # Python 2.5 and later
+                  "TypeError `'NoneType' object is unsubscriptable' trying to evaluate `${NONE[2]}'",
+--- 549,555 ----
+              scons_subst("${NONE[2]}", env, gvars={'NONE':None})
+          except SCons.Errors.UserError, e:
+              expect = [
+!                 # Python 2.3, 2.4
+                  "TypeError `unsubscriptable object' trying to evaluate `${NONE[2]}'",
+                  # Python 2.5 and later
+                  "TypeError `'NoneType' object is unsubscriptable' trying to evaluate `${NONE[2]}'",
+***************
+*** 566,574 ****
+              scons_subst("${func(1)}", env, gvars={'func':func})
+          except SCons.Errors.UserError, e:
+              expect = [
+!                 # Python 1.5
+!                 "TypeError `not enough arguments; expected 3, got 1' trying to evaluate `${func(1)}'",
+!                 # Python 2.2, 2.3, 2.4, 2.5
+                  "TypeError `func() takes exactly 3 arguments (1 given)' trying to evaluate `${func(1)}'"
+              ]
+              assert str(e) in expect, repr(str(e))
+--- 564,570 ----
+              scons_subst("${func(1)}", env, gvars={'func':func})
+          except SCons.Errors.UserError, e:
+              expect = [
+!                 # Python 2.3, 2.4, 2.5
+                  "TypeError `func() takes exactly 3 arguments (1 given)' trying to evaluate `${func(1)}'"
+              ]
+              assert str(e) in expect, repr(str(e))
+Index: src/engine/SCons/Tool/__init__.py
+===================================================================
+*** src/engine/SCons/Tool/__init__.py	(revision 4810)
+--- src/engine/SCons/Tool/__init__.py	(working copy)
+***************
+*** 34,41 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 34,39 ----
+Index: src/engine/SCons/Tool/MSCommon/vs.py
+===================================================================
+*** src/engine/SCons/Tool/MSCommon/vs.py	(revision 4810)
+--- src/engine/SCons/Tool/MSCommon/vs.py	(working copy)
+***************
+*** 416,423 ****
+          the default version.
+      """
+      if 'MSVS' not in env or not SCons.Util.is_Dict(env['MSVS']):
+-         # TODO(1.5):
+-         #versions = [vs.version for vs in get_installed_visual_studios()]
+          versions = [vs.version for vs in get_installed_visual_studios()]
+          env['MSVS'] = {'VERSIONS' : versions}
+      else:
+--- 416,421 ----
+***************
+*** 473,480 ****
+          vars = ('LIB', 'LIBPATH', 'PATH', 'INCLUDE')
+  
+          msvs_list = get_installed_visual_studios()
+-         # TODO(1.5):
+-         #vscommonvarnames = [ vs.common_tools_var for vs in msvs_list ]
+          vscommonvarnames = [vs.common_tools_var for vs in msvs_list]
+          nenv = normalize_env(env['ENV'], vscommonvarnames + ['COMSPEC'])
+          output = get_output(batfilename, arch, env=nenv)
+--- 471,476 ----
+***************
+*** 487,494 ****
+      """Query the system to get available versions of VS. A version is
+      considered when a batfile is found."""
+      msvs_list = get_installed_visual_studios()
+-     # TODO(1.5)
+-     #versions = [ msvs.version for msvs in msvs_list ]
+      versions = [msvs.version for msvs in msvs_list]
+      return versions
+  
+--- 483,488 ----
+Index: src/engine/SCons/Tool/MSCommon/common.py
+===================================================================
+*** src/engine/SCons/Tool/MSCommon/common.py	(revision 4810)
+--- src/engine/SCons/Tool/MSCommon/common.py	(working copy)
+***************
+*** 147,154 ****
+      # dkeep is a dict associating key: path_list, where key is one item from
+      # keep, and pat_list the associated list of paths
+  
+-     # TODO(1.5):  replace with the following list comprehension:
+-     #dkeep = dict([(i, []) for i in keep])
+      dkeep = dict([(i, []) for i in keep])
+  
+      # rdk will  keep the regex to match the .bat file output line starts
+--- 147,152 ----
+Index: src/engine/SCons/Tool/MSCommon/netframework.py
+===================================================================
+*** src/engine/SCons/Tool/MSCommon/netframework.py	(revision 4810)
+--- src/engine/SCons/Tool/MSCommon/netframework.py	(working copy)
+***************
+*** 19,26 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 19,24 ----
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+*** src/engine/SCons/Tool/msvs.py	(revision 4810)
+--- src/engine/SCons/Tool/msvs.py	(working copy)
+***************
+*** 29,36 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 29,34 ----
+***************
+*** 389,396 ****
+              for base in ("BASE ",""):
+                  self.file.write('# PROP %sUse_MFC 0\n'
+                                  '# PROP %sUse_Debug_Libraries ' % (base, base))
+-                 # TODO(1.5):
+-                 #if kind.lower().find('debug') < 0:
+                  if kind.lower().find('debug') < 0:
+                      self.file.write('0\n')
+                  else:
+--- 387,392 ----
+***************
+*** 446,453 ****
+                  continue # skip empty groups
+  
+              self.file.write('# Begin Group "' + kind + '"\n\n')
+-             # TODO(1.5)
+-             #typelist = categories[kind].replace('|', ';')
+              typelist = categories[kind].replace('|', ';')
+              self.file.write('# PROP Default_Filter "' + typelist + '"\n')
+  
+--- 442,447 ----
+***************
+*** 471,478 ****
+  
+          line = dspfile.readline()
+          while line:
+-             # TODO(1.5):
+-             #if line.find("# End Project") > -1:
+              if line.find("# End Project") > -1:
+                  break
+              line = dspfile.readline()
+--- 465,470 ----
+***************
+*** 664,672 ****
+              rebuildcmd  = xmlify(starting + self.env.subst('$MSVSREBUILDCOM', 1) + cmdargs)
+              cleancmd    = xmlify(starting + self.env.subst('$MSVSCLEANCOM', 1) + cmdargs)
+  
+-             # TODO(1.5)
+-             #preprocdefs = xmlify(';'.join(self.env.get('CPPDEFINES', [])))
+-             #includepath = xmlify(';'.join(self.env.get('CPPPATH', [])))
+              preprocdefs = xmlify(';'.join(processDefines(self.env.get('CPPDEFINES', []))))
+              includepath = xmlify(';'.join(self.env.get('CPPPATH', [])))
+  
+--- 656,661 ----
+***************
+*** 774,781 ****
+  
+          line = dspfile.readline()
+          while line:
+-             # TODO(1.5)
+-             #if line.find('<!-- SCons Data:') > -1:
+              if line.find('<!-- SCons Data:') > -1:
+                  break
+              line = dspfile.readline()
+--- 763,768 ----
+Index: src/engine/SCons/Tool/ipkg.py
+===================================================================
+*** src/engine/SCons/Tool/ipkg.py	(revision 4810)
+--- src/engine/SCons/Tool/ipkg.py	(working copy)
+***************
+*** 52,60 ****
+  
+      env['IPKG']       = 'ipkg-build'
+      env['IPKGCOM']    = '$IPKG $IPKGFLAGS ${SOURCE}'
+-     # TODO(1.5)
+-     #env['IPKGUSER']   = os.popen('id -un').read().strip()
+-     #env['IPKGGROUP']  = os.popen('id -gn').read().strip()
+      env['IPKGUSER']   = os.popen('id -un').read().strip()
+      env['IPKGGROUP']  = os.popen('id -gn').read().strip()
+      env['IPKGFLAGS']  = SCons.Util.CLVar('-o $IPKGUSER -g $IPKGGROUP')
+--- 52,57 ----
+Index: src/engine/SCons/Tool/dvipdf.py
+===================================================================
+*** src/engine/SCons/Tool/dvipdf.py	(revision 4810)
+--- src/engine/SCons/Tool/dvipdf.py	(working copy)
+***************
+*** 29,36 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 29,34 ----
+Index: src/engine/SCons/Tool/javac.py
+===================================================================
+*** src/engine/SCons/Tool/javac.py	(revision 4810)
+--- src/engine/SCons/Tool/javac.py	(working copy)
+***************
+*** 29,36 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 29,34 ----
+Index: src/engine/SCons/Tool/packaging/msi.py
+===================================================================
+*** src/engine/SCons/Tool/packaging/msi.py	(revision 4810)
+--- src/engine/SCons/Tool/packaging/msi.py	(working copy)
+***************
+*** 24,31 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 24,29 ----
+Index: src/engine/SCons/Tool/packaging/rpm.py
+===================================================================
+*** src/engine/SCons/Tool/packaging/rpm.py	(revision 4810)
+--- src/engine/SCons/Tool/packaging/rpm.py	(working copy)
+***************
+*** 24,31 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 24,29 ----
+Index: src/engine/SCons/Tool/packaging/__init__.py
+===================================================================
+*** src/engine/SCons/Tool/packaging/__init__.py	(revision 4810)
+--- src/engine/SCons/Tool/packaging/__init__.py	(working copy)
+***************
+*** 24,31 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 24,29 ----
+Index: src/engine/SCons/Tool/zip.xml
+===================================================================
+*** src/engine/SCons/Tool/zip.xml	(revision 4810)
+--- src/engine/SCons/Tool/zip.xml	(working copy)
+***************
+*** 90,99 ****
+  The default value is
+  <literal>zipfile.ZIP_DEFLATED</literal>,
+  which creates a compressed zip archive.
+! This value has no effect when using Python 1.5.2
+! or if the
+  <literal>zipfile</literal>
+! module is otherwise unavailable.
+  </summary>
+  </cvar>
+  
+--- 90,98 ----
+  The default value is
+  <literal>zipfile.ZIP_DEFLATED</literal>,
+  which creates a compressed zip archive.
+! This value has no effect if the
+  <literal>zipfile</literal>
+! module is unavailable.
+  </summary>
+  </cvar>
+  
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+*** src/engine/SCons/Tool/tex.py	(revision 4810)
+--- src/engine/SCons/Tool/tex.py	(working copy)
+***************
+*** 236,243 ****
+      #
+      # routine to update MD5 hash and compare
+      #
+!     # TODO(1.5):  nested scopes
+!     def check_MD5(filenode, suffix, saved_hashes=saved_hashes, targetbase=targetbase):
+          global must_rerun_latex
+          # two calls to clear old csig
+          filenode.clear_memoized_values()
+--- 236,242 ----
+      #
+      # routine to update MD5 hash and compare
+      #
+!     def check_MD5(filenode, suffix):
+          global must_rerun_latex
+          # two calls to clear old csig
+          filenode.clear_memoized_values()
+***************
+*** 427,434 ****
+          pass
+      else:
+          # Split at os.pathsep to convert into absolute path
+-         # TODO(1.5)
+-         #paths = paths.split(os.pathsep)
+          paths = paths.split(os.pathsep)
+  
+      # now that we have the path list restore the env
+--- 426,431 ----
+***************
+*** 653,660 ****
+          pass
+      else:
+          # Split at os.pathsep to convert into absolute path
+-         # TODO(1.5)
+-         #paths = paths.split(os.pathsep)
+          paths = paths.split(os.pathsep)
+  
+      # now that we have the path list restore the env
+--- 650,655 ----
+Index: src/engine/SCons/Builder.py
+===================================================================
+*** src/engine/SCons/Builder.py	(revision 4810)
+--- src/engine/SCons/Builder.py	(working copy)
+***************
+*** 96,103 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 96,101 ----
+Index: src/test_interrupts.py
+===================================================================
+*** src/test_interrupts.py	(revision 4810)
+--- src/test_interrupts.py	(working copy)
+***************
+*** 20,27 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 20,25 ----
+Index: src/README.txt
+===================================================================
+*** src/README.txt	(revision 4810)
+--- src/README.txt	(working copy)
+***************
+*** 30,36 ****
+  EXECUTION REQUIREMENTS
+  ======================
+  
+! Running SCons requires Python version 1.5.2 or later.  There should be
+  no other dependencies or requirements to run SCons.  (There is, however,
+  an additional requirement to *install* SCons from this particular
+  package; see the next section.)
+--- 30,36 ----
+  EXECUTION REQUIREMENTS
+  ======================
+  
+! Running SCons requires Python version 2.4 or later.  There should be
+  no other dependencies or requirements to run SCons.  (There is, however,
+  an additional requirement to *install* SCons from this particular
+  package; see the next section.)
+***************
+*** 44,80 ****
+  INSTALLATION REQUIREMENTS
+  =========================
+  
+! Installing SCons from this package requires the Python distutils
+! package.  The distutils package was not shipped as a standard part of
+! Python until Python version 1.6, so if your system is running Python
+! 1.5.2, you may not have distutils installed.  If you are running
+! Python version 1.6 or later, you should be fine.
+! 
+! NOTE TO RED HAT USERS:  Red Hat shipped Python 1.5.2 as the default all
+! the way up to Red Hat Linux 7.3, so you probably do *not* have distutils
+! installed, unless you have already done so manually or are running Red
+! Hat 8.0 or later.
+! 
+! In this case, your options are:
+! 
+!     --  (Recommended.)  Install from a pre-packaged SCons package that
+!         does not require distutils:
+! 
+!             Red Hat Linux       scons-__VERSION__-1.noarch.rpm
+! 
+!             Debian GNU/Linux    scons___VERSION__-1_all.deb
+!                                 (or use apt-get)
+! 
+!             Windows             scons-__VERSION__.win32.exe
+! 
+!     --  (Optional.)  Download the latest distutils package from the
+!         following URL:
+! 
+!             http://www.python.org/sigs/distutils-sig/download.html
+! 
+!         Install the distutils according to the instructions on the page.
+!         You can then proceed to the next section to install SCons from
+!         this package.
+  
+  
+  INSTALLATION
+--- 44,50 ----
+  INSTALLATION REQUIREMENTS
+  =========================
+  
+! Nothing special.
+  
+  
+  INSTALLATION
+Index: runtest.py
+===================================================================
+*** runtest.py	(revision 4810)
+--- runtest.py	(working copy)
+***************
+*** 85,92 ****
+  # library directory.  If we ever resurrect that as the default, then
+  # you can find the appropriate code in the 0.04 version of this script,
+  # rather than reinventing that wheel.)
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  import getopt
+  import glob
+--- 85,90 ----
+Index: gentoo/scons.ebuild.in
+===================================================================
+*** gentoo/scons.ebuild.in	(revision 4810)
+--- gentoo/scons.ebuild.in	(working copy)
+***************
+*** 12,18 ****
+  LICENSE="as-is"
+  KEYWORDS="~x86 ~sparc"
+  
+! DEPEND=">=dev-lang/python-2.0"
+  
+  src_compile() {
+          python setup.py build
+--- 12,18 ----
+  LICENSE="as-is"
+  KEYWORDS="~x86 ~sparc"
+  
+! DEPEND=">=dev-lang/python-2.4"
+  
+  src_compile() {
+          python setup.py build
+Index: README
+===================================================================
+*** README	(revision 4810)
+--- README	(working copy)
+***************
+*** 48,54 ****
+  EXECUTION REQUIREMENTS
+  ======================
+  
+! Running SCons requires Python version 1.5.2 or later.  There should be
+  no other dependencies or requirements to run SCons.
+  
+  The default SCons configuration assumes use of the Microsoft Visual C++
+--- 48,54 ----
+  EXECUTION REQUIREMENTS
+  ======================
+  
+! Running SCons requires Python version 2.4 or later.  There should be
+  no other dependencies or requirements to run SCons.
+  
+  The default SCons configuration assumes use of the Microsoft Visual C++
+***************
+*** 67,102 ****
+  INSTALLATION REQUIREMENTS
+  =========================
+  
+! Building and installing SCons from this package requires the Python
+! distutils package.  The distutils package was not shipped as a standard
+! part of Python until Python version 1.6, so if your system is running
+! Python 1.5.2, you may not have distutils installed.  If you are running
+! Python version 1.6 or later, you should be fine.
+! 
+! NOTE TO RED HAT USERS:  Red Hat shipped Python 1.5.2 as the default all
+! the way up to Red Hat Linux 7.3, so you probably do *not* have distutils
+! installed, unless you have already done so manually or are running Red
+! Hat 8.0 or later.
+! 
+! In this case, your options are:
+! 
+!     --  (Optional.)  Install from a pre-packaged SCons package that
+!         does not require distutils:
+! 
+!             Red Hat Linux       scons-1.3.0.noarch.rpm
+! 
+!             Debian GNU/Linux    use apt-get to get the official package
+! 
+!             Windows             scons-1.3.0.win32.exe
+! 
+!     --  (Recommended.)  Download the latest distutils package from the
+!         following URL:
+! 
+!             http://www.python.org/sigs/distutils-sig/download.html
+! 
+!         Install the distutils according to the instructions on the page.
+!         You can then proceed to the next section to install SCons from
+!         this package.
+  
+  
+  INSTALLATION
+--- 67,73 ----
+  INSTALLATION REQUIREMENTS
+  =========================
+  
+! Nothing special.
+  
+  
+  INSTALLATION
+Index: rpm/scons.spec.in
+===================================================================
+*** rpm/scons.spec.in	(revision 4810)
+--- rpm/scons.spec.in	(working copy)
+***************
+*** 16,22 ****
+  BuildArchitectures: noarch
+  Vendor: Steven Knight <knight@scons.org>
+  Packager: Steven Knight <knight@scons.org>
+! Requires: python >= 1.5
+  Url: http://www.scons.org/
+  
+  %description
+--- 16,22 ----
+  BuildArchitectures: noarch
+  Vendor: Steven Knight <knight@scons.org>
+  Packager: Steven Knight <knight@scons.org>
+! Requires: python >= 2.4
+  Url: http://www.scons.org/
+  
+  %description
+Index: bootstrap.py
+===================================================================
+*** bootstrap.py	(revision 4810)
+--- bootstrap.py	(working copy)
+***************
+*** 79,89 ****
+  local SConstruct file.
+  """
+  
+! try:
+!     script_dir = os.path.abspath(os.path.dirname(__file__))
+! except NameError:
+!     # Pre-2.3 versions of Python don't have __file__.
+!     script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+  
+  bootstrap_dir = os.path.join(script_dir, 'bootstrap')
+  
+--- 79,85 ----
+  local SConstruct file.
+  """
+  
+! script_dir = os.path.abspath(os.path.dirname(__file__))
+  
+  bootstrap_dir = os.path.join(script_dir, 'bootstrap')
+  
+Index: doc/python10/process.xml
+===================================================================
+*** doc/python10/process.xml	(revision 4810)
+--- doc/python10/process.xml	(working copy)
+***************
+*** 13,19 ****
+    <listitem>
+      <para>
+  
+!       &SCons; will be written to Python version 1.5.2 (to ensure
+        usability by a wide install base).
+  
+      </para>
+--- 13,19 ----
+    <listitem>
+      <para>
+  
+!       &SCons; will be written to Python version 2.4 (to ensure
+        usability by a wide install base).
+  
+      </para>
+Index: doc/SConscript
+===================================================================
+*** doc/SConscript	(revision 4810)
+--- doc/SConscript	(working copy)
+***************
+*** 23,30 ****
+  # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  import os.path
+  import re
+--- 23,28 ----
+Index: doc/man/scons.1
+===================================================================
+*** doc/man/scons.1	(revision 4810)
+--- doc/man/scons.1	(working copy)
+***************
+*** 380,386 ****
+  does not exist.
+  
+  .B scons
+! requires Python version 1.5.2 or later.
+  There should be no other dependencies or requirements to run
+  .B scons.
+  
+--- 380,386 ----
+  does not exist.
+  
+  .B scons
+! requires Python version 2.4 or later.
+  There should be no other dependencies or requirements to run
+  .B scons.
+  
+***************
+*** 591,600 ****
+  of the various classes used internally by SCons
+  before and after reading the SConscript files
+  and before and after building targets.
+! This is not supported when run under Python versions earlier than 2.1,
+! when SCons is executed with the Python
+  .B -O
+! (optimized) option,
+  or when the SCons modules
+  have been compiled with optimization
+  (that is, when executing from
+--- 591,599 ----
+  of the various classes used internally by SCons
+  before and after reading the SConscript files
+  and before and after building targets.
+! This is not supported when SCons is executed with the Python
+  .B -O
+! (optimized) option
+  or when the SCons modules
+  have been compiled with optimization
+  (that is, when executing from
+***************
+*** 642,648 ****
+  an internal subsystem that counts
+  how often SCons uses cached values in memory
+  instead of recomputing them each time they're needed.
+- Only available when using Python 2.2 or later.
+  
+  .TP
+  --debug=memory
+--- 641,646 ----
+***************
+*** 658,664 ****
+  --debug=objects
+  Prints a list of the various objects
+  of the various classes used internally by SCons.
+- This only works when run under Python 2.1 or later.
+  
+  .TP
+  --debug=pdb
+--- 656,661 ----
+***************
+*** 2446,2458 ****
+  see the documentation for
+  .B optparse
+  for a thorough discussion of its option-processing capabities.
+- (Note that although the
+- .B optparse
+- module was not a standard module until Python 2.3,
+- .B scons
+- contains a compatible version of the module
+- that is used to provide identical functionality
+- when run by earlier Python versions.)
+  
+  In addition to the arguments and values supported by the
+  .B optparse.add_option ()
+--- 2443,2448 ----
+***************
+*** 5500,5506 ****
+  .B SCons.dblite
+  module that uses pickled
+  Python data structures,
+! and which works on all Python versions from 1.5.2 on.
+  
+  Examples:
+  
+--- 5490,5496 ----
+  .B SCons.dblite
+  module that uses pickled
+  Python data structures,
+! and which works on all Python versions.
+  
+  Examples:
+  
+Index: doc/user/tasks.xml
+===================================================================
+*** doc/user/tasks.xml	(revision 4810)
+--- doc/user/tasks.xml	(working copy)
+***************
+*** 54,69 ****
+  filenames = [os.path.join(prefix, x) for x in filenames]
+  </programlisting>
+  
+- <simpara>or in Python 1.5.2:</simpara>
+- 
+- <programlisting>
+- import os.path
+- new_filenames = [] 
+- for x in filenames:
+-     new_filenames.append(os.path.join(prefix, x))
+- </programlisting>
+- </example>
+- 
+  <example>
+  <title>Substituting a path prefix with another one</title>
+  <programlisting>
+--- 54,59 ----
+***************
+*** 71,84 ****
+      filename = filename.replace(old_prefix, new_prefix)
+  </programlisting>
+  
+- <simpara>or in Python 1.5.2:</simpara>
+- 
+- <programlisting>
+- if filename.find(old_prefix) == 0:
+-     filename = filename.replace(old_prefix, new_prefix)      
+- </programlisting>
+- </example>
+- 
+  <example>
+  <title>Filtering a filename list to exclude/retain only a specific set
+  of extensions</title>
+--- 61,66 ----
+***************
+*** 87,103 ****
+  filenames = [x for x in filenames if os.path.splitext(x)[1] in extensions]
+  </programlisting>
+  
+- <simpara>or in Python 1.5.2:</simpara>
+- 
+- <programlisting>
+- import os.path
+- new_filenames = []
+- for x in filenames:
+-     if os.path.splitext(x)[1] in extensions:
+-         new_filenames.append(x)
+- </programlisting>
+- </example>
+- 
+  <example>
+  <title>The "backtick function": run a shell command and capture the
+  output</title>
+--- 69,74 ----
+Index: doc/user/tasks.in
+===================================================================
+*** doc/user/tasks.in	(revision 4810)
+--- doc/user/tasks.in	(working copy)
+***************
+*** 54,69 ****
+  filenames = [os.path.join(prefix, x) for x in filenames]
+  </programlisting>
+  
+- <simpara>or in Python 1.5.2:</simpara>
+- 
+- <programlisting>
+- import os.path
+- new_filenames = [] 
+- for x in filenames:
+-     new_filenames.append(os.path.join(prefix, x))
+- </programlisting>
+- </example>
+- 
+  <example>
+  <title>Substituting a path prefix with another one</title>
+  <programlisting>
+--- 54,59 ----
+***************
+*** 71,84 ****
+      filename = filename.replace(old_prefix, new_prefix)
+  </programlisting>
+  
+- <simpara>or in Python 1.5.2:</simpara>
+- 
+- <programlisting>
+- if filename.find(old_prefix) == 0:
+-     filename = filename.replace(old_prefix, new_prefix)      
+- </programlisting>
+- </example>
+- 
+  <example>
+  <title>Filtering a filename list to exclude/retain only a specific set
+  of extensions</title>
+--- 61,66 ----
+***************
+*** 87,103 ****
+  filenames = [x for x in filenames if os.path.splitext(x)[1] in extensions]
+  </programlisting>
+  
+- <simpara>or in Python 1.5.2:</simpara>
+- 
+- <programlisting>
+- import os.path
+- new_filenames = []
+- for x in filenames:
+-     if os.path.splitext(x)[1] in extensions:
+-         new_filenames.append(x)
+- </programlisting>
+- </example>
+- 
+  <example>
+  <title>The "backtick function": run a shell command and capture the
+  output</title>
+--- 69,74 ----
+Index: doc/user/misc.xml
+===================================================================
+*** doc/user/misc.xml	(revision 4810)
+--- doc/user/misc.xml	(working copy)
+***************
+*** 36,45 ****
+      <para>
+  
+      Although the &SCons; code itself will run 
+!     on any Python version 1.5.2 or later,
+      you are perfectly free to make use of
+      Python syntax and modules from more modern versions
+!     (for example, Python 2.4 or 2.5)
+      when writing your &SConscript; files
+      or your own local modules.
+      If you do this, it's usually helpful to
+--- 36,45 ----
+      <para>
+  
+      Although the &SCons; code itself will run 
+!     on any Python version 2.4 or later,
+      you are perfectly free to make use of
+      Python syntax and modules from more modern versions
+!     (for example, Python 2.5 or 2.6)
+      when writing your &SConscript; files
+      or your own local modules.
+      If you do this, it's usually helpful to
+Index: doc/user/build-install.in
+===================================================================
+*** doc/user/build-install.in	(revision 4810)
+--- doc/user/build-install.in	(working copy)
+***************
+*** 111,127 ****
+  
+      <para>
+  
+-     (Note that the <option>-V</option> option
+-     was added to Python version 2.0,
+-     so if your system only has an earlier version available
+-     you may see an
+-     <literal>"Unknown option: -V"</literal>
+-     error message.)
+- 
+-     </para>
+- 
+-     <para>
+- 
+      The standard location for information
+      about downloading and installing Python is
+      <ulink url="http://www.python.org/download/">http://www.python.org/download/</ulink>.
+--- 111,116 ----
+***************
+*** 132,141 ****
+  
+      <para>
+  
+!     &SCons; will work with any version of Python from 1.5.2 or later.
+      If you need to install Python and have a choice,
+!     we recommend using the most recent Python 2.5 version available.
+!     Python 2.5 has significant improvements
+      that help speed up the performance of &SCons;.
+  
+      </para>
+--- 121,130 ----
+  
+      <para>
+  
+!     &SCons; will work with any version of Python from 2.4 or later.
+      If you need to install Python and have a choice,
+!     we recommend using the most recent Python version available.
+!     Newer Pythons have significant improvements
+      that help speed up the performance of &SCons;.
+  
+      </para>
+Index: doc/user/builders-built-in.in
+===================================================================
+*** doc/user/builders-built-in.in	(revision 4810)
+--- doc/user/builders-built-in.in	(working copy)
+***************
+*** 838,856 ****
+          <scons_output_command>scons -Q .</scons_output_command>
+        </scons_output>
+  
+-       <para>
+- 
+-       If you're using Python version 1.5.2 to run &SCons;,
+-       then &SCons; will try to use an external
+-       &zip; program as follows:
+- 
+-       </para>
+- 
+-       <screen>
+-         % <userinput>scons -Q .</userinput>
+-         zip /home/my/project/zip.out file1 file2
+-       </screen>
+- 
+      </section>
+  
+    </section>
+--- 838,843 ----
+Index: doc/user/misc.in
+===================================================================
+*** doc/user/misc.in	(revision 4810)
+--- doc/user/misc.in	(working copy)
+***************
+*** 36,45 ****
+      <para>
+  
+      Although the &SCons; code itself will run 
+!     on any Python version 1.5.2 or later,
+      you are perfectly free to make use of
+      Python syntax and modules from more modern versions
+!     (for example, Python 2.4 or 2.5)
+      when writing your &SConscript; files
+      or your own local modules.
+      If you do this, it's usually helpful to
+--- 36,45 ----
+      <para>
+  
+      Although the &SCons; code itself will run 
+!     on any Python version 2.4 or later,
+      you are perfectly free to make use of
+      Python syntax and modules from more modern versions
+!     (for example, Python 2.5 or 2.6)
+      when writing your &SConscript; files
+      or your own local modules.
+      If you do this, it's usually helpful to
+Index: doc/user/build-install.xml
+===================================================================
+*** doc/user/build-install.xml	(revision 4810)
+--- doc/user/build-install.xml	(working copy)
+***************
+*** 111,127 ****
+  
+      <para>
+  
+-     (Note that the <option>-V</option> option
+-     was added to Python version 2.0,
+-     so if your system only has an earlier version available
+-     you may see an
+-     <literal>"Unknown option: -V"</literal>
+-     error message.)
+- 
+-     </para>
+- 
+-     <para>
+- 
+      The standard location for information
+      about downloading and installing Python is
+      <ulink url="http://www.python.org/download/">http://www.python.org/download/</ulink>.
+--- 111,116 ----
+***************
+*** 132,141 ****
+  
+      <para>
+  
+!     &SCons; will work with any version of Python from 1.5.2 or later.
+      If you need to install Python and have a choice,
+!     we recommend using the most recent Python 2.5 version available.
+!     Python 2.5 has significant improvements
+      that help speed up the performance of &SCons;.
+  
+      </para>
+--- 121,130 ----
+  
+      <para>
+  
+!     &SCons; will work with any version of Python from 2.4 or later.
+      If you need to install Python and have a choice,
+!     we recommend using the most recent Python version available.
+!     Newer Pythons have significant improvements
+      that help speed up the performance of &SCons;.
+  
+      </para>
+Index: doc/user/builders-built-in.xml
+===================================================================
+*** doc/user/builders-built-in.xml	(revision 4810)
+--- doc/user/builders-built-in.xml	(working copy)
+***************
+*** 812,830 ****
+          zip(["out.zip"], ["file1", "file2"])
+        </screen>
+  
+-       <para>
+- 
+-       If you're using Python version 1.5.2 to run &SCons;,
+-       then &SCons; will try to use an external
+-       &zip; program as follows:
+- 
+-       </para>
+- 
+-       <screen>
+-         % <userinput>scons -Q .</userinput>
+-         zip /home/my/project/zip.out file1 file2
+-       </screen>
+- 
+      </section>
+  
+    </section>
+--- 812,817 ----
+Index: SConstruct
+===================================================================
+*** SConstruct	(revision 4810)
+--- SConstruct	(working copy)
+***************
+*** 2,9 ****
+  # SConstruct file to build scons packages during development.
+  #
+  # See the README file for an overview of how SCons is built and tested.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  # When this gets changed, you must also change the copyright_years string
+  # in QMTest/TestSCons.py so the test scripts look for the right string.
+--- 2,7 ----
+Index: bin/install_python.py
+===================================================================
+*** bin/install_python.py	(revision 4810)
+--- bin/install_python.py	(working copy)
+***************
+*** 15,24 ****
+  from Command import CommandRunner, Usage
+  
+  all_versions = [
+-     #'1.5.2',   # no longer available at python.org
+-     '2.0.1',
+-     '2.1.3',
+-     '2.2',
+      '2.3.7',
+      '2.4.5',
+      #'2.5.2',
+--- 15,20 ----
+***************
+*** 89,104 ****
+          tar_gz = os.path.join(downloads_dir, python + '.tgz')
+          tar_gz_url = os.path.join(downloads_url, version, python + '.tgz')
+  
+-         if (version.startswith('1.5') or
+-             version.startswith('1.6') or
+-             version.startswith('2.0')):
+- 
+-             configureflags = '--with-threads'
+- 
+-         else:
+- 
+-             configureflags = ''
+- 
+          cmd.subst_dictionary(locals())
+  
+          if not os.path.exists(tar_gz):
+--- 85,90 ----
+***************
+*** 110,126 ****
+  
+          cmd.run('cd %(python)s')
+  
+-         if (version.startswith('1.6') or
+-             version.startswith('2.0')):
+- 
+-             def edit_modules_setup_in():
+-                 content = open('Modules/Setup.in', 'r').read()
+-                 content = content.replace('\n#zlib', '\nzlib')
+-                 open('Modules/Setup.in', 'w').write(content)
+- 
+-             display = 'ed Modules/Setup.in <<EOF\ns/^#zlib/zlib/\nw\nq\nEOF\n'
+-             cmd.run((edit_modules_setup_in,), display)
+- 
+          cmd.run('./configure --prefix=%(prefix)s %(configureflags)s 2>&1 | tee configure.out')
+          cmd.run('make 2>&1 | tee make.out')
+          cmd.run('%(sudo)s make install')
+--- 96,101 ----
+Index: bin/SConsDoc.py
+===================================================================
+*** bin/SConsDoc.py	(revision 4810)
+--- bin/SConsDoc.py	(working copy)
+***************
+*** 2,8 ****
+  #
+  # Module for handling SCons documentation processing.
+  #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __doc__ = """
+  This module parses home-brew XML files that document various things
+--- 2,7 ----
+Index: bin/scons-doc.py
+===================================================================
+*** bin/scons-doc.py	(revision 4810)
+--- bin/scons-doc.py	(working copy)
+***************
+*** 88,94 ****
+  # Error output gets passed through to your error output so you
+  # can see if there are any problems executing the command.
+  #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  import optparse
+  import os
+--- 88,93 ----
+***************
+*** 501,514 ****
+      return func(args[1:], c, t, dict)
+  
+  class MySGML(sgmllib.SGMLParser):
+!     """A subclass of the standard Python 2.2 sgmllib SGML parser.
+  
+      This extends the standard sgmllib parser to recognize, and do cool
+      stuff with, the added tags that describe our SCons examples,
+      commands, and other stuff.
+- 
+-     Note that this doesn't work with the 1.5.2 sgmllib module, because
+-     that didn't have the ability to work with ENTITY declarations.
+      """
+      def __init__(self, outfp):
+          sgmllib.SGMLParser.__init__(self)
+--- 500,510 ----
+      return func(args[1:], c, t, dict)
+  
+  class MySGML(sgmllib.SGMLParser):
+!     """A subclass of the standard Python sgmllib SGML parser.
+  
+      This extends the standard sgmllib parser to recognize, and do cool
+      stuff with, the added tags that describe our SCons examples,
+      commands, and other stuff.
+      """
+      def __init__(self, outfp):
+          sgmllib.SGMLParser.__init__(self)
+Index: bin/linecount.py
+===================================================================
+*** bin/linecount.py	(revision 4810)
+--- bin/linecount.py	(working copy)
+***************
+*** 21,28 ****
+  # in each category, the number of non-blank lines, and the number of
+  # non-comment lines.  The last figure (non-comment) lines is the most
+  # interesting one for most purposes.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 21,26 ----
+Index: bin/sconsexamples.py
+===================================================================
+*** bin/sconsexamples.py	(revision 4810)
+--- bin/sconsexamples.py	(working copy)
+***************
+*** 66,73 ****
+  # output from SCons, and insert it into the text as appropriate.
+  # Error output gets passed through to your error output so you
+  # can see if there are any problems executing the command.
+- #
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  import os
+  import os.path
+--- 66,71 ----
+***************
+*** 222,231 ****
+  """
+  
+  class MySGML(sgmllib.SGMLParser):
+!     """A subclass of the standard Python 2.2 sgmllib SGML parser.
+! 
+!     Note that this doesn't work with the 1.5.2 sgmllib module, because
+!     that didn't have the ability to work with ENTITY declarations.
+      """
+      def __init__(self):
+          sgmllib.SGMLParser.__init__(self)
+--- 220,226 ----
+  """
+  
+  class MySGML(sgmllib.SGMLParser):
+!     """A subclass of the standard Python sgmllib SGML parser.
+      """
+      def __init__(self):
+          sgmllib.SGMLParser.__init__(self)
+Index: QMTest/TestCommon.py
+===================================================================
+*** QMTest/TestCommon.py	(revision 4810)
+--- QMTest/TestCommon.py	(working copy)
+***************
+*** 88,94 ****
+  # PARTICULAR PURPOSE.  THE CODE PROVIDED HEREUNDER IS ON AN "AS IS" BASIS,
+  # AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
+  # SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __author__ = "Steven Knight <knight at baldmt dot com>"
+  __revision__ = "TestCommon.py 0.37.D001 2010/01/11 16:55:50 knight"
+--- 88,93 ----
+Index: QMTest/scons_tdb.py
+===================================================================
+*** QMTest/scons_tdb.py	(revision 4810)
+--- QMTest/scons_tdb.py	(working copy)
+***************
+*** 27,33 ****
+  
+  Thanks to Stefan Seefeld for the initial code.
+  """
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 27,32 ----
+Index: QMTest/unittest.py
+===================================================================
+*** QMTest/unittest.py	(revision 4810)
+--- QMTest/unittest.py	(working copy)
+***************
+*** 28,34 ****
+  AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
+  SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+  """
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __author__ = "Steve Purcell (stephen_purcell@yahoo.com)"
+  __version__ = "$ Revision: 1.23 $"[11:-2]
+--- 28,33 ----
+Index: QMTest/TestCmd.py
+===================================================================
+*** QMTest/TestCmd.py	(revision 4810)
+--- QMTest/TestCmd.py	(working copy)
+***************
+*** 213,219 ****
+  # PARTICULAR PURPOSE.  THE CODE PROVIDED HEREUNDER IS ON AN "AS IS" BASIS,
+  # AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
+  # SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __author__ = "Steven Knight <knight at baldmt dot com>"
+  __revision__ = "TestCmd.py 0.37.D001 2010/01/11 16:55:50 knight"
+--- 213,218 ----
+***************
+*** 293,300 ****
+  
+  _Cleanup = []
+  
+- _chain_to_exitfunc = None
+- 
+  def _clean():
+      global _Cleanup
+      cleanlist = [_f for _f in _Cleanup if _f]
+--- 292,297 ----
+***************
+*** 302,321 ****
+      cleanlist.reverse()
+      for test in cleanlist:
+          test.cleanup()
+!     if _chain_to_exitfunc:
+!         _chain_to_exitfunc()
+! 
+! try:
+!     import atexit
+! except ImportError:
+!     # TODO(1.5): atexit requires python 2.0, so chain sys.exitfunc
+!     try:
+!         _chain_to_exitfunc = sys.exitfunc
+!     except AttributeError:
+!         pass
+!     sys.exitfunc = _clean
+! else:
+!     atexit.register(_clean)
+  
+  def _caller(tblist, skip):
+      string = ""
+--- 299,306 ----
+      cleanlist.reverse()
+      for test in cleanlist:
+          test.cleanup()
+! import atexit
+! atexit.register(_clean)
+  
+  def _caller(tblist, skip):
+      string = ""
+Index: QMTest/TestSCons.py
+===================================================================
+*** QMTest/TestSCons.py	(revision 4810)
+--- QMTest/TestSCons.py	(working copy)
+***************
+*** 13,19 ****
+  """
+  
+  # __COPYRIGHT__
+- from __future__ import generators  ### KEEP FOR COMPATIBILITY FIXERS
+  
+  __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+  
+--- 13,18 ----
+***************
+*** 407,414 ****
+                  kw['arguments'] = option + arguments
+              else:
+                  kw['arguments'] = option + ' ' + arguments
+-         # TODO(1.5)
+-         #return self.run(**kw)
+          return self.run(**kw)
+  
+      def diff_substr(self, expect, actual, prelen=20, postlen=40):
+--- 406,411 ----
+***************
+*** 1045,1052 ****
+          if 'verbose' not in kw and not self.calibrate:
+              kw['verbose'] = True
+  
+-         # TODO(1.5)
+-         #TestSCons.__init__(self, *args, **kw)
+          TestSCons.__init__(self, *args, **kw)
+  
+          # TODO(sgk):    better way to get the script dir than sys.argv[0]
+--- 1042,1047 ----
+***************
+*** 1080,1094 ****
+                  options.append('%s=%s' % (variable, value))
+              kw['options'] = ' '.join(options)
+          if self.calibrate:
+-             # TODO(1.5)
+-             #self.calibration(*args, **kw)
+              self.calibration(*args, **kw)
+          else:
+              self.uptime()
+-             # TODO(1.5)
+-             #self.startup(*args, **kw)
+-             #self.full(*args, **kw)
+-             #self.null(*args, **kw)
+              self.startup(*args, **kw)
+              self.full(*args, **kw)
+              self.null(*args, **kw)
+--- 1075,1083 ----
+***************
+*** 1109,1116 ****
+                     "seconds",
+                     sort=0)
+          for name, args in stats.items():
+-             # TODO(1.5)
+-             #self.trace(name, trace, *args)
+              self.trace(name, trace, **args)
+  
+      def uptime(self):
+--- 1098,1103 ----
+***************
+*** 1150,1157 ****
+          # won't report any statistics for it, but we can still execute
+          # the full and null builds.
+          kw['status'] = None
+-         # TODO(1.5)
+-         #self.run(*args, **kw)
+          self.run(*args, **kw)
+          sys.stdout.write(self.stdout())
+          stats = self.collect_stats(self.stdout())
+--- 1137,1142 ----
+***************
+*** 1164,1179 ****
+          """
+          Runs a full build of SCons.
+          """
+-         # TODO(1.5)
+-         #self.run(*args, **kw)
+          self.run(*args, **kw)
+          sys.stdout.write(self.stdout())
+          stats = self.collect_stats(self.stdout())
+          self.report_traces('full', stats)
+-         # TODO(1.5)
+-         #self.trace('full-memory', 'initial', **stats['memory-initial'])
+-         #self.trace('full-memory', 'prebuild', **stats['memory-prebuild'])
+-         #self.trace('full-memory', 'final', **stats['memory-final'])
+          self.trace('full-memory', 'initial', **stats['memory-initial'])
+          self.trace('full-memory', 'prebuild', **stats['memory-prebuild'])
+          self.trace('full-memory', 'final', **stats['memory-final'])
+--- 1149,1158 ----
+***************
+*** 1184,1191 ****
+          information (the variable(s) that were set for this configuration,
+          and the elapsed time to run.
+          """
+-         # TODO(1.5)
+-         #self.run(*args, **kw)
+          self.run(*args, **kw)
+          if self.variables:
+              for variable, value in self.variables.items():
+--- 1163,1168 ----
+***************
+*** 1198,1208 ****
+          """
+          # TODO(sgk):  allow the caller to specify the target (argument)
+          # that must be up-to-date.
+!         # TODO(1.5)
+!         #self.up_to_date(arguments='.', **kw)
+!         kw = kw.copy()
+!         kw['arguments'] = '.'
+!         self.up_to_date(**kw)
+          sys.stdout.write(self.stdout())
+          stats = self.collect_stats(self.stdout())
+          # time-commands should always be 0.0 on a null build, because
+--- 1175,1181 ----
+          """
+          # TODO(sgk):  allow the caller to specify the target (argument)
+          # that must be up-to-date.
+!         self.up_to_date(arguments='.', **kw)
+          sys.stdout.write(self.stdout())
+          stats = self.collect_stats(self.stdout())
+          # time-commands should always be 0.0 on a null build, because
+***************
+*** 1213,1222 ****
+          if float(stats['time-commands']['value']) == 0.0:
+              del stats['time-commands']
+          self.report_traces('null', stats)
+-         # TODO(1.5)
+-         #self.trace('null-memory', 'initial', **stats['memory-initial'])
+-         #self.trace('null-memory', 'prebuild', **stats['memory-prebuild'])
+-         #self.trace('null-memory', 'final', **stats['memory-final'])
+          self.trace('null-memory', 'initial', **stats['memory-initial'])
+          self.trace('null-memory', 'prebuild', **stats['memory-prebuild'])
+          self.trace('null-memory', 'final', **stats['memory-final'])
+--- 1186,1191 ----
+***************
+*** 1239,1246 ****
+          kw['options'] = kw.get('options', '') + ' --debug=memory --debug=time'
+          self.startTime = time.time()
+          try:
+-             # TODO(1.5)
+-             #result = TestSCons.run(self, *args, **kw)
+              result = TestSCons.run(self, *args, **kw)
+          finally:
+              self.endTime = time.time()
+--- 1208,1213 ----
