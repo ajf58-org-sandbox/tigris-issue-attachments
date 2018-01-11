@@ -1,0 +1,115 @@
+From 0dd6c106a262564cd12efd9c6a652477da3f888f Mon Sep 17 00:00:00 2001
+From: Emil Stanchev <estanchev@vmware.com>
+Date: Fri, 2 Sep 2011 19:41:15 +0300
+Subject: [PATCH] add fix
+
+---
+ src/engine/SCons/Node/FS.py      |   31 ++++++++++++++++---------------
+ src/engine/SCons/Node/FSTests.py |   27 +++++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+), 15 deletions(-)
+
+diff --git a/src/engine/SCons/Node/FS.py b/src/engine/SCons/Node/FS.py
+index f106d46..2617f28 100644
+--- a/src/engine/SCons/Node/FS.py
++++ b/src/engine/SCons/Node/FS.py
+@@ -34,6 +34,7 @@ that can be used by scripts or modules looking for the canonical default.
+ 
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
++import errno
+ import fnmatch
+ import os
+ import re
+@@ -308,8 +309,11 @@ Unlink = SCons.Action.Action(UnlinkFunc, None)
+ 
+ def MkdirFunc(target, source, env):
+     t = target[0]
+-    if not t.exists():
++    try:
+         t.fs.mkdir(t.abspath)
++    except OSError, e:
++       if e.errno != errno.EEXIST:
++          raise
+     return 0
+ 
+ Mkdir = SCons.Action.Action(MkdirFunc, None, presub=None)
+@@ -1716,20 +1720,17 @@ class Dir(Base):
+             parent = p
+         listDirs.reverse()
+         for dirnode in listDirs:
+-            try:
+-                # Don't call dirnode.build(), call the base Node method
+-                # directly because we definitely *must* create this
+-                # directory.  The dirnode.build() method will suppress
+-                # the build if it's the default builder.
+-                SCons.Node.Node.build(dirnode)
+-                dirnode.get_executor().nullify()
+-                # The build() action may or may not have actually
+-                # created the directory, depending on whether the -n
+-                # option was used or not.  Delete the _exists and
+-                # _rexists attributes so they can be reevaluated.
+-                dirnode.clear()
+-            except OSError:
+-                pass
++            # Don't call dirnode.build(), call the base Node method
++            # directly because we definitely *must* create this
++            # directory.  The dirnode.build() method will suppress
++            # the build if it's the default builder.
++            SCons.Node.Node.build(dirnode)
++            dirnode.get_executor().nullify()
++            # The build() action may or may not have actually
++            # created the directory, depending on whether the -n
++            # option was used or not.  Delete the _exists and
++            # _rexists attributes so they can be reevaluated.
++            dirnode.clear()
+ 
+     def multiple_side_effect_has_builder(self):
+         global MkdirBuilder
+diff --git a/src/engine/SCons/Node/FSTests.py b/src/engine/SCons/Node/FSTests.py
+index a60b8a4..4b68a3e 100644
+--- a/src/engine/SCons/Node/FSTests.py
++++ b/src/engine/SCons/Node/FSTests.py
+@@ -3722,6 +3722,32 @@ class AbsolutePathTestCase(unittest.TestCase):
+             os.chdir(save_cwd)
+ 
+ 
++class MakeDirTestCase(unittest.TestCase):
++    def test_mkdir_func_existing_race_condition(self):
++        fs = SCons.Node.FS.FS()
++        dirnode = fs.Dir('fffdir')
++        try:
++            # Make the build method think that the directory doesn't exist.
++            # This was triggering a race-condition bug.
++            dirnode.exists = lambda: False
++
++            # Create the directory
++            os.mkdir(dirnode.abspath)
++
++            try:
++                SCons.Node.Node.build(dirnode)
++            except Exception:
++                print "Building an existing directory failed!"
++                raise
++        except OSError:
++            pass
++        finally:
++            try:
++                os.rmdir(dirnode.abspath)
++            except OSError:
++                print "Couldn't delete directory %s" % dirnode.abspath
++                raise
++
+ 
+ if __name__ == "__main__":
+     suite = unittest.TestSuite()
+@@ -3750,6 +3776,7 @@ if __name__ == "__main__":
+         FileNodeInfoTestCase,
+         FSTestCase,
+         GlobTestCase,
++        MakeDirTestCase,
+         RepositoryTestCase,
+     ]
+     for tclass in tclasses:
+-- 
+1.7.4.1
+
