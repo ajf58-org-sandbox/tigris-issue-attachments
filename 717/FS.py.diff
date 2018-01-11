@@ -1,0 +1,19 @@
+*** engine/SCons/Node/FS.py.orig	Tue Mar 23 13:09:40 2010
+--- engine/SCons/Node/FS.py	Tue Mar 23 13:09:56 2010
+***************
+*** 1783,1789 ****
+                  d[name] = result
+              return result
+          else:
+!             return d.has_key(name)
+  
+      memoizer_counters.append(SCons.Memoize.CountValue('srcdir_list'))
+  
+--- 1783,1789 ----
+                  d[name] = result
+              return result
+          else:
+!             return d.has_key(_my_normcase(name))
+  
+      memoizer_counters.append(SCons.Memoize.CountValue('srcdir_list'))
+  
