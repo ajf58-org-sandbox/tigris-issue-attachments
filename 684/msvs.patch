@@ -1,0 +1,42 @@
+--- d:\projects\lockon\msvs.py	Mon Jan 18 01:24:06 2010
++++ msvs.py	Wed Jan 27 13:04:13 2010
+@@ -612,7 +612,11 @@
+         _DSPGenerator.__init__(self, dspfile, source, env)
+         self.version = env['MSVS_VERSION']
+         self.version_num, self.suite = msvs_parse_version(self.version)
+-        if self.version_num >= 8.0:
++        if self.version_num >= 9.0:
++            self.versionstr = '9.00'
++            self.dspheader = V8DSPHeader
++            self.dspconfiguration = V8DSPConfiguration
++        elif self.version_num >= 8.0:
+             self.versionstr = '8.00'
+             self.dspheader = V8DSPHeader
+             self.dspconfiguration = V8DSPConfiguration
+@@ -891,12 +895,12 @@
+         self.version = self.env['MSVS_VERSION']
+         self.version_num, self.suite = msvs_parse_version(self.version)
+         self.versionstr = '7.00'
+-        if self.version_num >= 8.0:
++        if self.version_num >= 9.0:
++            self.versionstr = '10.00'
++        elif self.version_num >= 8.0:
+             self.versionstr = '9.00'
+         elif self.version_num >= 7.1:
+             self.versionstr = '8.00'
+-        if self.version_num >= 8.0:
+-            self.versionstr = '9.00'
+ 
+         if env.has_key('slnguid') and env['slnguid']:
+             self.slnguid = env['slnguid']
+@@ -974,7 +978,9 @@
+     def PrintSolution(self):
+         """Writes a solution file"""
+         self.file.write('Microsoft Visual Studio Solution File, Format Version %s\n' % self.versionstr )
+-        if self.version_num >= 8.0:
++        if self.version_num >= 9.0:
++            self.file.write('# Visual Studio 2008\n')
++        elif self.version_num >= 8.0:
+             self.file.write('# Visual Studio 2005\n')
+         for p in self.dspfiles:
+             name = os.path.basename(p)
