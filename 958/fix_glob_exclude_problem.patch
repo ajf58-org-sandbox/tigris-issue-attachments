@@ -1,0 +1,12 @@
+--- FS.py_ORIG	2015-09-16 12:01:07.867725391 +0200
++++ FS.py_PATCHED	2015-09-16 12:51:27.377627159 +0200
+@@ -2072,7 +2072,8 @@
+                     r = [os.path.join(str(dir), x) for x in r]
+                 result.extend(r)
+         if exclude:
+-            result = filter(lambda x: not any(fnmatch.fnmatch(str(x), e) for e in SCons.Util.flatten(exclude)), result)
++            result = filter(lambda x: not any(fnmatch.fnmatch(os.path.basename(str(x)), e) for e in SCons.Util.flatten(exclude)), result)
++
+         return sorted(result, key=lambda a: str(a))
+ 
+     def _glob1(self, pattern, ondisk=True, source=False, strings=False):
