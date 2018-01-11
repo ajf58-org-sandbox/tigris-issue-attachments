@@ -1,0 +1,17 @@
+Index: src/engine/SCons/Defaults.py
+===================================================================
+--- src/engine/SCons/Defaults.py	(revision 3918)
++++ src/engine/SCons/Defaults.py	(working copy)
+@@ -236,7 +236,11 @@
+ def move_func(dest, src):
+     SCons.Node.FS.invalidate_node_memos(dest)
+     SCons.Node.FS.invalidate_node_memos(src)
+-    os.rename(src, dest)
++    try:
++        os.rename(src, dest)
++    except OSError:
++        shutil.move(src, dest)
++        
+ 
+ Move = ActionFactory(move_func,
+                      lambda dest, src: 'Move("%s", "%s")' % (dest, src),
