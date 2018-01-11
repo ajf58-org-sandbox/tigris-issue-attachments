@@ -1,0 +1,48 @@
+Index: src/engine/SCons/Scanner/RC.py
+===================================================================
+--- src/engine/SCons/Scanner/RC.py	(revision 5256)
++++ src/engine/SCons/Scanner/RC.py	(working copy)
+@@ -40,7 +40,7 @@
+     res_re= r'^(?:\s*#\s*(?:include)|' \
+             '.*?\s+(?:ICON|BITMAP|CURSOR|HTML|FONT|MESSAGETABLE|TYPELIB|REGISTRY|D3DFX)' \
+             '\s*.*?)' \
+-            '\s*(<|"| )([^>"\s]+)(?:[>" ])*$'
++            '\s*(<|"| )([^>"\s]+)(?:[>"\s])*$'
+     resScanner = SCons.Scanner.ClassicCPP( "ResourceScanner",
+                                            "$RCSUFFIXES",
+                                            "CPPPATH",
+Index: src/engine/SCons/Scanner/RCTests.py
+===================================================================
+--- src/engine/SCons/Scanner/RCTests.py	(revision 5256)
++++ src/engine/SCons/Scanner/RCTests.py	(working copy)
+@@ -57,6 +57,7 @@
+ 
+ """)
+ 
++test.write('t3.rc','#include "t1.h"\r\n')
+ 
+ # Create dummy include files
+ headers = ['t1.h',
+@@ -144,12 +145,22 @@
+                    'testregis.rgs','testtypelib.tlb']
+         deps_match(self, deps, headers)
+ 
++class RCScannerTestCase3(unittest.TestCase):
++    def runTest(self):
++        path = []
++        env = DummyEnvironment(RCSUFFIXES=['.rc','.rc2'],
++                               CPPPATH=path)
++        s = SCons.Scanner.RC.RCScan()
++        deps = s(env.File('t3.rc'), env, path)
++        headers = ['t1.h']
++        deps_match(self, deps, headers)
+         
+ 
+ def suite():
+     suite = unittest.TestSuite()
+     suite.addTest(RCScannerTestCase1())
+     suite.addTest(RCScannerTestCase2())
++    suite.addTest(RCScannerTestCase3())
+     return suite
+ 
+ if __name__ == "__main__":
