@@ -1,0 +1,30 @@
+--- C:/Python/Lib/site-packages/scons-2.0.1/SCons.old/Tool/mingw.py	Thu Sep 16 12:16:12 2010
++++ C:/Python/Lib/site-packages/scons-2.0.1/SCons.new/Tool/mingw.py	Wed Sep 22 10:26:29 2010
+@@ -78,9 +78,10 @@
+        not env.FindIxes(target, 'LIBPREFIX', 'LIBSUFFIX'):
+ 
+         # Append an import library to the list of targets.
+-        target.append(env.ReplaceIxes(dll,  
+-                                      'SHLIBPREFIX', 'SHLIBSUFFIX',
+-                                      'LIBPREFIX', 'LIBSUFFIX'))
++        targStr = env.ReplaceIxes(dll,  
++                                  'SHLIBPREFIX', 'SHLIBSUFFIX',
++                                  'LIBPREFIX', 'LIBSUFFIX')
++        target.append(env.fs.File(targStr))
+ 
+     # Append a def file target if there isn't already a def file target
+     # or a def file source. There is no option to disable def file
+@@ -89,9 +90,10 @@
+     def_source = env.FindIxes(source, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
+     def_target = env.FindIxes(target, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
+     if not def_source and not def_target:
+-        target.append(env.ReplaceIxes(dll,  
+-                                      'SHLIBPREFIX', 'SHLIBSUFFIX',
+-                                      'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX'))
++        targStr = env.ReplaceIxes(dll,  
++                                  'SHLIBPREFIX', 'SHLIBSUFFIX',
++                                  'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
++        target.append(env.fs.File(targStr))
+     
+     return (target, source)
+                          
