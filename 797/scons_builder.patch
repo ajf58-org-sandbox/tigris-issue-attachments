@@ -1,0 +1,26 @@
+--- SCons.orig/Builder.py	2010-09-16 12:58:42 +0100
++++ SCons.new/Builder.py	2010-09-16 12:59:30 +0100
+@@ -336,13 +336,19 @@
+         # in strings.  Maybe we should change that?
+         while SCons.Util.is_String(emitter) and emitter in env:
+             emitter = env[emitter]
++
++        alltarget = target[:]
+         if callable(emitter):
+             target, source = emitter(target, source, env)
++            alltarget = target[:]
+         elif SCons.Util.is_List(emitter):
+             for e in emitter:
+-                target, source = e(target, source, env)
++                temp = target[:]
++                extratarget, extrasource = e(temp, source, env)
++                alltarget += extratarget
++                source += extrasource
++        alltarget = list(set(alltarget))
++        source = list(set(source))
++
+-        return (target, source)
++        return (alltarget, source)
+ 
+ 
+     def __cmp__(self, other):
