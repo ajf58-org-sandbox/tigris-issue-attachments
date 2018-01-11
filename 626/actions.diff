@@ -1,0 +1,444 @@
+Index: test/TEX/nomencl.py
+===================================================================
+--- test/TEX/nomencl.py	(revision 0)
++++ test/TEX/nomencl.py	(revision 0)
+@@ -0,0 +1,100 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Validate that use of \nomencl in TeX source files causes SCons to
++be aware of the necessary created glossary files.
++
++Test configuration contributed by Robert Managan.
++"""
++
++import os
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++latex = test.where_is('latex')
++
++if not latex:
++    test.skip_test("Could not find latex; skipping test(s).\n")
++
++test.write('SConstruct', """\
++import os
++env = Environment(tools = ['pdftex'], ENV = {'PATH' : os.environ['PATH']})
++env.PDF('nomencl', 'nomencl.tex')
++""")
++
++test.write('nomencl.tex', r"""
++\documentclass{article}
++
++\usepackage[refpage]{nomencl}
++
++\makenomenclature
++
++
++\begin{document}
++
++A nomenclature entry \nomenclature{gnu}{an animal or software group} 
++and another\nomenclature{nix}{not sure}.
++
++\printnomenclature
++
++\end{document}
++""")
++
++test.run(arguments = '.', stderr=None)
++
++test.must_exist(test.workpath('nomencl.aux'))
++test.must_exist(test.workpath('nomencl.fls'))
++test.must_exist(test.workpath('nomencl.nlg'))
++test.must_exist(test.workpath('nomencl.nlo'))
++test.must_exist(test.workpath('nomencl.nls'))
++test.must_exist(test.workpath('nomencl.log'))
++test.must_exist(test.workpath('nomencl.pdf'))
++
++test.run(arguments = '-c .')
++
++x = "Could not remove 'nomencl.aux': No such file or directory"
++test.must_not_contain_any_line(test.stdout(), [x])
++
++test.must_not_exist(test.workpath('nomencl.aux'))
++test.must_not_exist(test.workpath('nomencl.fls'))
++test.must_not_exist(test.workpath('nomencl.nlg'))
++test.must_not_exist(test.workpath('nomencl.nlo'))
++test.must_not_exist(test.workpath('nomencl.nls'))
++test.must_not_exist(test.workpath('nomencl.log'))
++test.must_not_exist(test.workpath('nomencl.pdf'))
++
++test.pass_test()
++
++
++
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/TEX/glossary.py
+===================================================================
+--- test/TEX/glossary.py	(revision 0)
++++ test/TEX/glossary.py	(revision 0)
+@@ -0,0 +1,102 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Validate that use of \glossary in TeX source files causes SCons to
++be aware of the necessary created glossary files.
++
++Test configuration contributed by Robert Managan.
++"""
++
++import os
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++latex = test.where_is('latex')
++
++if not latex:
++    test.skip_test("Could not find latex; skipping test(s).\n")
++
++test.write('SConstruct', """\
++import os
++env = Environment(tools = ['latex'], ENV = {'PATH' : os.environ['PATH']})
++env.DVI('gloassary', 'glossary.ltx')
++""")
++
++test.write('glossary.ltx', r"""
++\documentclass{article}
++
++\usepackage{glossary}
++
++\makeglossary
++
++
++\begin{document}
++
++A glossary entry \glossary{name={gnu}, description={an animal or software group}}
++and another\glossary{name={nix}, description={not sure}}.
++
++\printglossary
++
++\end{document}
++""")
++
++test.run(arguments = '.', stderr=None)
++
++test.must_exist(test.workpath('glossary.aux'))
++test.must_exist(test.workpath('glossary.fls'))
++test.must_exist(test.workpath('glossary.glg'))
++test.must_exist(test.workpath('glossary.glo'))
++test.must_exist(test.workpath('glossary.gls'))
++test.must_exist(test.workpath('glossary.ist'))
++test.must_exist(test.workpath('glossary.log'))
++test.must_exist(test.workpath('gloassary.dvi'))
++
++test.run(arguments = '-c .')
++
++x = "Could not remove 'glossary.aux': No such file or directory"
++test.must_not_contain_any_line(test.stdout(), [x])
++
++test.must_not_exist(test.workpath('glossary.aux'))
++test.must_not_exist(test.workpath('glossary.fls'))
++test.must_not_exist(test.workpath('glossary.glg'))
++test.must_not_exist(test.workpath('glossary.glo'))
++test.must_not_exist(test.workpath('glossary.gls'))
++test.must_not_exist(test.workpath('glossary.ist'))
++test.must_not_exist(test.workpath('glossary.log'))
++test.must_not_exist(test.workpath('gloassary.dvi'))
++
++test.pass_test()
++
++
++
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: src/CHANGES.txt
+===================================================================
+--- src/CHANGES.txt	(revision 4336)
++++ src/CHANGES.txt	(working copy)
+@@ -93,9 +93,17 @@
+       Latex output
+ 
+     - Remove LATEXSUFFIXES from environments that don't initialize Tex.
+-    
++
+     - Add support for the glosaaries package for glossaries and acronyms
+ 
++    - Fix problem that pdftex, latex, and pdflatex tools by themselves did
++      not create the actions for bibtex, makeindex,... by creating them 
++      and other environment settings in one routine called by all four 
++      tex tools.
++
++    - Fix problem with filenames of sideeffects when the user changes
++      the name of the output file from the latex default
++
+ RELEASE 1.2.0.d20090223 - Mon, 23 Feb 2009 08:41:06 -0800
+ 
+   From Stanislav Baranov:
+Index: src/engine/SCons/Tool/pdftex.py
+===================================================================
+--- src/engine/SCons/Tool/pdftex.py	(revision 4336)
++++ src/engine/SCons/Tool/pdftex.py	(working copy)
+@@ -1,6 +1,7 @@
+ """SCons.Tool.pdftex
+ 
+ Tool-specific initialization for pdftex.
++Generates .pdf files from .tex files
+ 
+ There normally shouldn't be any need to import this module directly.
+ It will usually be imported through the generic SCons.Tool.Tool()
+@@ -91,16 +92,8 @@
+     # so pdftex is the default for no source suffix
+     pdf.generate2(env)
+ 
+-    env['PDFTEX']      = 'pdftex'
+-    env['PDFTEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['PDFTEXCOM']   = 'cd ${TARGET.dir} && $PDFTEX $PDFTEXFLAGS ${SOURCE.file}'
++    SCons.Tool.tex.generate_common(env)
+ 
+-    # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
+-    env['PDFLATEX']      = 'pdflatex'
+-    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+-    env['LATEXRETRIES']  = 3
+-
+ def exists(env):
+     return env.Detect('pdftex')
+ 
+Index: src/engine/SCons/Tool/pdflatex.py
+===================================================================
+--- src/engine/SCons/Tool/pdflatex.py	(revision 4336)
++++ src/engine/SCons/Tool/pdflatex.py	(working copy)
+@@ -1,6 +1,7 @@
+ """SCons.Tool.pdflatex
+ 
+ Tool-specific initialization for pdflatex.
++Generates .pdf files from .latex or .ltx files
+ 
+ There normally shouldn't be any need to import this module directly.
+ It will usually be imported through the generic SCons.Tool.Tool()
+@@ -70,10 +71,7 @@
+     bld.add_emitter('.ltx', SCons.Tool.tex.tex_pdf_emitter)
+     bld.add_emitter('.latex', SCons.Tool.tex.tex_pdf_emitter)
+ 
+-    env['PDFLATEX']      = 'pdflatex'
+-    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+-    env['LATEXRETRIES']  = 3
++    SCons.Tool.tex.generate_common(env)
+ 
+ def exists(env):
+     return env.Detect('pdflatex')
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 4336)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -1,6 +1,7 @@
+ """SCons.Tool.tex
+ 
+ Tool-specific initialization for TeX.
++Generates .dvi files from .tex files
+ 
+ There normally shouldn't be any need to import this module directly.
+ It will usually be imported through the generic SCons.Tool.Tool()
+@@ -491,12 +492,12 @@
+     are needed on subsequent runs of latex to finish tables of contents,
+     bibliographies, indices, lists of figures, and hyperlink references.
+     """
+-    targetbase, targetext = SCons.Util.splitext(str(target[0]))
+     basename = SCons.Util.splitext(str(source[0]))[0]
+     basefile = os.path.split(str(basename))[1]
++    targetdir = os.path.split(str(target[0]))[0]
++    targetbase = os.path.join(targetdir, basefile)
+ 
+     basedir = os.path.split(str(source[0]))[0]
+-    targetdir = os.path.split(str(target[0]))[0]
+     abspath = os.path.abspath(basedir)
+     target[0].attributes.path = abspath
+     
+@@ -614,6 +615,25 @@
+ def generate(env):
+     """Add Builders and construction variables for TeX to an Environment."""
+ 
++    global TeXLaTeXAction
++    if TeXLaTeXAction is None:
++        TeXLaTeXAction = SCons.Action.Action(TeXLaTeXFunction,
++                              strfunction=TeXLaTeXStrFunction)
++
++    env.AppendUnique(LATEXSUFFIXES=SCons.Tool.LaTeXSuffixes)
++
++    generate_common(env)
++
++    import dvi
++    dvi.generate(env)
++
++    bld = env['BUILDERS']['DVI']
++    bld.add_action('.tex', TeXLaTeXAction)
++    bld.add_emitter('.tex', tex_eps_emitter)
++
++def generate_common(env):
++    """Add internal Builders and construction variables for LaTeX to an Environment."""
++
+     # A generic tex file Action, sufficient for all tex files.
+     global TeXAction
+     if TeXAction is None:
+@@ -650,30 +670,23 @@
+     if MakeAcronymsAction is None:
+         MakeAcronymsAction = SCons.Action.Action("$MAKEACRONYMSCOM", "$MAKEACRONYMSCOMSTR")
+ 
+-    global TeXLaTeXAction
+-    if TeXLaTeXAction is None:
+-        TeXLaTeXAction = SCons.Action.Action(TeXLaTeXFunction,
+-                              strfunction=TeXLaTeXStrFunction)
+-
+-    env.AppendUnique(LATEXSUFFIXES=SCons.Tool.LaTeXSuffixes)
+-
+-    import dvi
+-    dvi.generate(env)
+-
+-    bld = env['BUILDERS']['DVI']
+-    bld.add_action('.tex', TeXLaTeXAction)
+-    bld.add_emitter('.tex', tex_eps_emitter)
+-
+     env['TEX']      = 'tex'
+     env['TEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+     env['TEXCOM']   = 'cd ${TARGET.dir} && $TEX $TEXFLAGS ${SOURCE.file}'
+ 
+-    # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
++    env['PDFTEX']      = 'pdftex'
++    env['PDFTEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
++    env['PDFTEXCOM']   = 'cd ${TARGET.dir} && $PDFTEX $PDFTEXFLAGS ${SOURCE.file}'
++
+     env['LATEX']        = 'latex'
+     env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+     env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+     env['LATEXRETRIES'] = 3
+ 
++    env['PDFLATEX']      = 'pdflatex'
++    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
++    env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
++
+     env['BIBTEX']      = 'bibtex'
+     env['BIBTEXFLAGS'] = SCons.Util.CLVar('')
+     env['BIBTEXCOM']   = 'cd ${TARGET.dir} && $BIBTEX $BIBTEXFLAGS ${SOURCE.filebase}'
+@@ -693,15 +706,10 @@
+     env['MAKEACRONYMSCOM']   = 'cd ${TARGET.dir} && $MAKEACRONYMS ${SOURCE.filebase}.acn $MAKEACRONYMSFLAGS -o ${SOURCE.filebase}.acr'
+ 
+     env['MAKENCL']      = 'makeindex'
+-    env['MAKENCLSTYLE'] = '$nomencl.ist'
++    env['MAKENCLSTYLE'] = 'nomencl.ist'
+     env['MAKENCLFLAGS'] = '-s ${MAKENCLSTYLE} -t ${SOURCE.filebase}.nlg'
+     env['MAKENCLCOM']   = 'cd ${TARGET.dir} && $MAKENCL ${SOURCE.filebase}.nlo $MAKENCLFLAGS -o ${SOURCE.filebase}.nls'
+ 
+-    # Duplicate from pdflatex.py.  If latex.py goes away, then this is still OK.
+-    env['PDFLATEX']      = 'pdflatex'
+-    env['PDFLATEXFLAGS'] = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['PDFLATEXCOM']   = 'cd ${TARGET.dir} && $PDFLATEX $PDFLATEXFLAGS ${SOURCE.file}'
+-
+ def exists(env):
+     return env.Detect('tex')
+ 
+Index: src/engine/SCons/Tool/latex.py
+===================================================================
+--- src/engine/SCons/Tool/latex.py	(revision 4336)
++++ src/engine/SCons/Tool/latex.py	(working copy)
+@@ -1,6 +1,7 @@
+ """SCons.Tool.latex
+ 
+ Tool-specific initialization for LaTeX.
++Generates .dvi files from .latex or .ltx files
+ 
+ There normally shouldn't be any need to import this module directly.
+ It will usually be imported through the generic SCons.Tool.Tool()
+@@ -40,10 +41,8 @@
+ import SCons.Tool
+ import SCons.Tool.tex
+ 
+-LaTeXAction = None
+-
+ def LaTeXAuxFunction(target = None, source= None, env=None):
+-    result = SCons.Tool.tex.InternalLaTeXAuxAction( LaTeXAction, target, source, env )
++    result = SCons.Tool.tex.InternalLaTeXAuxAction( SCons.Tool.tex.LaTeXAction, target, source, env )
+     if result != 0:
+         print env['LATEX']," returned an error, check the log file"
+     return result
+@@ -53,9 +52,6 @@
+ 
+ def generate(env):
+     """Add Builders and construction variables for LaTeX to an Environment."""
+-    global LaTeXAction
+-    if LaTeXAction is None:
+-        LaTeXAction = SCons.Action.Action('$LATEXCOM', '$LATEXCOMSTR')
+ 
+     env.AppendUnique(LATEXSUFFIXES=SCons.Tool.LaTeXSuffixes)
+ 
+@@ -71,10 +67,7 @@
+     bld.add_emitter('.ltx', SCons.Tool.tex.tex_eps_emitter)
+     bld.add_emitter('.latex', SCons.Tool.tex.tex_eps_emitter)
+ 
+-    env['LATEX']        = 'latex'
+-    env['LATEXFLAGS']   = SCons.Util.CLVar('-interaction=nonstopmode -recorder')
+-    env['LATEXCOM']     = 'cd ${TARGET.dir} && $LATEX $LATEXFLAGS ${SOURCE.file}'
+-    env['LATEXRETRIES'] = 3
++    SCons.Tool.tex.generate_common(env)
+ 
+ def exists(env):
+     return env.Detect('latex')
