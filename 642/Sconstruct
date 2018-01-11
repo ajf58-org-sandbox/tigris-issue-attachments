@@ -1,0 +1,1 @@
+Program( target = 'test', source = 'test.f90')
