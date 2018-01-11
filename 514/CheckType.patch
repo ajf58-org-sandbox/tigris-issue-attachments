@@ -1,0 +1,38 @@
+Index: src/engine/SCons/Conftest.py
+===================================================================
+--- src/engine/SCons/Conftest.py	(revision 3693)
++++ src/engine/SCons/Conftest.py	(working copy)
+@@ -392,6 +392,24 @@
+     #   declared (struct something).
+     # - Using "sizeof(TYPE)" is valid when TYPE is actually a variable.
+     # - Using the previous two together works reliably.
++    
++    # The documentation claims that there is support for header to be a list,
++    # so we better make that valid.
++    if not header or header == '':
++        headertext = ''
++    elif isinstance(header, list):
++        headertext = map(lambda h: '#include "%s"' % h, header)
++        headertext = string.join(headertext, '\n')
++    # This is here in case the user REALLY needs angle-brackets instead of 
++    # quote includes since this function does NOT support the include_quotes
++    # argument.  If the user wants the angle brackets, they will be unable to
++    # pass the header file that requires it in as an element of a list; it will
++    # need to be a separate call to CheckType.  I don't forsee a need for this,
++    # but you never know what some project or dependency will require.
++    elif header[0] == '<' and header[-1] == '>':
++        headertext = '#include %s' % header
++    else:
++        headertext = '#include "%s"' % header
+     text = """
+ %(include)s
+ %(header)s
+@@ -403,7 +421,7 @@
+     return 0;
+ }
+ """ % { 'include': includetext,
+-        'header': header,
++        'header': headertext,
+         'name': type_name }
+ 
+     context.Display("Checking for %s type %s... " % (lang, type_name))
