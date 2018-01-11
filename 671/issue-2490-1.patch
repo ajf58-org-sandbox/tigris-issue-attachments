@@ -1,0 +1,677 @@
+Index: test/CSC/CSC.py
+===================================================================
+*** test/CSC/CSC.py	(revision 0)
+--- test/CSC/CSC.py	(revision 0)
+***************
+*** 0 ****
+--- 1,141 ----
++ #!/usr/bin/env python
++ #
++ # __COPYRIGHT__
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ import os
++ import string
++ import sys
++ import TestSCons
++ 
++ _python_ = TestSCons._python_
++ 
++ test = TestSCons.TestSCons()
++ 
++ 
++ test.write('mycsc.py', r"""
++ import getopt
++ import sys
++ sources = []
++ for arg in sys.argv[1:]:
++     if arg[:5] == '-out:':
++         out = arg[5:]
++         continue
++     sources.append(arg)
++ infile = open(sources[0], 'rb')
++ outfile = open(out, 'wb')
++ for l in infile.readlines():
++     if l[:7] != '/*csc*/':
++         outfile.write(l)
++ sys.exit(0)
++ """)
++ 
++ test.write('SConstruct', """
++ csc = Environment().Dictionary('CSC')
++ env = Environment(CSC = r'%(_python_)s mycsc.py')
++ env.CLIProgram(target = 'test1', source = 'test1.cs')
++ """ % locals())
++ 
++ test.write('test1.cs', r"""This is a .cs file.
++ /*csc*/
++ """)
++ 
++ test.run(arguments = '.', stderr = None)
++ 
++ test.must_match('test1.exe', "This is a .cs file.\n")
++ 
++ if os.path.normcase('.cs') == os.path.normcase('.CS'):
++ 
++     test.write('SConstruct', """
++ csc = Environment().Dictionary('CSC')
++ env = Environment(CSC = r'%(_python_)s mycsc.py')
++ env.CLIProgram(target = 'test2', source = 'test2.CS')
++ """ % locals())
++ 
++     test.write('test2.CS', r"""This is a .CS file.
++ /*csc*/
++ """)
++ 
++     test.run(arguments = '.', stderr = None)
++ 
++     test.fail_test(test.read('test2.exe') != "This is a .CS file.\n")
++ 
++ 
++ 
++ test.write("wrapper.py",
++ """import os
++ import string
++ import sys
++ open('%s', 'wb').write("wrapper.py\\n")
++ os.system(string.join(sys.argv[1:], " "))
++ """ % string.replace(test.workpath('wrapper.out'), '\\', '\\\\'))
++ 
++ test.write('SConstruct', """
++ foo = Environment()
++ csc = foo.Dictionary('CSC')
++ bar = Environment(CSC = r'%(_python_)s wrapper.py ' + csc)
++ foo.CLIProgram(target = 'foo', source = 'foo.cs')
++ bar.CLIProgram(target = 'bar', source = 'bar.cs')
++ """ % locals())
++ 
++ test.write('foo.cs', r"""
++ public class Hello1
++ {
++   public static void Main()
++   {
++     System.Console.WriteLine("foo.cs");
++   }
++ }
++ """)
++ 
++ test.write('bar.cs', r"""
++ public class Hello1
++ {
++   public static void Main()
++   {
++     System.Console.WriteLine("bar.cs");
++   }
++ }
++ """)
++ 
++ 
++ test.run(arguments = 'foo.exe')
++ 
++ test.fail_test(os.path.exists(test.workpath('wrapper.out')))
++ 
++ test.up_to_date(arguments = 'foo.exe')
++ 
++ test.run(arguments = 'bar.exe')
++ 
++ test.fail_test(test.read('wrapper.out') != "wrapper.py\n")
++ 
++ test.up_to_date(arguments = 'bar.exe')
++ 
++ test.pass_test()
++ 
++ # Local Variables:
++ # tab-width:4
++ # indent-tabs-mode:nil
++ # End:
++ # vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/CSC/CSCCOMSTR.py
+===================================================================
+*** test/CSC/CSCCOMSTR.py	(revision 0)
+--- test/CSC/CSCCOMSTR.py	(revision 0)
+***************
+*** 0 ****
+--- 1,89 ----
++ #!/usr/bin/env python
++ #
++ # __COPYRIGHT__
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ """
++ Test that the $CSCCOMSTR construction variable allows you to configure
++ the C# compilation output.
++ """
++ 
++ import os
++ 
++ import TestSCons
++ 
++ _python_ = TestSCons._python_
++ 
++ test = TestSCons.TestSCons()
++ 
++ 
++ 
++ test.write('mycc.py', r"""
++ import sys
++ outfile = open(sys.argv[1], 'wb')
++ infile = open(sys.argv[2], 'rb')
++ for l in filter(lambda l: l[:7] != '/*csc*/', infile.readlines()):
++     outfile.write(l)
++ sys.exit(0)
++ """)
++ 
++ if os.path.normcase('.cs') == os.path.normcase('.CS'):
++     alt_c_suffix = '.CS'
++ else:
++     alt_c_suffix = '.cs'
++ 
++ test.write('SConstruct', """
++ env = Environment(CSCCOM = r'%(_python_)s mycc.py $TARGET $SOURCE',
++                   CSCCOMSTR = 'Building $TARGET from $SOURCE')
++ env.CLIProgram(target = 'test1', source = 'test1.cs')
++ env.CLIProgram(target = 'test2', source = 'test2%(alt_c_suffix)s')
++ """ % locals())
++ 
++ test.write('test1.cs', """\
++ test1.cs
++ /*csc*/
++ """)
++ 
++ test.write('test2'+alt_c_suffix, """\
++ test2.CS
++ /*csc*/
++ """)
++ 
++ test.run(stdout = test.wrap_stdout("""\
++ Building test1.exe from test1.cs
++ Building test2.exe from test2%(alt_c_suffix)s
++ """ % locals()))
++ 
++ test.must_match('test1.exe', "test1.cs\n")
++ test.must_match('test2.exe', "test2.CS\n")
++ 
++ 
++ 
++ test.pass_test()
++ 
++ # Local Variables:
++ # tab-width:4
++ # indent-tabs-mode:nil
++ # End:
++ # vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/CSC/CSCFLAGS.py
+===================================================================
+*** test/CSC/CSCFLAGS.py	(revision 0)
+--- test/CSC/CSCFLAGS.py	(revision 0)
+***************
+*** 0 ****
+--- 1,89 ----
++ #!/usr/bin/env python
++ #
++ # __COPYRIGHT__
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ import TestSCons
++ 
++ test = TestSCons.TestSCons()
++ 
++ test.write('SConstruct', """
++ foo = Environment(CSCFLAGS = '-define:FOO')
++ bar = Environment(CSCFLAGS = '-define:BAR')
++ foo.CLIProgram(target = 'foo', source = 'prog.cs')
++ bar.CLIProgram(target = 'bar', source = 'prog.cs')
++ foo.CLIProgram(target = 'prog', source = 'prog.cs',
++                CSCFLAGS = '$CSCFLAGS -define:BAR $BAZ',
++                BAZ = '-define:BAZ')
++ """)
++ 
++ test.write('prog.cs', r"""
++ public class Hello1
++ {
++   public static void Main()
++   {
++ #if FOO
++         System.Console.WriteLine("prog.cs:  FOO");
++ #endif
++ #if BAR
++         System.Console.WriteLine("prog.cs:  BAR");
++ #endif
++ #if BAZ
++         System.Console.WriteLine("prog.cs:  BAZ");
++ #endif
++   }
++ }
++ """)
++ 
++ 
++ test.run(arguments = '.')
++ 
++ test.run(program = test.workpath('foo.exe'), stdout = "prog.cs:  FOO\n")
++ test.run(program = test.workpath('bar.exe'), stdout = "prog.cs:  BAR\n")
++ test.run(program = test.workpath('prog.exe'), stdout = """\
++ prog.cs:  FOO
++ prog.cs:  BAR
++ prog.cs:  BAZ
++ """)
++ 
++ 
++ 
++ test.write('SConstruct', """
++ bar = Environment(CSCFLAGS = '-define:BAR')
++ bar.CLIProgram(target = 'foo', source = 'prog.cs')
++ bar.CLIProgram(target = 'bar', source = 'prog.cs')
++ """)
++ 
++ test.run(arguments = '.')
++ 
++ test.run(program = test.workpath('foo.exe'), stdout = "prog.cs:  BAR\n")
++ test.run(program = test.workpath('bar.exe'), stdout = "prog.cs:  BAR\n")
++ 
++ test.pass_test()
++ 
++ # Local Variables:
++ # tab-width:4
++ # indent-tabs-mode:nil
++ # End:
++ # vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/CSC/CSCCOM.py
+===================================================================
+*** test/CSC/CSCCOM.py	(revision 0)
+--- test/CSC/CSCCOM.py	(revision 0)
+***************
+*** 0 ****
+--- 1,85 ----
++ #!/usr/bin/env python
++ #
++ # __COPYRIGHT__
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ """
++ Test the ability to configure the $CSCCOM construction variable.
++ """
++ 
++ import os
++ 
++ import TestSCons
++ 
++ _python_ = TestSCons._python_
++ _exe   = TestSCons._exe
++ 
++ test = TestSCons.TestSCons()
++ 
++ 
++ 
++ test.write('mycsc.py', r"""
++ import sys
++ outfile = open(sys.argv[1], 'wb')
++ infile = open(sys.argv[2], 'rb')
++ for l in filter(lambda l: l[:7] != '/*csc*/', infile.readlines()):
++     outfile.write(l)
++ sys.exit(0)
++ """)
++ 
++ if os.path.normcase('.cs') == os.path.normcase('.CS'):
++     alt_c_suffix = '.CS'
++ else:
++     alt_c_suffix = '.cs'
++ 
++ test.write('SConstruct', """
++ env = Environment(CSCCOM = r'%(_python_)s mycsc.py $TARGET $SOURCE')
++ env.CLIProgram(target = 'test1', source = 'test1.cs')
++ env.CLIProgram(target = 'test2', source = 'test2%(alt_c_suffix)s')
++ """ % locals())
++ 
++ test.write('test1.cs', """\
++ test1.cs
++ /*csc*/
++ """)
++ 
++ test.write('test2'+alt_c_suffix, """\
++ test2.CS
++ /*csc*/
++ """)
++ 
++ test.run()
++ 
++ test.must_match('test1.exe', "test1.cs\n")
++ test.must_match('test2.exe', "test2.CS\n")
++ 
++ 
++ 
++ test.pass_test()
++ 
++ # Local Variables:
++ # tab-width:4
++ # indent-tabs-mode:nil
++ # End:
++ # vim: set expandtab tabstop=4 shiftwidth=4:
+Index: src/engine/SCons/Tool/__init__.py
+===================================================================
+*** src/engine/SCons/Tool/__init__.py	(revision 4585)
+--- src/engine/SCons/Tool/__init__.py	(working copy)
+***************
+*** 646,655 ****
+          fortran_compiler = FindTool(fortran_compilers, env) or fortran_compilers[0]
+          ar = FindTool(ars, env) or ars[0]
+  
+!     other_tools = FindAllTools(['BitKeeper', 'CVS',
+                                  'dmd',
+                                  'filesystem',
+!                                 'dvipdf', 'dvips', 'gs',
+                                  'jar', 'javac', 'javah',
+                                  'latex', 'lex',
+                                  'm4', #'midl', 'msvs',
+--- 646,655 ----
+          fortran_compiler = FindTool(fortran_compilers, env) or fortran_compilers[0]
+          ar = FindTool(ars, env) or ars[0]
+  
+!     other_tools = FindAllTools(['BitKeeper', 'csc', 'CVS',
+                                  'dmd',
+                                  'filesystem',
+!                                 'dvipdf', 'dvips', 'gmcs', 'gs',
+                                  'jar', 'javac', 'javah',
+                                  'latex', 'lex',
+                                  'm4', #'midl', 'msvs',
+Index: src/engine/SCons/Tool/gmcs.py
+===================================================================
+*** src/engine/SCons/Tool/gmcs.py	(revision 0)
+--- src/engine/SCons/Tool/gmcs.py	(revision 0)
+***************
+*** 0 ****
+--- 1,46 ----
++ """SCons.Tool.gmcs
++ 
++ Tool-specific initialization for the Mono C# compiler.
++ 
++ There normally shouldn't be any need to import this module directly.
++ It will usually be imported through the generic SCons.Tool.Tool()
++ selection method.
++ """
++ 
++ #
++ # __COPYRIGHT__
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ import os.path
++ 
++ import SCons.Tool.csharp
++ 
++ compilers = ['GMCS', 'gmcs']
++ 
++ def generate(env):
++     SCons.Tool.csharp.generate(env)
++     env['CSC']        = 'gmcs'
++ 
++ def exists(env):
++     return env.Detect(compilers)
+Index: src/engine/SCons/Tool/csc.py
+===================================================================
+*** src/engine/SCons/Tool/csc.py	(revision 0)
+--- src/engine/SCons/Tool/csc.py	(revision 0)
+***************
+*** 0 ****
+--- 1,44 ----
++ """SCons.Tool.csc
++ 
++ Tool-specific initialization for the Microsoft C# compiler.
++ 
++ There normally shouldn't be any need to import this module directly.
++ It will usually be imported through the generic SCons.Tool.Tool()
++ selection method.
++ """
++ 
++ #
++ # __COPYRIGHT__
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ import SCons.Tool.csharp
++ 
++ compilers = ['CSC', 'csc']
++ 
++ def generate(env):
++     SCons.Tool.csharp.generate(env)
++     env['CSC']        = 'csc'
++ 
++ def exists(env):
++     return env.Detect(compilers)
+Index: src/engine/SCons/Tool/csharp.py
+===================================================================
+*** src/engine/SCons/Tool/csharp.py	(revision 0)
+--- src/engine/SCons/Tool/csharp.py	(revision 0)
+***************
+*** 0 ****
+--- 1,82 ----
++ """SCons.Tool.csharp
++ 
++ Tool-specific initialization for generic C# compilers.
++ 
++ There normally shouldn't be any need to import this module directly.
++ It will usually be imported through the generic SCons.Tool.Tool()
++ selection method.
++ """
++ 
++ #
++ # __COPYRIGHT__
++ #
++ # Permission is hereby granted, free of charge, to any person obtaining
++ # a copy of this software and associated documentation files (the
++ # "Software"), to deal in the Software without restriction, including
++ # without limitation the rights to use, copy, modify, merge, publish,
++ # distribute, sublicense, and/or sell copies of the Software, and to
++ # permit persons to whom the Software is furnished to do so, subject to
++ # the following conditions:
++ #
++ # The above copyright notice and this permission notice shall be included
++ # in all copies or substantial portions of the Software.
++ #
++ # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++ # KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++ # WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++ # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++ # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++ # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ #
++ 
++ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++ 
++ import os.path
++ 
++ import SCons.Action
++ import SCons.Builder
++ import SCons.Node.FS
++ import SCons.Util
++ 
++ CSSuffixes = ['.cs']
++ if SCons.Util.case_sensitive_suffixes('.cs', '.CS'):
++     CSSuffixes.append('.CS')
++ 
++ def iscsharp(source):
++     if not source:
++         # Source might be None for unusual cases like SConf.
++         return 0
++     for s in source:
++         if s.sources:
++             ext = os.path.splitext(str(s.sources[0]))[1]
++             if ext in CSSuffixes:
++                 return 1
++     return 0
++ 
++ 
++ csccom = "$CSC $CSCFLAGS $_CSCLIBPATH $_CSCLIBS -out:${TARGET.abspath} $SOURCES"
++ csclibcom = "$CSC -t:library $CSCLIBFLAGS $_CSCLIBPATH $_CSCLIBS -out:${TARGET.abspath} $SOURCES"
++ 
++ 
++ McsBuilder = SCons.Builder.Builder(action = SCons.Action.Action('$CSCCOM', '$CSCCOMSTR'),
++                                    source_factory = SCons.Node.FS.default_fs.Entry,
++                                    suffix = '.exe')
++ 
++ McsLibBuilder = SCons.Builder.Builder(action = SCons.Action.Action('$CSCLIBCOM', '$CSCLIBCOMSTR'),
++                                    source_factory = SCons.Node.FS.default_fs.Entry,
++                                    suffix = '.dll')
++ 
++ def generate(env):
++     env['BUILDERS']['CLIProgram'] = McsBuilder
++     env['BUILDERS']['CLILibrary'] = McsLibBuilder
++ 
++     env['_CSCLIBS']    = "${_stripixes('-r:', CILLIBS, '', '-r', '', __env__)}"
++     env['_CSCLIBPATH'] = "${_stripixes('-lib:', CILLIBPATH, '', '-r', '', __env__)}"
++     # env['CSC'] must be set by a compiler-specific Tool module
++     env['CSCFLAGS']   = SCons.Util.CLVar('')
++     env['CSCCOM']     = SCons.Action.Action(csccom)
++     env['CSCLIBCOM']  = SCons.Action.Action(csclibcom)
++ 
++ def exists(env):
++     return env.Detect(compilers)
+Index: src/engine/MANIFEST.in
+===================================================================
+*** src/engine/MANIFEST.in	(revision 4585)
+--- src/engine/MANIFEST.in	(working copy)
+***************
+*** 77,82 ****
+--- 77,84 ----
+  SCons/Tool/BitKeeper.py
+  SCons/Tool/c++.py
+  SCons/Tool/cc.py
++ SCons/Tool/csc.py
++ SCons/Tool/csharp.py
+  SCons/Tool/cvf.py
+  SCons/Tool/CVS.py
+  SCons/Tool/default.py
+***************
+*** 95,100 ****
+--- 97,103 ----
+  SCons/Tool/gas.py
+  SCons/Tool/gcc.py
+  SCons/Tool/gfortran.py
++ SCons/Tool/gmcs.py
+  SCons/Tool/gnulink.py
+  SCons/Tool/gs.py
+  SCons/Tool/hpc++.py
