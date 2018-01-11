@@ -1,0 +1,1012 @@
+Index: script/scons-time.py
+===================================================================
+--- script/scons-time.py	(revision 4169)
++++ script/scons-time.py	(working copy)
+@@ -715,7 +715,7 @@
+         lines = open(file).readlines()
+         line = [ l for l in lines if l.endswith(object_string) ][0]
+         result = [ int(field) for field in line.split()[:4] ]
+-        if not index is None:
++        if index is not None:
+             result = result[index]
+         return result
+ 
+Index: test_interrupts.py
+===================================================================
+--- test_interrupts.py	(revision 4169)
++++ test_interrupts.py	(working copy)
+@@ -118,10 +118,10 @@
+                 exc_all_seen = 0
+                 line = l
+                 #print " -> reset"
+-            elif not m1 is None:
++            elif m1 is not None:
+                 exc_keyboardint_seen = 1
+                 #print " -> keyboard -> ", m1.groups()
+-            elif not m2 is None:
++            elif m2 is not None:
+                 exc_all_seen = 1
+                 #print " -> all -> ", m2.groups()
+             else:
+Index: engine/SCons/Node/NodeTests.py
+===================================================================
+--- engine/SCons/Node/NodeTests.py	(revision 4169)
++++ engine/SCons/Node/NodeTests.py	(working copy)
+@@ -295,9 +295,9 @@
+         # Make sure it doesn't blow up if no builder is set.
+         node = MyNode("www")
+         node.build()
+-        assert built_it == None
++        assert built_it is None
+         node.build(extra_kw_argument = 1)
+-        assert built_it == None
++        assert built_it is None
+ 
+         node = MyNode("xxx")
+         node.builder_set(Builder())
+@@ -522,7 +522,7 @@
+         n = SCons.Node.Node()
+         t, m = n.alter_targets()
+         assert t == [], t
+-        assert m == None, m
++        assert m is None, m
+ 
+     def test_is_up_to_date(self):
+         """Test the default is_up_to_date() method
+@@ -622,7 +622,7 @@
+         node.fs = FS()
+         node.fs.Top = SCons.Node.Node()
+         result = node.explain()
+-        assert result == None, result
++        assert result is None, result
+ 
+         def get_null_info():
+             class Null_SConsignEntry:
+@@ -1020,7 +1020,7 @@
+ 
+     def test_scanner_key(self):
+         """Test that a scanner_key() method exists"""
+-        assert SCons.Node.Node().scanner_key() == None
++        assert SCons.Node.Node().scanner_key() is None
+ 
+     def test_children(self):
+         """Test fetching the non-ignored "children" of a Node.
+@@ -1104,7 +1104,7 @@
+         assert not nw.is_done()
+         assert nw.next().name ==  "n1"
+         assert nw.is_done()
+-        assert nw.next() == None
++        assert nw.next() is None
+ 
+         n2 = MyNode("n2")
+         n3 = MyNode("n3")
+@@ -1118,7 +1118,7 @@
+         n = nw.next()
+         assert n.name ==  "n1", n.name
+         n = nw.next()
+-        assert n == None, n
++        assert n is None, n
+ 
+         n4 = MyNode("n4")
+         n5 = MyNode("n5")
+@@ -1138,7 +1138,7 @@
+         assert nw.next().name ==  "n3"
+         assert nw.history.has_key(n1)
+         assert nw.next().name ==  "n1"
+-        assert nw.next() == None
++        assert nw.next() is None
+ 
+         n8 = MyNode("n8")
+         n8.add_dependency([n3])
+@@ -1160,7 +1160,7 @@
+         n = nw.next()
+         assert n.name == "n7", n.name
+         n = nw.next()
+-        assert nw.next() == None
++        assert nw.next() is None
+ 
+     def test_abspath(self):
+         """Test the get_abspath() method."""
+Index: engine/SCons/Node/FSTests.py
+===================================================================
+--- engine/SCons/Node/FSTests.py	(revision 4169)
++++ engine/SCons/Node/FSTests.py	(working copy)
+@@ -611,7 +611,7 @@
+ 
+         e1 = fs.Entry('e1')
+         s = e1.stat()
+-        assert not s is None, s
++        assert s is not None, s
+ 
+         e2 = fs.Entry('e2')
+         s = e2.stat()
+@@ -1386,7 +1386,7 @@
+ 
+         f = fs.File('does_not_exist')
+         r = f.remove()
+-        assert r == None, r
++        assert r is None, r
+ 
+         test.write('exists', "exists\n")
+         f = fs.File('exists')
+Index: engine/SCons/Node/AliasTests.py
+===================================================================
+--- engine/SCons/Node/AliasTests.py	(revision 4169)
++++ engine/SCons/Node/AliasTests.py	(working copy)
+@@ -35,7 +35,7 @@
+         """Test creating an Alias name space
+         """
+         ans = SCons.Node.Alias.AliasNameSpace()
+-        assert not ans is None, ans
++        assert ans is not None, ans
+ 
+     def test_ANS_Alias(self):
+         """Test the Alias() factory
+@@ -82,7 +82,7 @@
+         assert a is a1, a1
+ 
+         a = ans.lookup('a2')
+-        assert a == None, a
++        assert a is None, a
+ 
+     def test_Alias(self):
+         """Test creating an Alias() object
+Index: engine/SCons/Node/__init__.py
+===================================================================
+--- engine/SCons/Node/__init__.py	(revision 4169)
++++ engine/SCons/Node/__init__.py	(working copy)
+@@ -352,7 +352,7 @@
+             if d.missing():
+                 msg = "Explicit dependency `%s' not found, needed by target `%s'."
+                 raise SCons.Errors.StopError, msg % (d, self)
+-        if not self.implicit is None:
++        if self.implicit is not None:
+             for i in self.implicit:
+                 if i.missing():
+                     msg = "Implicit dependency `%s' not found, needed by target `%s'."
+@@ -474,7 +474,7 @@
+             # There was no explicit builder for this Node, so initialize
+             # the self.builder attribute to None now.
+             b = self.builder = None
+-        return not b is None
++        return b is not None
+ 
+     def set_explicit(self, is_explicit):
+         self.is_explicit = is_explicit
+@@ -602,7 +602,7 @@
+         # Don't bother scanning non-derived files, because we don't
+         # care what their dependencies are.
+         # Don't scan again, if we already have scanned.
+-        if not self.implicit is None:
++        if self.implicit is not None:
+             return
+         self.implicit = []
+         self.implicit_set = set()
+@@ -891,7 +891,7 @@
+ 
+     def add_wkid(self, wkid):
+         """Add a node to the list of kids waiting to be evaluated"""
+-        if self.wkids != None:
++        if self.wkids is not None:
+             self.wkids.append(wkid)
+ 
+     def _children_reset(self):
+Index: engine/SCons/Node/Python.py
+===================================================================
+--- engine/SCons/Node/Python.py	(revision 4169)
++++ engine/SCons/Node/Python.py	(working copy)
+@@ -53,7 +53,7 @@
+     def __init__(self, value, built_value=None):
+         SCons.Node.Node.__init__(self)
+         self.value = value
+-        if not built_value is None:
++        if built_value is not None:
+             self.built_value = built_value
+ 
+     def str_for_display(self):
+Index: engine/SCons/ErrorsTests.py
+===================================================================
+--- engine/SCons/ErrorsTests.py	(revision 4169)
++++ engine/SCons/ErrorsTests.py	(working copy)
+@@ -68,13 +68,13 @@
+             assert e.errstr == "Unknown error"
+             assert e.status == 2
+             assert e.exitstatus == 2
+-            assert e.filename == None
++            assert e.filename is None
+             assert e.exc_info == (None, None, None)
+ 
+-            assert e.node == None
+-            assert e.executor == None
+-            assert e.action == None
+-            assert e.command == None
++            assert e.node is None
++            assert e.executor is None
++            assert e.action is None
++            assert e.command is None
+ 
+     def test_InternalError(self):
+         """Test the InternalError exception."""
+Index: engine/SCons/UtilTests.py
+===================================================================
+--- engine/SCons/UtilTests.py	(revision 4169)
++++ engine/SCons/UtilTests.py	(working copy)
+@@ -625,13 +625,13 @@
+ 
+         s = Selector({'.d' : 'DDD', '.e' : 'EEE'})
+         ret = s(env, [])
+-        assert ret == None, ret
++        assert ret is None, ret
+         ret = s(env, [MyNode('foo.d')])
+         assert ret == 'DDD', ret
+         ret = s(env, [MyNode('bar.e')])
+         assert ret == 'EEE', ret
+         ret = s(env, [MyNode('bar.x')])
+-        assert ret == None, ret
++        assert ret is None, ret
+         s[None] = 'XXX'
+         ret = s(env, [MyNode('bar.x')])
+         assert ret == 'XXX', ret
+Index: engine/SCons/ActionTests.py
+===================================================================
+--- engine/SCons/ActionTests.py	(revision 4169)
++++ engine/SCons/ActionTests.py	(working copy)
+@@ -262,7 +262,7 @@
+ 
+         def none(a):
+             assert hasattr(a, 'strfunction')
+-            assert a.cmdstr == None, a.cmdstr
++            assert a.cmdstr is None, a.cmdstr
+         #FUTURE test_varlist(pos_callback, none, cmd, None, **kw)
+         apply(test_varlist, (pos_callback, none, cmd, None), kw)
+ 
+Index: engine/SCons/TaskmasterTests.py
+===================================================================
+--- engine/SCons/TaskmasterTests.py	(revision 4169)
++++ engine/SCons/TaskmasterTests.py	(working copy)
+@@ -207,7 +207,7 @@
+         t.prepare()
+         t.execute()
+         t = tm.next_task()
+-        assert t == None
++        assert t is None
+ 
+         n1 = Node("n1")
+         n2 = Node("n2")
+@@ -236,7 +236,7 @@
+         t.executed()
+         t.postprocess()
+ 
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+ 
+         built_text = "up to date: "
+         top_node = n3
+@@ -281,7 +281,7 @@
+         t.executed()
+         t.postprocess()
+ 
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+ 
+ 
+         n1 = Node("n1")
+@@ -316,13 +316,13 @@
+         t5.executed()
+         t5.postprocess()
+ 
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+ 
+ 
+         n4 = Node("n4")
+         n4.set_state(SCons.Node.executed)
+         tm = SCons.Taskmaster.Taskmaster([n4])
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+ 
+         n1 = Node("n1")
+         n2 = Node("n2", [n1])
+@@ -331,7 +331,7 @@
+         t.executed()
+         t.postprocess()
+         t = tm.next_task()
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+ 
+ 
+         n1 = Node("n1")
+@@ -353,7 +353,7 @@
+         assert target == n3, target
+         t.executed()
+         t.postprocess()
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+ 
+         n1 = Node("n1")
+         n2 = Node("n2")
+@@ -379,14 +379,14 @@
+         assert t.get_target() == n4
+         t.executed()
+         t.postprocess()
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+         assert scan_called == 4, scan_called
+ 
+         tm = SCons.Taskmaster.Taskmaster([n5])
+         t = tm.next_task()
+         assert t.get_target() == n5, t.get_target()
+         t.executed()
+-        assert tm.next_task() == None
++        assert tm.next_task() is None
+         assert scan_called == 5, scan_called
+ 
+         n1 = Node("n1")
+Index: engine/SCons/Scanner/__init__.py
+===================================================================
+--- engine/SCons/Scanner/__init__.py	(revision 4169)
++++ engine/SCons/Scanner/__init__.py	(working copy)
+@@ -352,7 +352,7 @@
+     def scan(self, node, path=()):
+ 
+         # cache the includes list in node so we only scan it once:
+-        if node.includes != None:
++        if node.includes is not None:
+             includes = node.includes
+         else:
+             includes = self.find_include_names (node)
+Index: engine/SCons/Script/Main.py
+===================================================================
+--- engine/SCons/Script/Main.py	(revision 4169)
++++ engine/SCons/Script/Main.py	(working copy)
+@@ -1101,14 +1101,14 @@
+         else:
+             node = None
+             # Why would ltop be None? Unfortunately this happens.
+-            if ltop == None: ltop = ''
++            if ltop is None: ltop = ''
+             # Curdir becomes important when SCons is called with -u, -C,
+             # or similar option that changes directory, and so the paths
+             # of targets given on the command line need to be adjusted.
+             curdir = os.path.join(os.getcwd(), str(ltop))
+             for lookup in SCons.Node.arg2nodes_lookups:
+                 node = lookup(x, curdir=curdir)
+-                if node != None:
++                if node is not None:
+                     break
+             if node is None:
+                 node = fs.Entry(x, directory=ltop, create=1)
+Index: engine/SCons/EnvironmentTests.py
+===================================================================
+--- engine/SCons/EnvironmentTests.py	(revision 4169)
++++ engine/SCons/EnvironmentTests.py	(working copy)
+@@ -956,20 +956,20 @@
+                                  'builder2' : b2 })
+         called_it = {}
+         env.builder1('in1')
+-        assert called_it['target'] == None, called_it
++        assert called_it['target'] is None, called_it
+         assert called_it['source'] == ['in1'], called_it
+ 
+         called_it = {}
+         env.builder2(source = 'in2', xyzzy = 1)
+-        assert called_it['target'] == None, called_it
++        assert called_it['target'] is None, called_it
+         assert called_it['source'] == ['in2'], called_it
+         assert called_it['xyzzy'] == 1, called_it
+ 
+         called_it = {}
+         env.builder1(foo = 'bar')
+         assert called_it['foo'] == 'bar', called_it
+-        assert called_it['target'] == None, called_it
+-        assert called_it['source'] == None, called_it
++        assert called_it['target'] is None, called_it
++        assert called_it['source'] is None, called_it
+ 
+     def test_BuilderWrapper_attributes(self):
+         """Test getting and setting of BuilderWrapper attributes
+@@ -1976,12 +1976,12 @@
+ 
+         assert paths[0] == env.FindIxes(paths, 'LIBPREFIX', 'LIBSUFFIX')
+         assert paths[1] == env.FindIxes(paths, 'SHLIBPREFIX', 'SHLIBSUFFIX')
+-        assert None == env.FindIxes(paths, 'PREFIX', 'POST')
++        assert None is env.FindIxes(paths, 'PREFIX', 'POST')
+ 
+         paths = ['libfoo.a', 'prefoopost']
+ 
+         assert paths[0] == env.FindIxes(paths, 'LIBPREFIX', 'LIBSUFFIX')
+-        assert None == env.FindIxes(paths, 'SHLIBPREFIX', 'SHLIBSUFFIX')
++        assert None is env.FindIxes(paths, 'SHLIBPREFIX', 'SHLIBSUFFIX')
+         assert paths[1] == env.FindIxes(paths, 'PREFIX', 'SUFFIX')
+ 
+     def test_ParseConfig(self):
+@@ -2729,20 +2729,20 @@
+         env = self.TestEnvironment(FOO = 'xyzzy')
+ 
+         b = env.Builder(action = 'foo')
+-        assert not b is None, b
++        assert b is not None, b
+ 
+         b = env.Builder(action = '$FOO')
+-        assert not b is None, b
++        assert b is not None, b
+ 
+         b = env.Builder(action = ['$FOO', 'foo'])
+-        assert not b is None, b
++        assert b is not None, b
+ 
+         def func(arg):
+             pass
+         b = env.Builder(action = func)
+-        assert not b is None, b
++        assert b is not None, b
+         b = env.Builder(generator = func)
+-        assert not b is None, b
++        assert b is not None, b
+ 
+     def test_CacheDir(self):
+         """Test the CacheDir() method"""
+@@ -2785,7 +2785,7 @@
+         env = Environment()
+         t = env.Command(target='foo.out', source=['foo1.in', 'foo2.in'],
+                         action='buildfoo $target $source')[0]
+-        assert not t.builder is None
++        assert t.builder is not None
+         assert t.builder.action.__class__.__name__ == 'CommandAction'
+         assert t.builder.action.cmd_list == 'buildfoo $target $source'
+         assert 'foo1.in' in map(lambda x: x.path, t.sources)
+@@ -2802,7 +2802,7 @@
+             return 0
+         t = env.Command(target='foo.out', source=['foo1.in','foo2.in'],
+                         action=testFunc)[0]
+-        assert not t.builder is None
++        assert t.builder is not None
+         assert t.builder.action.__class__.__name__ == 'FunctionAction'
+         t.build()
+         assert 'foo1.in' in map(lambda x: x.path, t.sources)
+@@ -2815,7 +2815,7 @@
+         t = env.Command(target='baz.out', source='baz.in',
+                         action='${TEST2(XYZ)}',
+                         XYZ='magic word')[0]
+-        assert not t.builder is None
++        assert t.builder is not None
+         t.build()
+         assert x[0] == 'magic word', x
+ 
+@@ -2846,11 +2846,11 @@
+                 pass
+ 
+             c = env.Configure()
+-            assert not c is None, c
++            assert c is not None, c
+             c.Finish()
+ 
+             c = env.Configure(custom_tests = {'foo' : func, '$FOO' : func})
+-            assert not c is None, c
++            assert c is not None, c
+             assert hasattr(c, 'foo')
+             assert hasattr(c, 'xyzzy')
+             c.Finish()
+@@ -3139,17 +3139,17 @@
+         env = self.TestEnvironment(FOO = scan)
+ 
+         s = env.Scanner('foo')
+-        assert not s is None, s
++        assert s is not None, s
+ 
+         s = env.Scanner(function = 'foo')
+-        assert not s is None, s
++        assert s is not None, s
+ 
+         if 0:
+             s = env.Scanner('$FOO')
+-            assert not s is None, s
++            assert s is not None, s
+ 
+             s = env.Scanner(function = '$FOO')
+-            assert not s is None, s
++            assert s is not None, s
+ 
+     def test_SConsignFile(self):
+         """Test the SConsignFile() method"""
+@@ -3175,19 +3175,19 @@
+ 
+             env.SConsignFile('foo')
+             assert fnames[-1] == os.path.join(os.sep, 'dir', 'foo'), fnames
+-            assert dbms[-1] == None, dbms
++            assert dbms[-1] is None, dbms
+ 
+             env.SConsignFile('$FOO')
+             assert fnames[-1] == os.path.join(os.sep, 'dir', 'SConsign'), fnames
+-            assert dbms[-1] == None, dbms
++            assert dbms[-1] is None, dbms
+ 
+             env.SConsignFile('/$FOO')
+             assert fnames[-1] == os.sep + 'SConsign', fnames
+-            assert dbms[-1] == None, dbms
++            assert dbms[-1] is None, dbms
+ 
+             env.SConsignFile(os.sep + '$FOO')
+             assert fnames[-1] == os.sep + 'SConsign', fnames
+-            assert dbms[-1] == None, dbms
++            assert dbms[-1] is None, dbms
+ 
+             env.SConsignFile('$BAR', 'x')
+             assert fnames[-1] == os.path.join(os.sep, 'File'), fnames
+@@ -3199,11 +3199,11 @@
+ 
+             env.SConsignFile()
+             assert fnames[-1] == os.path.join(os.sep, 'dir', '.sconsign'), fnames
+-            assert dbms[-1] == None, dbms
++            assert dbms[-1] is None, dbms
+ 
+             env.SConsignFile(None)
+-            assert fnames[-1] == None, fnames
+-            assert dbms[-1] == None, dbms
++            assert fnames[-1] is None, fnames
++            assert dbms[-1] is None, dbms
+         finally:
+             SCons.SConsign.File = save_SConsign_File
+ 
+@@ -3611,8 +3611,8 @@
+         assert env.get('YYY') == 'y', env.get('YYY')
+         assert env2.get('YYY') == 'y', env2.get('YYY')
+         assert env3.get('YYY') == 'y3', env3.get('YYY')
+-        assert env.get('ZZZ') == None, env.get('ZZZ')
+-        assert env2.get('ZZZ') == None, env2.get('ZZZ')
++        assert env.get('ZZZ') is None, env.get('ZZZ')
++        assert env2.get('ZZZ') is None, env2.get('ZZZ')
+         assert env3.get('ZZZ') == 'z3', env3.get('ZZZ')
+ 
+     def test_has_key(self):
+@@ -3937,15 +3937,15 @@
+     def test_is_valid_construction_var(self):
+         """Testing is_valid_construction_var()"""
+         r = is_valid_construction_var("_a")
+-        assert not r is None, r
++        assert r is not None, r
+         r = is_valid_construction_var("z_")
+-        assert not r is None, r
++        assert r is not None, r
+         r = is_valid_construction_var("X_")
+-        assert not r is None, r
++        assert r is not None, r
+         r = is_valid_construction_var("2a")
+         assert r is None, r
+         r = is_valid_construction_var("a2_")
+-        assert not r is None, r
++        assert r is not None, r
+         r = is_valid_construction_var("/")
+         assert r is None, r
+         r = is_valid_construction_var("_/")
+Index: engine/SCons/SConfTests.py
+===================================================================
+--- engine/SCons/SConfTests.py	(revision 4169)
++++ engine/SCons/SConfTests.py	(working copy)
+@@ -141,9 +141,9 @@
+         log = self.test.read( self.test.workpath('config.log') )
+         expr = re.compile( ".*failed in a previous run and all", re.DOTALL ) 
+         firstOcc = expr.match( log )
+-        assert firstOcc != None, log
++        assert firstOcc is not None, log
+         secondOcc = expr.match( log, firstOcc.end(0) )
+-        assert secondOcc == None, log
++        assert secondOcc is None, log
+ 
+         # 2.2 test the error caching mechanism (dependencies have changed)
+         self._resetSConfState()
+@@ -285,9 +285,9 @@
+         log = self.test.read( self.test.workpath('config.log') )
+         expr = re.compile( ".*failed in a previous run and all", re.DOTALL )
+         firstOcc = expr.match( log )
+-        assert firstOcc != None, log
++        assert firstOcc is not None, log
+         secondOcc = expr.match( log, firstOcc.end(0) )
+-        assert secondOcc == None, log
++        assert secondOcc is None, log
+ 
+ 
+     def test_TryAction(self):
+Index: engine/SCons/Platform/win32.py
+===================================================================
+--- engine/SCons/Platform/win32.py	(revision 4169)
++++ engine/SCons/Platform/win32.py	(working copy)
+@@ -134,18 +134,18 @@
+                 ret = exitvalmap[e[0]]
+             except KeyError:
+                 sys.stderr.write("scons: unknown OSError exception code %d - %s: %s\n" % (e[0], cmd, e[1]))
+-            if stderr != None:
++            if stderr is not None:
+                 stderr.write("scons: %s: %s\n" % (cmd, e[1]))
+         # copy child output from tempfiles to our streams
+         # and do clean up stuff
+-        if stdout != None and stdoutRedirected == 0:
++        if stdout is not None and stdoutRedirected == 0:
+             try:
+                 stdout.write(open( tmpFileStdout, "r" ).read())
+                 os.remove( tmpFileStdout )
+             except (IOError, OSError):
+                 pass
+ 
+-        if stderr != None and stderrRedirected == 0:
++        if stderr is not None and stderrRedirected == 0:
+             try:
+                 stderr.write(open( tmpFileStderr, "r" ).read())
+                 os.remove( tmpFileStderr )
+Index: engine/SCons/Platform/posix.py
+===================================================================
+--- engine/SCons/Platform/posix.py	(revision 4169)
++++ engine/SCons/Platform/posix.py	(working copy)
+@@ -116,7 +116,7 @@
+                 str = cmd_stdout.read()
+                 if len(str) == 0:
+                     stdout_eof = 1
+-                elif stdout != None:
++                elif stdout is not None:
+                     stdout.write(str)
+             if cmd_stderr in i:
+                 str = cmd_stderr.read()
+Index: engine/SCons/Environment.py
+===================================================================
+--- engine/SCons/Environment.py	(revision 4169)
++++ engine/SCons/Environment.py	(working copy)
+@@ -245,9 +245,9 @@
+         if source is _null:
+             source = target
+             target = None
+-        if not target is None and not SCons.Util.is_List(target):
++        if target is not None and not SCons.Util.is_List(target):
+             target = [target]
+-        if not source is None and not SCons.Util.is_List(source):
++        if source is not None and not SCons.Util.is_List(source):
+             source = [source]
+         return apply(MethodWrapper.__call__, (self, target, source) + args, kw)
+ 
+@@ -457,9 +457,9 @@
+                 n = None
+                 for l in lookup_list:
+                     n = l(v)
+-                    if not n is None:
++                    if n is not None:
+                         break
+-                if not n is None:
++                if n is not None:
+                     if SCons.Util.is_String(n):
+                         # n = self.subst(n, raw=1, **kw)
+                         kw['raw'] = 1
+@@ -1822,7 +1822,7 @@
+ 
+     def CacheDir(self, path):
+         import SCons.CacheDir
+-        if not path is None:
++        if path is not None:
+             path = self.subst(path)
+         self._CacheDir_path = path
+ 
+@@ -2013,7 +2013,7 @@
+         return apply(SCons.Scanner.Base, nargs, nkw)
+ 
+     def SConsignFile(self, name=".sconsign", dbm_module=None):
+-        if not name is None:
++        if name is not None:
+             name = self.subst(name)
+             if not os.path.isabs(name):
+                 name = os.path.join(str(self.fs.SConstruct_dir), name)
+Index: engine/SCons/Defaults.py
+===================================================================
+--- engine/SCons/Defaults.py	(revision 4169)
++++ engine/SCons/Defaults.py	(working copy)
+@@ -273,7 +273,7 @@
+         return list
+ 
+     l = f(SCons.PathList.PathList(list).subst_path(env, target, source))
+-    if not l is None:
++    if l is not None:
+         list = l
+ 
+     return _concat_ixes(prefix, list, suffix, env)
+Index: engine/SCons/SConf.py
+===================================================================
+--- engine/SCons/SConf.py	(revision 4169)
++++ engine/SCons/SConf.py	(working copy)
+@@ -398,11 +398,11 @@
+         if not SConfFS:
+             SConfFS = SCons.Node.FS.default_fs or \
+                       SCons.Node.FS.FS(env.fs.pathTop)
+-        if not sconf_global is None:
++        if sconf_global is not None:
+             raise (SCons.Errors.UserError,
+                    "Only one SConf object may be active at one time")
+         self.env = env
+-        if log_file != None:
++        if log_file is not None:
+             log_file = SConfFS.File(env.subst(log_file))
+         self.logfile = log_file
+         self.logstream = None
+@@ -429,7 +429,7 @@
+         self.AddTests(default_tests)
+         self.AddTests(custom_tests)
+         self.confdir = SConfFS.Dir(env.subst(conf_dir))
+-        if not config_h is None:
++        if config_h is not None:
+             config_h = SConfFS.File(config_h)
+         self.config_h = config_h
+         self._startup()
+@@ -471,7 +471,7 @@
+         Tries to build the given nodes immediately. Returns 1 on success,
+         0 on error.
+         """
+-        if self.logstream != None:
++        if self.logstream is not None:
+             # override stdout / stderr to write in log file
+             oldStdout = sys.stdout
+             sys.stdout = self.logstream
+@@ -510,7 +510,7 @@
+             SConfFS.set_max_drift(save_max_drift)
+             os.chdir(old_os_dir)
+             SConfFS.chdir(old_fs_dir, change_os_dir=0)
+-            if self.logstream != None:
++            if self.logstream is not None:
+                 # restore stdout / stderr
+                 sys.stdout = oldStdout
+                 sys.stderr = oldStderr
+@@ -559,7 +559,7 @@
+             self.env['SPAWN'] = self.pspawn_wrapper
+             sourcetext = self.env.Value(text)
+ 
+-            if text != None:
++            if text is not None:
+                 textFile = self.confdir.File(f + extension)
+                 textFileNode = self.env.SConfSourceBuilder(target=textFile,
+                                                            source=sourcetext)
+@@ -645,7 +645,7 @@
+                        "Test called after sconf.Finish()")
+             context = CheckContext(self.sconf)
+             ret = apply(self.test, (context,) +  args, kw)
+-            if not self.sconf.config_h is None:
++            if self.sconf.config_h is not None:
+                 self.sconf.config_h_text = self.sconf.config_h_text + context.config_h
+             context.Result("error: no result")
+             return ret
+@@ -685,7 +685,7 @@
+         self._createDir(self.confdir)
+         self.confdir.up().add_ignore( [self.confdir] )
+ 
+-        if self.logfile != None and not dryrun:
++        if self.logfile is not None and not dryrun:
+             # truncate logfile, if SConf.Configure is called for the first time
+             # in a build
+             if _ac_config_logs.has_key(self.logfile):
+@@ -724,7 +724,7 @@
+ 
+         if not self.active:
+             raise SCons.Errors.UserError, "Finish may be called only once!"
+-        if self.logstream != None and not dryrun:
++        if self.logstream is not None and not dryrun:
+             self.logstream.write("\n")
+             self.logstream.close()
+             self.logstream = None
+@@ -869,7 +869,7 @@
+         self.Log("scons: Configure: " + msg + "\n")
+ 
+     def Log(self, msg):
+-        if self.sconf.logstream != None:
++        if self.sconf.logstream is not None:
+             self.sconf.logstream.write(msg)
+ 
+     #### End of stuff used by Conftest.py.
+Index: engine/SCons/BuilderTests.py
+===================================================================
+--- engine/SCons/BuilderTests.py	(revision 4169)
++++ engine/SCons/BuilderTests.py	(working copy)
+@@ -1108,7 +1108,7 @@
+         r = builder.get_prefix(env)
+         assert r == 'A_', r
+         r = builder.get_suffix(env)
+-        assert r == None, r
++        assert r is None, r
+         r = builder.get_src_suffix(env)
+         assert r == '', r
+         r = builder.src_suffixes(env)
+@@ -1127,9 +1127,9 @@
+         r = builder.get_prefix(env)
+         assert r == 'A_', r
+         r = builder.get_suffix(env)
+-        assert r == None, r
++        assert r is None, r
+         r = builder.get_suffix(env, [MyNode('X.src_sfx1')])
+-        assert r == None, r
++        assert r is None, r
+         r = builder.get_src_suffix(env)
+         assert r == '.src_sfx1', r
+         r = builder.src_suffixes(env)
+@@ -1145,7 +1145,7 @@
+         r = builder.get_prefix(env)
+         assert r == 'A_', r
+         r = builder.get_suffix(env)
+-        assert r ==  None, r
++        assert r is None, r
+         r = builder.get_src_suffix(env)
+         assert r == '.src_sfx1', r
+         r = builder.src_suffixes(env)
+Index: engine/SCons/Util.py
+===================================================================
+--- engine/SCons/Util.py	(revision 4169)
++++ engine/SCons/Util.py	(working copy)
+@@ -1127,7 +1127,7 @@
+             # the dictionary before giving up.
+             s_dict = {}
+             for (k,v) in self.items():
+-                if not k is None:
++                if k is not None:
+                     s_k = env.subst(k)
+                     if s_dict.has_key(s_k):
+                         # We only raise an error when variables point
+Index: engine/SCons/Variables/VariablesTests.py
+===================================================================
+--- engine/SCons/Variables/VariablesTests.py	(revision 4169)
++++ engine/SCons/Variables/VariablesTests.py	(working copy)
+@@ -85,9 +85,9 @@
+         o = opts.options[0]
+         assert o.key == 'VAR'
+         assert o.help == ''
+-        assert o.default == None
+-        assert o.validator == None
+-        assert o.converter == None
++        assert o.default is None
++        assert o.validator is None
++        assert o.converter is None
+ 
+         o = opts.options[1]
+         assert o.key == 'ANSWER'
+@@ -120,9 +120,9 @@
+         o = opts.options[0]
+         assert o.key == 'VAR2', o.key
+         assert o.help == '', o.help
+-        assert o.default == None, o.default
+-        assert o.validator == None, o.validator
+-        assert o.converter == None, o.converter
++        assert o.default is None, o.default
++        assert o.validator is None, o.validator
++        assert o.converter is None, o.converter
+ 
+         o = opts.options[1]
+         assert o.key == 'ANSWER2', o.key
+Index: engine/SCons/Variables/EnumVariableTests.py
+===================================================================
+--- engine/SCons/Variables/EnumVariableTests.py	(revision 4169)
++++ engine/SCons/Variables/EnumVariableTests.py	(working copy)
+@@ -41,8 +41,8 @@
+         assert o.key == 'test', o.key
+         assert o.help == 'test option help (one|two|three)', o.help
+         assert o.default == 0, o.default
+-        assert not o.validator is None, o.validator
+-        assert not o.converter is None, o.converter
++        assert o.validator is not None, o.validator
++        assert o.converter is not None, o.converter
+ 
+     def test_converter(self):
+         """Test the EnumVariable converter"""
+Index: engine/SCons/Variables/PackageVariableTests.py
+===================================================================
+--- engine/SCons/Variables/PackageVariableTests.py	(revision 4169)
++++ engine/SCons/Variables/PackageVariableTests.py	(working copy)
+@@ -41,8 +41,8 @@
+         assert o.key == 'test', o.key
+         assert o.help == 'test option help\n    ( yes | no | /path/to/test )', repr(o.help)
+         assert o.default == '/default/path', o.default
+-        assert not o.validator is None, o.validator
+-        assert not o.converter is None, o.converter
++        assert o.validator is not None, o.validator
++        assert o.converter is not None, o.converter
+ 
+     def test_converter(self):
+         """Test the PackageVariable converter"""
+Index: engine/SCons/Variables/BoolVariableTests.py
+===================================================================
+--- engine/SCons/Variables/BoolVariableTests.py	(revision 4169)
++++ engine/SCons/Variables/BoolVariableTests.py	(working copy)
+@@ -39,8 +39,8 @@
+         assert o.key == 'test', o.key
+         assert o.help == 'test option help (yes|no)', o.help
+         assert o.default == 0, o.default
+-        assert not o.validator is None, o.validator
+-        assert not o.converter is None, o.converter
++        assert o.validator is not None, o.validator
++        assert o.converter is not None, o.converter
+ 
+     def test_converter(self):
+         """Test the BoolVariable converter"""
+Index: engine/SCons/Variables/PathVariableTests.py
+===================================================================
+--- engine/SCons/Variables/PathVariableTests.py	(revision 4169)
++++ engine/SCons/Variables/PathVariableTests.py	(working copy)
+@@ -44,7 +44,7 @@
+         assert o.key == 'test', o.key
+         assert o.help == 'test option help ( /path/to/test )', repr(o.help)
+         assert o.default == '/default/path', o.default
+-        assert not o.validator is None, o.validator
++        assert o.validator is not None, o.validator
+         assert o.converter is None, o.converter
+ 
+     def test_PathExists(self):
+Index: engine/SCons/Tool/JavaCommonTests.py
+===================================================================
+--- engine/SCons/Tool/JavaCommonTests.py	(revision 4169)
++++ engine/SCons/Tool/JavaCommonTests.py	(working copy)
+@@ -75,7 +75,7 @@
+ }
+ """
+         pkg_dir, classes = SCons.Tool.JavaCommon.parse_java(input)
+-        assert pkg_dir == None, pkg_dir
++        assert pkg_dir is None, pkg_dir
+         assert classes == ['BadDep'], classes
+ 
+ 
+@@ -246,7 +246,7 @@
+ """
+ 
+         pkg_dir, classes = SCons.Tool.JavaCommon.parse_java(input)
+-        assert pkg_dir == None, pkg_dir
++        assert pkg_dir is None, pkg_dir
+         assert classes == ['Test'], classes
+ 
+ 
+@@ -265,7 +265,7 @@
+ """
+ 
+         pkg_dir, classes = SCons.Tool.JavaCommon.parse_java(input)
+-        assert pkg_dir == None, pkg_dir
++        assert pkg_dir is None, pkg_dir
+         assert classes == ['MyTabs$MyInternal', 'MyTabs'], classes
+ 
+ 
+@@ -302,7 +302,7 @@
+ """
+ 
+         pkg_dir, classes = SCons.Tool.JavaCommon.parse_java(input)
+-        assert pkg_dir == None, pkg_dir
++        assert pkg_dir is None, pkg_dir
+         assert classes == ['TestClass$1', 'TestClass$2', 'TestClass'], classes
+ 
+ 
+@@ -320,7 +320,7 @@
+ """
+ 
+         pkg_dir, classes = SCons.Tool.JavaCommon.parse_java(input)
+-        assert pkg_dir == None, pkg_dir
++        assert pkg_dir is None, pkg_dir
+         assert classes == ['TestSCons', 'Foo'], classes
+ 
+ 
+@@ -354,7 +354,7 @@
+ """
+ 
+         pkg_dir, classes = SCons.Tool.JavaCommon.parse_java(input)
+-        assert pkg_dir == None, pkg_dir
++        assert pkg_dir is None, pkg_dir
+         assert classes == ['A$B', 'A'], classes
+ 
+     def test_anonymous_classes_with_parentheses(self):
+Index: engine/SCons/Tool/tex.py
+===================================================================
+--- engine/SCons/Tool/tex.py	(revision 4169)
++++ engine/SCons/Tool/tex.py	(working copy)
+@@ -431,7 +431,7 @@
+         print " scanning ",str(theFile)
+ 
+     for i in range(len(file_tests_search)):
+-        if file_tests[i][0] == None:
++        if file_tests[i][0] is None:
+             file_tests[i][0] = file_tests_search[i].search(content)
+ 
+     # recursively call this on each of the included files
+@@ -444,7 +444,7 @@
+ 
+     for src in inc_files:
+         srcNode = srcNode = FindFile(src,['.tex','.ltx','.latex'],paths,env,requireExt=False)
+-        if srcNode != None:
++        if srcNode is not None:
+             file_test = ScanFiles(srcNode, target, paths, file_tests, file_tests_search, env, graphics_extensions, targetdir)
+     if Verbose:
+         print " done scanning ",str(theFile)
