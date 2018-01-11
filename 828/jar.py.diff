@@ -1,0 +1,19 @@
+*** jar.py.orig	Fri Jan 14 11:21:30 2011
+--- jar.py	Mon Jan 24 11:59:33 2011
+***************
+*** 101,107 ****
+      env['JARSUFFIX']  = '.jar'
+  
+  def exists(env):
+!     return env.Detect('jar')
+  
+  # Local Variables:
+  # tab-width:4
+--- 101,107 ----
+      env['JARSUFFIX']  = '.jar'
+  
+  def exists(env):
+!     return 1
+  
+  # Local Variables:
+  # tab-width:4
