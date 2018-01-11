@@ -1,0 +1,83 @@
+DEBUG:root:trying to find VC 10.0
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:found VC 10.0
+DEBUG:root:trying to find VC 9.0
+DEBUG:root:find_vc_dir(): found VC in registry: c:\Program Files\Microsoft Visual Studio 9.0\VC\
+DEBUG:root:found VC 9.0
+DEBUG:root:trying to find VC 8.0
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files\Microsoft Visual Studio 8\VC\
+DEBUG:root:found VC 8.0
+DEBUG:root:trying to find VC 7.1
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\7.1\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 7.1
+DEBUG:root:trying to find VC 7.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\7.0\\Setup\\VC\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 7.0
+DEBUG:root:trying to find VC 6.0
+DEBUG:root:find_vc_dir(): no VC registry key 'Software\\Microsoft\\VisualStudio\\6.0\\Setup\\Microsoft Visual C++\\ProductDir'
+DEBUG:root:find_vc_pdir return None for ver 6.0
+DEBUG:root:msvc_setup_env()
+DEBUG:root:get_default_version()
+DEBUG:root:get_default_version(): msvc_version:None msvs_version:None
+DEBUG:root:installed_vcs:['10.0', '9.0', '8.0']
+DEBUG:root:msvc_setup_env: using default installed MSVC version '10.0'
+
+DEBUG:root:msvc_setup_env: using specified MSVC version '10.0'
+
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:vc.py: find_batch_file() pdir:C:\Program Files\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:sdk.py:get_installed_sdks()
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 7.0
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v7.0\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v7.0\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.1\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.1\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.0A
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.0A\InstallationFolder
+DEBUG:root:find_sdk_dir(): Trying SDK Dir: C:\Program Files\Microsoft SDKs\Windows\v6.0A\
+DEBUG:root:MSCommon/sdk.py:found SDK 6.0A
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 6.0
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\Microsoft SDKs\Windows\v6.0\InstallationFolder
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\Microsoft SDKs\\Windows\\v6.0\\InstallationFolder'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 2003R2
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\MicrosoftSDK\InstalledSDKS\D2FF9F89-8AA2-4373-8A31-C838BF4DBBE1\Install Dir
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\D2FF9F89-8AA2-4373-8A31-C838BF4DBBE1\\Install Dir'
+DEBUG:root:MSCommon/sdk.py: trying to find SDK 2003R1
+DEBUG:root:find_sdk_dir(): checking registry:Software\Microsoft\MicrosoftSDK\InstalledSDKS\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3\Install Dir
+DEBUG:root:find_sdk_dir(): no SDK registry key 'Software\\Microsoft\\MicrosoftSDK\\InstalledSDKS\\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3\\Install Dir'
+DEBUG:root:sdk.py: get_sdk_vc_script():arch_string:x86 host_arch:x86 target_arch:x86
+DEBUG:root:sdk.py: get_sdk_vc_script():file:bin\vcvars32.bat
+DEBUG:root:vc.py:find_batch_file() sdk_bat_file_path:C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat
+DEBUG:root:vc.py:msvc_setup_env() vc_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\vcvarsall.bat sdk_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat
+DEBUG:root:vc.py:msvc_setup_env() vc_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\vcvarsall.bat sdk_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat
+DEBUG:root:use_script 2 u'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\vcvarsall.bat', args:x86
+
+DEBUG:root:Calling 'C:\Program Files\Microsoft Visual Studio 10.0\VC\vcvarsall.bat x86'
+DEBUG:root:vc.py:msvc_setup_env() env:PATH -> ['C:\\Program Files\\Microsoft F#\\v4.0\\', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VSTSDB\\Deploy', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE\\', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\BIN', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\Tools', 'C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30128', 'C:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\VCPackages', 'C:\\Program Files\\HTML Help Workshop', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\bin\\NETFX 4.0 Tools', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\bin', 'C:\\Python26\\Scripts\\', 'C:\\Python26\\Scripts\\..', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\IDE', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\BIN', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\Tools', 'c:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'c:\\Windows\\Microsoft.NET\\Framework\\v2.0.50727', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\VCPackages', 'C:\\Program Files\\\\Microsoft SDKs\\Windows\\v6.0A\\bin', 'C:\\Python26\\Lib\\site-packages\\PyQt4\\bin', 'C:\\Program Files\\Common Files\\Microsoft Shared\\Windows Live', 'C:\\Windows\\system32', 'C:\\Windows', 'C:\\Windows\\System32\\Wbem', 'C:\\Program Files\\Common Files\\Roxio Shared\\DLLShared\\', 'C:\\Program Files\\Common Files\\Roxio Shared\\9.0\\DLLShared\\', 'C:\\Program Files\\Common Files\\Adobe\\AGL', 'c:\\Program Files\\Microsoft SQL Server\\90\\Tools\\binn\\', 'C:\\SAXI\\SXTL', 'C:\\SAXI', 'C:\\SAXI\\SAINT32', 'C:\\Program Files\\texlive\\2008\\bin\\win32', 'C:\\Program Files\\TortoiseSVN\\bin', 'C:\\Program Files\\QuickTime\\QTSystem\\', 'c:\\Program Files\\Microsoft SQL Server\\100\\Tools\\Binn\\', 'c:\\Program Files\\Microsoft SQL Server\\100\\DTS\\Binn\\', 'C:\\Program Files\\Graphviz2.26.3\\bin', 'C:\\Program Files\\Common Files\\Microsoft Shared\\Windows Live', 'C:\\Program Files\\Google\\google_appengine\\', 'C:\\Program Files\\OpenBabel-2.2.0', 'C:\\Program Files\\Notepad++', 'C:\\Program Files\\gfortran\\libexec\\gcc\\i586-pc-mingw32\\4.5.0', 'C:\\Program Files\\gfortran\\bin', 'C:\\Program Files\\g95\\bin', 'C:\\Program Files\\g95\\lib\\gcc-lib\\i686-pc-mingw32\\4.0.4']
+DEBUG:root:vc.py:msvc_setup_env() env:INCLUDE -> ['C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\INCLUDE', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\INCLUDE', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\include', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\INCLUDE', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\INCLUDE', 'C:\\Program Files\\\\Microsoft SDKs\\Windows\\v6.0A\\include']
+DEBUG:root:vc.py:msvc_setup_env() env:LIB -> ['C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\LIB', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\LIB', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\lib', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\LIB', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\LIB', 'C:\\Program Files\\\\Microsoft SDKs\\Windows\\v6.0A\\lib']
+DEBUG:root:vc.py:msvc_setup_env() env:LIBPATH -> ['C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30128', 'C:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\LIB', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\LIB', 'c:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'c:\\Windows\\Microsoft.NET\\Framework\\v2.0.50727', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\LIB', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\LIB']
+DEBUG:root:msvc_setup_env()
+DEBUG:root:get_default_version()
+DEBUG:root:get_default_version(): msvc_version:None msvs_version:None
+DEBUG:root:installed_vcs:['10.0', '9.0', '8.0']
+DEBUG:root:msvc_setup_env: using default installed MSVC version '10.0'
+
+DEBUG:root:msvc_setup_env: using specified MSVC version '10.0'
+
+DEBUG:root:find_vc_dir(): found VC in registry: C:\Program Files\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:vc.py: find_batch_file() pdir:C:\Program Files\Microsoft Visual Studio 10.0\VC\
+DEBUG:root:sdk.py:get_installed_sdks()
+DEBUG:root:sdk.py: get_sdk_vc_script():arch_string:x86 host_arch:x86 target_arch:x86
+DEBUG:root:sdk.py: get_sdk_vc_script():file:bin\vcvars32.bat
+DEBUG:root:vc.py:find_batch_file() sdk_bat_file_path:C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat
+DEBUG:root:vc.py:msvc_setup_env() vc_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\vcvarsall.bat sdk_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat
+DEBUG:root:vc.py:msvc_setup_env() vc_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\vcvarsall.bat sdk_script:C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat
+DEBUG:root:use_script 2 u'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\vcvarsall.bat', args:x86
+
+DEBUG:root:Calling 'C:\Program Files\Microsoft Visual Studio 10.0\VC\vcvarsall.bat x86'
+DEBUG:root:vc.py:msvc_setup_env() env:PATH -> ['C:\\Program Files\\Microsoft F#\\v4.0\\', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VSTSDB\\Deploy', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE\\', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\BIN', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\Tools', 'C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30128', 'C:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\VCPackages', 'C:\\Program Files\\HTML Help Workshop', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\bin\\NETFX 4.0 Tools', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\bin', 'C:\\Program Files\\Microsoft F#\\v4.0\\', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VSTSDB\\Deploy', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\IDE\\', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\BIN', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Common7\\Tools', 'C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30128', 'C:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\VCPackages', 'C:\\Program Files\\HTML Help Workshop', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\bin\\NETFX 4.0 Tools', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\bin', 'C:\\Python26\\Scripts\\', 'C:\\Python26\\Scripts\\..', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\IDE', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\BIN', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\Common7\\Tools', 'c:\\Windows\\Microsoft.NET\\Framework\\v2.0.50727', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\VCPackages', 'C:\\Program Files\\\\Microsoft SDKs\\Windows\\v6.0A\\bin', 'C:\\Python26\\Lib\\site-packages\\PyQt4\\bin', 'C:\\Program Files\\Common Files\\Microsoft Shared\\Windows Live', 'C:\\Windows\\system32', 'C:\\Windows', 'C:\\Windows\\System32\\Wbem', 'C:\\Program Files\\Common Files\\Roxio Shared\\DLLShared\\', 'C:\\Program Files\\Common Files\\Roxio Shared\\9.0\\DLLShared\\', 'C:\\Program Files\\Common Files\\Adobe\\AGL', 'c:\\Program Files\\Microsoft SQL Server\\90\\Tools\\binn\\', 'C:\\SAXI\\SXTL', 'C:\\SAXI', 'C:\\SAXI\\SAINT32', 'C:\\Program Files\\texlive\\2008\\bin\\win32', 'C:\\Program Files\\TortoiseSVN\\bin', 'C:\\Program Files\\QuickTime\\QTSystem\\', 'c:\\Program Files\\Microsoft SQL Server\\100\\Tools\\Binn\\', 'c:\\Program Files\\Microsoft SQL Server\\100\\DTS\\Binn\\', 'C:\\Program Files\\Graphviz2.26.3\\bin', 'C:\\Program Files\\Google\\google_appengine\\', 'C:\\Program Files\\OpenBabel-2.2.0', 'C:\\Program Files\\Notepad++', 'C:\\Program Files\\gfortran\\libexec\\gcc\\i586-pc-mingw32\\4.5.0', 'C:\\Program Files\\gfortran\\bin', 'C:\\Program Files\\g95\\bin', 'C:\\Program Files\\g95\\lib\\gcc-lib\\i686-pc-mingw32\\4.0.4']
+DEBUG:root:vc.py:msvc_setup_env() env:INCLUDE -> ['C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\INCLUDE', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\INCLUDE', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\include', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\INCLUDE', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\INCLUDE', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\include', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\INCLUDE', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\INCLUDE', 'C:\\Program Files\\\\Microsoft SDKs\\Windows\\v6.0A\\include']
+DEBUG:root:vc.py:msvc_setup_env() env:LIB -> ['C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\LIB', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\LIB', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\lib', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\LIB', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\LIB', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0A\\lib', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\LIB', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\LIB', 'C:\\Program Files\\\\Microsoft SDKs\\Windows\\v6.0A\\lib']
+DEBUG:root:vc.py:msvc_setup_env() env:LIBPATH -> ['C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30128', 'C:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\LIB', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\LIB', 'C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30128', 'C:\\Windows\\Microsoft.NET\\Framework\\v3.5', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\LIB', 'C:\\Program Files\\Microsoft Visual Studio 10.0\\VC\\ATLMFC\\LIB', 'c:\\Windows\\Microsoft.NET\\Framework\\v2.0.50727', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\LIB', 'c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\LIB']
