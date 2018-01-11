@@ -1,0 +1,19 @@
+diff -ru SCons.ori/Tool/mingw.py SCons/Tool/mingw.py
+--- SCons.ori/Tool/mingw.py	2012-01-11 15:17:43.294680500 +0100
++++ SCons/Tool/mingw.py	2012-01-11 15:17:21.482040900 +0100
+@@ -100,12 +100,11 @@
+         target.append(env.fs.File(targetStrings))
+ 
+     # Append a def file target if there isn't already a def file target
+-    # or a def file source. There is no option to disable def file
+-    # target emitting, because I can't figure out why someone would ever
+-    # want to turn it off.
++    # or a def file source and if def file creation is enabled.
+     def_source = env.FindIxes(source, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
+     def_target = env.FindIxes(target, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
+-    if not def_source and not def_target:
++    insert_def = env.subst("$WINDOWS_INSERT_DEF")
++    if not def_source and not def_target and not insert_def in ['', '0', 0]:
+         # Create list of target libraries and def files as strings
+         targetStrings=env.ReplaceIxes(dll,  
+                                       'SHLIBPREFIX', 'SHLIBSUFFIX',
