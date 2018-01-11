@@ -1,0 +1,13 @@
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 3778)
++++ QMTest/TestSCons.py	(working copy)
+@@ -85,7 +85,7 @@
+     machine = machine_map.get(machine, machine)
+ 
+ python = python_executable
+-_python_ = '"' + python_executable + '"'
++_python_ = '"' + python_executable.replace('\\','\\\\') + '"'
+ _exe = exe_suffix
+ _obj = obj_suffix
+ _shobj = shobj_suffix
