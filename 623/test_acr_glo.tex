@@ -1,0 +1,22 @@
+\documentclass{article}
+
+\usepackage[acronym]{glossaries}
+
+\newglossaryentry{nix}{
+  name={Nix},
+  description={Version 5}
+}
+
+\newacronym{gnu}{GNU}{GNU's Not UNIX}
+
+\makeglossaries
+
+
+\begin{document}
+
+Acronyms \gls{gnu} and glossary entries \gls{nix}.
+
+\printglossary[type=acronym]
+\printglossary[type=main]
+
+\end{document}
