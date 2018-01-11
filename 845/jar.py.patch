@@ -1,0 +1,69 @@
+*** jar.py.orig	2011-03-03 08:19:18.185173578 +0100
+--- jar.py	2011-03-17 14:49:29.022947443 +0100
+***************
+*** 35,43 ****
+--- 35,45 ----
+  
+  import SCons.Subst
+  import SCons.Util
++ import glob
+  
+  def jarSources(target, source, env, for_signature):
+      """Only include sources that are not a manifest file."""
++     got_manifest = False
+      try:
+          env['JARCHDIR']
+      except KeyError:
+***************
+*** 48,63 ****
+          if jarchdir:
+              jarchdir = env.fs.Dir(jarchdir)
+      result = []
+      for src in source:
+!         contents = src.get_text_contents()
+!         if contents[:16] != "Manifest-Version":
+!             if jarchdir_set:
+!                 _chdir = jarchdir
+!             else:
+!                 try:
+!                     _chdir = src.attributes.java_classdir
+!                 except AttributeError:
+!                     _chdir = None
+              if _chdir:
+                  # If we are changing the dir with -C, then sources should
+                  # be relative to that directory.
+--- 50,83 ----
+          if jarchdir:
+              jarchdir = env.fs.Dir(jarchdir)
+      result = []
++     present = {}
+      for src in source:
+!         if not got_manifest:
+!             contents = src.get_text_contents()
+!             if contents[:16] == "Manifest-Version":
+!                 got_manifest = True
+!                 continue
+!         try:
+!             _chdir = src.attributes.java_classdir
+!         except AttributeError:
+!             _chdir = None
+!         srcs = [src]
+!         # SPECIAL HANDLING START; See Issue 2742
+!         if _chdir and str(src)[-6:] == '.class':
+!              if str(src).find('$') != -1:
+!                 # record every .class file containing '$' as not missing
+!                 present[str(src)] = True
+!              else:
+!                 # No dollar, so this class file could have $*.class files associated
+!                 for x in glob.glob(str(src)[0:-6] + '$*.class'):
+!                     if not present.has_key(x):
+!                         msg = 'Java scanner missed a class file, added now: ' + x
+!                         SCons.Warnings.warn(SCons.Warnings.DependencyWarning, msg)
+!                         srcs.append(env.File(x))
+!         # SPECIAL HANDLING END; See Issue 2742
+!         if jarchdir_set:
+!             _chdir = jarchdir
+!         for src in srcs:
+              if _chdir:
+                  # If we are changing the dir with -C, then sources should
+                  # be relative to that directory.
