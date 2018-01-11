@@ -1,0 +1,21 @@
+import os, sys, string
+pj = os.path.join
+
+BaseEnv = Environment(ENV = os.environ)
+
+conf = BaseEnv.Configure(config_h='config_scons.h')
+
+types = Split("""
+    int16_t
+    int32_t
+    int8_t
+    intptr_t
+""")
+
+for t in types:
+    conf.CheckType(t)
+    conf.CheckType(t, 'stdint.h')
+    conf.CheckType(t, ['inttypes.h', 'stdint.h'])
+    conf.CheckType(t, '<stdint.h>')
+
+conf.Finish()
