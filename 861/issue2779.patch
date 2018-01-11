@@ -1,0 +1,16 @@
+Index: Main.py
+===================================================================
+--- Main.py	(revision 5349)
++++ Main.py	(working copy)
+@@ -1075,6 +1075,11 @@
+ 
+     global this_build_status
+     this_build_status = 0
++    
++    #RDEVE: prevent old error dump on exit from interactive mode
++    global _BuildFailures
++    _BuildFailures = []
++    #RDEVE: end of patch
+ 
+     progress_display.set_mode(not (options.no_progress or options.silent))
+     display.set_mode(not options.silent)
