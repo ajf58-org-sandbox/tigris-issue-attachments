@@ -1,0 +1,13 @@
+Index: scons-1.2.0.d20090919/scons.1
+===================================================================
+--- scons-1.2.0.d20090919.orig/scons.1	2009-12-05 17:20:35.282743297 +0100
++++ scons-1.2.0.d20090919/scons.1	2009-12-05 17:20:46.686742153 +0100
+@@ -1356,7 +1356,7 @@
+ currently deprecated features.
+ These warnings are enabled by default.
+ Note that the
+-.b --warn=no-deprecated
++.B --warn=no-deprecated
+ option does not disable warnings about absolutely all deprecated features.
+ Warnings for some deprecated features that have already been through
+ several releases with deprecation warnings
