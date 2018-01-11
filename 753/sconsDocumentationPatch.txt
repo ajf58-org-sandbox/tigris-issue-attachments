@@ -1,0 +1,146 @@
+=== modified file 'bin/docdiff' (properties changed: -x to +x)
+=== modified file 'bin/docrun' (properties changed: -x to +x)
+=== modified file 'bin/docupdate' (properties changed: -x to +x)
+=== modified file 'doc/user/builders-writing.in'
+--- doc/user/builders-writing.in	2010-04-05 04:06:48 +0000
++++ doc/user/builders-writing.in	2010-06-01 05:51:28 +0000
+@@ -900,7 +900,7 @@
+     <para>
+ 
+     The <filename>site_scons</filename> directory gives you a place to
+-    put Python modules you can import into your &SConscript; files
++    put Python modules and packages that you can import into your &SConscript; files
+     (<filename>site_scons</filename>),
+     add-on tools that can integrate into &SCons;
+     (<filename>site_scons/site_tools</filename>),
+@@ -912,11 +912,15 @@
+ 
+     <para>
+ 
+-    If you get a tool from somewhere (the &SCons; wiki or a third party,
+-    for instance) and you'd like to use it in your project, the
+-    <filename>site_scons</filename> dir is the simplest place to put it.
+-    Tools come in two flavors; either a Python function that operates on
+-    an &Environment; or a Python file containing two functions,
++    If you get a tool from somewhere (by branching/cloning a contributed
++    tool found from from the ToolIndex page of the &SCons; wiki,
++    downloading code from the &SCons; wiki, writing one yourself, or
++    obtaining one from some other third party) and you'd like to use it
++    in your project, the
++    <filename>site_scons</filename> dir is the place to put it.  Tools
++    come in two flavors; either a Python function that operates on an
++    &Environment; or a Python module or package containing two
++    functions,
+     <function>exists()</function> and <function>generate()</function>.
+ 
+     </para>
+@@ -975,16 +979,23 @@
+     -->
+ 
+     <para>
+-      Similarly, a more full-fledged tool with
++      A more full-fledged tool with
+       <function>exists()</function> and <function>generate()</function>
+-      methods can be installed in
+-      <filename>site_scons/site_tools/toolname.py</filename>.  Since
+-      <filename>site_scons/site_tools</filename> is automatically added
+-      to the head of the tool search path, any tool found there will be
+-      available to all environments.  Furthermore, a tool found there
+-      will override a built-in tool of the same name, so if you need to
+-      change the behavior of a built-in tool, site_scons gives you the
+-      hook you need.
++      methods can be installed either as a module in the file
++      <filename>site_scons/site_tools/toolname.py</filename> or as a
++      package in the
++      directory <filename>site_scons/site_tools/toolname</filename>.  In
++      the case of using a package, the <function>exists()</function>
++      and <function>generate()</function> are in the
++      file <filename>site_scons/site_tools/toolname/__init__.py</filename>.
++      (In all the above case <filename>toolname</filename> is replaced
++      by the name of the tool.)
++      Since <filename>site_scons/site_tools</filename> is automatically
++      added to the head of the tool search path, any tool found there
++      will be available to all environments.  Furthermore, a tool found
++      there will override a built-in tool of the same name, so if you
++      need to change the behavior of a built-in
++      tool, <filename>site_scons</filename> gives you the hook you need.
+     </para>
+ 
+     <para>
+
+=== modified file 'doc/user/builders-writing.xml'
+--- doc/user/builders-writing.xml	2010-04-05 04:06:48 +0000
++++ doc/user/builders-writing.xml	2010-06-01 05:51:32 +0000
+@@ -233,7 +233,7 @@
+ 
+     <screen>
+       % <userinput>scons -Q</userinput>
+-      AttributeError: SConsEnvironment instance has no attribute 'Program':
++      AttributeError: 'SConsEnvironment' object has no attribute 'Program':
+         File "/home/my/project/SConstruct", line 4:
+           env.Program('hello.c')
+     </screen>
+@@ -782,7 +782,7 @@
+     <para>
+ 
+     The <filename>site_scons</filename> directory gives you a place to
+-    put Python modules you can import into your &SConscript; files
++    put Python modules and packages that you can import into your &SConscript; files
+     (<filename>site_scons</filename>),
+     add-on tools that can integrate into &SCons;
+     (<filename>site_scons/site_tools</filename>),
+@@ -794,11 +794,15 @@
+ 
+     <para>
+ 
+-    If you get a tool from somewhere (the &SCons; wiki or a third party,
+-    for instance) and you'd like to use it in your project, the
+-    <filename>site_scons</filename> dir is the simplest place to put it.
+-    Tools come in two flavors; either a Python function that operates on
+-    an &Environment; or a Python file containing two functions,
++    If you get a tool from somewhere (by branching/cloning a contributed
++    tool found from from the ToolIndex page of the &SCons; wiki,
++    downloading code from the &SCons; wiki, writing one yourself, or
++    obtaining one from some other third party) and you'd like to use it
++    in your project, the
++    <filename>site_scons</filename> dir is the place to put it.  Tools
++    come in two flavors; either a Python function that operates on an
++    &Environment; or a Python module or package containing two
++    functions,
+     <function>exists()</function> and <function>generate()</function>.
+ 
+     </para>
+@@ -848,16 +852,23 @@
+     -->
+ 
+     <para>
+-      Similarly, a more full-fledged tool with
++      A more full-fledged tool with
+       <function>exists()</function> and <function>generate()</function>
+-      methods can be installed in
+-      <filename>site_scons/site_tools/toolname.py</filename>.  Since
+-      <filename>site_scons/site_tools</filename> is automatically added
+-      to the head of the tool search path, any tool found there will be
+-      available to all environments.  Furthermore, a tool found there
+-      will override a built-in tool of the same name, so if you need to
+-      change the behavior of a built-in tool, site_scons gives you the
+-      hook you need.
++      methods can be installed either as a module in the file
++      <filename>site_scons/site_tools/toolname.py</filename> or as a
++      package in the
++      directory <filename>site_scons/site_tools/toolname</filename>.  In
++      the case of using a package, the <function>exists()</function>
++      and <function>generate()</function> are in the
++      file <filename>site_scons/site_tools/toolname/__init__.py</filename>.
++      (In all the above case <filename>toolname</filename> is replaced
++      by the name of the tool.)
++      Since <filename>site_scons/site_tools</filename> is automatically
++      added to the head of the tool search path, any tool found there
++      will be available to all environments.  Furthermore, a tool found
++      there will override a built-in tool of the same name, so if you
++      need to change the behavior of a built-in
++      tool, <filename>site_scons</filename> gives you the hook you need.
+     </para>
+ 
+     <para>
+
