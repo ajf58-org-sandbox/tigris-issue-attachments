@@ -1,0 +1,233 @@
+Index: src/engine/SCons/Executor.py
+===================================================================
+--- src/engine/SCons/Executor.py	(revision 5214)
++++ src/engine/SCons/Executor.py	(working copy)
+@@ -238,6 +238,13 @@
+             result.extend(batch.targets)
+         return result
+ 
++    def get_node_targets(self, node):
++        result = []
++        for batch in self.batches:
++            if node in batch.targets:
++                result.extend(batch.targets)
++        return result
++
+     def get_all_sources(self):
+         """Returns all sources for all batches of this Executor."""
+         result = []
+@@ -442,15 +449,19 @@
+         return 0
+ 
+     def scan_targets(self, scanner):
+-        # TODO(batch):  scan by batches
+-        self.scan(scanner, self.get_all_targets())
++        # For batch mode to work correctly each batch must be
++        # processes separately.
++        for batch in self.batches:
++            self.scan(scanner, batch.targets, batch)
+ 
+     def scan_sources(self, scanner):
+-        # TODO(batch):  scan by batches
+-        if self.batches[0].sources:
+-            self.scan(scanner, self.get_all_sources())
++        # For batch mode to work correctly each batch must be
++        # processes separately.
++        for batch in self.batches:
++            if batch.sources:
++                self.scan(scanner, batch.sources, batch)
+ 
+-    def scan(self, scanner, node_list):
++    def scan(self, scanner, node_list, batch):
+         """Scan a list of this Executor's files (targets or sources) for
+         implicit dependencies and update all of the targets with them.
+         This essentially short-circuits an N*M scan of the sources for
+@@ -458,7 +469,6 @@
+         """
+         env = self.get_build_env()
+ 
+-        # TODO(batch):  scan by batches)
+         deps = []
+         if scanner:
+             for node in node_list:
+@@ -483,7 +493,8 @@
+ 
+         deps.extend(self.get_implicit_deps())
+ 
+-        for tgt in self.get_all_targets():
++        # Add deps only to batch targets
++        for tgt in batch.targets:
+             tgt.add_to_implicit(deps)
+ 
+     def _get_unignored_sources_key(self, node, ignore=()):
+Index: src/engine/SCons/Node/__init__.py
+===================================================================
+--- src/engine/SCons/Node/__init__.py	(revision 5214)
++++ src/engine/SCons/Node/__init__.py	(working copy)
+@@ -622,9 +622,22 @@
+                 # essentially short-circuits an N*M scan of the
+                 # sources for each individual target, which is a hell
+                 # of a lot more efficient.
+-                for tgt in executor.get_all_targets():
+-                    tgt.add_to_implicit(implicit)
+ 
++                # Coment to previous comment. Getting all targets
++                # when MSVC_BATCH is enabled causes to rebuild all
++                # targets and not only needed ones. Moreover it
++                # caused deps to be set incorrectly - deps to first
++                # target was set as deps to all targets in batch.
++                # Following fix is not the best one but should work.
++                if 'MSVC_BATCH' in build_env and build_env['MSVC_BATCH']:
++                    # batch mode
++                    for tgt in executor.get_node_targets(self):
++                        tgt.add_to_implicit(implicit)
++                else:
++                    # default mode
++                    for tgt in executor.get_all_targets():
++                        tgt.add_to_implicit(implicit)
++
+                 if implicit_deps_unchanged or self.is_up_to_date():
+                     return
+                 # one of this node's sources has changed,
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 5214)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -543,9 +543,15 @@
+         nodesToBeBuilt = []
+ 
+         f = "conftest_" + str(_ac_build_counter)
++        # If MSVC_BATCH is enabled test are not processed correctly
++        # as builder is trying to compile allways first test file.
++        # It is not the best fix but making output in separete
++        # directories fixes the problem.
++        conftestdir = self.confdir.Dir(f)
++        self._createDir(conftestdir)
+         pref = self.env.subst( builder.builder.prefix )
+         suff = self.env.subst( builder.builder.suffix )
+-        target = self.confdir.File(pref + f + suff)
++        target = conftestdir.File(pref + f + suff)
+ 
+         try:
+             # Slide our wrapper into the construction environment as
+Index: src/engine/SCons/Subst.py
+===================================================================
+--- src/engine/SCons/Subst.py	(revision 5214)
++++ src/engine/SCons/Subst.py	(working copy)
+@@ -286,8 +286,18 @@
+         # away soon anyway.  We just let these expand to $TARGETS
+         # because that's "good enough" for the use of ToolSurrogates
+         # (see test/ToolSurrogate.py) to generate documentation.
+-        dict['CHANGED_TARGETS'] = '$TARGETS'
+-        dict['UNCHANGED_TARGETS'] = '$TARGETS'
++        #
++        # Fixing batch compiling (MSVC_BATCH enabled) caused link
++        # process to fail if cmd line was too long. This was so
++        # becouse we are passing 'CHANGED_TARGETS' as target
++        # in callable(s) invoke. For compile process CHANGED_TARGETS
++        # contains only realy changed targets. For linker this is
++        # $TARGETS defined here. It is expanded only in direct call
++        # to linker/compiler and if there are many targets (so cmd
++        # file should be used) 'command line too long' error appears.
++        # Changing this to new version. It looks that this fixed the issue.
++        dict['CHANGED_TARGETS'] = dict['TARGETS']
++        dict['UNCHANGED_TARGETS'] = dict['TARGETS']
+     else:
+         dict['TARGETS'] = NullNodesList
+         dict['TARGET'] = NullNodesList
+@@ -312,8 +322,18 @@
+         # away soon anyway.  We just let these expand to $TARGETS
+         # because that's "good enough" for the use of ToolSurrogates
+         # (see test/ToolSurrogate.py) to generate documentation.
+-        dict['CHANGED_SOURCES'] = '$SOURCES'
+-        dict['UNCHANGED_SOURCES'] = '$SOURCES'
++        #
++        # Fixing batch compiling (MSVC_BATCH enabled) caused link
++        # process to fail if cmd line was too long. This was so
++        # becouse we are passing 'CHANGED_SOURCES' as source
++        # in callable(s) invoke. For compile process CHANGED_SOURCES
++        # contains only realy changed sources.. But for linker this is
++        # $SOURCES defined here. It is expanded only in direct call to
++        # linker and if there are many  sources (so cmd file should be
++        # used) 'command line too long' error appears.
++        # Changing this to new version. It looks that this fixed the issue.
++        dict['CHANGED_SOURCES'] = dict['SOURCES']
++        dict['UNCHANGED_SOURCES'] = dict['SOURCES']
+     else:
+         dict['SOURCES'] = NullNodesList
+         dict['SOURCE'] = NullNodesList
+@@ -683,8 +703,8 @@
+                     self.next_word()
+             elif callable(s):
+                 try:
+-                    s = s(target=lvars['TARGETS'],
+-                         source=lvars['SOURCES'],
++                    s = s(target=lvars['CHANGED_TARGETS'],
++                         source=lvars['CHANGED_SOURCES'],
+                          env=self.env,
+                          for_signature=(self.mode != SUBST_CMD))
+                 except TypeError:
+Index: src/engine/SCons/Tool/msvc.py
+===================================================================
+--- src/engine/SCons/Tool/msvc.py	(revision 5214)
++++ src/engine/SCons/Tool/msvc.py	(working copy)
+@@ -140,8 +140,10 @@
+     Returning None specifies that the specified target+source should not
+     be batched with other compilations.
+     """
+-    b = env.subst('$MSVC_BATCH')
+-    if b in (None, '', '0'):
++
++    # Fixing MSVC_BATCH mode. Previous if did not work when MSVC_BATCH
++    # was set to False. This new version should work better.
++    if not 'MSVC_BATCH' in env or not env['MSVC_BATCH']:
+         # We're not using batching; return no key.
+         return None
+     t = target[0]
+@@ -161,8 +163,13 @@
+     we return an /Fo string that just specifies the first target's
+     directory (where the Visual C/C++ compiler will put the .obj files).
+     """
+-    b = env.subst('$MSVC_BATCH')
+-    if b in (None, '', '0') or len(source) == 1:
++
++    # Fixing MSVC_BATCH mode. Previous if did not work when MSVC_BATCH
++    # was set to False. This new version should work better. Removed
++    # len(source)==1 as batch mode can compile only one file
++    # (and it also fixed problem with compiling only one changed file
++    # with batch mode enabled)
++    if not 'MSVC_BATCH' in env or not env['MSVC_BATCH']:
+         return '/Fo$TARGET'
+     else:
+         # The Visual C/C++ compiler requires a \ at the end of the /Fo
+@@ -207,6 +214,8 @@
+         static_obj.add_emitter(suffix, static_object_emitter)
+         shared_obj.add_emitter(suffix, shared_object_emitter)
+ 
++    # When MSVC_BATCH is enable command line to compile can be greater
++    # than 2048 characters. TEMPFILE use is needed.
+     env['CCPDBFLAGS'] = SCons.Util.CLVar(['${(PDB and "/Z7") or ""}'])
+     env['CCPCHFLAGS'] = SCons.Util.CLVar(['${(PCH and "/Yu%s \\\"/Fp%s\\\""%(PCHSTOP or "",File(PCH))) or ""}'])
+     env['_MSVC_OUTPUT_FLAG'] = msvc_output_flag
+@@ -214,17 +223,17 @@
+     env['CC']         = 'cl'
+     env['CCFLAGS']    = SCons.Util.CLVar('/nologo')
+     env['CFLAGS']     = SCons.Util.CLVar('')
+-    env['CCCOM']      = '$CC $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $CFLAGS $CCFLAGS $_CCCOMCOM'
++    env['CCCOM']      = '${TEMPFILE("$CC $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $CFLAGS $CCFLAGS $_CCCOMCOM")}'
+     env['SHCC']       = '$CC'
+     env['SHCCFLAGS']  = SCons.Util.CLVar('$CCFLAGS')
+     env['SHCFLAGS']   = SCons.Util.CLVar('$CFLAGS')
+-    env['SHCCCOM']    = '$SHCC $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $SHCFLAGS $SHCCFLAGS $_CCCOMCOM'
++    env['SHCCCOM']    = '${TEMPFILE("$SHCC $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $SHCFLAGS $SHCCFLAGS $_CCCOMCOM")}'
+     env['CXX']        = '$CC'
+     env['CXXFLAGS']   = SCons.Util.CLVar('$( /TP $)')
+-    env['CXXCOM']     = '$CXX $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $CXXFLAGS $CCFLAGS $_CCCOMCOM'
++    env['CXXCOM']     = '${TEMPFILE("$CXX $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $CXXFLAGS $CCFLAGS $_CCCOMCOM")}'
+     env['SHCXX']      = '$CXX'
+     env['SHCXXFLAGS'] = SCons.Util.CLVar('$CXXFLAGS')
+-    env['SHCXXCOM']   = '$SHCXX $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $SHCXXFLAGS $SHCCFLAGS $_CCCOMCOM'
++    env['SHCXXCOM']   = '${TEMPFILE("$SHCXX $_MSVC_OUTPUT_FLAG /c $CHANGED_SOURCES $SHCXXFLAGS $SHCCFLAGS $_CCCOMCOM")}'
+     env['CPPDEFPREFIX']  = '/D'
+     env['CPPDEFSUFFIX']  = ''
+     env['INCPREFIX']  = '/I'
