@@ -1,0 +1,13 @@
+Index: QMTest/TestCmd.py
+===================================================================
+--- QMTest/TestCmd.py	(revision 5214)
++++ QMTest/TestCmd.py	(working copy)
+@@ -967,7 +967,7 @@
+             condition = self.condition
+         if self._preserve[condition]:
+             for dir in self._dirlist:
+-                print "Preserved directory", dir
++                print unicode("Preserved directory " + dir + "\n"),
+         else:
+             list = self._dirlist[:]
+             list.reverse()
