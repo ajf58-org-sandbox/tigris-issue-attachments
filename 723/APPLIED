@@ -1,0 +1,1330 @@
+RefactoringTool: Files that were modified:
+RefactoringTool: SConstruct
+RefactoringTool: src/test_interrupts.py
+RefactoringTool: src/test_pychecker.py
+RefactoringTool: src/engine/SCons/Action.py
+RefactoringTool: src/engine/SCons/ActionTests.py
+RefactoringTool: src/engine/SCons/Conftest.py
+RefactoringTool: src/engine/SCons/Debug.py
+RefactoringTool: src/engine/SCons/Defaults.py
+RefactoringTool: src/engine/SCons/Environment.py
+RefactoringTool: src/engine/SCons/EnvironmentTests.py
+RefactoringTool: src/engine/SCons/Job.py
+RefactoringTool: src/engine/SCons/JobTests.py
+RefactoringTool: src/engine/SCons/SConf.py
+RefactoringTool: src/engine/SCons/SConfTests.py
+RefactoringTool: src/engine/SCons/SConsign.py
+RefactoringTool: src/engine/SCons/Subst.py
+RefactoringTool: src/engine/SCons/SubstTests.py
+RefactoringTool: src/engine/SCons/Taskmaster.py
+RefactoringTool: src/engine/SCons/TaskmasterTests.py
+RefactoringTool: src/engine/SCons/Util.py
+RefactoringTool: src/engine/SCons/UtilTests.py
+RefactoringTool: src/engine/SCons/dblite.py
+RefactoringTool: src/engine/SCons/Node/FSTests.py
+RefactoringTool: src/engine/SCons/Node/NodeTests.py
+RefactoringTool: src/engine/SCons/Node/__init__.py
+RefactoringTool: src/engine/SCons/Scanner/CTests.py
+RefactoringTool: src/engine/SCons/Scanner/Dir.py
+RefactoringTool: src/engine/SCons/Scanner/FortranTests.py
+RefactoringTool: src/engine/SCons/Scanner/IDLTests.py
+RefactoringTool: src/engine/SCons/Scanner/LaTeXTests.py
+RefactoringTool: src/engine/SCons/Scanner/ProgTests.py
+RefactoringTool: src/engine/SCons/Scanner/RCTests.py
+RefactoringTool: src/engine/SCons/Scanner/ScannerTests.py
+RefactoringTool: src/engine/SCons/Script/Main.py
+RefactoringTool: src/engine/SCons/Script/SConscript.py
+RefactoringTool: src/engine/SCons/Tool/javac.py
+RefactoringTool: src/engine/SCons/Tool/msvs.py
+RefactoringTool: src/engine/SCons/Tool/mwcc.py
+RefactoringTool: src/engine/SCons/Variables/__init__.py
+RefactoringTool: src/script/scons-time.py
+RefactoringTool: src/script/sconsign.py
+RefactoringTool: test/Copy-Action.py
+RefactoringTool: test/option--C.py
+RefactoringTool: QMTest/TestCmd.py
+RefactoringTool: QMTest/TestCommon.py
+RefactoringTool: QMTest/TestSCons.py
+RefactoringTool: QMTest/scons_tdb.py
+RefactoringTool: QMTest/unittest.py
+RefactoringTool: bin/Command.py
+RefactoringTool: bin/import-test.py
+RefactoringTool: bin/objcounts.py
+RefactoringTool: bin/scons-diff.py
+RefactoringTool: bin/scons-doc.py
+RefactoringTool: bin/scons-test.py
+RefactoringTool: bin/scons-unzip.py
+RefactoringTool: bin/time-scons.py
+RefactoringTool: bin/xmlagenda.py
+RefactoringTool: bench/bench.py
+RefactoringTool: bench/is_types.py
+RefactoringTool: timings/SCons_Bars.py
+--- SConstruct (original)
++++ SConstruct (refactored)
+@@ -280,8 +280,7 @@
+ 
+ """)
+ 
+-aliases = packaging_flavors + [('doc', 'The SCons documentation.')]
+-aliases.sort()
++aliases = sorted(packaging_flavors + [('doc', 'The SCons documentation.')])
+ 
+ for alias, help_text in aliases:
+     tw = textwrap.TextWrapper(
+--- src/test_interrupts.py (original)
++++ src/test_interrupts.py (refactored)
+@@ -90,7 +90,7 @@
+     contents = open(os.path.join(scons_lib_dir, f)).read()
+     try_except_lines = {}
+     lastend = 0
+-    while 1:
++    while True:
+         match = tryexc_pat.search( contents, lastend )
+         if match is None:
+             break
+--- src/test_pychecker.py (original)
++++ src/test_pychecker.py (refactored)
+@@ -91,9 +91,7 @@
+     except KeyError:
+         pass
+ 
+-files = u.keys()
+-
+-files.sort()
++files = sorted(u.keys())
+ 
+ mismatches = []
+ 
+--- src/engine/SCons/Action.py (original)
++++ src/engine/SCons/Action.py (refactored)
+@@ -704,7 +704,7 @@
+             result = env.subst_list(self.cmd_list, 0, target, source)
+         silent = None
+         ignore = None
+-        while 1:
++        while True:
+             try: c = result[0][0][0]
+             except IndexError: c = None
+             if c == '@': silent = 1
+--- src/engine/SCons/ActionTests.py (original)
++++ src/engine/SCons/ActionTests.py (refactored)
+@@ -542,18 +542,18 @@
+             env = Environment()
+ 
+             def execfunc(target, source, env):
+-                assert type(target) is type([]), type(target)
+-                assert type(source) is type([]), type(source)
++                assert isinstance(target, list), type(target)
++                assert isinstance(source, list), type(source)
+                 return 7
+             a = SCons.Action.Action(execfunc)
+ 
+             def firstfunc(target, source, env):
+-                assert type(target) is type([]), type(target)
+-                assert type(source) is type([]), type(source)
++                assert isinstance(target, list), type(target)
++                assert isinstance(source, list), type(source)
+                 return 0
+             def lastfunc(target, source, env):
+-                assert type(target) is type([]), type(target)
+-                assert type(source) is type([]), type(source)
++                assert isinstance(target, list), type(target)
++                assert isinstance(source, list), type(source)
+                 return 9
+             b = SCons.Action.Action([firstfunc, execfunc, lastfunc])
+             
+--- src/engine/SCons/Conftest.py (original)
++++ src/engine/SCons/Conftest.py (refactored)
+@@ -729,7 +729,7 @@
+         line = "#define %s 1\n" % key_up
+     elif have == 0:
+         line = "/* #undef %s */\n" % key_up
+-    elif type(have) == IntType:
++    elif isinstance(have, IntType):
+         line = "#define %s %d\n" % (key_up, have)
+     else:
+         line = "#define %s %s\n" % (key_up, str(have))
+--- src/engine/SCons/Debug.py (original)
++++ src/engine/SCons/Debug.py (refactored)
+@@ -55,8 +55,7 @@
+ 
+ def string_to_classes(s):
+     if s == '*':
+-        c = tracked_classes.keys()
+-        c.sort()
++        c = sorted(tracked_classes.keys())
+         return c
+     else:
+         return s.split()
+@@ -160,8 +159,7 @@
+ 
+ # print each call tree
+ def dump_caller_counts(file=sys.stdout):
+-    keys = caller_bases.keys()
+-    keys.sort()
++    keys = sorted(caller_bases.keys())
+     for k in keys:
+         file.write("Callers of %s:%d(%s), %d calls:\n"
+                     % (func_shorten(k) + (caller_bases[k],)))
+--- src/engine/SCons/Defaults.py (original)
++++ src/engine/SCons/Defaults.py (refactored)
+@@ -373,7 +373,7 @@
+     if SCons.Util.is_List(defs):
+         l = []
+         for d in defs:
+-            if SCons.Util.is_List(d) or type(d) is types.TupleType:
++            if SCons.Util.is_List(d) or isinstance(d, tuple):
+                 l.append(str(d[0]) + '=' + str(d[1]))
+             else:
+                 l.append(str(d))
+@@ -385,8 +385,7 @@
+         # Consequently, we have to sort the keys to ensure a
+         # consistent order...
+         l = []
+-        keys = defs.keys()
+-        keys.sort()
++        keys = sorted(defs.keys())
+         for k in keys:
+             v = defs[k]
+             if v is None:
+--- src/engine/SCons/Environment.py (original)
++++ src/engine/SCons/Environment.py (refactored)
+@@ -99,7 +99,7 @@
+         return
+     # Filter out null tools from the list.
+     for tool in [_f for _f in tools if _f]:
+-        if SCons.Util.is_List(tool) or type(tool)==type(()):
++        if SCons.Util.is_List(tool) or isinstance(tool, tuple):
+             toolname = tool[0]
+             toolargs = tool[1] # should be a dict of kw args
+             tool = env.Tool(toolname, **toolargs)
+--- src/engine/SCons/EnvironmentTests.py (original)
++++ src/engine/SCons/EnvironmentTests.py (refactored)
+@@ -128,7 +128,7 @@
+ 
+ class CLVar(UserList.UserList):
+     def __init__(self, seq):
+-        if type(seq) == type(''):
++        if isinstance(seq, str):
+             seq = seq.split()
+         UserList.UserList.__init__(self, seq)
+     def __add__(self, other):
+--- src/engine/SCons/Job.py (original)
++++ src/engine/SCons/Job.py (refactored)
+@@ -189,7 +189,7 @@
+         fails to execute (i.e. execute() raises an exception), then the job will
+         stop."""
+         
+-        while 1:
++        while True:
+             task = self.taskmaster.next_task()
+ 
+             if task is None:
+@@ -242,7 +242,7 @@
+             self.start()
+ 
+         def run(self):
+-            while 1:
++            while True:
+                 task = self.requestQueue.get()
+ 
+                 if task is None:
+@@ -376,7 +376,7 @@
+ 
+             jobs = 0
+             
+-            while 1:
++            while True:
+                 # Start up as many available tasks as we're
+                 # allowed to.
+                 while jobs < self.maxjobs:
+@@ -404,7 +404,7 @@
+ 
+                 # Let any/all completed tasks finish up before we go
+                 # back and put the next batch of tasks on the queue.
+-                while 1:
++                while True:
+                     task, ok = self.tp.get()
+                     jobs = jobs - 1
+ 
+--- src/engine/SCons/JobTests.py (original)
++++ src/engine/SCons/JobTests.py (refactored)
+@@ -527,8 +527,8 @@
+     result = runner.run(suite())
+     if (len(result.failures) == 0
+         and len(result.errors) == 1
+-        and type(result.errors[0][0]) == SerialTestCase
+-        and type(result.errors[0][1][0]) == NoThreadsException):
++        and isinstance(result.errors[0][0], SerialTestCase)
++        and isinstance(result.errors[0][1][0], NoThreadsException)):
+         sys.exit(2)
+     elif not result.wasSuccessful():
+         sys.exit(1)
+--- src/engine/SCons/SConf.py (original)
++++ src/engine/SCons/SConf.py (refactored)
+@@ -155,7 +155,7 @@
+             source[0].get_contents().replace( '\n', "\n  |" ) )
+ 
+ # python 2.2 introduces types.BooleanType
+-BooleanTypes = [types.IntType, types.BooleanType]
++BooleanTypes = [int, bool]
+ 
+ class SConfBuildInfo(SCons.Node.FS.FileBuildInfo):
+     """
+@@ -789,7 +789,7 @@
+                 text = "yes"
+             else:
+                 text = "no"
+-        elif type(res) == types.StringType:
++        elif isinstance(res, str):
+             text = res
+         else:
+             raise TypeError, "Expected string, int or bool, got " + str(type(res))
+--- src/engine/SCons/SConfTests.py (original)
++++ src/engine/SCons/SConfTests.py (refactored)
+@@ -61,7 +61,7 @@
+         for n in sys.modules.keys():
+             if n.split('.')[0] == 'SCons' and n[:12] != 'SCons.compat':
+                 m = sys.modules[n]
+-                if type(m) is ModuleType:
++                if isinstance(m, ModuleType):
+                     # if this is really a scons module, clear its namespace
+                     del sys.modules[n]
+                     m.__dict__.clear()
+--- src/engine/SCons/SConsign.py (original)
++++ src/engine/SCons/SConsign.py (refactored)
+@@ -202,7 +202,7 @@
+         else:
+             try:
+                 self.entries = cPickle.loads(rawentries)
+-                if type(self.entries) is not type({}):
++                if not isinstance(self.entries, dict):
+                     self.entries = {}
+                     raise TypeError
+             except KeyboardInterrupt:
+@@ -261,7 +261,7 @@
+             return
+ 
+         self.entries = cPickle.load(fp)
+-        if type(self.entries) is not type({}):
++        if not isinstance(self.entries, dict):
+             self.entries = {}
+             raise TypeError
+ 
+--- src/engine/SCons/Subst.py (original)
++++ src/engine/SCons/Subst.py (refactored)
+@@ -399,7 +399,7 @@
+     handles separating command lines into lists of arguments, so see
+     that function if that's what you're looking for.
+     """
+-    if type(strSubst) == types.StringType and strSubst.find('$') < 0:
++    if isinstance(strSubst, str) and strSubst.find('$') < 0:
+         return strSubst
+ 
+     class StringSubber:
+@@ -870,7 +870,7 @@
+ 
+     We do this with some straightforward, brute-force code here...
+     """
+-    if type(strSubst) == types.StringType and strSubst.find('$') < 0:
++    if isinstance(strSubst, str) and strSubst.find('$') < 0:
+         return strSubst
+ 
+     matchlist = ['$' + key, '${' + key + '}']
+--- src/engine/SCons/SubstTests.py (original)
++++ src/engine/SCons/SubstTests.py (refactored)
+@@ -150,7 +150,7 @@
+     def _defines(defs):
+         l = []
+         for d in defs:
+-            if SCons.Util.is_List(d) or type(d) is types.TupleType:
++            if SCons.Util.is_List(d) or isinstance(d, tuple):
+                 l.append(str(d[0]) + '=' + str(d[1]))
+             else:
+                 l.append(str(d))
+--- src/engine/SCons/Taskmaster.py (original)
++++ src/engine/SCons/Taskmaster.py (refactored)
+@@ -737,7 +737,7 @@
+         T = self.trace
+         if T: T.write('\n' + self.trace_message('Looking for a node to evaluate'))
+ 
+-        while 1:
++        while True:
+             node = self.next_candidate()
+             if node is None:
+                 if T: T.write(self.trace_message('No candidate anymore.') + '\n')
+@@ -952,7 +952,7 @@
+                 T.write(self.trace_message('       removing node %s from the pending children set\n' %
+                         self.trace_node(n)))
+         try:
+-            while 1:
++            while True:
+                 try:
+                     node = to_visit.pop()
+                 except AttributeError:
+--- src/engine/SCons/TaskmasterTests.py (original)
++++ src/engine/SCons/TaskmasterTests.py (refactored)
+@@ -910,7 +910,7 @@
+             assert e.errstr == "OtherError : ", e.errstr
+             assert len(e.exc_info) == 3, e.exc_info
+             exc_traceback = sys.exc_info()[2]
+-            assert type(e.exc_info[2]) == type(exc_traceback), e.exc_info[2]
++            assert isinstance(e.exc_info[2], type(exc_traceback)), e.exc_info[2]
+         else:
+             raise TestFailed, "did not catch expected BuildError"
+ 
+--- src/engine/SCons/Util.py (original)
++++ src/engine/SCons/Util.py (refactored)
+@@ -42,14 +42,14 @@
+ 
+ # Don't "from types import ..." these because we need to get at the
+ # types module later to look for UnicodeType.
+-DictType        = types.DictType
++DictType        = dict
+ InstanceType    = types.InstanceType
+-ListType        = types.ListType
+-StringType      = types.StringType
+-TupleType       = types.TupleType
++ListType        = list
++StringType      = str
++TupleType       = tuple
+ try: unicode
+ except NameError: UnicodeType = None
+-else:             UnicodeType = types.UnicodeType
++else:             UnicodeType = unicode
+ 
+ def dictify(keys, values, result={}):
+     for k, v in zip(keys, values):
+@@ -597,15 +597,15 @@
+         # Doesn't seem like we need to, but we'll comment it just in case.
+         copy[key] = semi_deepcopy(val)
+     return copy
+-d[types.DictionaryType] = _semi_deepcopy_dict
++d[dict] = _semi_deepcopy_dict
+ 
+ def _semi_deepcopy_list(x):
+     return list(map(semi_deepcopy, x))
+-d[types.ListType] = _semi_deepcopy_list
++d[list] = _semi_deepcopy_list
+ 
+ def _semi_deepcopy_tuple(x):
+     return tuple(map(semi_deepcopy, x))
+-d[types.TupleType] = _semi_deepcopy_tuple
++d[tuple] = _semi_deepcopy_tuple
+ 
+ def _semi_deepcopy_inst(x):
+     if hasattr(x, '__semi_deepcopy__'):
+@@ -1222,8 +1222,7 @@
+     # sort functions in all languages or libraries, so this approach
+     # is more effective in Python than it may be elsewhere.
+     try:
+-        t = list(s)
+-        t.sort()
++        t = sorted(s)
+     except TypeError:
+         pass    # move on to the next method
+     else:
+@@ -1293,7 +1292,7 @@
+ 
+     def readline(self):
+         result = []
+-        while 1:
++        while True:
+             line = self.fileobj.readline()
+             if not line:
+                 break
+@@ -1306,7 +1305,7 @@
+ 
+     def readlines(self):
+         result = []
+-        while 1:
++        while True:
+             line = self.readline()
+             if not line:
+                 break
+@@ -1547,7 +1546,7 @@
+         def MD5filesignature(fname, chunksize=65536):
+             m = hashlib.md5()
+             f = open(fname, "rb")
+-            while 1:
++            while True:
+                 blck = f.read(chunksize)
+                 if not blck:
+                     break
+--- src/engine/SCons/UtilTests.py (original)
++++ src/engine/SCons/UtilTests.py (refactored)
+@@ -296,7 +296,7 @@
+                 s3=UserString.UserString(unicode('bar'))
+                 assert to_String(s3) == s3, s3
+                 assert to_String(s3) == unicode('bar'), s3
+-                assert type(to_String(s3)) is types.UnicodeType, \
++                assert isinstance(to_String(s3), unicode), \
+                        type(to_String(s3))
+         except ImportError:
+             pass
+@@ -304,7 +304,7 @@
+         if HasUnicode:
+             s4 = unicode('baz')
+             assert to_String(s4) == unicode('baz'), to_String(s4)
+-            assert type(to_String(s4)) is types.UnicodeType, \
++            assert isinstance(to_String(s4), unicode), \
+                    type(to_String(s4))
+ 
+     def test_WhereIs(self):
+--- src/engine/SCons/dblite.py (original)
++++ src/engine/SCons/dblite.py (refactored)
+@@ -16,10 +16,10 @@
+ try: unicode
+ except NameError:
+     def is_string(s):
+-        return type(s) is types.StringType
++        return isinstance(s, str)
+ else:
+     def is_string(s):
+-        return type(s) in (types.StringType, types.UnicodeType)
++        return type(s) in (str, unicode)
+ 
+ try:
+     unicode('a')
+--- src/engine/SCons/Node/FSTests.py (original)
++++ src/engine/SCons/Node/FSTests.py (refactored)
+@@ -1722,8 +1722,7 @@
+         fs.Dir(os.path.join('ddd', 'd1', 'f4'))
+         fs.Dir(os.path.join('ddd', 'd1', 'f5'))
+         dir.scan()
+-        kids = [x.path for x in dir.children(None)]
+-        kids.sort()
++        kids = sorted([x.path for x in dir.children(None)])
+         assert kids == [os.path.join('ddd', 'd1'),
+                         os.path.join('ddd', 'f1'),
+                         os.path.join('ddd', 'f2'),
+@@ -1768,8 +1767,7 @@
+ 
+         fs.File(os.path.join('ddd', 'f1'))
+         dir.scan()
+-        kids = [x.path for x in dir.children()]
+-        kids.sort()
++        kids = sorted([x.path for x in dir.children()])
+         assert kids == [os.path.join('ddd', 'f1')], kids
+ 
+         fs.File(os.path.join('ddd', 'f2'))
+@@ -2240,8 +2238,7 @@
+         strings_kwargs = copy.copy(kwargs)
+         strings_kwargs['strings'] = True
+         for input, string_expect, node_expect in cases:
+-            r = self.fs.Glob(input, **strings_kwargs)
+-            r.sort()
++            r = sorted(self.fs.Glob(input, **strings_kwargs))
+             assert r == string_expect, "Glob(%s, strings=True) expected %s, got %s" % (input, string_expect, r)
+ 
+         # Now execute all of the cases without string=True and look for
+@@ -2256,13 +2253,12 @@
+                 r.sort(lambda a,b: cmp(a.path, b.path))
+                 result = []
+                 for n in node_expect:
+-                    if type(n) == type(''):
++                    if isinstance(n, str):
+                         n = self.fs.Entry(n)
+                     result.append(n)
+                 fmt = lambda n: "%s %s" % (repr(n), repr(str(n)))
+             else:
+-                r = list(map(str, r))
+-                r.sort()
++                r = sorted(map(str, r))
+                 result = string_expect
+                 fmt = lambda n: n
+             if r != result:
+--- src/engine/SCons/Node/NodeTests.py (original)
++++ src/engine/SCons/Node/NodeTests.py (refactored)
+@@ -50,7 +50,7 @@
+             all.append(curr_a)
+         elif isinstance(curr_a, MyListAction):
+             all.extend(curr_a.list)
+-        elif type(curr_a) == type([]):
++        elif isinstance(curr_a, list):
+             all.extend(curr_a)
+         else:
+             raise 'Cannot Combine Actions'
+--- src/engine/SCons/Node/__init__.py (original)
++++ src/engine/SCons/Node/__init__.py (refactored)
+@@ -136,8 +136,7 @@
+             try:
+                 field_list = self.field_list
+             except AttributeError:
+-                field_list = self.__dict__.keys()
+-                field_list.sort()
++                field_list = sorted(self.__dict__.keys())
+         fields = []
+         for field in field_list:
+             try:
+--- src/engine/SCons/Scanner/CTests.py (original)
++++ src/engine/SCons/Scanner/CTests.py (refactored)
+@@ -190,7 +190,7 @@
+         return [[strSubst]]
+ 
+     def subst_path(self, path, target=None, source=None, conv=None):
+-        if type(path) != type([]):
++        if not isinstance(path, list):
+             path = [path]
+         return list(map(self.subst, path))
+ 
+--- src/engine/SCons/Scanner/Dir.py (original)
++++ src/engine/SCons/Scanner/Dir.py (refactored)
+@@ -101,8 +101,7 @@
+         # mixed Node types (Dirs and Files, for example) has a Dir as
+         # the first entry.
+         return []
+-    entry_list = list(filter(do_not_scan, entries.keys()))
+-    entry_list.sort()
++    entry_list = sorted(filter(do_not_scan, entries.keys()))
+     return [entries[n] for n in entry_list]
+ 
+ # Local Variables:
+--- src/engine/SCons/Scanner/FortranTests.py (original)
++++ src/engine/SCons/Scanner/FortranTests.py (refactored)
+@@ -238,7 +238,7 @@
+         return arg
+ 
+     def subst_path(self, path, target=None, source=None, conv=None):
+-        if type(path) != type([]):
++        if not isinstance(path, list):
+             path = [path]
+         return list(map(self.subst, path))
+ 
+--- src/engine/SCons/Scanner/IDLTests.py (original)
++++ src/engine/SCons/Scanner/IDLTests.py (refactored)
+@@ -203,7 +203,7 @@
+         return arg
+ 
+     def subst_path(self, path, target=None, source=None, conv=None):
+-        if type(path) != type([]):
++        if not isinstance(path, list):
+             path = [path]
+         return list(map(self.subst, path))
+ 
+--- src/engine/SCons/Scanner/LaTeXTests.py (original)
++++ src/engine/SCons/Scanner/LaTeXTests.py (refactored)
+@@ -85,7 +85,7 @@
+         return [[strSubst]]
+ 
+     def subst_path(self, path, target=None, source=None, conv=None):
+-        if type(path) != type([]):
++        if not isinstance(path, list):
+             path = [path]
+         return list(map(self.subst, path))
+ 
+--- src/engine/SCons/Scanner/ProgTests.py (original)
++++ src/engine/SCons/Scanner/ProgTests.py (refactored)
+@@ -78,7 +78,7 @@
+         return s
+ 
+     def subst_path(self, path, target=None, source=None, conv=None):
+-        if type(path) != type([]):
++        if not isinstance(path, list):
+             path = [path]
+         return list(map(self.subst, path))
+ 
+@@ -100,8 +100,7 @@
+         return self.name
+     
+ def deps_match(deps, libs):
+-    deps=list(map(str, deps))
+-    deps.sort()
++    deps=sorted(map(str, deps))
+     libs.sort()
+     return list(map(os.path.normpath, deps)) == list(map(os.path.normpath, libs))
+ 
+--- src/engine/SCons/Scanner/RCTests.py (original)
++++ src/engine/SCons/Scanner/RCTests.py (refactored)
+@@ -86,7 +86,7 @@
+         return strSubst
+ 
+     def subst_path(self, path, target=None, source=None, conv=None):
+-        if type(path) != type([]):
++        if not isinstance(path, list):
+             path = [path]
+         return list(map(self.subst, path))
+ 
+--- src/engine/SCons/Scanner/ScannerTests.py (original)
++++ src/engine/SCons/Scanner/ScannerTests.py (refactored)
+@@ -48,7 +48,7 @@
+             return [self.data[strSubst[1:]]]
+         return [[strSubst]]
+     def subst_path(self, path, target=None, source=None, conv=None):
+-        if type(path) != type([]):
++        if not isinstance(path, list):
+             path = [path]
+         return list(map(self.subst, path))
+     def get_factory(self, factory):
+@@ -134,7 +134,7 @@
+         self.failUnless(self.env == env, "the environment was passed incorrectly")
+         self.failUnless(scanned_strs == deps, "the dependencies were returned incorrectly")
+         for d in scanned:
+-            self.failUnless(type(d) != type(""), "got a string in the dependencies")
++            self.failUnless(not isinstance(d, str), "got a string in the dependencies")
+ 
+         if len(args) > 0:
+             self.failUnless(self.arg == args[0], "the argument was passed incorrectly")
+--- src/engine/SCons/Script/Main.py (original)
++++ src/engine/SCons/Script/Main.py (refactored)
+@@ -316,10 +316,7 @@
+                     display("Removed " + pathstr)
+                 elif os.path.isdir(path) and not os.path.islink(path):
+                     # delete everything in the dir
+-                    entries = os.listdir(path)
+-                    # Sort for deterministic output (os.listdir() Can
+-                    # return entries in a random order).
+-                    entries.sort()
++                    entries = sorted(os.listdir(path))
+                     for e in entries:
+                         p = os.path.join(path, e)
+                         s = os.path.join(pathstr, e)
+@@ -508,8 +505,7 @@
+             for n, c in s:
+                 stats_table[n][i] = c
+             i = i + 1
+-        keys = stats_table.keys()
+-        keys.sort()
++        keys = sorted(stats_table.keys())
+         self.outfp.write("Object counts:\n")
+         pre = ["   "]
+         post = ["   %s\n"]
+@@ -1228,7 +1224,7 @@
+ 
+     options, args = parser.parse_args(all_args, values)
+ 
+-    if type(options.debug) == type([]) and "pdb" in options.debug:
++    if isinstance(options.debug, list) and "pdb" in options.debug:
+         import pdb
+         pdb.Pdb().runcall(_main, parser)
+     elif options.profile_file:
+--- src/engine/SCons/Script/SConscript.py (original)
++++ src/engine/SCons/Script/SConscript.py (refactored)
+@@ -629,7 +629,7 @@
+         import SCons.Script
+         d = SCons.Script.__dict__
+         def not_a_module(m, d=d, mtype=type(SCons.Script)):
+-             return type(d[m]) != mtype
++             return not isinstance(d[m], mtype)
+         for m in filter(not_a_module, dir(SCons.Script)):
+              GlobalDict[m] = d[m]
+ 
+--- src/engine/SCons/Tool/javac.py (original)
++++ src/engine/SCons/Tool/javac.py (refactored)
+@@ -74,10 +74,7 @@
+         elif isinstance(entry, SCons.Node.FS.Dir):
+             result = SCons.Util.OrderedDict()
+             def visit(arg, dirname, names, dirnode=entry.rdir()):
+-                java_files = [n for n in names if _my_normcase(n[-len(js):]) == js]
+-                # The on-disk entries come back in arbitrary order.  Sort
+-                # them so our target and source lists are determinate.
+-                java_files.sort()
++                java_files = sorted([n for n in names if _my_normcase(n[-len(js):]) == js])
+                 mydir = dirnode.Dir(dirname)
+                 java_paths = [mydir.File(f) for f in java_files]
+                 for jp in java_paths:
+--- src/engine/SCons/Tool/msvs.py (original)
++++ src/engine/SCons/Tool/msvs.py (refactored)
+@@ -352,8 +352,7 @@
+ 
+     def PrintHeader(self):
+         # pick a default config
+-        confkeys = self.configs.keys()
+-        confkeys.sort()
++        confkeys = sorted(self.configs.keys())
+ 
+         name = self.name
+         confkey = confkeys[0]
+@@ -373,8 +372,7 @@
+                         '# PROP Scc_LocalPath ""\n\n')
+ 
+         first = 1
+-        confkeys = self.configs.keys()
+-        confkeys.sort()
++        confkeys = sorted(self.configs.keys())
+         for kind in confkeys:
+             outdir = self.configs[kind].outdir
+             buildtarget = self.configs[kind].buildtarget
+@@ -649,8 +647,7 @@
+     def PrintProject(self):
+         self.file.write('\t<Configurations>\n')
+ 
+-        confkeys = self.configs.keys()
+-        confkeys.sort()
++        confkeys = sorted(self.configs.keys())
+         for kind in confkeys:
+             variant = self.configs[kind].variant
+             platform = self.configs[kind].platform
+@@ -1007,8 +1004,7 @@
+         else:
+             self.file.write('\tGlobalSection(SolutionConfiguration) = preSolution\n')
+ 
+-        confkeys = self.configs.keys()
+-        confkeys.sort()
++        confkeys = sorted(self.configs.keys())
+         cnt = 0
+         for name in confkeys:
+             variant = self.configs[name].variant
+--- src/engine/SCons/Tool/mwcc.py (original)
++++ src/engine/SCons/Tool/mwcc.py (refactored)
+@@ -99,7 +99,7 @@
+             product_key = SCons.Util.RegOpenKeyEx(HLM, product)
+ 
+             i = 0
+-            while 1:
++            while True:
+                 name = product + '\\' + SCons.Util.RegEnumKey(product_key, i)
+                 name_key = SCons.Util.RegOpenKeyEx(HLM, name)
+ 
+--- src/engine/SCons/Variables/__init__.py (original)
++++ src/engine/SCons/Variables/__init__.py (refactored)
+@@ -123,7 +123,7 @@
+                     putting it in the environment.
+         """
+ 
+-        if SCons.Util.is_List(key) or type(key) == type(()):
++        if SCons.Util.is_List(key) or isinstance(key, tuple):
+             self._do_add(*key)
+             return
+ 
+--- src/script/scons-time.py (original)
++++ src/script/scons-time.py (refactored)
+@@ -531,8 +531,7 @@
+         """
+         files = []
+         for a in args:
+-            g = glob.glob(a)
+-            g.sort()
++            g = sorted(glob.glob(a))
+             files.extend(g)
+ 
+         if tail:
+@@ -615,8 +614,7 @@
+         """
+         gp = Gnuplotter(self.title, self.key_location)
+ 
+-        indices = results.keys()
+-        indices.sort()
++        indices = sorted(results.keys())
+ 
+         for i in indices:
+             try:
+--- src/script/sconsign.py (original)
++++ src/script/sconsign.py (refactored)
+@@ -282,8 +282,7 @@
+     try:
+         keys = ninfo.field_list + ['_version_id']
+     except AttributeError:
+-        keys = d.keys()
+-        keys.sort()
++        keys = sorted(d.keys())
+     l = []
+     for k in keys:
+         l.append('%s: %s' % (repr(k), repr(d.get(k))))
+@@ -336,8 +335,7 @@
+                     print nodeinfo_string(name, entry.ninfo)
+                 printfield(name, entry.binfo)
+     else:
+-        names = entries.keys()
+-        names.sort()
++        names = sorted(entries.keys())
+         for name in names:
+             entry = entries[name]
+             try:
+@@ -402,8 +400,7 @@
+                 else:
+                     self.printentries(dir, val)
+         else:
+-            keys = db.keys()
+-            keys.sort()
++            keys = sorted(db.keys())
+             for dir in keys:
+                 self.printentries(dir, db[dir])
+ 
+--- test/Copy-Action.py (original)
++++ test/Copy-Action.py (refactored)
+@@ -153,9 +153,9 @@
+ 
+ def must_be_same(f1, f2):
+     global errors
+-    if type(f1) is type([]):
++    if isinstance(f1, list):
+         f1 = os.path.join(*f1)
+-    if type(f2) is type([]):
++    if isinstance(f2, list):
+         f2 = os.path.join(*f2)
+     s1 = os.stat(f1)
+     s2 = os.stat(f2)
+--- test/option--C.py (original)
++++ test/option--C.py (refactored)
+@@ -30,9 +30,9 @@
+ import TestSCons
+ 
+ def match_normcase(lines, matches):
+-    if not type(lines) is types.ListType:
++    if not isinstance(lines, list):
+         lines = lines.split("\n")
+-    if not type(matches) is types.ListType:
++    if not isinstance(matches, list):
+         matches = matches.split("\n")
+     if len(lines) != len(matches):
+         return
+--- QMTest/TestCmd.py (original)
++++ QMTest/TestCmd.py (refactored)
+@@ -250,7 +250,7 @@
+     __all__.append('simple_diff')
+ 
+ def is_List(e):
+-    return type(e) is types.ListType \
++    return isinstance(e, list) \
+         or isinstance(e, UserList.UserList)
+ 
+ try:
+@@ -259,14 +259,14 @@
+     class UserString:
+         pass
+ 
+-try: types.UnicodeType
++try: unicode
+ except NameError:
+     def is_String(e):
+-        return type(e) is types.StringType or isinstance(e, UserString)
++        return isinstance(e, str) or isinstance(e, UserString)
+ else:
+     def is_String(e):
+-        return type(e) is types.StringType \
+-            or type(e) is types.UnicodeType \
++        return isinstance(e, str) \
++            or isinstance(e, unicode) \
+             or isinstance(e, UserString)
+ 
+ tempfile.template = 'testcmd.'
+@@ -441,9 +441,9 @@
+ def match_re_dotall(lines = None, res = None):
+     """
+     """
+-    if not type(lines) is type(""):
++    if not isinstance(lines, str):
+         lines = "\n".join(lines)
+-    if not type(res) is type(""):
++    if not isinstance(res, str):
+         res = "\n".join(res)
+     s = "^" + res + "$"
+     try:
+@@ -998,21 +998,21 @@
+                            interpreter = None,
+                            arguments = None):
+         if program:
+-            if type(program) == type('') and not os.path.isabs(program):
++            if isinstance(program, str) and not os.path.isabs(program):
+                 program = os.path.join(self._cwd, program)
+         else:
+             program = self.program
+             if not interpreter:
+                 interpreter = self.interpreter
+-        if not type(program) in [type([]), type(())]:
++        if not type(program) in [list, tuple]:
+             program = [program]
+         cmd = list(program)
+         if interpreter:
+-            if not type(interpreter) in [type([]), type(())]:
++            if not type(interpreter) in [list, tuple]:
+                 interpreter = [interpreter]
+             cmd = list(interpreter) + cmd
+         if arguments:
+-            if type(arguments) == type(''):
++            if isinstance(arguments, str):
+                 arguments = arguments.split()
+             cmd.extend(arguments)
+         return cmd
+--- QMTest/TestCommon.py (original)
++++ QMTest/TestCommon.py (refactored)
+@@ -172,7 +172,7 @@
+     dll_suffix   = '.so'
+ 
+ def is_List(e):
+-    return type(e) is types.ListType \
++    return isinstance(e, list) \
+         or isinstance(e, UserList.UserList)
+ 
+ def is_writable(f):
+--- QMTest/TestSCons.py (original)
++++ QMTest/TestSCons.py (refactored)
+@@ -515,8 +515,7 @@
+         import glob
+         result = []
+         for p in patterns:
+-            paths = glob.glob(p)
+-            paths.sort()
++            paths = sorted(glob.glob(p))
+             result.extend(paths)
+         return result
+ 
+@@ -770,7 +769,7 @@
+         self.QT_LIB_DIR = self.workpath(dir, 'lib')
+ 
+     def Qt_create_SConstruct(self, place):
+-        if type(place) is type([]):
++        if isinstance(place, list):
+             place = test.workpath(*place)
+         self.write(place, """\
+ if ARGUMENTS.get('noqtdir', 0): QTDIR=None
+--- QMTest/scons_tdb.py (original)
++++ QMTest/scons_tdb.py (refactored)
+@@ -397,8 +397,7 @@
+         self._outcomes[test_id] = exit_status
+     def Summarize(self):
+         self.file.write('test_result = [\n')
+-        file_names = self._outcomes.keys()
+-        file_names.sort()
++        file_names = sorted(self._outcomes.keys())
+         for file_name in file_names:
+             exit_status = self._outcomes[file_name]
+             file_name = file_name.replace('\\', '/')
+--- QMTest/unittest.py (original)
++++ QMTest/unittest.py (refactored)
+@@ -633,7 +633,7 @@
+ """
+     def __init__(self, module='__main__', defaultTest=None,
+                  argv=None, testRunner=None):
+-        if type(module) == type(''):
++        if isinstance(module, str):
+             self.module = __import__(module)
+             for part in module.split('.')[1:]:
+                 self.module = getattr(self.module, part)
+--- bin/Command.py (original)
++++ bin/Command.py (refactored)
+@@ -44,7 +44,7 @@
+         return string
+ 
+     def do_display(self, string):
+-        if type(string) == type(()):
++        if isinstance(string, tuple):
+             func = string[0]
+             args = string[1:]
+             s = '%s(%s)' % (func.__name__, ', '.join(map(repr, args)))
+@@ -59,14 +59,14 @@
+         pass
+ 
+     def do_execute(self, command):
+-        if type(command) == type(''):
++        if isinstance(command, str):
+             command = self.subst(command)
+             cmdargs = shlex.split(command)
+             if cmdargs[0] == 'cd':
+                  command = (os.chdir,) + tuple(cmdargs[1:])
+             elif cmdargs[0] == 'mkdir':
+                  command = (os.mkdir,) + tuple(cmdargs[1:])
+-        if type(command) == type(()):
++        if isinstance(command, tuple):
+             func = command[0]
+             args = command[1:]
+             return func(*args)
+--- bin/import-test.py (original)
++++ bin/import-test.py (refactored)
+@@ -41,8 +41,7 @@
+         self.entries = {}
+     def call_for_each_entry(self, func):
+         entries = self.entries
+-        names = entries.keys()
+-        names.sort()
++        names = sorted(entries.keys())
+         for name in names:
+             func(name, entries[name])
+ 
+--- bin/objcounts.py (original)
++++ bin/objcounts.py (refactored)
+@@ -86,8 +86,7 @@
+           diffstr(c1[3], c2[3]) + \
+           ' ' + classname
+ 
+-keys = common.keys()
+-keys.sort()
++keys = sorted(common.keys())
+ for k in keys:
+     c = common[k]
+     printline(c[0], c[1], k)
+--- bin/scons-diff.py (original)
++++ bin/scons-diff.py (refactored)
+@@ -173,8 +173,7 @@
+         u[l] = 1
+     for r in rlist:
+         u[r] = 1
+-    clist = [ x for x in u.keys() if x[-4:] != '.pyc' ]
+-    clist.sort()
++    clist = sorted([ x for x in u.keys() if x[-4:] != '.pyc' ])
+     for x in clist:
+         if x in llist:
+             if x in rlist:
+--- bin/scons-doc.py (original)
++++ bin/scons-doc.py (refactored)
+@@ -478,8 +478,7 @@
+ def command_ls(args, c, test, dict):
+     def ls(a):
+         files = os.listdir(a)
+-        files = [x for x in files if x[0] != '.']
+-        files.sort()
++        files = sorted([x for x in files if x[0] != '.'])
+         return ['  '.join(files)]
+     if args:
+         l = []
+--- bin/scons-test.py (original)
++++ bin/scons-test.py (refactored)
+@@ -82,7 +82,7 @@
+ 
+ def outname(n, outdir=outdir):
+     l = []
+-    while 1:
++    while True:
+         n, tail = os.path.split(n)
+         if not n:
+             break
+@@ -205,8 +205,7 @@
+ 
+     print "  <environment>"
+     #keys = os.environ.keys()
+-    keys = environ_keys
+-    keys.sort()
++    keys = sorted(environ_keys)
+     for key in keys:
+         value = os.environ.get(key)
+         if value:
+--- bin/scons-unzip.py (original)
++++ bin/scons-unzip.py (refactored)
+@@ -45,7 +45,7 @@
+ 
+ def outname(n, outdir=outdir):
+     l = []
+-    while 1:
++    while True:
+         n, tail = os.path.split(n)
+         if not n:
+             break
+--- bin/time-scons.py (original)
++++ bin/time-scons.py (refactored)
+@@ -81,11 +81,11 @@
+     def display(self, command, stdout=None, stderr=None):
+         if not self.verbose:
+             return
+-        if type(command) == type(()):
++        if isinstance(command, tuple):
+             func = command[0]
+             args = command[1:]
+             s = '%s(%s)' % (func.__name__, ', '.join(map(repr, args)))
+-        if type(command) == type([]):
++        if isinstance(command, list):
+             # TODO:    quote arguments containing spaces
+             # TODO:    handle meta characters?
+             s = ' '.join(command)
+@@ -102,12 +102,12 @@
+         """
+         if not self.active:
+             return 0
+-        if type(command) == type(''):
++        if isinstance(command, str):
+             command = self.subst(command)
+             cmdargs = shlex.split(command)
+             if cmdargs[0] == 'cd':
+                  command = (os.chdir,) + tuple(cmdargs[1:])
+-        if type(command) == type(()):
++        if isinstance(command, tuple):
+             func = command[0]
+             args = command[1:]
+             return func(*args)
+--- bin/xmlagenda.py (original)
++++ bin/xmlagenda.py (refactored)
+@@ -17,8 +17,7 @@
+ 
+ # The team members
+ # FIXME: These names really should be external to this script
+-team = 'Steven Gary Greg Ken Jim David Bill Sergey Jason'.split()
+-team.sort()
++team = sorted('Steven Gary Greg Ken Jim David Bill Sergey Jason'.split())
+ 
+ # The elements to be picked out of the issue
+ PickList = [
+--- bench/bench.py (original)
++++ bench/bench.py (refactored)
+@@ -94,10 +94,9 @@
+ try:
+     FunctionList
+ except NameError:
+-    function_names = [x for x in locals().keys() if x[:4] == FunctionPrefix]
+-    function_names.sort()
++    function_names = sorted([x for x in locals().keys() if x[:4] == FunctionPrefix])
+     l = [locals()[f] for f in function_names]
+-    FunctionList = [f for f in l if type(f) == types.FunctionType]
++    FunctionList = [f for f in l if isinstance(f, types.FunctionType)]
+ 
+ IterationList = [None] * Iterations
+ 
+--- bench/is_types.py (original)
++++ bench/is_types.py (refactored)
+@@ -15,7 +15,7 @@
+     # and modified slightly for use with SCons.
+     class UserString:
+         def __init__(self, seq):
+-            if type(seq) == type(''):
++            if isinstance(seq, str):
+                 self.data = seq
+             elif isinstance(seq, UserString):
+                 self.data = seq.data[:]
+@@ -60,14 +60,14 @@
+         __rmul__ = __mul__
+ 
+ InstanceType = types.InstanceType
+-DictType = types.DictType
+-ListType = types.ListType
+-StringType = types.StringType
++DictType = dict
++ListType = list
++StringType = str
+ try: unicode
+ except NameError:
+     UnicodeType = None
+ else:
+-    UnicodeType = types.UnicodeType
++    UnicodeType = unicode
+ 
+ 
+ # The original implementations, pretty straightforward checks for the
+@@ -75,19 +75,19 @@
+ # User* type.
+ 
+ def original_is_Dict(e):
+-    return type(e) is types.DictType or isinstance(e, UserDict)
++    return isinstance(e, dict) or isinstance(e, UserDict)
+ 
+ def original_is_List(e):
+-    return type(e) is types.ListType or isinstance(e, UserList)
++    return isinstance(e, list) or isinstance(e, UserList)
+ 
+ if UnicodeType is not None:
+     def original_is_String(e):
+-        return type(e) is types.StringType \
+-            or type(e) is types.UnicodeType \
++        return isinstance(e, str) \
++            or isinstance(e, unicode) \
+             or isinstance(e, UserString)
+ else:
+     def original_is_String(e):
+-        return type(e) is types.StringType or isinstance(e, UserString)
++        return isinstance(e, str) or isinstance(e, UserString)
+ 
+ 
+ 
+@@ -96,22 +96,22 @@
+ # type.
+ 
+ def checkInstanceType_is_Dict(e):
+-    return type(e) is types.DictType or \
+-           (type(e) is types.InstanceType and isinstance(e, UserDict))
++    return isinstance(e, dict) or \
++           (isinstance(e, types.InstanceType) and isinstance(e, UserDict))
+ 
+ def checkInstanceType_is_List(e):
+-    return type(e) is types.ListType \
+-        or (type(e) is types.InstanceType and isinstance(e, UserList))
++    return isinstance(e, list) \
++        or (isinstance(e, types.InstanceType) and isinstance(e, UserList))
+ 
+ if UnicodeType is not None:
+     def checkInstanceType_is_String(e):
+-        return type(e) is types.StringType \
+-            or type(e) is types.UnicodeType \
+-            or (type(e) is types.InstanceType and isinstance(e, UserString))
++        return isinstance(e, str) \
++            or isinstance(e, unicode) \
++            or (isinstance(e, types.InstanceType) and isinstance(e, UserString))
+ else:
+     def checkInstanceType_is_String(e):
+-        return type(e) is types.StringType \
+-            or (type(e) is types.InstanceType and isinstance(e, UserString))
++        return isinstance(e, str) \
++            or (isinstance(e, types.InstanceType) and isinstance(e, UserString))
+ 
+ 
+ 
+@@ -120,24 +120,24 @@
+ 
+ def cache_type_e_is_Dict(e):
+     t = type(e)
+-    return t is types.DictType or \
++    return t is dict or \
+            (t is types.InstanceType and isinstance(e, UserDict))
+ 
+ def cache_type_e_is_List(e):
+     t = type(e)
+-    return t is types.ListType \
++    return t is list \
+         or (t is types.InstanceType and isinstance(e, UserList))
+ 
+ if UnicodeType is not None:
+     def cache_type_e_is_String(e):
+         t = type(e)
+-        return t is types.StringType \
+-            or t is types.UnicodeType \
++        return t is str \
++            or t is unicode \
+             or (t is types.InstanceType and isinstance(e, UserString))
+ else:
+     def cache_type_e_is_String(e):
+         t = type(e)
+-        return t is types.StringType \
++        return t is str \
+             or (t is types.InstanceType and isinstance(e, UserString))
+ 
+ 
+@@ -174,9 +174,9 @@
+ # to their corresponding underlying types.
+ 
+ instanceTypeMap = {
+-    UserDict : types.DictType,
+-    UserList : types.ListType,
+-    UserString : types.StringType,
++    UserDict : dict,
++    UserList : list,
++    UserString : str,
+ }
+ 
+ if UnicodeType is not None:
+@@ -184,8 +184,8 @@
+         t = type(obj)
+         if t is types.InstanceType:
+             t = instanceTypeMap.get(obj.__class__, t)
+-        elif t is types.UnicodeType:
+-            t = types.StringType
++        elif t is unicode:
++            t = str
+         return t
+ else:
+     def myType(obj):
+@@ -195,13 +195,13 @@
+         return t
+ 
+ def myType_is_Dict(e):
+-    return myType(e) is types.DictType
++    return myType(e) is dict
+ 
+ def myType_is_List(e):
+-    return myType(e) is types.ListType
++    return myType(e) is list
+ 
+ def myType_is_String(e):
+-    return myType(e) is types.StringType
++    return myType(e) is str
+ 
+ 
+ 
+--- timings/SCons_Bars.py (original)
++++ timings/SCons_Bars.py (refactored)
+@@ -42,8 +42,7 @@
+         if color is None:
+             color = self.color
+         if revs is None:
+-            revs = self.keys()
+-            revs.sort()
++            revs = sorted(self.keys())
+         if labels:
+             result = [ (r, color, None, self[r]) for r in revs ]
+         else:
