@@ -1,0 +1,73 @@
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+--- src/engine/SCons/Script/Main.py	(revision 4037)
++++ src/engine/SCons/Script/Main.py	(working copy)
+@@ -329,38 +329,44 @@
+         except (IOError, OSError), e:
+             print "scons: Could not remove '%s':" % pathstr, e.strerror
+ 
+-    def show(self):
++    def _get_files_to_clean(self):
++        result = []
+         target = self.targets[0]
+-        if (target.has_builder() or target.side_effect) and not target.noclean:
++        if target.has_builder() or target.side_effect:
+             for t in self.targets:
+-                if not t.isdir():
+-                    display("Removed " + str(t))
+-        if SCons.Environment.CleanTargets.has_key(target):
+-            files = SCons.Environment.CleanTargets[target]
+-            for f in files:
+-                self.fs_delete(f.abspath, str(f), 0)
++                if not t.noclean:
++                    result.append(t)
++        return result
+ 
+-    def remove(self):
++    def _clean_targets(self, remove):
+         target = self.targets[0]
+-        if (target.has_builder() or target.side_effect) and not target.noclean:
+-            for t in self.targets:
+-                try:
+-                    removed = t.remove()
+-                except OSError, e:
+-                    # An OSError may indicate something like a permissions
+-                    # issue, an IOError would indicate something like
+-                    # the file not existing.  In either case, print a
+-                    # message and keep going to try to remove as many
+-                    # targets aa possible.
+-                    print "scons: Could not remove '%s':" % str(t), e.strerror
+-                else:
+-                    if removed:
+-                        display("Removed " + str(t))
+         if SCons.Environment.CleanTargets.has_key(target):
+             files = SCons.Environment.CleanTargets[target]
+             for f in files:
+-                self.fs_delete(f.abspath, str(f))
++                self.fs_delete(f.abspath, str(f), remove)
+ 
++    def show(self):
++        for t in self._get_files_to_clean():
++            if not t.isdir():
++                display("Removed " + str(t))
++        self._clean_targets(0)
++
++    def remove(self):
++        for t in self._get_files_to_clean():
++            try:
++                removed = t.remove()
++            except OSError, e:
++                # An OSError may indicate something like a permissions
++                # issue, an IOError would indicate something like
++                # the file not existing.  In either case, print a
++                # message and keep going to try to remove as many
++                # targets aa possible.
++                print "scons: Could not remove '%s':" % str(t), e.strerror
++            else:
++                if removed:
++                    display("Removed " + str(t))
++        self._clean_targets(1)
++
+     execute = remove
+ 
+     # We want the Taskmaster to update the Node states (and therefore
