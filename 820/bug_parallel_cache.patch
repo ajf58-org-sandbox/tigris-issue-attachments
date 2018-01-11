@@ -1,0 +1,20 @@
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+--- src/engine/SCons/Taskmaster.py	(revision 5188)
++++ src/engine/SCons/Taskmaster.py	(working copy)
+@@ -221,14 +221,7 @@
+         try:
+             everything_was_cached = 1
+             for t in self.targets:
+-                if t.retrieve_from_cache():
+-                    # Call the .built() method without calling the
+-                    # .push_to_cache() method, since we just got the
+-                    # target from the cache and don't need to push
+-                    # it back there.
+-                    t.set_state(NODE_EXECUTED)
+-                    t.built()
+-                else:
++                if not t.retrieve_from_cache():
+                     everything_was_cached = 0
+                     break
+             if not everything_was_cached:
