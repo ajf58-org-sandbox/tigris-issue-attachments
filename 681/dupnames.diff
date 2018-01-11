@@ -1,0 +1,168 @@
+Index: test/TEX/dup_names.py
+===================================================================
+--- test/TEX/dup_names.py	(revision 0)
++++ test/TEX/dup_names.py	(revision 0)
+@@ -0,0 +1,76 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test whether duplicate base names are handled correctly. Basically there 
++is a directory and a file in the same location with the same basename 
++(foo/ and foo.tex). This test verifies \include{foo} includes foo.tex 
++and not the directory.
++
++Test configuration courtesy Lennart Sauerbeck.
++"""
++
++import TestSCons
++
++test = TestSCons.TestSCons()
++
++pdflatex = test.where_is('pdflatex')
++
++if not pdflatex:
++    test.skip_test("Could not find pdflatex; skipping test(s).\n")
++
++test.subdir(['foo'])
++
++test.write('SConstruct', """\
++import os
++env = Environment(tools = ['pdflatex'],
++                  ENV = {'PATH' : os.environ['PATH']})
++pdf = env.PDF( "base.ltx" )
++""")
++
++test.write('base.ltx', r"""
++\documentclass{article}
++
++\begin{document}
++\input{foo}
++\end{document}
++""")
++
++test.write('foo.tex', r"""
++Yes, this is a valid document.
++""")
++
++test.run(arguments = '.', stderr=None)
++
++test.must_exist(test.workpath('base.aux'))
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: src/engine/SCons/Tool/tex.py
+===================================================================
+--- src/engine/SCons/Tool/tex.py	(revision 4640)
++++ src/engine/SCons/Tool/tex.py	(working copy)
+@@ -146,7 +146,7 @@
+         testName = os.path.join(path,name)
+         if Verbose:
+             print " look for '%s'" % testName
+-        if os.path.exists(testName):
++        if os.path.exists(testName) and os.path.isfile(testName):
+             if Verbose:
+                 print " found '%s'" % testName
+             return env.fs.File(testName)
+@@ -161,7 +161,7 @@
+                 if Verbose:
+                     print " look for '%s'" % testNameExt
+ 
+-                if os.path.exists(testNameExt):
++                if os.path.exists(testNameExt) and os.path.isfile(testNameExt):
+                     if Verbose:
+                         print " found '%s'" % testNameExt
+                     return env.fs.File(testNameExt)
+@@ -268,7 +268,7 @@
+         # Read the log file to find warnings/errors
+         logfilename = targetbase + '.log'
+         logContent = ''
+-        if os.path.exists(logfilename):
++        if os.path.exists(logfilename) and os.path.isfile(logfilename):
+             logContent = open(logfilename, "rb").read()
+ 
+ 
+@@ -276,7 +276,7 @@
+         flsfilename = targetbase + '.fls'
+         flsContent = ''
+         auxfiles = []
+-        if os.path.exists(flsfilename):
++        if os.path.exists(flsfilename) and os.path.isfile(flsfilename):
+             flsContent = open(flsfilename, "rb").read()
+             auxfiles = openout_aux_re.findall(flsContent)
+         if Verbose:
+@@ -290,7 +290,7 @@
+         if count == 1:
+             for auxfilename in auxfiles:
+                 target_aux = os.path.join(targetdir, auxfilename)
+-                if os.path.exists(target_aux):
++                if os.path.exists(target_aux) and os.path.isfile(target_aux):
+                     content = open(target_aux, "rb").read()
+                     if string.find(content, "bibdata") != -1:
+                         if Verbose:
+@@ -375,8 +375,10 @@
+ # end of while loop
+ 
+     # rename Latex's output to what the target name is
+-    if not (str(target[0]) == resultfilename  and  os.path.exists(resultfilename)):
+-        if os.path.exists(resultfilename):
++    if not (str(target[0]) == resultfilename  and  
++            os.path.exists(resultfilename) and 
++            os.path.isfile(resultfilename)):
++        if os.path.exists(resultfilename) and os.path.isfile(resultfilename):
+             print "move %s to %s" % (resultfilename, str(target[0]), )
+             shutil.move(resultfilename,str(target[0]))
+ 
+@@ -598,10 +600,11 @@
+ 
+     content = source[0].get_text_contents()
+ 
+-    idx_exists = os.path.exists(targetbase + '.idx')
+-    nlo_exists = os.path.exists(targetbase + '.nlo')
+-    glo_exists = os.path.exists(targetbase + '.glo')
+-    acr_exists = os.path.exists(targetbase + '.acn')
++    # These never got used. Fix them anyway
++    #idx_exists = os.path.exists(targetbase + '.idx') and os.path.isfile(targetbase + '.idx')
++    #nlo_exists = os.path.exists(targetbase + '.nlo') and os.path.isfile(targetbase + '.nlo')
++    #glo_exists = os.path.exists(targetbase + '.glo') and os.path.isfile(targetbase + '.glo')
++    #acr_exists = os.path.exists(targetbase + '.acn') and os.path.isfile(targetbase + '.acn')
+ 
+     # set up list with the regular expressions
+     # we use to find features used
+@@ -680,7 +683,7 @@
+         env.Clean(target[0],aFile_base + '.aux')
+     # read fls file to get all other files that latex creates and will read on the next pass
+     # remove files from list that we explicitly dealt with above
+-    if os.path.exists(flsfilename):
++    if os.path.exists(flsfilename) and os.path.isfile(flsfilename):
+         content = open(flsfilename, "rb").read()
+         out_files = openout_re.findall(content)
+         myfiles = [auxfilename, logfilename, flsfilename, targetbase+'.dvi',targetbase+'.pdf']
