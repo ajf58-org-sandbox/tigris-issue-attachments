@@ -1,0 +1,28 @@
+*** SCons/Platform/__init__.py.orig	2011-07-28 14:36:28.318131880 +0200
+--- SCons/Platform/__init__.py	2011-07-28 14:37:16.038378082 +0200
+***************
+*** 204,210 ****
+          if not prefix:
+              prefix = '@'
+  
+!         args = list(map(SCons.Subst.quote_spaces, cmd[1:]))
+          os.write(fd, " ".join(args) + "\n")
+          os.close(fd)
+          # XXX Using the SCons.Action.print_actions value directly
+--- 204,219 ----
+          if not prefix:
+              prefix = '@'
+  
+!         def quote_spaces(arg):
+!             """Generic function for putting double quotes around any string
+!             that has white space or double-quote in it, and put backspaces
+!             before '\' and '"' """
+!             if ' ' in arg or '\t' in arg:
+!                  return ('"%s"' % str(arg).replace('\\', '\\\\').replace('"', '\\"'))
+!             else:
+!                 return str(arg)
+! 
+!         args = list(map(quote_spaces, cmd[1:]))
+          os.write(fd, " ".join(args) + "\n")
+          os.close(fd)
+          # XXX Using the SCons.Action.print_actions value directly
