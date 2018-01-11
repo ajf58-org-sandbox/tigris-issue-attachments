@@ -1,0 +1,477 @@
+Index: test/NodeOps.py
+===================================================================
+*** test/NodeOps.py	(revision 4786)
+--- test/NodeOps.py	(working copy)
+***************
+*** 70,76 ****
+    real1 = [os.path.exists(str(N)) for N in Nodes]
+    exists = [N.exists() for N in Nodes]
+    real2 = [os.path.exists(str(N)) for N in Nodes]
+!   for N,D,R,E,F in map(None, Nodes, derived, real1, exists, real2):
+      print '%%s: %%s %%s %%s %%s'%%(N,D,R,E,F)
+  foo.SharedLibrary(target = 'foo', source = 'foo%(_obj)s')
+  bar.SharedLibrary(target = 'bar', source = 'bar%(_obj)s')
+--- 70,76 ----
+    real1 = [os.path.exists(str(N)) for N in Nodes]
+    exists = [N.exists() for N in Nodes]
+    real2 = [os.path.exists(str(N)) for N in Nodes]
+!   for N,D,R,E,F in zip(Nodes, derived, real1, exists, real2):
+      print '%%s: %%s %%s %%s %%s'%%(N,D,R,E,F)
+  foo.SharedLibrary(target = 'foo', source = 'foo%(_obj)s')
+  bar.SharedLibrary(target = 'bar', source = 'bar%(_obj)s')
+Index: test/exitfns.py
+===================================================================
+*** test/exitfns.py	(revision 4786)
+--- test/exitfns.py	(working copy)
+***************
+*** 34,42 ****
+  def x1():
+      print "running x1"
+  def x2(n):
+!     print "running x2(%s)" % `n`
+  def x3(n, kwd=None):
+!     print "running x3(%s, kwd=%s)" % (`n`, `kwd`)
+  
+  register(x3, "no kwd args")
+  register(x1)
+--- 34,42 ----
+  def x1():
+      print "running x1"
+  def x2(n):
+!     print "running x2(%s)" % repr(n)
+  def x3(n, kwd=None):
+!     print "running x3(%s, kwd=%s)" % (repr(n), repr(kwd))
+  
+  register(x3, "no kwd args")
+  register(x1)
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+*** src/engine/SCons/Node/FS.py	(revision 4786)
+--- src/engine/SCons/Node/FS.py	(working copy)
+***************
+*** 1960,1967 ****
+              if strings:
+                  r = [os.path.join(str(dir), x) for x in r]
+              result.extend(r)
+!         result.sort(lambda a, b: cmp(str(a), str(b)))
+!         return result
+  
+      def _glob1(self, pattern, ondisk=True, source=False, strings=False):
+          """
+--- 1960,1966 ----
+              if strings:
+                  r = [os.path.join(str(dir), x) for x in r]
+              result.extend(r)
+!         return sorted(result, key=lambda a: str(a))
+  
+      def _glob1(self, pattern, ondisk=True, source=False, strings=False):
+          """
+Index: src/engine/SCons/Node/FSTests.py
+===================================================================
+*** src/engine/SCons/Node/FSTests.py	(revision 4786)
+--- src/engine/SCons/Node/FSTests.py	(working copy)
+***************
+*** 2251,2257 ****
+          for input, string_expect, node_expect in cases:
+              r = self.fs.Glob(input, **kwargs)
+              if node_expect:
+!                 r.sort(lambda a,b: cmp(a.path, b.path))
+                  result = []
+                  for n in node_expect:
+                      if isinstance(n, str):
+--- 2251,2257 ----
+          for input, string_expect, node_expect in cases:
+              r = self.fs.Glob(input, **kwargs)
+              if node_expect:
+!                 r = sorted(r, key=lambda a: a.path)
+                  result = []
+                  for n in node_expect:
+                      if isinstance(n, str):
+Index: src/engine/SCons/Script/Main.py
+===================================================================
+*** src/engine/SCons/Script/Main.py	(revision 4786)
+--- src/engine/SCons/Script/Main.py	(working copy)
+***************
+*** 528,534 ****
+          self.stats.append(SCons.Debug.memory())
+      def do_print(self):
+          fmt = 'Memory %-32s %12d\n'
+!         for label, stats in map(None, self.labels, self.stats):
+              self.outfp.write(fmt % (label, stats))
+  
+  memory_stats = MemStats()
+--- 528,534 ----
+          self.stats.append(SCons.Debug.memory())
+      def do_print(self):
+          fmt = 'Memory %-32s %12d\n'
+!         for label, stats in zip(self.labels, self.stats):
+              self.outfp.write(fmt % (label, stats))
+  
+  memory_stats = MemStats()
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+*** src/engine/SCons/Taskmaster.py	(revision 4786)
+--- src/engine/SCons/Taskmaster.py	(working copy)
+***************
+*** 107,114 ****
+        "%(build)3d "
+  
+  def dump_stats():
+!     StatsNodes.sort(lambda a, b: cmp(str(a), str(b)))
+!     for n in StatsNodes:
+          print (fmt % n.stats.__dict__) + str(n)
+  
+  
+--- 107,113 ----
+        "%(build)3d "
+  
+  def dump_stats():
+!     for n in sorted(StatsNodes, key=lambda a: str(a)):
+          print (fmt % n.stats.__dict__) + str(n)
+  
+  
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+*** src/engine/SCons/EnvironmentTests.py	(revision 4786)
+--- src/engine/SCons/EnvironmentTests.py	(working copy)
+***************
+*** 25,37 ****
+  
+  import SCons.compat
+  
+- import collections
+  import copy
+  import io
+  import os
+  import sys
+  import TestCmd
+  import unittest
+  
+  from SCons.Environment import *
+  import SCons.Warnings
+--- 25,37 ----
+  
+  import SCons.compat
+  
+  import copy
+  import io
+  import os
+  import sys
+  import TestCmd
+  import unittest
++ from collections import UserDict as UD, UserList as UL
+  
+  from SCons.Environment import *
+  import SCons.Warnings
+***************
+*** 126,140 ****
+  
+  
+  
+! class CLVar(collections.UserList):
+      def __init__(self, seq):
+          if isinstance(seq, str):
+              seq = seq.split()
+!         collections.UserList.__init__(self, seq)
+      def __add__(self, other):
+!         return collections.UserList.__add__(self, CLVar(other))
+      def __radd__(self, other):
+!         return collections.UserList.__radd__(self, CLVar(other))
+      def __coerce__(self, other):
+          return (self, CLVar(other))
+  
+--- 126,140 ----
+  
+  
+  
+! class CLVar(UL):
+      def __init__(self, seq):
+          if isinstance(seq, str):
+              seq = seq.split()
+!         UL.__init__(self, seq)
+      def __add__(self, other):
+!         return UL.__add__(self, CLVar(other))
+      def __radd__(self, other):
+!         return UL.__radd__(self, CLVar(other))
+      def __coerce__(self, other):
+          return (self, CLVar(other))
+  
+***************
+*** 1479,1489 ****
+          b2 = Environment()['BUILDERS']
+          assert b1 == b2, diff_dict(b1, b2)
+  
+-         import UserDict
+-         UD = collections.UserDict
+-         import UserList
+-         UL = collections.UserList
+- 
+          cases = [
+              'a1',       'A1',           'a1A1',
+              'a2',       ['A2'],         ['a2', 'A2'],
+--- 1479,1484 ----
+***************
+*** 2151,2161 ****
+      def test_Prepend(self):
+          """Test prepending to construction variables in an Environment
+          """
+-         import UserDict
+-         UD = collections.UserDict
+-         import UserList
+-         UL = collections.UserList
+- 
+          cases = [
+              'a1',       'A1',           'A1a1',
+              'a2',       ['A2'],         ['A2', 'a2'],
+--- 2146,2151 ----
+Index: src/engine/SCons/compat/_scons_builtins.py
+===================================================================
+*** src/engine/SCons/compat/_scons_builtins.py	(revision 4786)
+--- src/engine/SCons/compat/_scons_builtins.py	(working copy)
+***************
+*** 127,133 ****
+      # Pre-2.2 Python has no False keyword.
+      builtins.False = not 1
+      # Assign to False in this module namespace so it shows up in pydoc output.
+!     False = False
+  
+  try:
+      True
+--- 127,133 ----
+      # Pre-2.2 Python has no False keyword.
+      builtins.False = not 1
+      # Assign to False in this module namespace so it shows up in pydoc output.
+!     #False = False
+  
+  try:
+      True
+***************
+*** 135,141 ****
+      # Pre-2.2 Python has no True keyword.
+      builtins.True = not 0
+      # Assign to True in this module namespace so it shows up in pydoc output.
+!     True = True
+  
+  try:
+      file
+--- 135,141 ----
+      # Pre-2.2 Python has no True keyword.
+      builtins.True = not 0
+      # Assign to True in this module namespace so it shows up in pydoc output.
+!     #True = True
+  
+  try:
+      file
+Index: src/engine/SCons/compat/__init__.py
+===================================================================
+*** src/engine/SCons/compat/__init__.py	(revision 4786)
+--- src/engine/SCons/compat/__init__.py	(working copy)
+***************
+*** 227,244 ****
+      os.path.lexists = lexists
+  
+  
+! try:
+!     # Use the "imp" module to protect the import from fixers.
+!     import imp
+!     _cPickle = imp.load_module('cPickle', *imp.find_module('cPickle'))
+! except ImportError, e:
+!     # The "cPickle" module has already been eliminated in favor of
+!     # having "import pickle" import the fast version when available.
+!     pass
+! else:
+!     import sys
+!     sys.modules['pickle'] = _cPickle
+!     del _cPickle
+  
+  
+  try:
+--- 227,249 ----
+      os.path.lexists = lexists
+  
+  
+! # When we're using the '-3' option during regression tests, importing
+! # cPickle gives a warning no matter how it's done, so always use the
+! # real profile module, whether it's fast or not.
+! if os.environ.get('SCONS_HORRIBLE_REGRESSION_TEST_HACK') is None:
+!     # Not a regression test with '-3', so try to use faster version.
+!     try:
+!         # Use the "imp" module to protect the import from fixers.
+!         import imp
+!         _cPickle = imp.load_module('cPickle', *imp.find_module('cPickle'))
+!     except ImportError, e:
+!         # The "cPickle" module has already been eliminated in favor of
+!         # having "import pickle" import the fast version when available.
+!         pass
+!     else:
+!         import sys
+!         sys.modules['pickle'] = _cPickle
+!         del _cPickle
+  
+  
+  try:
+***************
+*** 387,392 ****
+--- 392,415 ----
+      del mkstemp
+  
+  
++ if os.environ.get('SCONS_HORRIBLE_REGRESSION_TEST_HACK') is not None:
++     # We can't apply the 'callable' fixer until the floor is 2.6, but the
++     # '-3' option to Python 2.6 and 2.7 generates almost ten thousand
++     # warnings.  This hack allows us to run regression tests with the '-3'
++     # option by replacing the callable() built-in function with a hack
++     # that performs the same function but doesn't generate the warning.
++     # Note that this hack is ONLY intended to be used for regression
++     # testing, and should NEVER be used for real runs.
++     from types import ClassType
++     def callable(obj):
++         if hasattr(obj, '__call__'): return True
++         if isinstance(obj, (ClassType, type)): return True
++         return False
++     import builtins
++     builtins.callable = callable
++     del callable
++ 
++ 
+  # Local Variables:
+  # tab-width:4
+  # indent-tabs-mode:nil
+Index: src/engine/SCons/Variables/__init__.py
+===================================================================
+*** src/engine/SCons/Variables/__init__.py	(revision 4786)
+--- src/engine/SCons/Variables/__init__.py	(working copy)
+***************
+*** 284,290 ****
+          """
+  
+          if sort:
+!             options = sorted(self.options, cmp=lambda x,y: sort(x.key,y.key))
+          else:
+              options = self.options
+  
+--- 284,290 ----
+          """
+  
+          if sort:
+!             options = sorted(self.options, key=lambda x: x.key)
+          else:
+              options = self.options
+  
+Index: src/engine/SCons/cpp.py
+===================================================================
+*** src/engine/SCons/cpp.py	(revision 4786)
+--- src/engine/SCons/cpp.py	(working copy)
+***************
+*** 133,139 ****
+  # re module, as late as version 2.2.2, empirically matches the
+  # "!" in "!=" first, instead of finding the longest match.
+  # What's up with that?
+! l = sorted(CPP_to_Python_Ops_Dict.keys(), cmp=lambda a, b: cmp(len(b), len(a)))
+  
+  # Turn the list of keys into one regular expression that will allow us
+  # to substitute all of the operators at once.
+--- 133,139 ----
+  # re module, as late as version 2.2.2, empirically matches the
+  # "!" in "!=" first, instead of finding the longest match.
+  # What's up with that?
+! l = sorted(CPP_to_Python_Ops_Dict.keys(), key=lambda a: len(a), reverse=True)
+  
+  # Turn the list of keys into one regular expression that will allow us
+  # to substitute all of the operators at once.
+Index: src/engine/SCons/Builder.py
+===================================================================
+*** src/engine/SCons/Builder.py	(revision 4786)
+--- src/engine/SCons/Builder.py	(working copy)
+***************
+*** 122,128 ****
+      if suffixes:
+          matchsuf = [S for S in suffixes if path[-len(S):] == S]
+          if matchsuf:
+!             suf = max(list(map(None, list(map(len, matchsuf)), matchsuf)))[1]
+              return [path[:-len(suf)], path[-len(suf):]]
+      return SCons.Util.splitext(path)
+  
+--- 122,128 ----
+      if suffixes:
+          matchsuf = [S for S in suffixes if path[-len(S):] == S]
+          if matchsuf:
+!             suf = max([(len(_f),_f) for _f in matchsuf])[1]
+              return [path[:-len(suf)], path[-len(suf):]]
+      return SCons.Util.splitext(path)
+  
+Index: QMTest/unittest.py
+===================================================================
+*** QMTest/unittest.py	(revision 4786)
+--- QMTest/unittest.py	(working copy)
+***************
+*** 344,350 ****
+          testFnNames = testFnNames + \
+                        getTestCaseNames(baseclass, prefix, sortUsing=None)
+      if sortUsing:
+!         testFnNames.sort(sortUsing)
+      return testFnNames
+  
+  
+--- 344,353 ----
+          testFnNames = testFnNames + \
+                        getTestCaseNames(baseclass, prefix, sortUsing=None)
+      if sortUsing:
+!         # sortUsing is only either 'None' or 'cmp' so don't bother with arg
+!         # which is not supported in Py3k.
+!         #testFnNames.sort(sortUsing)
+!         testFnNames.sort()
+      return testFnNames
+  
+  
+Index: QMTest/TestCmd.py
+===================================================================
+*** QMTest/TestCmd.py	(revision 4786)
+--- QMTest/TestCmd.py	(working copy)
+***************
+*** 581,589 ****
+      # The subprocess module doesn't exist in this version of Python,
+      # so we're going to cobble up something that looks just enough
+      # like its API for our purposes below.
+!     import new
+! 
+!     subprocess = new.module('subprocess')
+  
+      subprocess.PIPE = 'PIPE'
+      subprocess.STDOUT = 'STDOUT'
+--- 581,588 ----
+      # The subprocess module doesn't exist in this version of Python,
+      # so we're going to cobble up something that looks just enough
+      # like its API for our purposes below.
+!     from types import ModuleType
+!     class subprocess(ModuleType): pass
+  
+      subprocess.PIPE = 'PIPE'
+      subprocess.STDOUT = 'STDOUT'
+Index: QMTest/TestSCons.py
+===================================================================
+*** QMTest/TestSCons.py	(revision 4786)
+--- QMTest/TestSCons.py	(working copy)
+***************
+*** 1259,1270 ****
+          for root, dirs, files in os.walk(source_dir):
+              if '.svn' in dirs:
+                  dirs.remove('.svn')
+!             # TODO(1.5)
+!             #dirs = [ d for d in dirs if not d.startswith('TimeSCons-') ]
+!             #files = [ f for f in files if not f.startswith('TimeSCons-') ]
+!             not_timescons_entries = lambda s: not s.startswith('TimeSCons-')
+!             dirs = list(filter(not_timescons_entries, dirs))
+!             files = list(filter(not_timescons_entries, files))
+              for dirname in dirs:
+                  source = os.path.join(root, dirname)
+                  destination = source.replace(source_dir, dest_dir)
+--- 1259,1266 ----
+          for root, dirs, files in os.walk(source_dir):
+              if '.svn' in dirs:
+                  dirs.remove('.svn')
+!             dirs = [ d for d in dirs if not d.startswith('TimeSCons-') ]
+!             files = [ f for f in files if not f.startswith('TimeSCons-') ]
+              for dirname in dirs:
+                  source = os.path.join(root, dirname)
+                  destination = source.replace(source_dir, dest_dir)
