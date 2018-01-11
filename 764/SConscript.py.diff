@@ -1,0 +1,56 @@
+Index: SConscript.py
+===================================================================
+--- SConscript.py	(revision 5030)
++++ SConscript.py	(working copy)
+@@ -161,6 +161,16 @@
+ 
+ stack_bottom = '% Stack boTTom %' # hard to define a variable w/this name :)
+ 
++def _change_to_src_dir(fs,variant_dir,src_dir,sconscript_chdir):
++    # Note that we do this directly, not through
++    # fs.chdir(), because we still need to
++    # interpret the stuff within the SConscript file
++    # relative to where we are logically.
++    fs.chdir(variant_dir, change_os_dir=False)
++    #only change dir if the option is set to do this
++    if sconscript_chdir:
++        os.chdir(src_dir.get_abspath())
++
+ def _SConscript(fs, *files, **kw):
+     top = fs.Top
+     sd = fs.SConstruct_dir.rdir()
+@@ -225,18 +235,22 @@
+                             # Do the sensible thing and just use the
+                             # SConcript directory.
+                             ldir = fs.Dir(f.dir.get_path(sd))
+-                    try:
+-                        fs.chdir(ldir, change_os_dir=sconscript_chdir)
+-                    except OSError:
+-                        # There was no local directory, so we should be
+-                        # able to chdir to the Repository directory.
+-                        # Note that we do this directly, not through
+-                        # fs.chdir(), because we still need to
+-                        # interpret the stuff within the SConscript file
+-                        # relative to where we are logically.
+-                        fs.chdir(ldir, change_os_dir=0)
+-                        os.chdir(actual.dir.get_abspath())
+-
++                    if ldir.duplicate == True:
++                        # we want to duplicate the sources in the
++                        # VariantDir. In this case we want to allow
++                        # the user to scan for files as if they only
++                        # existed here. Create the directory to be safe
++                        try:
++                            fs.chdir(ldir, change_os_dir=sconscript_chdir)
++                        except OSError:
++                            #fallback as this is a first pass run and data
++                            # has not been copied over yet
++                            _change_to_src_dir(fs,ldir,actual.dir,sconscript_chdir)
++                    else:
++                        # we don't want to copy files to the VariantDir
++                        # in this case we want to change to the src_dir
++                        # so scans on disk work as expect.
++                        _change_to_src_dir(fs,ldir,actual.dir,sconscript_chdir)
+                     # Append the SConscript directory to the beginning
+                     # of sys.path so Python modules in the SConscript
+                     # directory can be easily imported.
