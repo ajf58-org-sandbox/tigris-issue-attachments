@@ -1,0 +1,7 @@
+env = Environment()
+
+class AFile(file): pass
+
+print 'Orbis, te saluto!'
+
+# vim: filetype=python
