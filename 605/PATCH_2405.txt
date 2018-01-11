@@ -1,0 +1,139 @@
+Index: test/MSVS/vs-8.0-clean.py
+===================================================================
+*** test/MSVS/vs-8.0-clean.py	(revision 4161)
+--- test/MSVS/vs-8.0-clean.py	(working copy)
+***************
+*** 45,51 ****
+  
+  test.write('SConstruct', """\
+  env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='8.0',
+!                 CPPDEFINES=['DEF1', 'DEF2'],
+                  CPPPATH=['inc1', 'inc2'])
+  
+  testsrc = ['test1.cpp', 'test2.cpp']
+--- 45,51 ----
+  
+  test.write('SConstruct', """\
+  env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='8.0',
+!                 CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
+                  CPPPATH=['inc1', 'inc2'])
+  
+  testsrc = ['test1.cpp', 'test2.cpp']
+Index: src/engine/SCons/Defaults.py
+===================================================================
+*** src/engine/SCons/Defaults.py	(revision 4161)
+--- src/engine/SCons/Defaults.py	(working copy)
+***************
+*** 367,375 ****
+  
+      return c(prefix, stripped, suffix, env)
+  
+! def _defines(prefix, defs, suffix, env, c=_concat_ixes):
+!     """A wrapper around _concat_ixes that turns a list or string
+!     into a list of C preprocessor command-line definitions.
+      """
+      if SCons.Util.is_List(defs):
+          l = []
+--- 367,375 ----
+  
+      return c(prefix, stripped, suffix, env)
+  
+! def processDefines(defs):
+!     """process defines, resolving strings, lists, dictionaries, into a list of
+!     strings
+      """
+      if SCons.Util.is_List(defs):
+          l = []
+***************
+*** 396,402 ****
+                  l.append(str(k) + '=' + str(v))
+      else:
+          l = [str(defs)]
+!     return c(prefix, env.subst_path(l), suffix, env)
+      
+  class NullCmdGenerator:
+      """This is a callable class that can be used in place of other
+--- 396,409 ----
+                  l.append(str(k) + '=' + str(v))
+      else:
+          l = [str(defs)]
+!     return l
+! 
+! def _defines(prefix, defs, suffix, env, c=_concat_ixes):
+!     """A wrapper around _concat_ixes that turns a list or string
+!     into a list of C preprocessor command-line definitions.
+!     """
+! 
+!     return c(prefix, env.subst_path(processDefines(defs)), suffix, env)
+      
+  class NullCmdGenerator:
+      """This is a callable class that can be used in place of other
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+*** src/engine/SCons/Tool/msvs.py	(revision 4161)
+--- src/engine/SCons/Tool/msvs.py	(working copy)
+***************
+*** 50,55 ****
+--- 50,56 ----
+  import SCons.Warnings
+  
+  from MSCommon import msvs_exists, merge_default_version
++ from SCons.Defaults import processDefines
+  
+  ##############################################################################
+  # Below here are the classes and functions for generation of
+***************
+*** 689,695 ****
+              # TODO(1.5)
+              #preprocdefs = xmlify(';'.join(self.env.get('CPPDEFINES', [])))
+              #includepath = xmlify(';'.join(self.env.get('CPPPATH', [])))
+!             preprocdefs = xmlify(string.join(self.env.get('CPPDEFINES', []), ';'))
+              includepath = xmlify(string.join(self.env.get('CPPPATH', []), ';'))
+  
+              if not env_has_buildtarget:
+--- 690,696 ----
+              # TODO(1.5)
+              #preprocdefs = xmlify(';'.join(self.env.get('CPPDEFINES', [])))
+              #includepath = xmlify(';'.join(self.env.get('CPPPATH', [])))
+!             preprocdefs = xmlify(string.join(processDefines(self.env.get('CPPDEFINES', [])), ';'))
+              includepath = xmlify(string.join(self.env.get('CPPPATH', []), ';'))
+  
+              if not env_has_buildtarget:
+Index: QMTest/TestSConsMSVS.py
+===================================================================
+*** QMTest/TestSConsMSVS.py	(revision 4161)
+--- QMTest/TestSConsMSVS.py	(working copy)
+***************
+*** 478,484 ****
+  \t\t\t\tReBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
+  \t\t\t\tCleanCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct -c &quot;Test.exe&quot;"
+  \t\t\t\tOutput="Test.exe"
+! \t\t\t\tPreprocessorDefinitions="DEF1;DEF2"
+  \t\t\t\tIncludeSearchPath="inc1;inc2"
+  \t\t\t\tForcedIncludes=""
+  \t\t\t\tAssemblySearchPath=""
+--- 478,484 ----
+  \t\t\t\tReBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
+  \t\t\t\tCleanCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct -c &quot;Test.exe&quot;"
+  \t\t\t\tOutput="Test.exe"
+! \t\t\t\tPreprocessorDefinitions="DEF1;DEF2;DEF3=1234"
+  \t\t\t\tIncludeSearchPath="inc1;inc2"
+  \t\t\t\tForcedIncludes=""
+  \t\t\t\tAssemblySearchPath=""
+***************
+*** 539,545 ****
+  
+  SConscript_contents_8_0 = """\
+  env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='8.0',
+!                 CPPDEFINES=['DEF1', 'DEF2'],
+                  CPPPATH=['inc1', 'inc2'])
+  
+  testsrc = ['test1.cpp', 'test2.cpp']
+--- 539,545 ----
+  
+  SConscript_contents_8_0 = """\
+  env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='8.0',
+!                 CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
+                  CPPPATH=['inc1', 'inc2'])
+  
+  testsrc = ['test1.cpp', 'test2.cpp']
