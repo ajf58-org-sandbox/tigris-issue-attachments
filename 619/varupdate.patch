@@ -1,0 +1,77 @@
+Index: src/engine/SCons/Variables/__init__.py
+===================================================================
+--- src/engine/SCons/Variables/__init__.py	(revision 4284)
++++ src/engine/SCons/Variables/__init__.py	(working copy)
+@@ -70,7 +70,10 @@
+ 
+         # create the singleton instance
+         if is_global:
+-            self=Variables.instance
++            # I don't know if this was done for a reason, but Variables.instance starts as None,
++            # this will set self to None, then below will set Variables.instance to self (None)
++            #
++            #self=Variables.instance
+ 
+             if not Variables.instance:
+                 Variables.instance=self
+@@ -152,11 +155,12 @@
+             apply(self._do_add, o)
+ 
+ 
+-    def Update(self, env, args=None):
++    def Update(self, env, args=None, variables=None):
+         """
+         Update an environment with the option variables.
+ 
+         env - the environment to update.
++        variables - the option variables to set in the environment, None to set all
+         """
+ 
+         values = {}
+@@ -193,13 +197,22 @@
+             if not added:
+                 self.unknown[arg] = value
+ 
++        # determine which variables to put into the environment
++        if variables is None:
++            variables = []
++            for option in self.options:
++                variables.append(option.key)
++        else:
++            variables = SCons.Util.Split(variables)
++
+         # put the variables in the environment:
+         # (don't copy over variables that are not declared as options)
+         for option in self.options:
+-            try:
+-                env[option.key] = values[option.key]
+-            except KeyError:
+-                pass
++            if option.key in variables:
++                try:
++                    env[option.key] = values[option.key]
++                except KeyError:
++                    pass
+ 
+         # Call the convert functions:
+         for option in self.options:
+@@ -219,6 +232,19 @@
+             if option.validator and values.has_key(option.key):
+                 option.validator(option.key, env.subst('${%s}'%option.key), env)
+ 
++    def UpdateNew(self, env, args=None):
++        """
++        Update an environment with new option variables
++        """
++
++        variables = []
++        for option in self.options:
++            if not option.key in env:
++                variables.append(option.key)
++
++        self.Update(env, args, variables)
++        
++
+     def UnknownVariables(self):
+         """
+         Returns any options in the specified arguments lists that
