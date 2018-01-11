@@ -1,0 +1,323 @@
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 5214)
++++ QMTest/TestSCons.py	(working copy)
+@@ -949,7 +949,12 @@
+                 result_cached = 1
+                 for bld_desc in cache_desc: # each TryXXX
+                     for ext, flag in bld_desc: # each file in TryBuild
+-                        file = os.path.join(sconf_dir,"conftest_%d%s" % (cnt, ext))
++                        # test are run in subdirectories named conftest_x
++                        # where x is test number, test files are named
++                        # conftest.ext (cpp or c)
++                        file = os.path.join(sconf_dir,
++                                            "conftest_%d" % (cnt),
++                                            "conftest%s"  % (ext))
+                         if flag == self.NCR:
+                             # rebuild will pass
+                             if ext in ['.c', '.cpp']:
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 5214)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -522,7 +522,13 @@
+         """
+         return self.pspawn(sh, escape, cmd, args, env, self.logstream, self.logstream)
+ 
++    def NextTestDirNode(self):
++        f = "conftest_" + str(_ac_build_counter)
++        return self.confdir.Dir(f)
+ 
++    def NextTestDir(self):
++        return str(self.NextTestDirNode())
++
+     def TryBuild(self, builder, text = None, extension = ""):
+         """Low level TryBuild implementation. Normally you don't need to
+         call that - you can use TryCompile / TryLink / TryRun instead
+@@ -542,10 +548,17 @@
+ 
+         nodesToBeBuilt = []
+ 
+-        f = "conftest_" + str(_ac_build_counter)
++        # If MSVC_BATCH is enabled test are not processed correctly
++        # as builder is trying to compile allways first test file.
++        # It is not the best fix but making output in separete
++        # directories fixes the problem.
++        self.lasttestdir = self.NextTestDirNode()
++        self._createDir(self.lasttestdir)
++
++        f = "conftest"
+         pref = self.env.subst( builder.builder.prefix )
+         suff = self.env.subst( builder.builder.suffix )
+-        target = self.confdir.File(pref + f + suff)
++        target = self.lasttestdir.File(pref + f + suff)
+ 
+         try:
+             # Slide our wrapper into the construction environment as
+@@ -554,7 +567,7 @@
+             sourcetext = self.env.Value(text)
+ 
+             if text is not None:
+-                textFile = self.confdir.File(f + extension)
++                textFile = self.lasttestdir.File(f + extension)
+                 textFileNode = self.env.SConfSourceBuilder(target=textFile,
+                                                            source=sourcetext)
+                 nodesToBeBuilt.extend(textFileNode)
+@@ -620,7 +633,7 @@
+         if( ok ):
+             prog = self.lastTarget
+             pname = prog.path
+-            output = self.confdir.File(os.path.basename(pname)+'.out')
++            output = self.lasttestdir.File(os.path.basename(pname)+'.out')
+             node = self.env.Command(output, prog, [ [ pname, ">", "${TARGET}"] ])
+             ok = self.BuildNodes(node)
+             if ok:
+Index: src/engine/SCons/SConfTests.py
+===================================================================
+--- src/engine/SCons/SConfTests.py	(revision 5214)
++++ src/engine/SCons/SConfTests.py	(working copy)
+@@ -109,12 +109,19 @@
+         # in one method, we pass the function as a string ('TryCompile',
+         # 'TryLink'), so we are aware of reloading modules.
+         
+-        def checks(self, sconf, TryFuncString):
++        def checks(self, sconf, TryFuncString, checkFirst=True, checkSecond=True):
+             TryFunc = self.SConf.SConfBase.__dict__[TryFuncString]
+-            res1 = TryFunc( sconf, "int main() { return 0; }\n", ".c" )
+-            res2 = TryFunc( sconf,
+-                            '#include "no_std_header.h"\nint main() {return 0; }\n',
+-                            '.c' )
++
++            res1 = None
++            res2 = None
++
++            if checkFirst:
++                res1 = TryFunc( sconf, "int main() { return 0; }\n", ".c" )
++
++            if checkSecond:
++                res2 = TryFunc( sconf,
++                                '#include "no_std_header.h"\nint main() {return 0; }\n',
++                                '.c' )
+             return (res1,res2)
+ 
+         # 1. test initial behaviour (check ok / failed)
+@@ -151,11 +158,20 @@
+         sconf = self.SConf.SConf(self.scons_env,
+                                  conf_dir=self.test.workpath('config.tests'),
+                                  log_file=self.test.workpath('config.log'))
+-        no_std_header_h = self.test.workpath('config.tests', 'no_std_header.h')
+-        test_h = self.test.write( no_std_header_h,
+-                                  "/* we are changing a dependency now */\n" );
++       
+         try:
+-            res = checks( self, sconf, TryFunc )
++            # sonf test are run in separate directories so we need
++            # to run each test alone in order to create no_std_header
++            # in proper directory
++            res1 = checks( self, sconf, TryFunc, checkSecond=False )
++
++            next_test_dir = sconf.NextTestDir()
++            no_std_header_h = self.test.workpath(next_test_dir, 'no_std_header.h')
++            test_h = self.test.write( no_std_header_h,
++                                      "/* we are changing a dependency now */\n" )
++            res2 = checks( self, sconf, TryFunc, checkFirst=False )
++
++            res = (res1[0], res2[1])
+             log = self.test.read( self.test.workpath('config.log') )
+             assert res[0] and res[1], res
+         finally:
+Index: test/Configure/build-fail.py
+===================================================================
+--- test/Configure/build-fail.py	(revision 5214)
++++ test/Configure/build-fail.py	(working copy)
+@@ -47,14 +47,16 @@
+ 
+ test.subdir('a', 'b')
+ 
+-a_boost_hpp = os.path.join('..', 'a', 'boost.hpp')
+-b_boost_hpp = os.path.join('..', 'b', 'boost.hpp')
++# since test are run in separete directorires path must go
++# two levels up
++a_boost_hpp = os.path.join('..', '..', 'a', 'boost.hpp')
++b_boost_hpp = os.path.join('..', '..', 'b', 'boost.hpp')
+ 
+ test.write('SConstruct', """\
+ import os
+ def _check(context):
+     for dir in ['a', 'b']:
+-        inc = os.path.join('..', dir, 'boost.hpp')
++        inc = os.path.join('..', '..', dir, 'boost.hpp')
+         result = context.TryRun('''
+         #include "%s"
+ 
+Index: test/Configure/ConfigureDryRunError.py
+===================================================================
+--- test/Configure/ConfigureDryRunError.py	(revision 5214)
++++ test/Configure/ConfigureDryRunError.py	(working copy)
+@@ -66,7 +66,11 @@
+ test.must_not_exist('config.log')
+ test.subdir('.sconf_temp')
+ 
+-conftest_0_c = os.path.join(".sconf_temp", "conftest_0.c")
++# tests are run in separate directories
++# we do not need to test again for directory creation
++test.subdir(os.path.join(".sconf_temp", "conftest_0"))
++
++conftest_0_c = os.path.join(".sconf_temp", "conftest_0" ,"conftest.c")
+ SConstruct_file_line = test.python_file_line(SConstruct_path, 6)[:-1]
+ 
+ expect = """
+Index: test/Configure/implicit-cache.py
+===================================================================
+--- test/Configure/implicit-cache.py	(revision 5214)
++++ test/Configure/implicit-cache.py	(working copy)
+@@ -55,6 +55,7 @@
+ get longer and longer until it blew out the users's memory.
+ """
+ 
++import os
+ import TestSConsign
+ 
+ test = TestSConsign.TestSConsign()
+@@ -71,25 +72,25 @@
+ test.write('foo.h', "#define FOO 1\n")
+ 
+ # First run:  Have the configure subsystem only look for math.h, and
+-# squirrel away the .sconsign info for the conftest_0.c file that's
+-# generated from the Python Value Node that we're using for our test.
++# squirrel away the .sconsign info for the conftest_0/conftest.c file
++# that's generated from the Python Value Node that we're using for our test.
+ 
+ test.run(arguments = '.')
+ 
+-test.run_sconsign('-d .sconf_temp -e conftest_0.c --raw .sconsign.dblite')
++test.run_sconsign('-d .sconf_temp' + os.sep + 'conftest_0 -e conftest.c --raw .sconsign.dblite')
+ old_sconsign_dblite = test.stdout()
+ 
+ # Second run:  Have the configure subsystem also look for foo.h, so
+ # that there's a change in the .sconf_temp directory that will cause its
+ # .sconsign information to get rewritten from disk.  Squirrel away the
+-# .sconsign info for the conftest_0.c file.  The now-fixed bug would show
+-# up because the entry would change with the additional string-escaping
+-# described above.  The now-correct behavior is that the re-stored value
+-# for conftest_0.c doesn't change.
++# .sconsign info for the conftest_0/conftest.c file.  The now-fixed bug 
++# would show up because the entry would change with the additional
++# string-escaping described above.  The now-correct behavior is that the
++# re-stored value for conftest_0/conftest.c doesn't change.
+ 
+ test.run(arguments = '--implicit-cache USE_FOO=1 .')
+ 
+-test.run_sconsign('-d .sconf_temp -e conftest_0.c --raw .sconsign.dblite')
++test.run_sconsign('-d .sconf_temp' + os.sep + 'conftest_0 -e conftest.c --raw .sconsign.dblite')
+ new_sconsign_dblite = test.stdout()
+ 
+ if old_sconsign_dblite != new_sconsign_dblite:
+Index: test/Configure/option--config.py
+===================================================================
+--- test/Configure/option--config.py	(revision 5214)
++++ test/Configure/option--config.py	(working copy)
+@@ -59,7 +59,8 @@
+ /* A header */
+ """)
+ 
+-conftest_0_c = os.path.join(".sconf_temp", "conftest_0.c")
++# tests are run in subdirectories name conftest_x where x is test number
++conftest_0_c = os.path.join(".sconf_temp", "conftest_0", "conftest.c")
+ SConstruct_file_line = test.python_file_line(SConstruct_path, 6)[:-1]
+ 
+ expect = """
+Index: test/option-n.py
+===================================================================
+--- test/option-n.py	(revision 5214)
++++ test/option-n.py	(working copy)
+@@ -209,16 +209,19 @@
+ stderr=r"""
+ scons: \*\*\* Cannot update configure test "%s" within a dry-run\.
+ File \S+, line \S+, in \S+
+-""" % re.escape(os.path.join("config.test", "conftest_0.in"))
++""" % re.escape(os.path.join("config.test", "conftest_0", "conftest.in"))
+ test.subdir(['configure','config.test'])
++# test are run in subdirectories to test file creation we must
++# create directory first
++test.subdir(['configure','config.test','conftest_0'])
+ test.run(arguments="-n",stderr=stderr,status=2,
+          chdir=test.workpath("configure"))
+ test.fail_test(os.path.exists(test.workpath("configure", "config.test",
+-                                            ".cache")))
++                                            "conftest_0", ".cache")))
+ test.fail_test(os.path.exists(test.workpath("configure", "config.test",
+-                                            "conftest_0")))
++                                            "conftest_0", "conftest")))
+ test.fail_test(os.path.exists(test.workpath("configure", "config.test",
+-                                            "conftest_0.in")))
++                                            "conftest_0", "conftest.in")))
+ test.fail_test(os.path.exists(test.workpath("configure", "config.log")))
+ 
+ # test that no error is raised, if all targets are up-to-date. In this
+Index: test/question/Configure.py
+===================================================================
+--- test/question/Configure.py	(revision 5214)
++++ test/question/Configure.py	(working copy)
+@@ -86,15 +86,21 @@
+ stderr=r"""
+ scons: \*\*\* Cannot update configure test "%s" within a dry-run\.
+ File \S+, line \S+, in \S+
+-""" % re.escape(os.path.join("config.test", "conftest_0.in"))
++""" % re.escape(os.path.join("config.test", "conftest_0", "conftest.in"))
+ 
+ test.subdir('config.test')
++# test are run in subdirectories, so to test file creation
++# we must create directory first
++test.subdir(['config.test','conftest_0'])
+ 
+ test.run(arguments="-q aaa.out",stderr=stderr,status=2)
+ 
+-test.must_not_exist(test.workpath("config.test", ".cache"))
+-test.must_not_exist(test.workpath("config.test", "conftest_0"))
+-test.must_not_exist(test.workpath("config.test", "conftest_0.in"))
++test.must_not_exist(test.workpath("config.test", "conftest_0",
++                                  ".cache"))
++test.must_not_exist(test.workpath("config.test", "conftest_0",
++                                  "conftest"))
++test.must_not_exist(test.workpath("config.test", "conftest_0",
++                                  "conftest.in"))
+ test.must_not_exist(test.workpath("config.log"))
+ 
+ # test that no error is raised, if all targets are up-to-date. In this
+Index: test/sconsign/script/Configure.py
+===================================================================
+--- test/sconsign/script/Configure.py	(revision 5214)
++++ test/sconsign/script/Configure.py	(working copy)
+@@ -47,11 +47,12 @@
+ CC_dir = re.escape(os.path.normcase(CC_dir))
+ CC_file = re.escape(CC_file)
+ 
++
+ # Note:  We don't use os.path.join() representations of the file names
+ # in the expected output because paths in the .sconsign files are
+ # canonicalized to use / as the separator.
++_sconf_temp_conftest_0_c = '.sconf_temp/conftest_0/conftest.c'
+ 
+-_sconf_temp_conftest_0_c = '.sconf_temp/conftest_0.c'
+ 
+ test.write('SConstruct', """
+ env = Environment()
+@@ -72,14 +73,14 @@
+ # probably be good to change that to a repr() of the contents.
+ expect = r"""=== .:
+ SConstruct: None \d+ \d+
+-=== .sconf_temp:
+-conftest_0.c:
++=== .sconf_temp[/\\]conftest_0:
++conftest.c:
+         '.*': 
+ #include "math.h"
+ 
+ 
+         %(sig_re)s \[.*\]
+-conftest_0%(_obj)s:
++conftest%(_obj)s:
+         %(_sconf_temp_conftest_0_c)s: %(sig_re)s \d+ \d+
+         %(CC)s: %(sig_re)s \d+ \d+
+         %(sig_re)s \[.*\]
