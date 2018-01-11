@@ -1,0 +1,18 @@
+--- orig.py	2010-08-19 09:36:28.000000000 +0300
++++ /usr/lib/scons/SCons/Script/SConscript.py	2010-08-19 09:35:07.000000000 +0300
+@@ -214,12 +214,13 @@
+                         ldir = fs.Dir(f.dir.get_path(sd))
+                     else:
+                         ldir = fs.Dir(src_dir)
+-                        if not ldir.is_under(f.dir):
++                        #THIS CHECK DOESN'T MAKE SENSE!
++                        #if not ldir.is_under(f.dir):
+                             # They specified a source directory, but
+                             # it's above the SConscript directory.
+                             # Do the sensible thing and just use the
+                             # SConcript directory.
+-                            ldir = fs.Dir(f.dir.get_path(sd))
++                            #ldir = fs.Dir(f.dir.get_path(sd))
+                     try:
+                         fs.chdir(ldir, change_os_dir=sconscript_chdir)
+                     except OSError:
