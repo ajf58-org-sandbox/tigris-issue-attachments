@@ -1,0 +1,13 @@
+Index: src/engine/SCons/Tool/MSCommon/common.py
+===================================================================
+--- src/engine/SCons/Tool/MSCommon/common.py	(revision 4790)
++++ src/engine/SCons/Tool/MSCommon/common.py	(working copy)
+@@ -118,7 +118,7 @@
+ 
+     return normenv
+ 
+-def get_output(vcbat, args = None, env = None):
++def get_output(vcbat, args = None, env = dict()):
+     """Parse the output of given bat file, with given args."""
+     if args:
+         debug("Calling '%s %s'" % (vcbat, args))
