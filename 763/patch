@@ -1,0 +1,56 @@
+Index: user/main.in
+===================================================================
+*** user/main.in	(revision 5049)
+--- user/main.in	(working copy)
+***************
+*** 177,194 ****
+      &environments;
+    </chapter>
+  
+!   <!-- These next three sections should be combined into one chapter -->
+!   <chapter id="chap-mergeflags">
+!     <title>Merging Options into the Environment: the &MergeFlags; Function</title>
+!     &mergeflags;
+!   </chapter>
+!   <chapter id="chap-parseflags">
+!     <title>Separating Compile Arguments into their Variables:  the &ParseFlags; Function</title>
+!     &parseflags;
+!   </chapter>
+!   <chapter id="chap-parseconfig">
+!     <title>Finding Installed Library Information:  the &ParseConfig; Function</title>
+!     &parseconfig;
+    </chapter>
+  
+    <chapter id="chap-output">
+--- 177,207 ----
+      &environments;
+    </chapter>
+  
+!   <chapter id="chap-manip-options">
+!     <title>Automatically Putting Command-line Options into their Construction Variables/title>
+!     <para>
+!     This chapter describes the &MergeFlags;, &ParseFlags;, and &ParseConfig; methods of a &consenv;.
+!     </para>
+!     <section id="sect-mergeflags">
+!       <title>Merging Options into the Environment: the &MergeFlags; Function</title>
+!       &mergeflags;
+!     </section>
+!     <section id="sect-parseflags">
+!       <title>Separating Compile Arguments into their Variables: the &ParseFlags; Function</title>
+!       &parseflags;
+!     </section>
+!     <section id="sect-parseconfig">
+!       <title>Finding Installed Library Information: the &ParseConfig; Function</title>
+!       &parseconfig;
+!     </section>
+!     <!--
+!     XXX parse_flags= option of Environment()
+! 
+!     <section id="sect-env-parseflags">
+!       <title>Adding Flags when Constructing Enviroment: the parse_flags Optional Argument</title>
+!       &envparseflags;
+!     </section>
+!     -->
+    </chapter>
+  
+    <chapter id="chap-output">
