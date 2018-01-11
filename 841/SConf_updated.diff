@@ -1,0 +1,56 @@
+Index: src/engine/SCons/SConf.py
+===================================================================
+--- src/engine/SCons/SConf.py	(revision 5214)
++++ src/engine/SCons/SConf.py	(working copy)
+@@ -522,7 +522,13 @@
+         """
+         return self.pspawn(sh, escape, cmd, args, env, self.logstream, self.logstream)
+ 
++    def NextTestDirNode(self):
++        f = "conftest_" + str(_ac_build_counter)
++        return self.confdir.Dir(f)
+ 
++    def NextTestDir(self):
++        return str(self.NextTestDirNode())
++
+     def TryBuild(self, builder, text = None, extension = ""):
+         """Low level TryBuild implementation. Normally you don't need to
+         call that - you can use TryCompile / TryLink / TryRun instead
+@@ -542,10 +548,17 @@
+ 
+         nodesToBeBuilt = []
+ 
+-        f = "conftest_" + str(_ac_build_counter)
++        # If MSVC_BATCH is enabled test are not processed correctly
++        # as builder is trying to compile allways first test file.
++        # It is not the best fix but making output in separete
++        # directories fixes the problem.
++        self.lasttestdir = self.NextTestDirNode()
++        self._createDir(self.lasttestdir)
++
++        f = "conftest"
+         pref = self.env.subst( builder.builder.prefix )
+         suff = self.env.subst( builder.builder.suffix )
+-        target = self.confdir.File(pref + f + suff)
++        target = self.lasttestdir.File(pref + f + suff)
+ 
+         try:
+             # Slide our wrapper into the construction environment as
+@@ -554,7 +567,7 @@
+             sourcetext = self.env.Value(text)
+ 
+             if text is not None:
+-                textFile = self.confdir.File(f + extension)
++                textFile = self.lasttestdir.File(f + extension)
+                 textFileNode = self.env.SConfSourceBuilder(target=textFile,
+                                                            source=sourcetext)
+                 nodesToBeBuilt.extend(textFileNode)
+@@ -620,7 +633,7 @@
+         if( ok ):
+             prog = self.lastTarget
+             pname = prog.path
+-            output = self.confdir.File(os.path.basename(pname)+'.out')
++            output = self.lasttestdir.File(os.path.basename(pname)+'.out')
+             node = self.env.Command(output, prog, [ [ pname, ">", "${TARGET}"] ])
+             ok = self.BuildNodes(node)
+             if ok:
