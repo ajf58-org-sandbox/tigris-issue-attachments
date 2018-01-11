@@ -1,0 +1,51 @@
+Index: test/ARGUMENTS.py
+===================================================================
+--- test/ARGUMENTS.py	(revision 4808)
++++ test/ARGUMENTS.py	(working copy)
+@@ -30,7 +30,7 @@
+ 
+ test.write('SConstruct', """
+ foo = open('foo.out', 'wb')
+-for k in sorted(list(ARGUMENTS.keys())):
++for k in sorted(ARGUMENTS.keys()):
+     foo.write(k + " = " + ARGUMENTS[k] + "\\n")
+ foo.close()
+ """)
+Index: test/SConscript/variables.py
+===================================================================
+--- test/SConscript/variables.py	(revision 4808)
++++ test/SConscript/variables.py	(working copy)
+@@ -44,7 +44,7 @@
+ test.write("SConstruct", """
+ x = 'x'
+ y = 'zoom'
+-Export(globals().keys())                         
++Export(list(globals().keys()))                         
+ SConscript('SConscript')
+ """)
+ 
+@@ -54,7 +54,7 @@
+ test.write("SConstruct", """
+ x = 'x'
+ y = 'zoom'
+-SConscript('SConscript', globals().keys())
++SConscript('SConscript', list(globals().keys()))
+ """)
+ 
+ test.run(arguments = ".")
+Index: bin/sfsum
+===================================================================
+--- bin/sfsum	(revision 4808)
++++ bin/sfsum	(working copy)
+@@ -119,9 +119,9 @@
+ 
+     # Hard-coded search for 'Open' bugs.  This should be easily
+     # generalized once we figure out other things for this script to do.
+-    bugs = filter(lambda x: x.status == 'Open', Artifacts['Bugs'])
++    bugs = [x for x in Artifacts['Bugs'] if x.status == 'Open']
+ 
+-    print Artifacts.keys()
++    print list(Artifacts.keys())
+ 
+     print "%d open bugs" % len(bugs)
+ 
