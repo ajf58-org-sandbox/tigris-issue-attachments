@@ -1,0 +1,35 @@
+## Test.java
+public class Test {
+	public Test() {
+		new Runnable() {
+			public void run() {
+				new Runnable() {
+					public void run() {
+						System.out.println("hello world");
+					}
+				}.run();
+			}
+		}.run();
+	}
+
+	public static void main(String arg[]) {
+		new Test();
+	}
+}
+
+## SConstruct [python]
+#!/usr/bin/python
+
+classes = Java(target = "bin", source = ".")
+Jar(target = "test.jar", source = classes)
+
+## shell output [bash]
+marshall@riviera:~/Code/test/scons$ scons
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+javac -d bin -sourcepath . Test.java
+jar cf test.jar -C bin Test$1.class -C bin Test$2.class -C bin Test.class
+bin/Test$2.class : no such file or directory
+scons: *** [test.jar] Error 1
+scons: building terminated because of errors.
