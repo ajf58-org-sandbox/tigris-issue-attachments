@@ -1,0 +1,1279 @@
+RefactoringTool: Files that were modified:
+RefactoringTool: SConstruct
+RefactoringTool: doc/SConscript
+RefactoringTool: runtest.py
+RefactoringTool: src/setup.py
+RefactoringTool: src/test_aegistests.py
+RefactoringTool: src/test_interrupts.py
+RefactoringTool: src/test_pychecker.py
+RefactoringTool: src/engine/SCons/Action.py
+RefactoringTool: src/engine/SCons/Builder.py
+RefactoringTool: src/engine/SCons/Environment.py
+RefactoringTool: src/engine/SCons/Executor.py
+RefactoringTool: src/engine/SCons/JobTests.py
+RefactoringTool: src/engine/SCons/Subst.py
+RefactoringTool: src/engine/SCons/Taskmaster.py
+RefactoringTool: src/engine/SCons/Node/FS.py
+RefactoringTool: src/engine/SCons/Node/NodeTests.py
+RefactoringTool: src/engine/SCons/Node/__init__.py
+RefactoringTool: src/engine/SCons/Scanner/Dir.py
+RefactoringTool: src/engine/SCons/Scanner/Fortran.py
+RefactoringTool: src/engine/SCons/Scanner/ScannerTests.py
+RefactoringTool: src/engine/SCons/Script/Interactive.py
+RefactoringTool: src/engine/SCons/Script/Main.py
+RefactoringTool: src/engine/SCons/Tool/__init__.py
+RefactoringTool: src/engine/SCons/Tool/dvipdf.py
+RefactoringTool: src/engine/SCons/Tool/javac.py
+RefactoringTool: src/engine/SCons/Tool/msvs.py
+RefactoringTool: src/engine/SCons/Tool/MSCommon/netframework.py
+RefactoringTool: src/engine/SCons/Tool/packaging/__init__.py
+RefactoringTool: src/engine/SCons/Tool/packaging/msi.py
+RefactoringTool: src/engine/SCons/Tool/packaging/rpm.py
+RefactoringTool: src/engine/SCons/Variables/ListVariable.py
+RefactoringTool: src/engine/SCons/Variables/__init__.py
+RefactoringTool: src/script/scons-time.py
+RefactoringTool: src/script/sconsign.py
+RefactoringTool: test/AddOption/help.py
+RefactoringTool: test/Deprecated/BuildDir.py
+RefactoringTool: test/Java/Java-1.4.py
+RefactoringTool: test/Java/Java-1.5.py
+RefactoringTool: test/Java/Java-1.6.py
+RefactoringTool: test/QT/copied-env.py
+RefactoringTool: test/TEX/TEX.py
+RefactoringTool: test/VariantDir/VariantDir.py
+RefactoringTool: test/option/debug-count.py
+RefactoringTool: test/option/help-options.py
+RefactoringTool: test/option/profile.py
+RefactoringTool: test/scons-time/help/all-subcommands.py
+RefactoringTool: QMTest/TestCmd.py
+RefactoringTool: QMTest/TestCommon.py
+RefactoringTool: QMTest/TestSCons.py
+RefactoringTool: QMTest/scons_tdb.py
+RefactoringTool: QMTest/unittest.py
+RefactoringTool: bin/SConsDoc.py
+RefactoringTool: bin/linecount.py
+RefactoringTool: bin/scons-doc.py
+RefactoringTool: bin/sconsexamples.py
+RefactoringTool: bench/bench.py
+--- SConstruct (original)
++++ SConstruct (refactored)
+@@ -137,7 +137,7 @@
+             revision = b.group(1) + ':' + revision
+         def generate_build_id(revision):
+             result = revision
+-            if filter(lambda l: l[0] in 'AMR!', hg_status_lines):
++            if [l for l in hg_status_lines if l[0] in 'AMR!']:
+                 result = result + '[MODIFIED]'
+             return result
+ 
+@@ -148,7 +148,7 @@
+         revision = m.group(1)
+         def generate_build_id(revision):
+             result = 'r' + revision
+-            if filter(lambda l: l[0] in 'ACDMR', svn_status_lines):
++            if [l for l in svn_status_lines if l[0] in 'ACDMR']:
+                 result = result + '[MODIFIED]'
+             return result
+ 
+@@ -1105,7 +1105,7 @@
+         local_script = os.path.join(build_dir_local, script)
+         commands.append(Move(local_script + '.py', local_script))
+ 
+-    rf = filter(lambda x: not x in scripts, raw_files)
++    rf = [x for x in raw_files if not x in scripts]
+     rf = map(lambda x: os.path.join(s_l_v, x), rf)
+     for script in scripts:
+         rf.append("%s.py" % script)
+@@ -1193,12 +1193,12 @@
+ 
+ sfiles = None
+ if hg_status_lines:
+-    slines = filter(lambda l: l[0] in 'ACM', hg_status_lines)
++    slines = [l for l in hg_status_lines if l[0] in 'ACM']
+     sfiles = map(lambda l: l.split()[-1], slines)
+ elif svn_status_lines:
+-    slines = filter(lambda l: l[0] in ' MA', svn_status_lines)
++    slines = [l for l in svn_status_lines if l[0] in ' MA']
+     sentries = map(lambda l: l.split()[-1], slines)
+-    sfiles = filter(os.path.isfile, sentries)
++    sfiles = list(filter(os.path.isfile, sentries))
+ else:
+    "Not building in a Mercurial or Subversion tree; skipping building src package."
+ 
+@@ -1213,7 +1213,7 @@
+     ]
+ 
+     for p in remove_patterns:
+-        sfiles = filter(lambda s: not fnmatch.fnmatch(s, p), sfiles)
++        sfiles = [s for s in sfiles if not fnmatch.fnmatch(s, p)]
+ 
+     if sfiles:
+         ps = "%s-src" % project
+--- doc/SConscript (original)
++++ doc/SConscript (refactored)
+@@ -470,11 +470,11 @@
+     e = os.path.join('#src', 'engine')
+     manifest_in = File(os.path.join(e, 'MANIFEST.in')).rstr()
+     sources = map(lambda x: x[:-1], open(manifest_in).readlines())
+-    sources = filter(lambda x: x.find('Optik') == -1, sources)
+-    sources = filter(lambda x: x.find('Platform') == -1, sources)
+-    sources = filter(lambda x: x.find('Tool') == -1, sources)
++    sources = [x for x in sources if x.find('Optik') == -1]
++    sources = [x for x in sources if x.find('Platform') == -1]
++    sources = [x for x in sources if x.find('Tool') == -1]
+     # XXX
+-    sources = filter(lambda x: x.find('Options') == -1, sources)
++    sources = [x for x in sources if x.find('Options') == -1]
+ 
+     e = os.path.join(build, '..', 'scons', 'engine')
+     sources = map(lambda x: os.path.join(e, x), sources)
+--- runtest.py (original)
++++ runtest.py (refactored)
+@@ -580,11 +580,11 @@
+ tests = []
+ 
+ def find_Tests_py(tdict, dirname, names):
+-    for n in filter(lambda n: n[-8:] == "Tests.py", names):
++    for n in [n for n in names if n[-8:] == "Tests.py"]:
+         tdict[os.path.join(dirname, n)] = 1
+ 
+ def find_py(tdict, dirname, names):
+-    tests = filter(lambda n: n[-3:] == ".py", names)
++    tests = [n for n in names if n[-3:] == ".py"]
+     try:
+         excludes = open(os.path.join(dirname,".exclude_tests")).readlines()
+     except (OSError, IOError):
+@@ -594,7 +594,7 @@
+             exclude = exclude.split('#' , 1)[0]
+             exclude = exclude.strip()
+             if not exclude: continue
+-            tests = filter(lambda n: n != exclude, tests)
++            tests = [n for n in tests if n != exclude]
+     for n in tests:
+         tdict[os.path.join(dirname, n)] = 1
+ 
+@@ -626,7 +626,7 @@
+                     tests.append(path)
+ elif testlistfile:
+     tests = open(testlistfile, 'r').readlines()
+-    tests = filter(lambda x: x[0] != '#', tests)
++    tests = [x for x in tests if x[0] != '#']
+     tests = map(lambda x: x[:-1], tests)
+ elif all and not qmtest:
+     # Find all of the SCons functional tests in the local directory
+@@ -777,9 +777,9 @@
+     tests[0].total_time = time_func() - total_start_time
+     print_time_func("Total execution time for all tests: %.1f seconds\n", tests[0].total_time)
+ 
+-passed = filter(lambda t: t.status == 0, tests)
+-fail = filter(lambda t: t.status == 1, tests)
+-no_result = filter(lambda t: t.status == 2, tests)
++passed = [t for t in tests if t.status == 0]
++fail = [t for t in tests if t.status == 1]
++no_result = [t for t in tests if t.status == 2]
+ 
+ if len(tests) != 1 and execute_tests:
+     if passed and print_passed_summary:
+--- src/setup.py (original)
++++ src/setup.py (refactored)
+@@ -297,8 +297,8 @@
+             create_version_script = self.do_nothing
+ 
+         inputs = self.get_inputs()
+-        bat_scripts = filter(lambda x: x[-4:] == '.bat', inputs)
+-        non_bat_scripts = filter(lambda x: x[-4:] != '.bat', inputs)
++        bat_scripts = [x for x in inputs if x[-4:] == '.bat']
++        non_bat_scripts = [x for x in inputs if x[-4:] != '.bat']
+ 
+         self.outfiles = []
+         self.mkpath(self.install_dir)
+--- src/test_aegistests.py (original)
++++ src/test_aegistests.py (refactored)
+@@ -58,7 +58,7 @@
+ output = get_stdout('aegis -list -unformatted pf') +\
+          get_stdout('aegis -list -unformatted cf')
+ lines = output.split('\n')[:-1]
+-sources = filter(lambda x: x[:7] == 'source ', lines)
++sources = [x for x in lines if x[:7] == 'source ']
+ 
+ re1 = re.compile(r' src/.*Tests\.py')
+ re2 = re.compile(r' src/test_.*\.py')
+@@ -67,7 +67,7 @@
+ def filename_is_a_test(x):
+     return re1.search(x) or re2.search(x) or re3.search(x)
+ 
+-test_files = filter(filename_is_a_test, sources)
++test_files = list(filter(filename_is_a_test, sources))
+ 
+ if test_files:
+     sys.stderr.write("Found the following files with test names not marked as Aegis tests:\n")
+--- src/test_interrupts.py (original)
++++ src/test_interrupts.py (refactored)
+@@ -77,7 +77,7 @@
+     test.skip_test('%s does not exist; skipping test.\n' % MANIFEST)
+ else:
+     files = fp.read().split()
+-    files = filter(lambda f: f[-3:] == '.py', files)
++    files = [f for f in files if f[-3:] == '.py']
+ 
+ # some regexps to parse the python files
+ tryexc_pat = re.compile(
+--- src/test_pychecker.py (original)
++++ src/test_pychecker.py (refactored)
+@@ -66,7 +66,7 @@
+ MANIFEST = os.path.join(src_engine, 'MANIFEST.in')
+ files = open(MANIFEST).read().split()
+ 
+-files = filter(lambda f: f[-3:] == '.py', files)
++files = [f for f in files if f[-3:] == '.py']
+ 
+ ignore = [
+     'SCons/compat/__init__.py',
+--- src/engine/SCons/Action.py (original)
++++ src/engine/SCons/Action.py (refactored)
+@@ -687,7 +687,7 @@
+         #TODO(1.5) _ActionAction.__init__(self, **kw)
+         _ActionAction.__init__(self, **kw)
+         if is_List(cmd):
+-            if filter(is_List, cmd):
++            if list(filter(is_List, cmd)):
+                 raise TypeError, "CommandAction should be given only " \
+                       "a single command"
+         self.cmd_list = cmd
+--- src/engine/SCons/Builder.py (original)
++++ src/engine/SCons/Builder.py (refactored)
+@@ -121,8 +121,7 @@
+ 
+ def match_splitext(path, suffixes = []):
+     if suffixes:
+-        matchsuf = filter(lambda S: path[-len(S):] == S,
+-                          suffixes)
++        matchsuf = [S for S in suffixes if path[-len(S):] == S]
+         if matchsuf:
+             suf = max(map(None, map(len, matchsuf), matchsuf))[1]
+             return [path[:-len(suf)], path[-len(suf):]]
+@@ -748,7 +747,7 @@
+                     # target, then filter out any sources that this
+                     # Builder isn't capable of building.
+                     if len(tlist) > 1:
+-                        tlist = filter(lambda t: match_src_suffix(t.name), tlist)
++                        tlist = [t for t in tlist if match_src_suffix(t.name)]
+                     result.extend(tlist)
+             else:
+                 result.append(s)
+--- src/engine/SCons/Environment.py (original)
++++ src/engine/SCons/Environment.py (refactored)
+@@ -98,7 +98,7 @@
+     if not tools:
+         return
+     # Filter out null tools from the list.
+-    for tool in filter(None, tools):
++    for tool in [_f for _f in tools if _f]:
+         if SCons.Util.is_List(tool) or type(tool)==type(()):
+             toolname = tool[0]
+             toolargs = tool[1] # should be a dict of kw args
+@@ -607,7 +607,7 @@
+         Removes the specified function's MethodWrapper from the
+         added_methods list, so we don't re-bind it when making a clone.
+         """
+-        self.added_methods = filter(lambda dm: not dm.method is function, self.added_methods)
++        self.added_methods = [dm for dm in self.added_methods if not dm.method is function]
+ 
+     def Override(self, overrides):
+         """
+@@ -1267,9 +1267,9 @@
+                 if not SCons.Util.is_List(dk):
+                     dk = [dk]
+                 if delete_existing:
+-                    dk = filter(lambda x: x not in val, dk)
++                    dk = [x for x in dk if x not in val]
+                 else:
+-                    val = filter(lambda x: x not in dk, val)
++                    val = [x for x in val if x not in dk]
+                 self._dict[key] = dk + val
+             else:
+                 dk = self._dict[key]
+@@ -1277,14 +1277,14 @@
+                     # By elimination, val is not a list.  Since dk is a
+                     # list, wrap val in a list first.
+                     if delete_existing:
+-                        dk = filter(lambda x: x not in val, dk)
++                        dk = [x for x in dk if x not in val]
+                         self._dict[key] = dk + [val]
+                     else:
+                         if not val in dk:
+                             self._dict[key] = dk + [val]
+                 else:
+                     if delete_existing:
+-                        dk = filter(lambda x: x not in val, dk)
++                        dk = [x for x in dk if x not in val]
+                     self._dict[key] = dk + val
+         self.scanner_map_delete(kw)
+ 
+@@ -1490,7 +1490,7 @@
+                 raise
+             return
+         lines = SCons.Util.LogicalLines(fp).readlines()
+-        lines = filter(lambda l: l[0] != '#', lines)
++        lines = [l for l in lines if l[0] != '#']
+         tdlist = []
+         for line in lines:
+             try:
+@@ -1623,9 +1623,9 @@
+                 if not SCons.Util.is_List(dk):
+                     dk = [dk]
+                 if delete_existing:
+-                    dk = filter(lambda x: x not in val, dk)
++                    dk = [x for x in dk if x not in val]
+                 else:
+-                    val = filter(lambda x: x not in dk, val)
++                    val = [x for x in val if x not in dk]
+                 self._dict[key] = val + dk
+             else:
+                 dk = self._dict[key]
+@@ -1633,14 +1633,14 @@
+                     # By elimination, val is not a list.  Since dk is a
+                     # list, wrap val in a list first.
+                     if delete_existing:
+-                        dk = filter(lambda x: x not in val, dk)
++                        dk = [x for x in dk if x not in val]
+                         self._dict[key] = [val] + dk
+                     else:
+                         if not val in dk:
+                             self._dict[key] = [val] + dk
+                 else:
+                     if delete_existing:
+-                        dk = filter(lambda x: x not in val, dk)
++                        dk = [x for x in dk if x not in val]
+                     self._dict[key] = val + dk
+         self.scanner_map_delete(kw)
+ 
+@@ -1765,7 +1765,7 @@
+         tlist = self.arg2nodes(target, self.ans.Alias)
+         if not SCons.Util.is_List(source):
+             source = [source]
+-        source = filter(None, source)
++        source = [_f for _f in source if _f]
+ 
+         if not action:
+             if not source:
+--- src/engine/SCons/Executor.py (original)
++++ src/engine/SCons/Executor.py (refactored)
+@@ -372,7 +372,7 @@
+         # TODO(batch):  extend to multiple batches
+         assert (len(self.batches) == 1)
+         # TODO(batch):  remove duplicates?
+-        sources = filter(lambda x: x not in self.batches[0].sources, sources)
++        sources = [x for x in sources if x not in self.batches[0].sources]
+         self.batches[0].sources.extend(sources)
+ 
+     def get_sources(self):
+@@ -517,7 +517,7 @@
+             idict = {}
+             for i in ignore:
+                 idict[i] = 1
+-            sourcelist = filter(lambda s: not idict.has_key(s), sourcelist)
++            sourcelist = [s for s in sourcelist if not idict.has_key(s)]
+ 
+         memo_dict[key] = sourcelist
+ 
+--- src/engine/SCons/JobTests.py (original)
++++ src/engine/SCons/JobTests.py (refactored)
+@@ -492,7 +492,7 @@
+             self.failUnless(state in [SCons.Node.no_state, N.expect_to_be],
+                             "Node %s got unexpected result: %s" % (N, state))
+ 
+-        self.failUnless(filter(lambda N: N.get_state(), testnodes),
++        self.failUnless([N for N in testnodes if N.get_state()],
+                         "no nodes ran at all.")
+ 
+ 
+--- src/engine/SCons/Subst.py (original)
++++ src/engine/SCons/Subst.py (refactored)
+@@ -50,7 +50,7 @@
+ 
+ def SetAllowableExceptions(*excepts):
+     global AllowableExceptions
+-    AllowableExceptions = filter(None, excepts)
++    AllowableExceptions = [_f for _f in excepts if _f]
+ 
+ def raise_exception(exception, target, s):
+     name = exception.__class__.__name__
+@@ -344,7 +344,7 @@
+ 
+ def _rm_list(list):
+     #return [ l for l in list if not l in ('$(', '$)') ]
+-    return filter(lambda l: not l in ('$(', '$)'), list)
++    return [l for l in list if not l in ('$(', '$)')]
+ 
+ def _remove_list(list):
+     result = []
+--- src/engine/SCons/Taskmaster.py (original)
++++ src/engine/SCons/Taskmaster.py (refactored)
+@@ -1008,7 +1008,7 @@
+         #    node for node, cycle in nclist
+         #             if cycle or node.get_state() != NODE_EXECUTED
+         #]
+-        genuine_cycles = filter(lambda t: t[1] or t[0].get_state() != NODE_EXECUTED, nclist)
++        genuine_cycles = [t for t in nclist if t[1] or t[0].get_state() != NODE_EXECUTED]
+         if not genuine_cycles:
+             # All of the "cycles" found were single nodes in EXECUTED state,
+             # which is to say, they really weren't cycles.  Just return.
+--- src/engine/SCons/Node/FS.py (original)
++++ src/engine/SCons/Node/FS.py (refactored)
+@@ -1915,7 +1915,7 @@
+         names.remove('.')
+         names.remove('..')
+         func(arg, self, names)
+-        for dirname in filter(lambda n: isinstance(entries[n], Dir), names):
++        for dirname in [n for n in names if isinstance(entries[n], Dir)]:
+             entries[dirname].walk(func, arg)
+ 
+     def glob(self, pathname, ondisk=True, source=False, strings=False):
+@@ -1990,7 +1990,7 @@
+             # the dir.entries dictionary are normalized (that is, all upper
+             # case) on case-insensitive systems like Windows.
+             #node_names = [ v.name for k, v in dir.entries.items() if k not in ('.', '..') ]
+-            entry_names = filter(lambda n: n not in ('.', '..'), dir.entries.keys())
++            entry_names = [n for n in dir.entries.keys() if n not in ('.', '..')]
+             node_names = map(lambda n: dir.entries[n].name, entry_names)
+             names.extend(node_names)
+             if not strings:
+@@ -2014,7 +2014,7 @@
+                     # after we exit this loop.
+                     if pattern[0] != '.':
+                         #disk_names = [ d for d in disk_names if d[0] != '.' ]
+-                        disk_names = filter(lambda x: x[0] != '.', disk_names)
++                        disk_names = [x for x in disk_names if x[0] != '.']
+                     disk_names = fnmatch.filter(disk_names, pattern)
+                     dirEntry = dir.Entry
+                     for name in disk_names:
+@@ -2030,7 +2030,7 @@
+         names = set(names)
+         if pattern[0] != '.':
+             #names = [ n for n in names if n[0] != '.' ]
+-            names = filter(lambda x: x[0] != '.', names)
++            names = [x for x in names if x[0] != '.']
+         names = fnmatch.filter(names, pattern)
+ 
+         if strings:
+@@ -3152,7 +3152,7 @@
+             #paths = filter(None, map(filedir_lookup, paths))
+ 
+             self.default_filedir = filedir
+-            paths = filter(None, map(self.filedir_lookup, paths))
++            paths = [_f for _f in map(self.filedir_lookup, paths) if _f]
+ 
+         result = None
+         for dir in paths:
+--- src/engine/SCons/Node/NodeTests.py (original)
++++ src/engine/SCons/Node/NodeTests.py (refactored)
+@@ -898,7 +898,7 @@
+ 
+         # Scanner method can select specific nodes to recurse
+         def no_fff(nodes):
+-            return filter(lambda n: str(n)[0] != 'f', nodes)
++            return [n for n in nodes if str(n)[0] != 'f']
+         s.recurse_nodes = no_fff
+         deps = node.get_implicit_deps(env, s, target)
+         assert deps == [d1, d2, e, f], map(str, deps)
+--- src/engine/SCons/Node/__init__.py (original)
++++ src/engine/SCons/Node/__init__.py (refactored)
+@@ -548,8 +548,7 @@
+         deps = []
+         while nodes:
+             n = nodes.pop(0)
+-            d = filter(lambda x: not seen.has_key(x),
+-                       n.get_found_includes(env, scanner, path))
++            d = [x for x in n.get_found_includes(env, scanner, path) if not seen.has_key(x)]
+             if d:
+                 deps.extend(d)
+                 for n in d:
+@@ -1215,7 +1214,7 @@
+ 
+         lines = []
+ 
+-        removed = filter(lambda x: not x in new_bkids, old_bkids)
++        removed = [x for x in old_bkids if not x in new_bkids]
+         if removed:
+             removed = map(stringify, removed)
+             fmt = "`%s' is no longer a dependency\n"
+--- src/engine/SCons/Scanner/Dir.py (original)
++++ src/engine/SCons/Scanner/Dir.py (refactored)
+@@ -29,7 +29,7 @@
+ 
+ def only_dirs(nodes):
+     is_Dir = lambda n: isinstance(n.disambiguate(), SCons.Node.FS.Dir)
+-    return filter(is_Dir, nodes)
++    return list(filter(is_Dir, nodes))
+ 
+ def DirScanner(**kw):
+     """Return a prototype Scanner instance for scanning
+@@ -101,7 +101,7 @@
+         # mixed Node types (Dirs and Files, for example) has a Dir as
+         # the first entry.
+         return []
+-    entry_list = filter(do_not_scan, entries.keys())
++    entry_list = list(filter(do_not_scan, entries.keys()))
+     entry_list.sort()
+     return map(lambda n: entries[n], entry_list)
+ 
+--- src/engine/SCons/Scanner/Fortran.py (original)
++++ src/engine/SCons/Scanner/Fortran.py (refactored)
+@@ -94,7 +94,7 @@
+             d = {}
+             for m in defmodules:
+                 d[m] = 1
+-            modules = filter(lambda m: not d.has_key(m), modules)
++            modules = [m for m in modules if not d.has_key(m)]
+             #modules = self.undefinedModules(modules, defmodules)
+ 
+             # Convert module name to a .mod filename
+--- src/engine/SCons/Scanner/ScannerTests.py (original)
++++ src/engine/SCons/Scanner/ScannerTests.py (refactored)
+@@ -281,7 +281,7 @@
+                         "recursive = 1 didn't return all nodes: %s" % n)
+ 
+         def odd_only(nodes):
+-            return filter(lambda n: n % 2, nodes)
++            return [n for n in nodes if n % 2]
+         s = SCons.Scanner.Base(function = self.func, recursive = odd_only)
+         n = s.recurse_nodes(nodes)
+         self.failUnless(n == [1, 3],
+--- src/engine/SCons/Script/Interactive.py (original)
++++ src/engine/SCons/Script/Interactive.py (refactored)
+@@ -223,7 +223,7 @@
+         def get_unseen_children(node, parent, seen_nodes=seen_nodes):
+             def is_unseen(node, seen_nodes=seen_nodes):
+                 return not seen_nodes.has_key(node)
+-            return filter(is_unseen, node.children(scan=1))
++            return list(filter(is_unseen, node.children(scan=1)))
+ 
+         def add_to_seen_nodes(node, parent, seen_nodes=seen_nodes):
+             seen_nodes[node] = 1
+--- src/engine/SCons/Script/Main.py (original)
++++ src/engine/SCons/Script/Main.py (refactored)
+@@ -414,7 +414,7 @@
+         return node.all_children()
+     def get_derived_children(self, node):
+         children = node.all_children(None)
+-        return filter(lambda x: x.has_builder(), children)
++        return [x for x in children if x.has_builder()]
+     def display(self, t):
+         if self.derived:
+             func = self.get_derived_children
+@@ -1087,7 +1087,7 @@
+                         # or not a file, so go ahead and keep it as a default
+                         # target and let the engine sort it out:
+                         return 1                
+-                d = filter(check_dir, SCons.Script.DEFAULT_TARGETS)
++                d = list(filter(check_dir, SCons.Script.DEFAULT_TARGETS))
+                 SCons.Script.DEFAULT_TARGETS[:] = d
+                 target_top = None
+                 lookup_top = None
+@@ -1122,7 +1122,7 @@
+                 node = None
+         return node
+ 
+-    nodes = filter(None, map(Entry, targets))
++    nodes = [_f for _f in map(Entry, targets) if _f]
+ 
+     task_class = BuildTask      # default action is to build targets
+     opening_message = "Building targets ..."
+--- src/engine/SCons/Tool/__init__.py (original)
++++ src/engine/SCons/Tool/__init__.py (refactored)
+@@ -547,7 +547,7 @@
+ def FindAllTools(tools, env):
+     def ToolExists(tool, env=env):
+         return Tool(tool).exists(env)
+-    return filter (ToolExists, tools)
++    return list(filter (ToolExists, tools))
+ 
+ def tool_list(platform, env):
+ 
+@@ -667,7 +667,7 @@
+               fortran_compiler, assembler, ar]
+              + other_tools)
+ 
+-    return filter(lambda x: x, tools)
++    return [x for x in tools if x]
+ 
+ # Local Variables:
+ # tab-width:4
+--- src/engine/SCons/Tool/dvipdf.py (original)
++++ src/engine/SCons/Tool/dvipdf.py (refactored)
+@@ -89,7 +89,7 @@
+     """
+     def strip_suffixes(n):
+         return not SCons.Util.splitext(str(n))[1] in ['.aux', '.log']
+-    source = filter(strip_suffixes, source)
++    source = list(filter(strip_suffixes, source))
+     return (target, source)
+ 
+ def generate(env):
+--- src/engine/SCons/Tool/javac.py (original)
++++ src/engine/SCons/Tool/javac.py (refactored)
+@@ -74,8 +74,7 @@
+         elif isinstance(entry, SCons.Node.FS.Dir):
+             result = SCons.Util.OrderedDict()
+             def visit(arg, dirname, names, dirnode=entry.rdir()):
+-                java_files = filter(lambda n: _my_normcase(n[-len(js):]) == js,
+-                                    names)
++                java_files = [n for n in names if _my_normcase(n[-len(js):]) == js]
+                 # The on-disk entries come back in arbitrary order.  Sort
+                 # them so our target and source lists are determinate.
+                 java_files.sort()
+--- src/engine/SCons/Tool/msvs.py (original)
++++ src/engine/SCons/Tool/msvs.py (refactored)
+@@ -740,7 +740,7 @@
+         # TODO(1.5)
+         #cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+         cats.sort(lambda a, b: cmp(a.lower(), b.lower()))
+-        cats = filter(lambda k: self.sources[k], cats)
++        cats = [k for k in cats if self.sources[k]]
+         for kind in cats:
+             if len(cats) > 1:
+                 self.file.write('\t\t<Filter\n'
+--- src/engine/SCons/Tool/MSCommon/netframework.py (original)
++++ src/engine/SCons/Tool/MSCommon/netframework.py (refactored)
+@@ -58,7 +58,7 @@
+         contents = os.listdir(froot)
+ 
+         l = re.compile('v[0-9]+.*')
+-        versions = filter(lambda e: l.match(e), contents)
++        versions = [e for e in contents if l.match(e)]
+ 
+         def versrt(a,b):
+             # since version numbers aren't really floats...
+--- src/engine/SCons/Tool/packaging/__init__.py (original)
++++ src/engine/SCons/Tool/packaging/__init__.py (refactored)
+@@ -175,7 +175,7 @@
+         args.remove('source')
+         # now remove any args for which we have a value in kw.
+         #args=[x for x in args if not kw.has_key(x)]
+-        args=filter(lambda x: not kw.has_key(x), args)
++        args=[x for x in args if not kw.has_key(x)]
+ 
+         if len(args)==0:
+             raise # must be a different error, so reraise
+@@ -238,7 +238,7 @@
+     #pattrs = [x for x in dir(f1) if not hasattr(f2, x) and\
+     #                                x.startswith('PACKAGING_')]
+     copyit = lambda x: not hasattr(f2, x) and x[:10] == 'PACKAGING_'
+-    pattrs = filter(copyit, dir(f1))
++    pattrs = list(filter(copyit, dir(f1)))
+     for attr in pattrs:
+         setattr(f2, attr, getattr(f1, attr))
+ def putintopackageroot(target, source, env, pkgroot, honor_install_location=1):
+@@ -292,7 +292,7 @@
+             (file.builder.name=="InstallBuilder" or\
+              file.builder.name=="InstallAsBuilder"))
+ 
+-    if len(filter(has_no_install_location, source)):
++    if len(list(filter(has_no_install_location, source))):
+         warn(Warning, "there are files to package which have no\
+         InstallBuilder attached, this might lead to irreproducible packages")
+ 
+--- src/engine/SCons/Tool/packaging/msi.py (original)
++++ src/engine/SCons/Tool/packaging/msi.py (refactored)
+@@ -66,7 +66,7 @@
+     charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxyz0123456789_.'
+     if s[0] in '0123456789.':
+         s += '_'+s
+-    id = filter( lambda c : c in charset, s )
++    id = [c for c in s if c in charset]
+ 
+     # did we already generate an id for this file?
+     try:
+@@ -110,7 +110,7 @@
+ 
+     # strip forbidden characters.
+     forbidden = '."/[]:;=, '
+-    fname = filter( lambda c : c not in forbidden, fname )
++    fname = [c for c in fname if c not in forbidden]
+ 
+     # check if we already generated a filename with the same number:
+     # thisis1.txt, thisis2.txt etc.
+@@ -297,9 +297,9 @@
+         upper_dir = ''
+ 
+         # walk down the xml tree finding parts of the directory
+-        dir_parts = filter( lambda d: d != '', dir_parts )
++        dir_parts = [d for d in dir_parts if d != '']
+         for d in dir_parts[:]:
+-            already_created = filter( lambda c: c.nodeName == 'Directory' and c.attributes['LongName'].value == escape(d), Directory.childNodes ) 
++            already_created = [c for c in Directory.childNodes if c.nodeName == 'Directory' and c.attributes['LongName'].value == escape(d)] 
+ 
+             if already_created != []:
+                 Directory = already_created[0]
+--- src/engine/SCons/Tool/packaging/rpm.py (original)
++++ src/engine/SCons/Tool/packaging/rpm.py (refactored)
+@@ -102,13 +102,13 @@
+ 
+     # filter out the target we are building the source list for.
+     #sources = [s for s in sources if not (s in target)]
+-    sources = filter(lambda s: s not in target, sources)
++    sources = [s for s in sources if s not in target]
+ 
+     # find the .spec file for rpm and add it since it is not necessarily found
+     # by the FindSourceFiles function.
+     #sources.extend( [s for s in source if str(s).rfind('.spec')!=-1] )
+     spec_file = lambda s: str(s).rfind('.spec') != -1
+-    sources.extend( filter(spec_file, source) )
++    sources.extend( list(filter(spec_file, source)) )
+ 
+     # as the source contains the url of the source package this rpm package
+     # is built from, we extract the target name
+@@ -337,7 +337,7 @@
+ 
+         str = ""
+         #domestic = [ (k,v) for k,v in replacements if not is_international(k) ]
+-        domestic = filter(lambda t: not is_international(t[0]), replacements)
++        domestic = [t for t in replacements if not is_international(t[0])]
+         for key, replacement in domestic:
+             try:
+                 str = str + replacement % values[key]
+@@ -346,11 +346,11 @@
+                     raise e
+ 
+         #international = [ (k,v) for k,v in replacements if is_international(k) ]
+-        international = filter(lambda t: is_international(t[0]), replacements)
++        international = [t for t in replacements if is_international(t[0])]
+         for key, replacement in international:
+             try:
+                 #int_values_for_key = [ (get_country_code(k),v) for k,v in values.items() if strip_country_code(k) == key ]
+-                x = filter(lambda t: strip_country_code(t[0]) == key, values.items())
++                x = [t for t in values.items() if strip_country_code(t[0]) == key]
+                 int_values_for_key = map(lambda t: (get_country_code(t[0]),t[1]), x)
+                 for v in int_values_for_key:
+                     str = str + replacement % v
+--- src/engine/SCons/Variables/ListVariable.py (original)
++++ src/engine/SCons/Variables/ListVariable.py (refactored)
+@@ -62,7 +62,7 @@
+ 
+ class _ListVariable(UserList.UserList):
+     def __init__(self, initlist=[], allowedElems=[]):
+-        UserList.UserList.__init__(self, filter(None, initlist))
++        UserList.UserList.__init__(self, [_f for _f in initlist if _f])
+         self.allowedElems = allowedElems[:]
+         self.allowedElems.sort()
+ 
+@@ -97,9 +97,9 @@
+     elif val == 'all':
+         val = allowedElems
+     else:
+-        val = filter(None, val.split(','))
++        val = [_f for _f in val.split(',') if _f]
+         val = map(lambda v: mapdict.get(v, v), val)
+-        notAllowed = filter(lambda v: not v in allowedElems, val)
++        notAllowed = [v for v in val if not v in allowedElems]
+         if notAllowed:
+             raise ValueError("Invalid value(s) for option: %s" %
+                              ','.join(notAllowed))
+--- src/engine/SCons/Variables/__init__.py (original)
++++ src/engine/SCons/Variables/__init__.py (refactored)
+@@ -295,7 +295,7 @@
+             else:
+                 actual = None
+             return self.FormatVariableHelpText(env, opt.key, opt.help, opt.default, actual, opt.aliases)
+-        lines = filter(None, map(format, options))
++        lines = [_f for _f in map(format, options) if _f]
+ 
+         return ''.join(lines)
+ 
+@@ -304,7 +304,7 @@
+ 
+     def FormatVariableHelpText(self, env, key, help, default, actual, aliases=[]):
+         # Don't display the key name itself as an alias.
+-        aliases = filter(lambda a: a != key, aliases)
++        aliases = [a for a in aliases if a != key]
+         if len(aliases)==0:
+             return self.format % (key, help, default, actual)
+         else:
+--- src/script/scons-time.py (original)
++++ src/script/scons-time.py (refactored)
+@@ -176,13 +176,13 @@
+         result = []
+         for line in self.lines:
+             result.extend(line.get_x_values())
+-        return filter(lambda r: not r is None, result)
++        return [r for r in result if not r is None]
+ 
+     def get_all_y_values(self):
+         result = []
+         for line in self.lines:
+             result.extend(line.get_y_values())
+-        return filter(lambda r: not r is None, result)
++        return [r for r in result if not r is None]
+ 
+     def get_min_x(self):
+         try:
+@@ -577,7 +577,7 @@
+         """
+         x = re.compile(re.escape(prefix) + '-([0-9]+).*')
+         matches = map(lambda e: x.match(e), os.listdir(dir))
+-        matches = filter(None, matches)
++        matches = [_f for _f in matches if _f]
+         if not matches:
+             return 0
+         run_numbers = map(lambda m: int(m.group(1)), matches)
+--- src/script/sconsign.py (original)
++++ src/script/sconsign.py (refactored)
+@@ -286,7 +286,7 @@
+         field_list = []
+     if '\n' in name:
+         name = repr(name)
+-    outlist = [name+':'] + filter(None, map(lambda x: field(x, ninfo, Verbose), field_list))
++    outlist = [name+':'] + [_f for _f in map(lambda x: field(x, ninfo, Verbose), field_list) if _f]
+     if Verbose:
+         sep = '\n    ' + prefix
+     else:
+--- test/AddOption/help.py (original)
++++ test/AddOption/help.py (refactored)
+@@ -56,7 +56,7 @@
+ 
+ test.run(arguments = '-h')
+ lines = test.stdout().split('\n')
+-missing = filter(lambda e: e not in lines, expected_lines)
++missing = [e for e in expected_lines if e not in lines]
+ 
+ if missing:
+     print "====== STDOUT:"
+@@ -69,7 +69,7 @@
+ 
+ test.run(arguments = '-h')
+ lines = test.stdout().split('\n')
+-unexpected = filter(lambda e: e in lines, expected_lines)
++unexpected = [e for e in expected_lines if e in lines]
+ 
+ if unexpected:
+     print "====== STDOUT:"
+--- test/Deprecated/BuildDir.py (original)
++++ test/Deprecated/BuildDir.py (refactored)
+@@ -190,9 +190,9 @@
+ def blank_output(err):
+     if not err:
+         return 1
+-    stderrlines = filter(lambda l: l, err.split('\n'))
++    stderrlines = [l for l in err.split('\n') if l]
+     msg = "warning: tempnam() possibly used unsafely"
+-    stderrlines = filter(lambda l: l.find(msg) == -1, stderrlines)
++    stderrlines = [l for l in stderrlines if l.find(msg) == -1]
+     return len(stderrlines) == 0
+ 
+ test.run(chdir='work1', arguments = '. ../build', stderr=None)
+--- test/Java/Java-1.4.py (original)
++++ test/Java/Java-1.4.py (refactored)
+@@ -362,7 +362,7 @@
+ 
+ def classes_must_not_exist(dir, expect):
+     global failed
+-    present = filter(os.path.exists, expect)
++    present = list(filter(os.path.exists, expect))
+     if present:
+         sys.stderr.write("Found the following unexpected class files in '%s' after cleaning:\n" % dir)
+         for c in present:
+--- test/Java/Java-1.5.py (original)
++++ test/Java/Java-1.5.py (refactored)
+@@ -358,7 +358,7 @@
+ 
+ def classes_must_not_exist(dir, expect):
+     global failed
+-    present = filter(os.path.exists, expect)
++    present = list(filter(os.path.exists, expect))
+     if present:
+         sys.stderr.write("Found the following unexpected class files in '%s' after cleaning:\n" % dir)
+         for c in present:
+--- test/Java/Java-1.6.py (original)
++++ test/Java/Java-1.6.py (refactored)
+@@ -358,7 +358,7 @@
+ 
+ def classes_must_not_exist(dir, expect):
+     global failed
+-    present = filter(os.path.exists, expect)
++    present = list(filter(os.path.exists, expect))
+     if present:
+         sys.stderr.write("Found the following unexpected class files in '%s' after cleaning:\n" % dir)
+         for c in present:
+--- test/QT/copied-env.py (original)
++++ test/QT/copied-env.py (refactored)
+@@ -67,10 +67,9 @@
+ 
+ test.run()
+ 
+-moc_MyForm = filter(lambda x: x.find('moc_MyForm') != -1,
+-                    test.stdout().split('\n'))
++moc_MyForm = [x for x in test.stdout().split('\n') if x.find('moc_MyForm') != -1]
+ 
+-MYLIB_IMPL = filter(lambda x: x.find('MYLIB_IMPL') != -1, moc_MyForm)
++MYLIB_IMPL = [x for x in moc_MyForm if x.find('MYLIB_IMPL') != -1]
+ 
+ if not MYLIB_IMPL:
+     print "Did not find MYLIB_IMPL on moc_MyForm compilation line:"
+--- test/TEX/TEX.py (original)
++++ test/TEX/TEX.py (refactored)
+@@ -173,13 +173,13 @@
+     test.run(stderr = None)
+     output_lines = test.stdout().split('\n')
+ 
+-    reruns = filter(lambda x: x.find('latex -interaction=nonstopmode -recorder rerun.tex') != -1, output_lines)
++    reruns = [x for x in output_lines if x.find('latex -interaction=nonstopmode -recorder rerun.tex') != -1]
+     if len(reruns) != 2:
+         print "Expected 2 latex calls, got %s:" % len(reruns)
+         print '\n'.join(reruns)
+         test.fail_test()
+ 
+-    bibtex = filter(lambda x: x.find('bibtex bibtex-test') != -1, output_lines)
++    bibtex = [x for x in output_lines if x.find('bibtex bibtex-test') != -1]
+     if len(bibtex) != 1:
+         print "Expected 1 bibtex call, got %s:" % len(bibtex)
+         print '\n'.join(bibtex)
+--- test/VariantDir/VariantDir.py (original)
++++ test/VariantDir/VariantDir.py (refactored)
+@@ -228,9 +228,9 @@
+ def blank_output(err):
+     if not err:
+         return 1
+-    stderrlines = filter(lambda l: l, err.split('\n'))
++    stderrlines = [l for l in err.split('\n') if l]
+     msg = "warning: tempnam() possibly used unsafely"
+-    stderrlines = filter(lambda l: l.find(msg) == -1, stderrlines)
++    stderrlines = [l for l in stderrlines if l.find(msg) == -1]
+     return len(stderrlines) == 0
+ 
+ test.run(chdir='work1', arguments = '. ../build', stderr=None)
+--- test/option/debug-count.py (original)
++++ test/option/debug-count.py (refactored)
+@@ -73,7 +73,7 @@
+     test.run(arguments = args)
+     stdout = test.stdout()
+ 
+-    missing = filter(lambda o: find_object_count(o, stdout) is None, objects)
++    missing = [o for o in objects if find_object_count(o, stdout) is None]
+ 
+     if missing:
+         print "Missing the following object lines from '%s' output:" % args
+--- test/option/help-options.py (original)
++++ test/option/help-options.py (refactored)
+@@ -54,7 +54,7 @@
+ stdout = ignored_re.sub('', test.stdout())
+ 
+ lines = stdout.split('\n')
+-lines = filter(lambda x: x[:3] == '  -', lines)
++lines = [x for x in lines if x[:3] == '  -']
+ lines = map(lambda x: x[3:], lines)
+ lines = map(lambda x: x[0] == '-' and x[1:] or x, lines)
+ options = map(lambda x: x.split()[0], lines)
+--- test/option/profile.py (original)
++++ test/option/profile.py (refactored)
+@@ -97,7 +97,7 @@
+ 
+ expect = 'Memory before reading SConscript files'
+ lines = test.stdout().split('\n')
+-memory_lines = filter(lambda l: l.find(expect) != -1, lines)
++memory_lines = [l for l in lines if l.find(expect) != -1]
+ 
+ test.fail_test(len(memory_lines) != 1)
+ 
+--- test/scons-time/help/all-subcommands.py (original)
++++ test/scons-time/help/all-subcommands.py (refactored)
+@@ -46,7 +46,7 @@
+ 
+ # Extract all subcommands from the the do_*() functions.
+ functions = globals['SConsTimer'].__dict__.keys()
+-do_funcs = filter(lambda x: x[:3] == 'do_', functions)
++do_funcs = [x for x in functions if x[:3] == 'do_']
+ 
+ subcommands = map(lambda x: x[3:], do_funcs)
+ 
+--- QMTest/TestCmd.py (original)
++++ QMTest/TestCmd.py (refactored)
+@@ -282,7 +282,7 @@
+ 
+ def _clean():
+     global _Cleanup
+-    cleanlist = filter(None, _Cleanup)
++    cleanlist = [_f for _f in _Cleanup if _f]
+     del _Cleanup[:]
+     cleanlist.reverse()
+     for test in cleanlist:
+--- QMTest/TestCommon.py (original)
++++ QMTest/TestCommon.py (refactored)
+@@ -229,7 +229,7 @@
+         """
+         files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+         existing, missing = separate_files(files)
+-        unwritable = filter(lambda x: not is_writable(x), existing)
++        unwritable = [x for x in existing if not is_writable(x)]
+         if missing:
+             print "Missing files: `%s'" % "', `".join(missing)
+         if unwritable:
+@@ -314,7 +314,7 @@
+         if any of the files does not exist.
+         """
+         files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+-        missing = filter(lambda x: not os.path.exists(x), files)
++        missing = [x for x in files if not os.path.exists(x)]
+         if missing:
+             print "Missing files: `%s'" % "', `".join(missing)
+             self.fail_test(missing)
+@@ -386,7 +386,7 @@
+         Exits FAILED if any of the files exists.
+         """
+         files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+-        existing = filter(os.path.exists, files)
++        existing = list(filter(os.path.exists, files))
+         if existing:
+             print "Unexpected files exist: `%s'" % "', `".join(existing)
+             self.fail_test(existing)
+@@ -401,7 +401,7 @@
+         """
+         files = map(lambda x: is_List(x) and os.path.join(*x) or x, files)
+         existing, missing = separate_files(files)
+-        writable = filter(is_writable, existing)
++        writable = list(filter(is_writable, existing))
+         if missing:
+             print "Missing files: `%s'" % "', `".join(missing)
+         if writable:
+--- QMTest/TestSCons.py (original)
++++ QMTest/TestSCons.py (refactored)
+@@ -1276,8 +1276,8 @@
+             #dirs = [ d for d in dirs if not d.startswith('TimeSCons-') ]
+             #files = [ f for f in files if not f.startswith('TimeSCons-') ]
+             not_timescons_entries = lambda s: not s.startswith('TimeSCons-')
+-            dirs = filter(not_timescons_entries, dirs)
+-            files = filter(not_timescons_entries, files)
++            dirs = list(filter(not_timescons_entries, dirs))
++            files = list(filter(not_timescons_entries, files))
+             for dirname in dirs:
+                 source = os.path.join(root, dirname)
+                 destination = source.replace(source_dir, dest_dir)
+--- QMTest/scons_tdb.py (original)
++++ QMTest/scons_tdb.py (refactored)
+@@ -155,7 +155,7 @@
+ def get_sys_values():
+     sys_attributes.sort()
+     result = map(lambda k: (k, getattr(sys, k, _null)), sys_attributes)
+-    result = filter(lambda t: not t[1] is _null, result)
++    result = [t for t in result if not t[1] is _null]
+     result = map(lambda t: t[0] + '=' + repr(t[1]), result)
+     return '\n '.join(result)
+ 
+@@ -170,7 +170,7 @@
+ def get_module_info(module):
+     module_attributes.sort()
+     result = map(lambda k: (k, getattr(module, k, _null)), module_attributes)
+-    result = filter(lambda t: not t[1] is _null, result)
++    result = [t for t in result if not t[1] is _null]
+     result = map(lambda t: t[0] + '=' + repr(t[1]), result)
+     return '\n '.join(result)
+ 
+@@ -216,7 +216,7 @@
+ def get_environment():
+     environ_keys.sort()
+     result = map(lambda k: (k, os.environ.get(k, _null)), environ_keys)
+-    result = filter(lambda t: not t[1] is _null, result)
++    result = [t for t in result if not t[1] is _null]
+     result = map(lambda t: t[0] + '-' + t[1], result)
+     return '\n '.join(result)
+ 
+--- QMTest/unittest.py (original)
++++ QMTest/unittest.py (refactored)
+@@ -339,8 +339,7 @@
+        and its base classes that start with the given prefix. This is used
+        by makeSuite().
+     """
+-    testFnNames = filter(lambda n: n[:len(prefix)] == prefix,
+-                         dir(testCaseClass))
++    testFnNames = [n for n in dir(testCaseClass) if n[:len(prefix)] == prefix]
+     for baseclass in testCaseClass.__bases__:
+         testFnNames = testFnNames + \
+                       getTestCaseNames(baseclass, prefix, sortUsing=None)
+--- bin/SConsDoc.py (original)
++++ bin/SConsDoc.py (refactored)
+@@ -170,8 +170,8 @@
+         self._start_dispatch = {}
+         self._end_dispatch = {}
+         keys = self.__class__.__dict__.keys()
+-        start_tag_method_names = filter(lambda k: k[:6] == 'start_', keys)
+-        end_tag_method_names = filter(lambda k: k[:4] == 'end_', keys)
++        start_tag_method_names = [k for k in keys if k[:6] == 'start_']
++        end_tag_method_names = [k for k in keys if k[:4] == 'end_']
+         for method_name in start_tag_method_names:
+             tag = method_name[6:]
+             self._start_dispatch[tag] = getattr(self, method_name)
+--- bin/linecount.py (original)
++++ bin/linecount.py (refactored)
+@@ -85,7 +85,7 @@
+ def t(arg, dirname, names):
+     try: names.remove('.svn')
+     except ValueError: pass
+-    names = filter(arg, names)
++    names = list(filter(arg, names))
+     arg.extend(map(lambda n: os.path.join(dirname, n), names))
+ 
+ os.path.walk('src', t, src_Tests_py_tests)
+--- bin/scons-doc.py (original)
++++ bin/scons-doc.py (refactored)
+@@ -478,7 +478,7 @@
+ def command_ls(args, c, test, dict):
+     def ls(a):
+         files = os.listdir(a)
+-        files = filter(lambda x: x[0] != '.', files)
++        files = [x for x in files if x[0] != '.']
+         files.sort()
+         return ['  '.join(files)]
+     if args:
+@@ -568,7 +568,7 @@
+     # handle the begin-end tags of our SCons examples.
+ 
+     def start_scons_example(self, attrs):
+-        t = filter(lambda t: t[0] == 'name', attrs)
++        t = [t for t in attrs if t[0] == 'name']
+         if t:
+             name = t[0][1]
+             try:
+@@ -584,7 +584,7 @@
+ 
+     def end_scons_example(self):
+         e = self.e
+-        files = filter(lambda f: f.printme, e.files)
++        files = [f for f in e.files if f.printme]
+         if files:
+             self.outfp.write('<programlisting>')
+             for f in files:
+@@ -607,7 +607,7 @@
+             e = self.e
+         except AttributeError:
+             self.error("<file> tag outside of <scons_example>")
+-        t = filter(lambda t: t[0] == 'name', attrs)
++        t = [t for t in attrs if t[0] == 'name']
+         if not t:
+             self.error("no <file> name attribute found")
+         try:
+@@ -631,7 +631,7 @@
+             e = self.e
+         except AttributeError:
+             self.error("<directory> tag outside of <scons_example>")
+-        t = filter(lambda t: t[0] == 'name', attrs)
++        t = [t for t in attrs if t[0] == 'name']
+         if not t:
+             self.error("no <directory> name attribute found")
+         try:
+@@ -650,7 +650,7 @@
+         self.afunclist = self.afunclist[:-1]
+ 
+     def start_scons_example_file(self, attrs):
+-        t = filter(lambda t: t[0] == 'example', attrs)
++        t = [t for t in attrs if t[0] == 'example']
+         if not t:
+             self.error("no <scons_example_file> example attribute found")
+         exname = t[0][1]
+@@ -658,11 +658,11 @@
+             e = self.examples[exname]
+         except KeyError:
+             self.error("unknown example name '%s'" % exname)
+-        fattrs = filter(lambda t: t[0] == 'name', attrs)
++        fattrs = [t for t in attrs if t[0] == 'name']
+         if not fattrs:
+             self.error("no <scons_example_file> name attribute found")
+         fname = fattrs[0][1]
+-        f = filter(lambda f: f.name == fname, e.files)
++        f = [f for f in e.files if f.name == fname]
+         if not f:
+             self.error("example '%s' does not have a file named '%s'" % (exname, fname))
+         self.f = f[0]
+@@ -674,7 +674,7 @@
+         delattr(self, 'f')
+ 
+     def start_scons_output(self, attrs):
+-        t = filter(lambda t: t[0] == 'example', attrs)
++        t = [t for t in attrs if t[0] == 'example']
+         if not t:
+             self.error("no <scons_output> example attribute found")
+         exname = t[0][1]
+--- bin/sconsexamples.py (original)
++++ bin/sconsexamples.py (refactored)
+@@ -269,7 +269,7 @@
+         sys.stdout.write('&#' + ref + ';')
+ 
+     def start_scons_example(self, attrs):
+-        t = filter(lambda t: t[0] == 'name', attrs)
++        t = [t for t in attrs if t[0] == 'name']
+         if t:
+             name = t[0][1]
+             try:
+@@ -285,7 +285,7 @@
+ 
+     def end_scons_example(self):
+         e = self.e
+-        files = filter(lambda f: f.printme, e.files)
++        files = [f for f in e.files if f.printme]
+         if files:
+             sys.stdout.write('<programlisting>')
+             for f in files:
+@@ -306,7 +306,7 @@
+             e = self.e
+         except AttributeError:
+             self.error("<file> tag outside of <scons_example>")
+-        t = filter(lambda t: t[0] == 'name', attrs)
++        t = [t for t in attrs if t[0] == 'name']
+         if not t:
+             self.error("no <file> name attribute found")
+         try:
+@@ -330,7 +330,7 @@
+             e = self.e
+         except AttributeError:
+             self.error("<directory> tag outside of <scons_example>")
+-        t = filter(lambda t: t[0] == 'name', attrs)
++        t = [t for t in attrs if t[0] == 'name']
+         if not t:
+             self.error("no <directory> name attribute found")
+         try:
+@@ -349,7 +349,7 @@
+         self.afunclist = self.afunclist[:-1]
+ 
+     def start_scons_example_file(self, attrs):
+-        t = filter(lambda t: t[0] == 'example', attrs)
++        t = [t for t in attrs if t[0] == 'example']
+         if not t:
+             self.error("no <scons_example_file> example attribute found")
+         exname = t[0][1]
+@@ -357,11 +357,11 @@
+             e = self.examples[exname]
+         except KeyError:
+             self.error("unknown example name '%s'" % exname)
+-        fattrs = filter(lambda t: t[0] == 'name', attrs)
++        fattrs = [t for t in attrs if t[0] == 'name']
+         if not fattrs:
+             self.error("no <scons_example_file> name attribute found")
+         fname = fattrs[0][1]
+-        f = filter(lambda f: f.name == fname, e.files)
++        f = [f for f in e.files if f.name == fname]
+         if not f:
+             self.error("example '%s' does not have a file named '%s'" % (exname, fname))
+         self.f = f[0]
+@@ -376,7 +376,7 @@
+         delattr(self, 'f')
+ 
+     def start_scons_output(self, attrs):
+-        t = filter(lambda t: t[0] == 'example', attrs)
++        t = [t for t in attrs if t[0] == 'example']
+         if not t:
+             self.error("no <scons_output> example attribute found")
+         exname = t[0][1]
+--- bench/bench.py (original)
++++ bench/bench.py (refactored)
+@@ -94,10 +94,10 @@
+ try:
+     FunctionList
+ except NameError:
+-    function_names = filter(lambda x: x[:4] == FunctionPrefix, locals().keys())
++    function_names = [x for x in locals().keys() if x[:4] == FunctionPrefix]
+     function_names.sort()
+     l = map(lambda f: locals()[f], function_names)
+-    FunctionList = filter(lambda f: type(f) == types.FunctionType, l)
++    FunctionList = [f for f in l if type(f) == types.FunctionType]
+ 
+ IterationList = [None] * Iterations
+ 
