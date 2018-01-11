@@ -1,0 +1,127 @@
+#
+# This file works OK if it is an SConstruct, and I get:
+# C:\temp\scons.ok>scons
+# scons: Reading SConscript files ...
+# Checking for C header file zlib.h... (cached) no
+# tc_config.cache: loaded
+# tc_config.cache: unchanged
+# scons: done reading SConscript files.
+# scons: Building targets ...
+# scons: `tc_config.h' is up to date.
+# scons: done building targets.
+#
+# However, it fails if it is an SConscript and invoked by an SConstruct
+# that is (just):
+# SConscript('./SConscript', variant_dir='c:/temp/scons.var')
+#
+# (The actual location of the variant directory is NOT important)
+#
+# What happens is that I get:
+# C:\temp\scons.bad>scons
+# scons: Reading SConscript files ...
+# Checking for C header file zlib.h... no
+# tc_config.cache: not found
+# tc_config.cache: saved
+# scons: done reading SConscript files.
+# scons: Building targets ...
+# scons: *** Source `C:\temp\scons.var\tc_config.cache' not found, needed by target `C:\temp\scons.var\tc_config.h'.  Stop.
+# scons: building terminated because of errors.
+#
+# If I comment out the Command builder then I get the cache file generated
+# or retained as expected (but, clearly, no header file) - but the my cache
+# file seems to be deleted as a side effect of considering whether to execute
+# the Command.
+#
+# My intent in this case is that I need to export information about the
+# way that a library was configured to its users, rather than just change
+# the compilation environment itself.
+#
+# In my full system I determine a location for the variant build
+# dynamically: I'd like the cache and header file to be generated there
+# if possible (and ideally any cache files that scons uses for configuration
+# too - I might not have write access to the source directory and might want
+# to build multiple variants (from multiple hosts sharing a network mount)
+# simultaneouslly.
+#
+# scons is 1.1.0, Python 2.5.1, host Windows XP.
+#
+# Apologies for the naff Python! Or indeed total failure to see how to
+# do this with the built-in configuration support.
+#
+
+from __future__ import with_statement
+
+import cPickle
+
+##############################################################################
+
+def checkConfigCache(configCacheFile, newConfDict):
+  configCacheFileName=str(configCacheFile)
+  try:
+    with open(configCacheFileName, 'rb') as confFile:
+      oldConfDict = cPickle.load(confFile)
+      print configCacheFileName+': loaded'
+  except:
+    oldConfDict = { }
+    print configCacheFileName+': not found'
+  if newConfDict == oldConfDict:
+    print configCacheFileName+': unchanged'
+  else:
+    try:
+      with open(configCacheFileName, 'wb') as confFile:
+        cPickle.dump(newConfDict, confFile)
+        print configCacheFileName+': saved'
+    except Exception, e:
+      print 'Failed to write config to '+configCacheFileName+' : '+str(e)
+
+def asInt(v):
+  if v:
+    return 1
+  else:
+    return 0
+
+def configHeaderGenerator(target, source, env):
+  targetName=str(target[0])
+  sourceName=str(source[0])
+  try:
+    with open(sourceName, 'rb') as configFile:
+      confDict = cPickle.load(configFile)
+      with open(targetName, 'w') as headerFile:
+        i = confDict.iteritems()
+        try:
+          print >> headerFile, "/* Automatically generated - do not edit */"
+          while i:
+            (k, v) = i.next()
+            print >> headerFile, '#define '+k+' '+str(v)
+        except StopIteration:
+          pass
+        print targetName+': generated'
+  except Exception, e:
+    print 'Failed to write header file '+targetName+str(e)
+
+##############################################################################
+
+env = Environment()
+
+newConfDict = { }
+
+conf=Configure(env)
+newConfDict['TC_WITH_ZLIB']=asInt(conf.CheckCHeader('zlib.h'))
+env=conf.Finish()
+
+( tc_config_h, tc_config_cache )  = env.File(['tc_config.h', 'tc_config.cache'])
+
+checkConfigCache(tc_config_cache, newConfDict)
+
+#
+# These seem to have no effect on whether the files are deleted?
+#
+
+env.Precious(tc_config_cache)
+env.Precious(tc_config_h)
+
+tc_config = env.Command(tc_config_h, tc_config_cache, configHeaderGenerator)
+
+Default(tc_config)
+
+##############################################################################
