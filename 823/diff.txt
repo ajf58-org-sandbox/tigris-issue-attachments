@@ -1,0 +1,29 @@
+*** vc.py.orig	Tue Aug 17 01:02:52 2010
+--- vc.py	Fri Dec  3 11:34:04 2010
+***************
+*** 326,332 ****
+          if not installed_vcs:
+              msg = 'No installed VCs'
+              debug('msv %s\n' % repr(msg))
+-             SCons.Warnings.warn(SCons.Warnings.VisualCMissingWarning, msg)
+              return None
+          msvc_version = installed_vcs[0]
+          debug('msvc_setup_env: using default installed MSVC version %s\n' % repr(msvc_version))
+--- 326,331 ----
+***************
+*** 417,423 ****
+      if version is None:
+          warn_msg = "No version of Visual Studio compiler found - C/C++ " \
+                     "compilers most likely not set correctly"
+!         SCons.Warnings.warn(SCons.Warnings.VisualCMissingWarning, warn_msg)
+          return None
+      debug('msvc_setup_env: using specified MSVC version %s\n' % repr(version))
+  
+--- 416,422 ----
+      if version is None:
+          warn_msg = "No version of Visual Studio compiler found - C/C++ " \
+                     "compilers most likely not set correctly"
+!         debug('msv %s\n' % repr(warn_msg))
+          return None
+      debug('msvc_setup_env: using specified MSVC version %s\n' % repr(version))
+  
