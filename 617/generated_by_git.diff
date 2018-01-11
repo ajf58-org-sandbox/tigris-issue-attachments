@@ -1,0 +1,187 @@
+From b2bddcbee93bb4fb7500a8cbb0700e292196274b Mon Sep 17 00:00:00 2001
+From: Sheng Cheng <jeru@jeru-office.(none)>
+Date: Fri, 19 Jun 2009 16:59:33 +0800
+Subject: [PATCH] RPATH patch:
+ RPATH='foo' in TOP/some/path/SConscript should refer to TOP/some/path/foo
+ and RPATH='#foo' should refer to TOP/foo
+
+---
+ src/engine/SCons/Tool/gnulink.py |    2 +-
+ src/engine/SCons/Tool/sgilink.py |    2 +-
+ src/engine/SCons/Tool/sunlink.py |    2 +-
+ test/RPATH.py                    |  100 +++++++++++++++++++++++++++++++++-----
+ 4 files changed, 91 insertions(+), 15 deletions(-)
+
+diff --git a/src/engine/SCons/Tool/gnulink.py b/src/engine/SCons/Tool/gnulink.py
+index 1472021..8657f6a 100644
+--- a/src/engine/SCons/Tool/gnulink.py
++++ b/src/engine/SCons/Tool/gnulink.py
+@@ -51,7 +51,7 @@ def generate(env):
+     env.Append(LINKFLAGS=['$__RPATH'])
+     env['RPATHPREFIX'] = '-Wl,-rpath='
+     env['RPATHSUFFIX'] = ''
+-    env['_RPATH'] = '${_concat(RPATHPREFIX, RPATH, RPATHSUFFIX, __env__)}'
++    env['_RPATH'] = '${_concat(RPATHPREFIX, RPATH, RPATHSUFFIX, __env__, RDirs, TARGET, SOURCE)}'
+     
+ def exists(env):
+     return env.Detect(linkers)
+diff --git a/src/engine/SCons/Tool/sgilink.py b/src/engine/SCons/Tool/sgilink.py
+index 1c32ad0..e026ae6 100644
+--- a/src/engine/SCons/Tool/sgilink.py
++++ b/src/engine/SCons/Tool/sgilink.py
+@@ -51,7 +51,7 @@ def generate(env):
+     env.Append(LINKFLAGS=['$__RPATH'])
+     env['RPATHPREFIX'] = '-rpath '
+     env['RPATHSUFFIX'] = ''
+-    env['_RPATH'] = '${_concat(RPATHPREFIX, RPATH, RPATHSUFFIX, __env__)}'
++    env['_RPATH'] = '${_concat(RPATHPREFIX, RPATH, RPATHSUFFIX, __env__, RDirs, TARGET, SOURCE)}'
+ 
+ def exists(env):
+     return env.Detect(linkers)
+diff --git a/src/engine/SCons/Tool/sunlink.py b/src/engine/SCons/Tool/sunlink.py
+index ab66f46..d187bd7 100644
+--- a/src/engine/SCons/Tool/sunlink.py
++++ b/src/engine/SCons/Tool/sunlink.py
+@@ -65,7 +65,7 @@ def generate(env):
+     env.Append(LINKFLAGS=['$__RPATH'])
+     env['RPATHPREFIX'] = '-R'
+     env['RPATHSUFFIX'] = ''
+-    env['_RPATH'] = '${_concat(RPATHPREFIX, RPATH, RPATHSUFFIX, __env__)}'
++    env['_RPATH'] = '${_concat(RPATHPREFIX, RPATH, RPATHSUFFIX, __env__, RDirs, TARGET, SOURCE)}'
+ 
+ def exists(env):
+     return ccLinker
+diff --git a/test/RPATH.py b/test/RPATH.py
+index 4e13bb1..8f2ecad 100644
+--- a/test/RPATH.py
++++ b/test/RPATH.py
+@@ -35,38 +35,114 @@ if sys.platform in ['cygwin', 'win32']:
+     msg = "Can not test RPATH on '%s', skipping test.\n" % sys.platform
+     test.skip_test(msg)
+ 
+-foo = test.workpath('foo' + _exe)
++"""
++An overview of the file structures
++TOP/
++ SConstruct
++ foo.cc         # executable "foo" depends on the shared library "bar"
++ bar/
++  bar.h         # shared library "bar" depends on
++  bar.cc        #   shared library "bar_sub1/bar_sub1" and
++                #   shared library "#bar_sub2/bar_sub2"
++  bar_sub1/
++   bar_sub1.h   # shared library "bar_sub1"
++   bar_sub1.cc
++ bar_sub2/
++  bar_sub2.h    # shared library "bar_sub2"
++  bar_sub2.cc
++"""
+ 
+-test.subdir('bar')
++foo = test.workpath('foo' + _exe)
+ 
+ test.write('SConstruct', """\
+-SConscript('bar/SConscript')
+-Program('foo', 'foo.c', LIBS='bar', LIBPATH='bar', RPATH='bar')
++SConscript(['bar/SConscript', 'bar_sub2/SConscript'])
++Program('foo', 'foo.cc', CPPPATH='bar', LIBS='bar', LIBPATH='bar', RPATH='bar')
+ """)
+ 
+-test.write('foo.c', """\
+-#include <stdlib.h>
++test.write('foo.cc', """\
++#include "bar.h"
+ int main() {
+-    void bar();
+     bar();
+-    exit (0);
++    return 0;
+ }
+ """)
+ 
++test.subdir('bar')
++
+ test.write(['bar', 'SConscript'], """\
+-SharedLibrary('bar', 'bar.c')
++SConscript('bar_sub1/SConscript')
++SharedLibrary('bar', 'bar.cc',
++              CPPPATH=['bar_sub1', '#bar_sub2'],
++              LIBS=['bar_sub1', 'bar_sub2'],
++              LIBPATH=['bar_sub1', '#bar_sub2'],
++              RPATH  =['bar_sub1', '#bar_sub2'])
++""")
++
++test.write(['bar', 'bar.h'], """\
++#ifndef __BAR_H__
++#define __BAR_H__
++void bar();
++#endif  // __BAR_H__
+ """)
+ 
+-test.write(['bar', 'bar.c'], """\
++test.write(['bar', 'bar.cc'], """\
+ #include <stdio.h>
++#include "bar_sub1.h"
++#include "bar_sub2.h"
+ void bar() {
+-    puts("bar");
++    puts(bar_sub1());
++    puts(bar_sub2());
++}
++""")
++
++test.subdir(['bar', 'bar_sub1'])
++
++test.write(['bar', 'bar_sub1', 'SConscript'], """\
++SharedLibrary('bar_sub1', 'bar_sub1.cc')
++""")
++
++test.write(['bar', 'bar_sub1', 'bar_sub1.h'], """\
++#ifndef __BAR_SUB1_H__
++#define __BAR_SUB1_H__
++const char* bar_sub1();
++#endif  // __BAR_SUB1_H__
++""")
++
++test.write(['bar', 'bar_sub1', 'bar_sub1.cc'], """\
++#include "bar_sub1.h"
++const char* bar_sub1() {
++    return "bar_sub1()";
++}
++""")
++
++test.subdir('bar_sub2')
++
++test.write(['bar_sub2', 'SConscript'], """\
++SharedLibrary('bar_sub2', 'bar_sub2.cc')
++""")
++
++test.write(['bar_sub2', 'bar_sub2.h'], """\
++#ifndef __BAR_SUB2_H__
++#define __BAR_SUB2_H__
++const char* bar_sub2();
++#endif  // __BAR_SUB2_H__
++""")
++
++test.write(['bar_sub2', 'bar_sub2.cc'], """\
++#include "bar_sub2.h"
++const char* bar_sub2() {
++    return "bar_sub2()";
+ }
+ """)
+ 
++expect = """\
++bar_sub1()
++bar_sub2()
++"""
++
+ test.run(arguments='.')
+ 
+-test.run(program=foo, chdir=test.workpath('.'), stdout='bar\n')
++test.run(program=foo, chdir=test.workpath('.'), stdout=expect)
+ 
+ test.pass_test()
+ 
+-- 
+1.6.0.4
+
