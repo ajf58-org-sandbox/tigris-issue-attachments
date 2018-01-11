@@ -1,0 +1,12 @@
+diff -urB scons-src-2.1.0.alpha.20101125//src/engine/SCons/Tool/tex.py scons-src-2.1.0.alpha.20101125-patched//src/engine/SCons/Tool/tex.py
+--- scons-src-2.1.0.alpha.20101125//src/engine/SCons/Tool/tex.py	2011-03-25 14:23:00 +0000
++++ scons-src-2.1.0.alpha.20101125-patched//src/engine/SCons/Tool/tex.py	2011-03-25 14:07:15 +0000
+@@ -69,7 +69,7 @@
+ #printglossary_re = re.compile(r"^[^%]*\\printglossary", re.MULTILINE)
+ 
+ # search to find rerun warnings
+-warning_rerun_str = '(^LaTeX Warning:.*Rerun)|(^Package \w+ Warning:.*Rerun)'
++warning_rerun_str = '(^LaTeX Warning:.*Rerun)|(^Package \w+ Warning:.*(\n.*)?Rerun)'
+ warning_rerun_re = re.compile(warning_rerun_str, re.MULTILINE)
+ 
+ # search to find citation rerun warnings
