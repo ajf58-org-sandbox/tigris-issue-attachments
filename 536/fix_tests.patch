@@ -1,0 +1,555 @@
+Index: test/bad-drive.py
+===================================================================
+--- test/bad-drive.py	(revision 3783)
++++ test/bad-drive.py	(working copy)
+@@ -97,15 +97,15 @@
+          status = 2)
+ 
+ test.run(arguments = bad_drive + 'no_target_1',
+-         stderr = "scons: *** No drive `%s' for target `%sno_target_1'.  Stop.\n" % (bad_drive, bad_drive),
++         stderr = "scons: *** [%sno_target_1] AttributeError : 'NoneType' object has no attribute 'path'\n" % bad_drive,
+          status = 2)
+ 
+ test.run(arguments = bad_drive + 'no_target_2',
+-         stderr = "scons: *** Source `ccc.does_not_exist' not found, needed by target `%sno_target_2'.  Stop.\n" % bad_drive,
++         stderr = "scons: *** [%sno_target_2] Source `ccc.does_not_exist' not found, needed by target `%sno_target_2'.\n" % (bad_drive, bad_drive),
+          status = 2)
+ 
+ test.run(arguments = 'ddd.out',
+-         stderr = "scons: *** Source `%sno_source' not found, needed by target `ddd.out'.  Stop.\n" % bad_drive,
++         stderr = "scons: *** [ddd.out] Source `%sno_source' not found, needed by target `ddd.out'.\n" % bad_drive,
+          status = 2)
+ 
+ test.pass_test()
+Index: test/Progress/spinner.py
+===================================================================
+--- test/Progress/spinner.py	(revision 3783)
++++ test/Progress/spinner.py	(working copy)
+@@ -34,33 +34,30 @@
+ 
+ import TestSCons
+ 
+-test = TestSCons.TestSCons(universal_newlines=None)
++test = TestSCons.TestSCons()
+ 
+ test.write('SConstruct', r"""
+ env = Environment()
+ env['BUILDERS']['C'] = Builder(action=Copy('$TARGET', '$SOURCE'))
+-Progress(['-\r', '\\\r', '|\r', '/\r'])
++Progress(['-\n', '\\\n', '|\n', '/\n'])
+ env.C('S1.out', 'S1.in')
+ env.C('S2.out', 'S2.in')
+ env.C('S3.out', 'S3.in')
+ env.C('S4.out', 'S4.in')
+ """)
+ 
+-test.write('S1.in', "S1.in\n")
+-test.write('S2.in', "S2.in\n")
+-test.write('S3.in', "S3.in\n")
+-test.write('S4.in', "S4.in\n")
++test.write('S1.in', "s1.in")
++test.write('S2.in', "s2.in")
++test.write('S3.in', "s3.in")
++test.write('S4.in', "s4.in")
+ 
+ expect = """\
+-\\\r|\rCopy("S1.out", "S1.in")
+-/\r-\rCopy("S2.out", "S2.in")
+-\\\r|\rCopy("S3.out", "S3.in")
+-/\r-\rCopy("S4.out", "S4.in")
+-\\\r|\r"""
++\\\n|\nCopy("S1.out", "S1.in")
++/\n-\nCopy("S2.out", "S2.in")
++\\\n|\nCopy("S3.out", "S3.in")
++/\n-\nCopy("S4.out", "S4.in")
++\\\n|\n"""
+ 
+-if os.linesep != '\n':
+-    expect = string.replace(expect, '\n', os.linesep)
+-
+ test.run(arguments = '-Q .', stdout=expect)
+ 
+ test.pass_test()
+Index: test/Progress/TARGET.py
+===================================================================
+--- test/Progress/TARGET.py	(revision 3783)
++++ test/Progress/TARGET.py	(working copy)
+@@ -34,33 +34,51 @@
+ 
+ import TestSCons
+ 
+-test = TestSCons.TestSCons(universal_newlines=None)
++test = TestSCons.TestSCons()
+ 
+ test.write('SConstruct', """\
+ env = Environment()
+ env['BUILDERS']['C'] = Builder(action=Copy('$TARGET', '$SOURCE'))
+-Progress('$TARGET\\r', overwrite=True)
++Progress('$TARGET\\n', overwrite=True)
+ env.C('S1.out', 'S1.in')
+ env.C('S2.out', 'S2.in')
+ env.C('S3.out', 'S3.in')
+ env.C('S4.out', 'S4.in')
+ """)
+ 
+-test.write('S1.in', "S1.in\n")
+-test.write('S2.in', "S2.in\n")
+-test.write('S3.in', "S3.in\n")
+-test.write('S4.in', "S4.in\n")
++test.write('S1.in', "s1.in")
++test.write('S2.in', "s2.in")
++test.write('S3.in', "s3.in")
++test.write('S4.in', "s4.in")
+ 
++# Note: spaces on blank lines below are SIGNIFICANT.
++# If they are removed, the test will fail.
+ expect = """\
+-S1.in\r     \rS1.out\rCopy("S1.out", "S1.in")
+-      \rS2.in\r     \rS2.out\rCopy("S2.out", "S2.in")
+-      \rS3.in\r     \rS3.out\rCopy("S3.out", "S3.in")
+-      \rS4.in\r     \rS4.out\rCopy("S4.out", "S4.in")
+-      \rSConstruct\r          \r.\r"""
++S1.in
++     
++S1.out
++Copy("S1.out", "S1.in")
++      
++S2.in
++     
++S2.out
++Copy("S2.out", "S2.in")
++      
++S3.in
++     
++S3.out
++Copy("S3.out", "S3.in")
++      
++S4.in
++     
++S4.out
++Copy("S4.out", "S4.in")
++      
++SConstruct
++          
++.
++"""
+ 
+-if os.linesep != '\n':
+-    expect = string.replace(expect, '\n', os.linesep)
+-
+ test.run(arguments = '-Q .', stdout=expect)
+ 
+ test.pass_test()
+Index: test/CVSCOM.py
+===================================================================
+--- test/CVSCOM.py	(revision 3783)
++++ test/CVSCOM.py	(working copy)
+@@ -32,6 +32,7 @@
+ 
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -92,19 +93,19 @@
+ 
+ test.run(arguments = '.',
+          stdout = test.wrap_stdout(read_str = """\
+-%(_python_)s my-cvs-co-.py %(sub_SConscript)s
++"%(python)s" my-cvs-co-.py %(sub_SConscript)s
+ """ % locals(),
+                                    build_str = """\
+-%(_python_)s my-cvs-co-.py aaa.in
++"%(python)s" my-cvs-co-.py aaa.in
+ cat(["aaa.out"], ["aaa.in"])
+ cat(["bbb.out"], ["bbb.in"])
+-%(_python_)s my-cvs-co-.py ccc.in
++"%(python)s" my-cvs-co-.py ccc.in
+ cat(["ccc.out"], ["ccc.in"])
+ cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+-%(_python_)s my-cvs-co-.py %(sub_ddd_in)s
++"%(python)s" my-cvs-co-.py %(sub_ddd_in)s
+ cat(["%(sub_ddd_out)s"], ["%(sub_ddd_in)s"])
+ cat(["%(sub_eee_out)s"], ["%(sub_eee_in)s"])
+-%(_python_)s my-cvs-co-.py %(sub_fff_in)s
++"%(python)s" my-cvs-co-.py %(sub_fff_in)s
+ cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+ cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+ """ % locals()))
+Index: test/srcchange.py
+===================================================================
+--- test/srcchange.py	(revision 3783)
++++ test/srcchange.py	(working copy)
+@@ -38,6 +38,7 @@
+ 
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -90,7 +91,7 @@
+ prog = 'main' + TestSCons._exe
+ 
+ light_build=test.wrap_stdout("""\
+-%(_python_)s getrevision > revision.in
++"%(python)s" getrevision > revision.in
+ """ % locals())
+ 
+ test.run(arguments='.')
+Index: test/CacheDir/option--cs.py
+===================================================================
+--- test/CacheDir/option--cs.py	(revision 3783)
++++ test/CacheDir/option--cs.py	(working copy)
+@@ -35,6 +35,7 @@
+ import TestSCons
+ 
+ _python_ = TestSCons._python_
++python = TestSCons.python
+ _exe = TestSCons._exe
+ _obj = TestSCons._obj
+ 
+@@ -106,8 +107,8 @@
+ # Verify that using --cache-show reports the files as being rebuilt,
+ # even though we actually fetch them from the cache.  Then clean up.
+ expect = test.wrap_stdout("""\
+-%(_python_)s build.py aaa.out aaa.in
+-%(_python_)s build.py bbb.out bbb.in
++"%(python)s" build.py aaa.out aaa.in
++"%(python)s" build.py bbb.out bbb.in
+ cat(["ccc.out"], ["ccc.in"])
+ cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+ """ % locals())
+@@ -124,8 +125,8 @@
+ # even though we don't actually fetch them from the cache.  No need to
+ # clean up.
+ expect = test.wrap_stdout("""\
+-%(_python_)s build.py aaa.out aaa.in
+-%(_python_)s build.py bbb.out bbb.in
++"%(python)s" build.py aaa.out aaa.in
++"%(python)s" build.py bbb.out bbb.in
+ cat(["ccc.out"], ["ccc.in"])
+ cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+ """ % locals())
+Index: test/BitKeeper/BITKEEPERCOM.py
+===================================================================
+--- test/BitKeeper/BITKEEPERCOM.py	(revision 3783)
++++ test/BitKeeper/BITKEEPERCOM.py	(working copy)
+@@ -32,6 +32,7 @@
+ 
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -92,19 +93,19 @@
+ 
+ test.run(arguments = '.',
+          stdout = test.wrap_stdout(read_str = """\
+-%(_python_)s my-bk-get.py %(sub_SConscript)s
++"%(python)s" my-bk-get.py %(sub_SConscript)s
+ """ % locals(),
+                                    build_str = """\
+-%(_python_)s my-bk-get.py aaa.in
++"%(python)s" my-bk-get.py aaa.in
+ cat(["aaa.out"], ["aaa.in"])
+ cat(["bbb.out"], ["bbb.in"])
+-%(_python_)s my-bk-get.py ccc.in
++"%(python)s" my-bk-get.py ccc.in
+ cat(["ccc.out"], ["ccc.in"])
+ cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+-%(_python_)s my-bk-get.py %(sub_ddd_in)s
++"%(python)s" my-bk-get.py %(sub_ddd_in)s
+ cat(["%(sub_ddd_out)s"], ["%(sub_ddd_in)s"])
+ cat(["%(sub_eee_out)s"], ["%(sub_eee_in)s"])
+-%(_python_)s my-bk-get.py %(sub_fff_in)s
++"%(python)s" my-bk-get.py %(sub_fff_in)s
+ cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+ cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+ """ % locals()))
+Index: test/SCCS/SCCSCOM.py
+===================================================================
+--- test/SCCS/SCCSCOM.py	(revision 3783)
++++ test/SCCS/SCCSCOM.py	(working copy)
+@@ -32,6 +32,7 @@
+ 
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -92,19 +93,19 @@
+ 
+ test.run(arguments = '.',
+          stdout = test.wrap_stdout(read_str = """\
+-%(_python_)s my-sccs-get.py %(sub_SConscript)s
++"%(python)s" my-sccs-get.py %(sub_SConscript)s
+ """ % locals(),
+                                    build_str = """\
+-%(_python_)s my-sccs-get.py aaa.in
++"%(python)s" my-sccs-get.py aaa.in
+ cat(["aaa.out"], ["aaa.in"])
+ cat(["bbb.out"], ["bbb.in"])
+-%(_python_)s my-sccs-get.py ccc.in
++"%(python)s" my-sccs-get.py ccc.in
+ cat(["ccc.out"], ["ccc.in"])
+ cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+-%(_python_)s my-sccs-get.py %(sub_ddd_in)s
++"%(python)s" my-sccs-get.py %(sub_ddd_in)s
+ cat(["%(sub_ddd_out)s"], ["%(sub_ddd_in)s"])
+ cat(["%(sub_eee_out)s"], ["%(sub_eee_in)s"])
+-%(_python_)s my-sccs-get.py %(sub_fff_in)s
++"%(python)s" my-sccs-get.py %(sub_fff_in)s
+ cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+ cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+ """ % locals()))
+Index: test/VariantDir/reflect.py
+===================================================================
+--- test/VariantDir/reflect.py	(revision 3783)
++++ test/VariantDir/reflect.py	(working copy)
+@@ -41,7 +41,7 @@
+ test = TestSCons.TestSCons()
+ 
+ _python_ = TestSCons._python_
+-re_python = re.escape(TestSCons.python)
++re_python = re.escape(TestSCons._python_)
+ 
+ test.write("mycc.py", """
+ print 'Compile'
+@@ -90,9 +90,9 @@
+ # The .+ after mycc\\.py below handles /nologo flags from Visual C/C++.
+ expect = test.wrap_stdout("""\
+ scons: building associated VariantDir targets: %(targets)s
+-"%(re_python)s" mycc\\.py.* %(INC_CNI)s .+
++%(re_python)s mycc\\.py.* %(INC_CNI)s.*
+ Compile
+-"%(re_python)s" mylink\\.py .+
++%(re_python)s mylink\\.py.*
+ Link
+ """ % locals())
+ 
+@@ -120,9 +120,9 @@
+ test.run(arguments = '',
+          stdout=test.wrap_stdout("""\
+ scons: building associated VariantDir targets: %(targets)s
+-"%(re_python)s" mycc\\.py.* %(INC_CNI)s .+
++%(re_python)s mycc\\.py.* %(INC_CNI)s.*
+ Compile
+-"%(re_python)s" mylink\\.py .+
++%(re_python)s mylink\\.py.*
+ Link
+ """ % locals()),
+          match=TestSCons.match_re,
+Index: test/silent-command.py
+===================================================================
+--- test/silent-command.py	(revision 3783)
++++ test/silent-command.py	(working copy)
+@@ -36,6 +36,7 @@
+ import TestCmd
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -70,7 +71,7 @@
+ test.write('f7.in', "f7.in\n")
+ 
+ expect = test.wrap_stdout("""\
+-%(_python_)s build.py f1.out f1.in
++"%(python)s" build.py f1.out f1.in
+ """ % locals())
+ 
+ test.run(arguments = '.', stdout = expect)
+Index: test/option/debug-findlibs.py
+===================================================================
+--- test/option/debug-findlibs.py	(revision 3783)
++++ test/option/debug-findlibs.py	(working copy)
+@@ -31,6 +31,7 @@
+ 
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -201,7 +202,7 @@
+   findlibs: looking for 'c-mmm.ccc' in 'sub1' ...
+   findlibs: looking for 'c-mmm.ccc' in 'sub2' ...
+   findlibs: looking for 'c-mmm.ccc' in '.' ...
+-%(_python_)s cat.py foo.xxx a.ooo
++"%(python)s" cat.py foo.xxx a.ooo
+ """ % locals()))
+ 
+ test.must_match('foo.xxx', "a.ooo\n")
+Index: test/Perforce/P4COM.py
+===================================================================
+--- test/Perforce/P4COM.py	(revision 3783)
++++ test/Perforce/P4COM.py	(working copy)
+@@ -32,6 +32,7 @@
+ 
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -92,19 +93,19 @@
+ 
+ test.run(arguments = '.',
+          stdout = test.wrap_stdout(read_str = """\
+-%(_python_)s my-p4.py %(sub_SConscript)s
++"%(python)s" my-p4.py %(sub_SConscript)s
+ """ % locals(),
+                                    build_str = """\
+-%(_python_)s my-p4.py aaa.in
++"%(python)s" my-p4.py aaa.in
+ cat(["aaa.out"], ["aaa.in"])
+ cat(["bbb.out"], ["bbb.in"])
+-%(_python_)s my-p4.py ccc.in
++"%(python)s" my-p4.py ccc.in
+ cat(["ccc.out"], ["ccc.in"])
+ cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+-%(_python_)s my-p4.py %(sub_ddd_in)s
++"%(python)s" my-p4.py %(sub_ddd_in)s
+ cat(["%(sub_ddd_out)s"], ["%(sub_ddd_in)s"])
+ cat(["%(sub_eee_out)s"], ["%(sub_eee_in)s"])
+-%(_python_)s my-p4.py %(sub_fff_in)s
++"%(python)s" my-p4.py %(sub_fff_in)s
+ cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+ cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+ """ % locals()))
+@@ -115,7 +116,4 @@
+ test.must_match(['sub', 'all'],
+                 "Perforce/sub/ddd.in\nchecked-out sub/eee.in\nPerforce/sub/fff.in\n")
+ 
+-
+-
+-#
+ test.pass_test()
+Index: test/RCS/RCS_COCOM.py
+===================================================================
+--- test/RCS/RCS_COCOM.py	(revision 3783)
++++ test/RCS/RCS_COCOM.py	(working copy)
+@@ -32,6 +32,7 @@
+ 
+ import TestSCons
+ 
++python = TestSCons.python
+ _python_ = TestSCons._python_
+ 
+ test = TestSCons.TestSCons()
+@@ -92,19 +93,19 @@
+ 
+ test.run(arguments = '.',
+          stdout = test.wrap_stdout(read_str = """\
+-%(_python_)s my-rcs-co.py %(sub_SConscript)s
++"%(python)s" my-rcs-co.py %(sub_SConscript)s
+ """ % locals(),
+                                    build_str = """\
+-%(_python_)s my-rcs-co.py aaa.in
++"%(python)s" my-rcs-co.py aaa.in
+ cat(["aaa.out"], ["aaa.in"])
+ cat(["bbb.out"], ["bbb.in"])
+-%(_python_)s my-rcs-co.py ccc.in
++"%(python)s" my-rcs-co.py ccc.in
+ cat(["ccc.out"], ["ccc.in"])
+ cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+-%(_python_)s my-rcs-co.py %(sub_ddd_in)s
++"%(python)s" my-rcs-co.py %(sub_ddd_in)s
+ cat(["%(sub_ddd_out)s"], ["%(sub_ddd_in)s"])
+ cat(["%(sub_eee_out)s"], ["%(sub_eee_in)s"])
+-%(_python_)s my-rcs-co.py %(sub_fff_in)s
++"%(python)s" my-rcs-co.py %(sub_fff_in)s
+ cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+ cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+ """ % locals()))
+Index: test/Fortran/link-with-cxx.py
+===================================================================
+--- test/Fortran/link-with-cxx.py	(revision 3783)
++++ test/Fortran/link-with-cxx.py	(working copy)
+@@ -90,7 +90,7 @@
+ scons: warning: Using \\$CXX to link Fortran and C\\+\\+ code together.
+ \tThis may generate a buggy executable if the '%s test_linker.py'
+ \tcompiler does not know how to deal with Fortran runtimes.
+-""" % re.escape(_python_)) + TestSCons.file_expr
++""" % re.escape('"%s"' % python)) + TestSCons.file_expr
+ 
+ test.run(arguments = '.', stderr=expect)
+ 
+Index: test/Interactive/variant_dir.py
+===================================================================
+--- test/Interactive/variant_dir.py	(revision 3783)
++++ test/Interactive/variant_dir.py	(working copy)
+@@ -25,7 +25,8 @@
+ __revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
+ 
+ """
+-XXX Put a description of the test here.
++Tests variant dir builds in interactive mode by building two test programs,
++one in the variant build dir, and one without a variant.
+ """
+ 
+ import TestSCons
+@@ -69,15 +70,12 @@
+ """)
+ 
+ 
+-
+ # The "chdir =" keyword argument in the test.start() call has no effect.
+ # Work around it for now.
+ import os
+ os.chdir('work/sub1')
+ scons = test.start(chdir = 'work/sub1', arguments = '-Q -u --interactive')
+ 
+-scons.send("shell pwd\n")
+-
+ scons.send("build\n")
+ 
+ scons.send("build %s\n" % marker_1)
+@@ -86,8 +84,6 @@
+ 
+ test.run(program = test.workpath('work/build/hello'), stdout="hello\n")
+ 
+-
+-
+ test.write(['work', 'sub1', 'hello.c'], """\
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -106,10 +102,6 @@
+ 
+ test.run(program = test.workpath('work/build/hello'), stdout="hello 2\n")
+ 
+-
+-
+ test.finish(scons)
+ 
+-
+-
+ test.pass_test()
+Index: QMTest/TestSCons.py
+===================================================================
+--- QMTest/TestSCons.py	(revision 3783)
++++ QMTest/TestSCons.py	(working copy)
+@@ -85,7 +85,7 @@
+     machine = machine_map.get(machine, machine)
+ 
+ python = python_executable
+-_python_ = '"' + python_executable + '"'
++_python_ = '"' + python_executable.replace('\\','\\\\') + '"'
+ _exe = exe_suffix
+ _obj = obj_suffix
+ _shobj = shobj_suffix
+@@ -981,8 +981,8 @@
+         else:
+             alt_cpp_suffix = '.C'
+         return alt_cpp_suffix
+-    
+ 
++
+ # In some environments, $AR will generate a warning message to stderr
+ # if the library doesn't previously exist and is being created.  One
+ # way to fix this is to tell AR to be quiet (sometimes the 'c' flag),
