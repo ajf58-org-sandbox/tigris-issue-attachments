@@ -1,0 +1,20 @@
+Index: FS.py
+===================================================================
+--- FS.py	(revision 3835)
++++ FS.py	(working copy)
+@@ -2278,9 +2278,13 @@
+         # it's a valid python string.
+         def get_text_contents(self):
+             contents = self.get_contents()
+-            if contents.startswith(codecs.BOM_UTF8):
++            def startswith(attr_name):
++                attr = getattr(codecs, attr_name, None)
++                if (attr is None): return False
++                return contents.startswith(attr)
++            if startswith('BOM_UTF8'):
+                 contents = contents.decode('utf-8')
+-            elif contents.startswith(codecs.BOM_UTF16):
++            elif startswith('BOM_UTF16'):
+                 contents = contents.decode('utf-16')
+             return contents
+ 
