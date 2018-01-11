@@ -1,0 +1,492 @@
+Index: test/SConscriptChdir.py
+===================================================================
+*** test/SConscriptChdir.py	(revision 4056)
+--- test/SConscriptChdir.py	(working copy)
+***************
+*** 44,70 ****
+  """)
+  
+  test.write(['dir1', 'SConscript'], """
+! execfile("create_test.py")
+  """)
+  
+  test.write(['dir2', 'SConscript'], """
+! execfile("create_test.py")
+  """)
+  
+  test.write(['dir3', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir3', 'create_test.py')
+! execfile(name)
+  """)
+  
+  test.write(['dir4', 'SConscript'], """
+! execfile("create_test.py")
+  """)
+  
+  test.write(['dir5', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir5', 'create_test.py')
+! execfile(name)
+  """)
+  
+  for dir in ['dir1', 'dir2', 'dir3','dir4', 'dir5']:
+--- 44,75 ----
+  """)
+  
+  test.write(['dir1', 'SConscript'], """
+! import string
+! exec(string.replace(open("create_test.py").read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir2', 'SConscript'], """
+! import string
+! exec(string.replace(open("create_test.py").read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir3', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir3', 'create_test.py')
+! import string
+! exec(string.replace(open(name).read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir4', 'SConscript'], """
+! import string
+! exec(string.replace(open("create_test.py").read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir5', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir5', 'create_test.py')
+! import string
+! exec(string.replace(open(name).read(), '\\r', '\\n'))
+  """)
+  
+  for dir in ['dir1', 'dir2', 'dir3','dir4', 'dir5']:
+Index: test/SConscript/SConscriptChdir.py
+===================================================================
+*** test/SConscript/SConscriptChdir.py	(revision 4056)
+--- test/SConscript/SConscriptChdir.py	(working copy)
+***************
+*** 44,70 ****
+  """)
+  
+  test.write(['dir1', 'SConscript'], """
+! execfile("create_test.py")
+  """)
+  
+  test.write(['dir2', 'SConscript'], """
+! execfile("create_test.py")
+  """)
+  
+  test.write(['dir3', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir3', 'create_test.py')
+! execfile(name)
+  """)
+  
+  test.write(['dir4', 'SConscript'], """
+! execfile("create_test.py")
+  """)
+  
+  test.write(['dir5', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir5', 'create_test.py')
+! execfile(name)
+  """)
+  
+  for dir in ['dir1', 'dir2', 'dir3','dir4', 'dir5']:
+--- 44,75 ----
+  """)
+  
+  test.write(['dir1', 'SConscript'], """
+! import string
+! exec(string.replace(open("create_test.py").read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir2', 'SConscript'], """
+! import string
+! exec(string.replace(open("create_test.py").read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir3', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir3', 'create_test.py')
+! import string
+! exec(string.replace(open(name).read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir4', 'SConscript'], """
+! import string
+! exec(string.replace(open("create_test.py").read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['dir5', 'SConscript'], """
+  import os.path
+  name = os.path.join('dir5', 'create_test.py')
+! import string
+! exec(string.replace(open(name).read(), '\\r', '\\n'))
+  """)
+  
+  for dir in ['dir1', 'dir2', 'dir3','dir4', 'dir5']:
+Index: test/Variables/Variables.py
+===================================================================
+*** test/Variables/Variables.py	(revision 4056)
+--- test/Variables/Variables.py	(working copy)
+***************
+*** 235,241 ****
+  def checkSave(file, expected):
+      gdict = {}
+      ldict = {}
+!     execfile(file, gdict, ldict)
+      assert expected == ldict, "%s\n...not equal to...\n%s" % (expected, ldict)
+  
+  # First test with no command line variables
+--- 235,241 ----
+  def checkSave(file, expected):
+      gdict = {}
+      ldict = {}
+!     exec string.replace(open(file).read(), '\r', '\n') in gdict, ldict
+      assert expected == ldict, "%s\n...not equal to...\n%s" % (expected, ldict)
+  
+  # First test with no command line variables
+Index: test/Variables/chdir.py
+===================================================================
+*** test/Variables/chdir.py	(revision 4056)
+--- test/Variables/chdir.py	(working copy)
+***************
+*** 52,58 ****
+  test.write(['bin', 'opts.cfg'], """\
+  import os
+  os.chdir(os.path.split(__name__)[0])
+! execfile('opts2.cfg')
+  """)
+  
+  test.write(['bin', 'opts2.cfg'], """\
+--- 52,59 ----
+  test.write(['bin', 'opts.cfg'], """\
+  import os
+  os.chdir(os.path.split(__name__)[0])
+! import string
+! exec(string.replace(open('opts2.cfg').read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['bin', 'opts2.cfg'], """\
+Index: test/Deprecated/Options/chdir.py
+===================================================================
+*** test/Deprecated/Options/chdir.py	(revision 4056)
+--- test/Deprecated/Options/chdir.py	(working copy)
+***************
+*** 52,58 ****
+  test.write(['bin', 'opts.cfg'], """\
+  import os
+  os.chdir(os.path.split(__name__)[0])
+! execfile('opts2.cfg')
+  """)
+  
+  test.write(['bin', 'opts2.cfg'], """\
+--- 52,59 ----
+  test.write(['bin', 'opts.cfg'], """\
+  import os
+  os.chdir(os.path.split(__name__)[0])
+! import string
+! exec(string.replace(open('opts2.cfg').read(), '\\r', '\\n'))
+  """)
+  
+  test.write(['bin', 'opts2.cfg'], """\
+Index: test/Deprecated/Options/Options.py
+===================================================================
+*** test/Deprecated/Options/Options.py	(revision 4056)
+--- test/Deprecated/Options/Options.py	(working copy)
+***************
+*** 241,247 ****
+  def checkSave(file, expected):
+      gdict = {}
+      ldict = {}
+!     execfile(file, gdict, ldict)
+      assert expected == ldict, "%s\n...not equal to...\n%s" % (expected, ldict)
+  
+  # First test with no command line options
+--- 241,247 ----
+  def checkSave(file, expected):
+      gdict = {}
+      ldict = {}
+!     exec string.replace(open(file).read(), '\r', '\n') in gdict, ldict
+      assert expected == ldict, "%s\n...not equal to...\n%s" % (expected, ldict)
+  
+  # First test with no command line options
+Index: bench/bench.py
+===================================================================
+*** bench/bench.py	(revision 4056)
+--- bench/bench.py	(working copy)
+***************
+*** 28,33 ****
+--- 28,34 ----
+  import sys
+  import time
+  import types
++ import string
+  
+  Usage = """\
+  Usage:  bench.py OPTIONS file.py
+***************
+*** 87,93 ****
+      sys.exit(1)
+  
+  
+! execfile(args[0])
+  
+  
+  try:
+--- 88,94 ----
+      sys.exit(1)
+  
+  
+! exec(string.replace(open(args[0]).read(), '\r', '\n'))
+  
+  
+  try:
+Index: src/script/scons-time.py
+===================================================================
+*** src/script/scons-time.py	(revision 4056)
+--- src/script/scons-time.py	(working copy)
+***************
+*** 79,84 ****
+--- 79,95 ----
+              tempfile.template = save_template
+      return result
+  
++ def HACK_for_exec(cmd, *args):
++     '''
++     For some reason, Python won't allow an exec() within a function
++     that also declares an internal function (including lambda functions).
++     This function is a hack that calls exec() in a function with no
++     internal functions.
++     '''
++     if not args:          exec(cmd)
++     elif len(args) == 1:  exec cmd in args[0]
++     else:                 exec cmd in args[0], args[1]
++ 
+  class Plotter:
+      def increment_size(self, largest):
+          """
+***************
+*** 830,836 ****
+                  self.title = a
+  
+          if self.config_file:
+!             execfile(self.config_file, self.__dict__)
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+--- 841,847 ----
+                  self.title = a
+  
+          if self.config_file:
+!             exec string.replace(open(self.config_file).read(), '\r', '\n') in self.__dict__
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+***************
+*** 859,877 ****
+  
+          if format == 'ascii':
+  
+!             def print_function_timing(file, func):
+                  try:
+!                     f, line, func, time = self.get_function_profile(file, func)
+                  except ValueError, e:
+!                     sys.stderr.write("%s: func: %s: %s\n" % (self.name, file, e))
+                  else:
+                      if f.startswith(cwd_):
+                          f = f[len(cwd_):]
+                      print "%.3f %s:%d(%s)" % (time, f, line, func)
+  
+-             for file in args:
+-                 print_function_timing(file, function_name)
+- 
+          elif format == 'gnuplot':
+  
+              results = self.collect_results(args, self.get_function_time,
+--- 870,887 ----
+  
+          if format == 'ascii':
+  
+!             for file in args:
+                  try:
+!                     f, line, func, time = \
+!                             self.get_function_profile(file, function_name)
+                  except ValueError, e:
+!                     sys.stderr.write("%s: func: %s: %s\n" %
+!                                      (self.name, file, e))
+                  else:
+                      if f.startswith(cwd_):
+                          f = f[len(cwd_):]
+                      print "%.3f %s:%d(%s)" % (time, f, line, func)
+  
+          elif format == 'gnuplot':
+  
+              results = self.collect_results(args, self.get_function_time,
+***************
+*** 950,956 ****
+                  self.title = a
+  
+          if self.config_file:
+!             execfile(self.config_file, self.__dict__)
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+--- 960,966 ----
+                  self.title = a
+  
+          if self.config_file:
+!             HACK_for_exec(string.replace(open(self.config_file).read(), '\r', '\n'), self.__dict__)
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+***************
+*** 1070,1076 ****
+          object_name = args.pop(0)
+  
+          if self.config_file:
+!             execfile(self.config_file, self.__dict__)
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+--- 1080,1086 ----
+          object_name = args.pop(0)
+  
+          if self.config_file:
+!             HACK_for_exec(string.replace(open(self.config_file).read(), '\r', '\n'), self.__dict__)
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+***************
+*** 1208,1214 ****
+              sys.exit(1)
+  
+          if self.config_file:
+!             execfile(self.config_file, self.__dict__)
+  
+          if args:
+              self.archive_list = args
+--- 1218,1224 ----
+              sys.exit(1)
+  
+          if self.config_file:
+!             exec string.replace(open(self.config_file).read(), '\r', '\n') in self.__dict__
+  
+          if args:
+              self.archive_list = args
+***************
+*** 1448,1454 ****
+                  which = a
+  
+          if self.config_file:
+!             execfile(self.config_file, self.__dict__)
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+--- 1458,1464 ----
+                  which = a
+  
+          if self.config_file:
+!             HACK_for_exec(string.replace(open(self.config_file).read(), '\r', '\n'), self.__dict__)
+  
+          if self.chdir:
+              os.chdir(self.chdir)
+Index: src/engine/SCons/compat/_scons_optparse.py
+===================================================================
+*** src/engine/SCons/compat/_scons_optparse.py	(revision 4056)
+--- src/engine/SCons/compat/_scons_optparse.py	(working copy)
+***************
+*** 920,926 ****
+  
+      def read_file(self, filename, mode="careful"):
+          vars = {}
+!         execfile(filename, vars)
+          self._update(vars, mode)
+  
+      def ensure_value(self, attr, value):
+--- 920,926 ----
+  
+      def read_file(self, filename, mode="careful"):
+          vars = {}
+!         exec string.replace(open(filename).read(), '\r', '\n') in vars
+          self._update(vars, mode)
+  
+      def ensure_value(self, attr, value):
+Index: src/engine/SCons/Variables/VariablesTests.py
+===================================================================
+*** src/engine/SCons/Variables/VariablesTests.py	(revision 4056)
+--- src/engine/SCons/Variables/VariablesTests.py	(working copy)
+***************
+*** 54,60 ****
+  def checkSave(file, expected):
+      gdict = {}
+      ldict = {}
+!     execfile(file, gdict, ldict)
+      assert expected == ldict, "%s\n...not equal to...\n%s" % (expected, ldict)
+  
+  class VariablesTestCase(unittest.TestCase):
+--- 54,60 ----
+  def checkSave(file, expected):
+      gdict = {}
+      ldict = {}
+!     exec string.replace(open(file).read(), '\r', '\n') in gdict, ldict
+      assert expected == ldict, "%s\n...not equal to...\n%s" % (expected, ldict)
+  
+  class VariablesTestCase(unittest.TestCase):
+Index: src/engine/SCons/Variables/__init__.py
+===================================================================
+*** src/engine/SCons/Variables/__init__.py	(revision 4056)
+--- src/engine/SCons/Variables/__init__.py	(working copy)
+***************
+*** 166,172 ****
+                      sys.path.insert(0, dir)
+                  try:
+                      values['__name__'] = filename
+!                     execfile(filename, {}, values)
+                  finally:
+                      if dir:
+                          del sys.path[0]
+--- 166,172 ----
+                      sys.path.insert(0, dir)
+                  try:
+                      values['__name__'] = filename
+!                     exec string.replace(open(filename).read(), '\r', '\n') in {}, values
+                  finally:
+                      if dir:
+                          del sys.path[0]
+Index: QMTest/TestSCons_time.py
+===================================================================
+*** QMTest/TestSCons_time.py	(revision 4056)
+--- QMTest/TestSCons_time.py	(working copy)
+***************
+*** 46,51 ****
+--- 46,52 ----
+  #!/usr/bin/env python
+  import os
+  import sys
++ import string
+  def write_args(fp, args):
+      fp.write(args[0] + '\\n')
+      for arg in args[1:]:
+***************
+*** 58,64 ****
+          write_args(profile, sys.argv)
+          break
+  sys.stdout.write('SCONS_LIB_DIR = ' + os.environ['SCONS_LIB_DIR'] + '\\n')
+! execfile('SConstruct')
+  """
+  
+  aegis_py = """\
+--- 59,65 ----
+          write_args(profile, sys.argv)
+          break
+  sys.stdout.write('SCONS_LIB_DIR = ' + os.environ['SCONS_LIB_DIR'] + '\\n')
+! exec(string.replace(open('SConstruct').read(), '\\r', '\\n'))
+  """
+  
+  aegis_py = """\
