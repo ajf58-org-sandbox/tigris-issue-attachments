@@ -1,0 +1,35 @@
+# HG changeset patch
+# User edA-qa mort-ora-y <edA-qa@disemia.com>
+# Date 1336220903 -7200
+# Node ID cb0efaf69bcb8b8a73e5c087338499dac453aab0
+# Parent  b84d4becbf2922d2b37f59a939d21b382eaf2875
+fix for Issue#2796
+
+diff -r b84d4becbf29 -r cb0efaf69bcb src/engine/SCons/Script/Main.py
+--- a/src/engine/SCons/Script/Main.py	Sat Apr 07 19:03:57 2012 -0400
++++ b/src/engine/SCons/Script/Main.py	Sat May 05 14:28:23 2012 +0200
+@@ -869,7 +869,8 @@
+                 script_dir = ''
+ 
+     if script_dir and script_dir != os.getcwd():
+-        display("scons: Entering directory `%s'" % script_dir)
++        if not options.silent:
++            display("scons: Entering directory `%s'" % script_dir)
+         try:
+             os.chdir(script_dir)
+         except OSError:
+diff -r b84d4becbf29 -r cb0efaf69bcb test/option-s.py
+--- a/test/option-s.py	Sat Apr 07 19:03:57 2012 -0400
++++ b/test/option-s.py	Sat May 05 14:28:23 2012 +0200
+@@ -67,6 +67,11 @@
+ test.fail_test(not os.path.exists(test.workpath('f1.out')))
+ test.fail_test(not os.path.exists(test.workpath('f2.out')))
+ 
++# -C should also be quiety Issue#2796
++test.subdir( 'sub' )
++test.write(['sub','SConstruct'],"")
++test.run(arguments = '-s -C sub', stdout = "" )
++
+ test.pass_test()
+  
+ 
