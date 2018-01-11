@@ -1,0 +1,11 @@
+--- a/engine/SCons/Tool/swig.py
++++ b/engine/SCons/Tool/swig.py
+@@ -109,7 +109,7 @@ def generate(env):
+     env['_SWIGINCFLAGS']     = '$( ${_concat(SWIGINCPREFIX, SWIGPATH, SWIGINCSUFFIX, __env__, RDirs, TARGET, SOURCE)} $)'
+     env['SWIGCOM']           = '$SWIG -o $TARGET ${_SWIGOUTDIR} ${_SWIGINCFLAGS} $SWIGFLAGS $SOURCES'
+ 
+-    expr = '^[ \t]*%[ \t]*(?:include|import|extern)[ \t]*(<|"?)([^>\s"]+)(?:>|"?)'
++    expr = '^[ \t]*[#%][ \t]*(?:include|import|extern)[ \t]*(<|"?)([^>\s"]+)(?:>|"?)'
+     scanner = SCons.Scanner.ClassicCPP("SWIGScan", ".i", "SWIGPATH", expr)
+ 
+     env.Append(SCANNERS = scanner)
