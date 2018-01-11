@@ -1,0 +1,1631 @@
+Index: test/SourceCode.py
+===================================================================
+--- test/SourceCode.py	(revision 4715)
++++ test/SourceCode.py	(working copy)
+@@ -41,10 +41,9 @@
+ 
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ def sc_cat(env, source, target):
+Index: test/suffixes.py
+===================================================================
+--- test/suffixes.py	(revision 4715)
++++ test/suffixes.py	(working copy)
+@@ -35,10 +35,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Builder(action=cat, suffix='.out')
+ env = Environment(BUILDERS = {'Cat':Cat})
+Index: test/Glob/Repository.py
+===================================================================
+--- test/Glob/Repository.py	(revision 4715)
++++ test/Glob/Repository.py	(working copy)
+@@ -49,10 +49,9 @@
+ test.write(['repository', 'SConstruct'], """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ # Verify that we can glob a repository-only Node that exists
+Index: test/ParseConfig.py
+===================================================================
+--- test/ParseConfig.py	(revision 4715)
++++ test/ParseConfig.py	(working copy)
+@@ -58,7 +58,7 @@
+ env.ParseConfig([r'%(_python_)s', r"%(test_config2)s", "--libs --cflags"])
+ print env['CPPPATH']
+ print env['LIBPATH']
+-print map(lambda x: str(x), env['LIBS'])
++print [str(x) for x in env['LIBS']]
+ print env['CCFLAGS']
+ """ % locals())
+ 
+@@ -70,7 +70,7 @@
+ env.ParseConfig(r"$PYTHON %(test_config2)s --libs --cflags")
+ print env['CPPPATH']
+ print env['LIBPATH']
+-print map(lambda x: str(x), env['LIBS'])
++print [str(x) for x in env['LIBS']]
+ print env['CCFLAGS']
+ """ % locals())
+ 
+@@ -81,7 +81,7 @@
+ env.ParseConfig(r"$PYTHON %(test_config3)s --libs --cflags")
+ print env['CPPPATH']
+ print env['LIBPATH']
+-print map(lambda x: str(x), env['LIBS'])
++print [str(x) for x in env['LIBS']]
+ print env['CCFLAGS']
+ """ % locals())
+ 
+Index: test/Install/wrap-by-attribute.py
+===================================================================
+--- test/Install/wrap-by-attribute.py	(revision 4715)
++++ test/Install/wrap-by-attribute.py	(working copy)
+@@ -46,10 +46,9 @@
+ 
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ env = Environment(DESTDIR='dest')
+Index: test/Install/Install.py
+===================================================================
+--- test/Install/Install.py	(revision 4715)
++++ test/Install/Install.py	(working copy)
+@@ -50,10 +50,9 @@
+ test.write(['work', 'SConstruct'], """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ def my_install(dest, source, env):
+Index: test/custom-concat.py
+===================================================================
+--- test/custom-concat.py	(revision 4716)
++++ test/custom-concat.py	(working copy)
+@@ -37,7 +37,7 @@
+ def my_concat1(pref, list, suff, env, f=None):
+     if f:
+         list = f(list)
+-    list = map(lambda x: 'my'+pref+x+suff+'1', list)
++    list = ['my'+pref+x+suff+'1' for x in list]
+     return list
+ myflags = '${_stripixes(MYPREFIX, LIST, MYSUFFIX, STRIPPREFIX, STRIPSUFFIX, __env__)}'
+ env1 = Environment(MYFLAGS=myflags, _concat = my_concat1,
+Index: test/textfile.py
+===================================================================
+--- test/textfile.py	(revision 4715)
++++ test/textfile.py	(working copy)
+@@ -46,8 +46,8 @@
+ env.Textfile('foo2a.txt', data + [''], LINESEPARATOR='|*')
+ 
+ # recreate the list with the data wrapped in Value()
+-data0 = map(Value, data0)
+-data = map(Value, data)
++data0 = list(map(Value, data0))
++data = list(map(Value, data))
+ data[2] = data0
+ 
+ env.Substfile('bar1', data)
+Index: test/preserve-source.py
+===================================================================
+--- test/preserve-source.py	(revision 4715)
++++ test/preserve-source.py	(working copy)
+@@ -34,7 +34,7 @@
+ test.write('SConstruct', r"""
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
++    source = list(map(str, source))
+     print 'cat(%s) > %s' % (source, target)
+     f = open(target, "wb")
+     for src in source:
+Index: test/CVSCOM.py
+===================================================================
+--- test/CVSCOM.py	(revision 4715)
++++ test/CVSCOM.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'CVS'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/Move.py
+===================================================================
+--- test/Move.py	(revision 4715)
++++ test/Move.py	(working copy)
+@@ -37,10 +37,9 @@
+ Execute(Move('File-f1.out', File('f1.in-File')))
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Action(cat)
+ env = Environment()
+Index: test/CacheDir/option--cs.py
+===================================================================
+--- test/CacheDir/option--cs.py	(revision 4715)
++++ test/CacheDir/option--cs.py	(working copy)
+@@ -57,10 +57,9 @@
+ def cat(env, source, target):
+     target = str(target[0])
+     open('cat.out', 'ab').write(target + "\\n")
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Internal':Builder(action=cat),
+                             'External':Builder(action='%(_python_)s build.py $TARGET $SOURCES')})
+Index: test/CacheDir/CacheDir.py
+===================================================================
+--- test/CacheDir/CacheDir.py	(revision 4715)
++++ test/CacheDir/CacheDir.py	(working copy)
+@@ -53,10 +53,9 @@
+ def cat(env, source, target):
+     target = str(target[0])
+     open('cat.out', 'ab').write(target + "\\n")
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'aaa.in')
+Index: test/CacheDir/VariantDir.py
+===================================================================
+--- test/CacheDir/VariantDir.py	(revision 4715)
++++ test/CacheDir/VariantDir.py	(working copy)
+@@ -43,10 +43,9 @@
+ def cat(env, source, target):
+     target = str(target[0])
+     open('cat.out', 'ab').write(target + "\\n")
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'aaa.in')
+Index: test/CacheDir/environment.py
+===================================================================
+--- test/CacheDir/environment.py	(revision 4715)
++++ test/CacheDir/environment.py	(working copy)
+@@ -54,10 +54,9 @@
+ def cat(env, source, target):
+     target = str(target[0])
+     open('cat.out', 'ab').write(target + "\\n")
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env_cache = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env_nocache = env_cache.Clone()
+Index: test/CacheDir/option--cd.py
+===================================================================
+--- test/CacheDir/option--cd.py	(revision 4715)
++++ test/CacheDir/option--cd.py	(working copy)
+@@ -42,10 +42,9 @@
+ def cat(env, source, target):
+     target = str(target[0])
+     open('cat.out', 'ab').write(target + "\\n")
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'aaa.in')
+Index: test/CacheDir/option--cf.py
+===================================================================
+--- test/CacheDir/option--cf.py	(revision 4715)
++++ test/CacheDir/option--cf.py	(working copy)
+@@ -41,10 +41,9 @@
+ def cat(env, source, target):
+     target = str(target[0])
+     open('cat.out', 'ab').write(target + "\\n")
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'aaa.in')
+Index: test/CacheDir/debug.py
+===================================================================
+--- test/CacheDir/debug.py	(revision 4715)
++++ test/CacheDir/debug.py	(working copy)
+@@ -53,10 +53,9 @@
+ def cat(env, source, target):
+     target = str(target[0])
+     open('cat.out', 'ab').write(target + "\\n")
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'aaa.in')
+Index: test/BitKeeper/BITKEEPERCOM.py
+===================================================================
+--- test/BitKeeper/BITKEEPERCOM.py	(revision 4715)
++++ test/BitKeeper/BITKEEPERCOM.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'BitKeeper'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/BitKeeper/BitKeeper.py
+===================================================================
+--- test/BitKeeper/BitKeeper.py	(revision 4715)
++++ test/BitKeeper/BitKeeper.py	(working copy)
+@@ -91,10 +91,9 @@
+     test.write(['work1', 'SConstruct'], """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+                   BITKEEPERGETFLAGS='-e')
+@@ -191,10 +190,9 @@
+     test.write(['work2', 'SConstruct'], """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+                   BITKEEPERGET='$BITKEEPER co',
+@@ -287,10 +285,9 @@
+ test.write(['work3', 'SConstruct'], """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ DefaultEnvironment(tools=['SCCS'])['SCCS'] = r'%s'
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+Index: test/BitKeeper/BITKEEPERCOMSTR.py
+===================================================================
+--- test/BitKeeper/BITKEEPERCOMSTR.py	(revision 4715)
++++ test/BitKeeper/BITKEEPERCOMSTR.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'BitKeeper'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/Chmod.py
+===================================================================
+--- test/Chmod.py	(revision 4715)
++++ test/Chmod.py	(working copy)
+@@ -45,10 +45,9 @@
+ Execute(Chmod(Dir('d2-Dir'), 0777))
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Action(cat)
+ env = Environment()
+Index: test/Flatten.py
+===================================================================
+--- test/Flatten.py	(revision 4715)
++++ test/Flatten.py	(working copy)
+@@ -37,16 +37,15 @@
+ test.write(['work', 'SConstruct'], """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ f1 = env.Cat('../file1.out', 'file1.in')
+ f2 = env.Cat('../file2.out', ['file2a.in', 'file2b.in'])
+-print map(str, Flatten(['begin', f1, 'middle', f2, 'end']))
+-print map(str, env.Flatten([f1, [['a', 'b'], 'c'], f2]))
++print list(map(str, Flatten(['begin', f1, 'middle', f2, 'end'])))
++print list(map(str, env.Flatten([f1, [['a', 'b'], 'c'], f2])))
+ SConscript('SConscript', "env")
+ """)
+ 
+Index: test/Alias/scanner.py
+===================================================================
+--- test/Alias/scanner.py	(revision 4715)
++++ test/Alias/scanner.py	(working copy)
+@@ -35,10 +35,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ XBuilder = Builder(action = cat, src_suffix = '.x', suffix = '.c')
+Index: test/Alias/action.py
+===================================================================
+--- test/Alias/action.py	(revision 4715)
++++ test/Alias/action.py	(working copy)
+@@ -35,20 +35,19 @@
+ test.write('SConstruct', """
+ def cat(target, source, env):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ def foo(target, source, env):
+-    target = map(str, target)
+-    source = map(str, source)
++    target = list(map(str, target))
++    source = list(map(str, source))
+     open('foo', 'wb').write("foo(%s, %s)\\n" % (target, source))
+ 
+ def bar(target, source, env):
+-    target = map(str, target)
+-    source = map(str, source)
++    target = list(map(str, target))
++    source = list(map(str, source))
+     open('bar', 'wb').write("bar(%s, %s)\\n" % (target, source))
+ 
+ env = Environment(BUILDERS = {'Cat':Builder(action=cat)})
+Index: test/Delete.py
+===================================================================
+--- test/Delete.py	(revision 4715)
++++ test/Delete.py	(working copy)
+@@ -39,10 +39,9 @@
+ Execute(Delete('d2'))
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Action(cat)
+ env = Environment()
+@@ -164,10 +163,9 @@
+ test.write("SConstruct", """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Action(cat)
+ env = Environment()
+Index: test/SHELL.py
+===================================================================
+--- test/SHELL.py	(revision 4715)
++++ test/SHELL.py	(working copy)
+@@ -56,7 +56,7 @@
+         s = s[1:-1]
+     return s
+ args = stripquote(sys.argv[2]).split()
+-args = map(stripquote, args)
++args = list(map(stripquote, args))
+ ofp = open(args[2], 'wb')
+ for f in args[3:] + ['extra.txt']:
+     ofp.write(open(f, 'rb').read())
+Index: test/Actions/function.py
+===================================================================
+--- test/Actions/function.py	(revision 4715)
++++ test/Actions/function.py	(working copy)
+@@ -136,7 +136,7 @@
+ env = Environment()
+ env.Append(BUILDERS = {'GenHeader' : genHeaderBld})
+ 
+-envdeps = map(str, range(int(optEnv['NbDeps'])))
++envdeps = list(map(str, range(int(optEnv['NbDeps']))))
+ 
+ env.GenHeader('Out', None, ENVDEPS=envdeps)
+ """)
+Index: test/Win32/default-drive.py
+===================================================================
+--- test/Win32/default-drive.py	(revision 4715)
++++ test/Win32/default-drive.py	(working copy)
+@@ -46,10 +46,9 @@
+ test.write(['src', 'SConstruct'], """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ env = Environment(BUILDERS={'Build':Builder(action=cat)})
+Index: test/Win32/bad-drive.py
+===================================================================
+--- test/Win32/bad-drive.py	(revision 4715)
++++ test/Win32/bad-drive.py	(working copy)
+@@ -57,7 +57,7 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
++    source = list(map(str, source))
+     print 'cat(%%s) > %%s' %% (source, target)
+     f = open(target, "wb")
+     for src in source:
+Index: test/SConscript/src_dir.py
+===================================================================
+--- test/SConscript/src_dir.py	(revision 4715)
++++ test/SConscript/src_dir.py	(working copy)
+@@ -57,7 +57,7 @@
+ from os.path import basename
+ Import('env')
+ 
+-sources = map(basename, glob(join(str(env.Dir('.').srcnode()),'*.c')))
++sources = list(map(basename, glob(join(str(env.Dir('.').srcnode()),'*.c'))))
+ 
+ # Trivial example; really I read the configuration file
+ # their build system uses to generate the vcproj files
+Index: test/SCCS/diskcheck.py
+===================================================================
+--- test/SCCS/diskcheck.py	(revision 4715)
++++ test/SCCS/diskcheck.py	(working copy)
+@@ -73,10 +73,9 @@
+ DefaultEnvironment()['SCCSCOM'] = 'cd ${TARGET.dir} && $SCCS get ${TARGET.file}'
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ SetOption('diskcheck', ['match', 'rcs'])
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+Index: test/SCCS/SCCSCOM.py
+===================================================================
+--- test/SCCS/SCCSCOM.py	(revision 4715)
++++ test/SCCS/SCCSCOM.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'SCCS'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/SCCS/explicit.py
+===================================================================
+--- test/SCCS/explicit.py	(revision 4715)
++++ test/SCCS/explicit.py	(working copy)
+@@ -69,10 +69,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+                   SCCSCOM = 'cd ${TARGET.dir} && $SCCS get $SCCSGETFLAGS ${TARGET.file}',
+Index: test/SCCS/transparent.py
+===================================================================
+--- test/SCCS/transparent.py	(revision 4715)
++++ test/SCCS/transparent.py	(working copy)
+@@ -71,10 +71,9 @@
+ DefaultEnvironment()['SCCSCOM'] = 'cd ${TARGET.dir} && $SCCS get ${TARGET.file}'
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+                   SCCSFLAGS='-k')
+Index: test/SCCS/SCCSCOMSTR.py
+===================================================================
+--- test/SCCS/SCCSCOMSTR.py	(revision 4715)
++++ test/SCCS/SCCSCOMSTR.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'SCCS'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/Requires/eval-order.py
+===================================================================
+--- test/Requires/eval-order.py	(revision 4715)
++++ test/Requires/eval-order.py	(working copy)
+@@ -35,8 +35,8 @@
+ test.write('SConstruct', """
+ def copy_and_create_func(target, source, env):
+     fp = open(str(target[0]), 'wb')
+-    for s in map(str, source):
+-        fp.write(open(s, 'rb').read())
++    for s in source:
++        fp.write(open(str(s), 'rb').read())
+     fp.close()
+     open('file.in', 'wb').write("file.in 1\\n")
+     return None
+Index: test/Requires/basic.py
+===================================================================
+--- test/Requires/basic.py	(revision 4715)
++++ test/Requires/basic.py	(working copy)
+@@ -36,8 +36,8 @@
+ test.write('SConstruct', """
+ def append_prereq_func(target, source, env):
+     fp = open(str(target[0]), 'wb')
+-    for s in map(str, source):
+-        fp.write(open(s, 'rb').read())
++    for s in source:
++        fp.write(open(str(s), 'rb').read())
+     fp.write(open('prereq.out', 'rb').read())
+     fp.close()
+     return None
+Index: test/TARGETS.py
+===================================================================
+--- test/TARGETS.py	(revision 4715)
++++ test/TARGETS.py	(working copy)
+@@ -36,10 +36,10 @@
+ 
+ test.write('SConstruct', """
+ print COMMAND_LINE_TARGETS
+-print map(str, BUILD_TARGETS)
++print list(map(str, BUILD_TARGETS))
+ Default('.')
+ print COMMAND_LINE_TARGETS
+-print map(str, BUILD_TARGETS)
++print list(map(str, BUILD_TARGETS))
+ """)
+ 
+ test.write('aaa', 'aaa\n')
+@@ -68,17 +68,17 @@
+ 
+ test.write('SConstruct', """
+ env = Environment()
+-print map(str, DEFAULT_TARGETS)
+-print map(str, BUILD_TARGETS)
++print list(map(str, DEFAULT_TARGETS))
++print list(map(str, BUILD_TARGETS))
+ Default('aaa')
+-print map(str, DEFAULT_TARGETS)
+-print map(str, BUILD_TARGETS)
++print list(map(str, DEFAULT_TARGETS))
++print list(map(str, BUILD_TARGETS))
+ env.Default('bbb')
+-print map(str, DEFAULT_TARGETS)
+-print map(str, BUILD_TARGETS)
++print list(map(str, DEFAULT_TARGETS))
++print list(map(str, BUILD_TARGETS))
+ env.Default(None)
+-print map(str, DEFAULT_TARGETS)
+-print map(str, BUILD_TARGETS)
++print list(map(str, DEFAULT_TARGETS))
++print list(map(str, BUILD_TARGETS))
+ env.Default('ccc')
+ """)
+ 
+@@ -113,9 +113,9 @@
+ 
+ 
+ test.write('SConstruct', """\
+-print map(str, BUILD_TARGETS)
++print list(map(str, BUILD_TARGETS))
+ SConscript('SConscript')
+-print map(str, BUILD_TARGETS)
++print list(map(str, BUILD_TARGETS))
+ """)
+ 
+ test.write('SConscript', """\
+Index: test/VariantDir/errors.py
+===================================================================
+--- test/VariantDir/errors.py	(revision 4715)
++++ test/VariantDir/errors.py	(working copy)
+@@ -57,10 +57,9 @@
+ 
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ env = Environment(BUILDERS={'Build':Builder(action=cat)},
+Index: test/VariantDir/SConscript-variant_dir.py
+===================================================================
+--- test/VariantDir/SConscript-variant_dir.py	(revision 4715)
++++ test/VariantDir/SConscript-variant_dir.py	(working copy)
+@@ -59,10 +59,9 @@
+ 
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+Index: test/special-filenames.py
+===================================================================
+--- test/special-filenames.py	(revision 4715)
++++ test/special-filenames.py	(working copy)
+@@ -66,7 +66,7 @@
+ def buildFileStr(fn):
+     return "env.Build(source=r\"\"\"%s.in\"\"\", target=r\"\"\"%s.out\"\"\")" % ( fn, fn )
+ 
+-xxx =  '\n'.join(map(buildFileStr, file_names))
++xxx = '\n'.join(map(buildFileStr, file_names))
+ 
+ test.write("SConstruct", """
+ env=Environment(BUILDERS = {'Build' : Builder(action = '%(_python_)s cat.py $TARGET $SOURCE')})
+Index: test/CVS.py
+===================================================================
+--- test/CVS.py	(revision 4715)
++++ test/CVS.py	(working copy)
+@@ -91,10 +91,9 @@
+ import os
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(ENV = { 'PATH' : os.environ['PATH'],
+                           'EDITOR' : os.environ.get('EDITOR', 'ed') },
+@@ -156,10 +155,9 @@
+ import os
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(ENV = { 'PATH' : os.environ['PATH'],
+                           'EDITOR' : os.environ.get('EDITOR', 'ed') },
+@@ -228,10 +226,9 @@
+ import os
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(ENV = { 'PATH' : os.environ['PATH'],
+                           'EDITOR' : os.environ.get('EDITOR', 'ed') },
+Index: test/no-target.py
+===================================================================
+--- test/no-target.py	(revision 4715)
++++ test/no-target.py	(working copy)
+@@ -42,10 +42,9 @@
+ test.write(subdir_SConscript, r"""
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ b = Builder(action=cat, suffix='.out', src_suffix='.in')
+Index: test/TARGET-dir.py
+===================================================================
+--- test/TARGET-dir.py	(revision 4715)
++++ test/TARGET-dir.py	(working copy)
+@@ -43,10 +43,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(CPPPATH='${TARGET.dir}')
+ env.Append(BUILDERS = {'Cat' : Builder(action=cat)})
+Index: test/Libs/SharedLibraryIxes.py
+===================================================================
+--- test/Libs/SharedLibraryIxes.py	(revision 4715)
++++ test/Libs/SharedLibraryIxes.py	(working copy)
+@@ -46,7 +46,7 @@
+ 
+ # We first bake the LIBSUFFIXES, so that it will not change as a
+ # side-effect of changing SHLIBSUFFIX.
+-env['LIBSUFFIXES'] = map( env.subst, env.get('LIBSUFFIXES', []))
++env['LIBSUFFIXES'] = list(map( env.subst, env.get('LIBSUFFIXES', [])))
+ 
+ weird_prefixes = ['libXX', 'libYY']
+ 
+@@ -76,13 +76,13 @@
+     return (source+lib, '')
+ 
+ def pathInSrc(source, lib, libname):
+-    return (source+map(str,lib), '')
++    return (source+list(map(str,lib)), '')
+ 
+ def nodeInLib(source, lib, libname):
+     return (source, lib)
+ 
+ def pathInLib(source, lib, libname):
+-    return (source, map(str,lib))
++    return (source, list(map(str,lib)))
+ 
+ def nameInLib(source, lib, libname):
+     # NOTE: libname must contain both the proper prefix and suffix.
+@@ -128,7 +128,7 @@
+             break;
+     assert found_dep, \
+         "One of %s not found in %s, method=%s, libname=%s, shlibsuffix=%s" % \
+-        (map(str,lib), map(str, build[0].children()), method.__name__, libname, shlibsuffix)
++        (list(map(str,lib)), list(map(str, build[0].children())), method.__name__, libname, shlibsuffix)
+     return build
+ 
+ def prog(i, 
+Index: test/option--random.py
+===================================================================
+--- test/option--random.py	(revision 4715)
++++ test/option--random.py	(working copy)
+@@ -37,10 +37,9 @@
+ test.write('SConscript', """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'aaa.in')
+Index: test/Deprecated/SConscript-build_dir.py
+===================================================================
+--- test/Deprecated/SConscript-build_dir.py	(revision 4715)
++++ test/Deprecated/SConscript-build_dir.py	(working copy)
+@@ -61,10 +61,9 @@
+ 
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+Index: test/ToolSurrogate.py
+===================================================================
+--- test/ToolSurrogate.py	(revision 4715)
++++ test/ToolSurrogate.py	(working copy)
+@@ -81,7 +81,7 @@
+ }
+ 
+ platform = ARGUMENTS['platform']
+-tools = map(lambda t: ToolSurrogate(*t), ToolList[platform])
++tools = [ToolSurrogate(*t) for t in ToolList[platform]]
+ 
+ env = Environment(tools=tools, PROGSUFFIX='.exe', OBJSUFFIX='.obj')
+ env.Program('foo.c')
+Index: test/no-arguments.py
+===================================================================
+--- test/no-arguments.py	(revision 4715)
++++ test/no-arguments.py	(working copy)
+@@ -39,7 +39,7 @@
+ test.write('SConstruct', r"""
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
++    source = list(map(str, source))
+     print 'cat(%s) > %s' % (source, target)
+     f = open(target, "wb")
+     for src in source:
+Index: test/option/debug-presub.py
+===================================================================
+--- test/option/debug-presub.py	(revision 4715)
++++ test/option/debug-presub.py	(working copy)
+@@ -39,10 +39,9 @@
+ test.write('SConstruct', """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ FILE = Builder(action="$FILECOM")
+ TEMP = Builder(action="$TEMPCOM")
+Index: test/Repository/VariantDir.py
+===================================================================
+--- test/Repository/VariantDir.py	(revision 4715)
++++ test/Repository/VariantDir.py	(working copy)
+@@ -47,7 +47,7 @@
+ test.write(['repository', 'src', 'SConscript'], r"""
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
++    source = list(map(str, source))
+     print 'cat(%s) > %s' % (source, target)
+     f = open(target, "wb")
+     for src in source:
+Index: test/Repository/targets.py
+===================================================================
+--- test/Repository/targets.py	(revision 4715)
++++ test/Repository/targets.py	(working copy)
+@@ -42,7 +42,7 @@
+ test.write(['repository', 'SConstruct'], """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
++    source = list(map(str, source))
+     print 'cat(%s) > %s' % (source, target)
+     f = open(target, "wb")
+     for src in source:
+Index: test/Repository/option-f.py
+===================================================================
+--- test/Repository/option-f.py	(revision 4715)
++++ test/Repository/option-f.py	(working copy)
+@@ -43,10 +43,9 @@
+ Repository(r'%s')
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ 
+ env = Environment(BUILDERS={'Build':Builder(action=cat)})
+Index: test/Repository/SConscript.py
+===================================================================
+--- test/Repository/SConscript.py	(revision 4715)
++++ test/Repository/SConscript.py	(working copy)
+@@ -61,10 +61,9 @@
+ test.write(['rep1', 'src', 'SConscript'], """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat(target = 'foo', source = ['aaa.in', 'bbb.in', 'ccc.in'])
+@@ -98,10 +97,9 @@
+ test.write(['rep2', 'src', 'SConscript'], """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat(target = 'foo', source = ['aaa.in', 'bbb.in', 'ccc.in'])
+Index: test/Perforce/P4COMSTR.py
+===================================================================
+--- test/Perforce/P4COMSTR.py	(revision 4715)
++++ test/Perforce/P4COMSTR.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'Perforce'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/Perforce/P4COM.py
+===================================================================
+--- test/Perforce/P4COM.py	(revision 4715)
++++ test/Perforce/P4COM.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'Perforce'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/Perforce/Perforce.py
+===================================================================
+--- test/Perforce/Perforce.py	(revision 4715)
++++ test/Perforce/Perforce.py	(working copy)
+@@ -239,10 +239,9 @@
+ SConstruct_contents = test.substitute("""
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(tools = ['default', 'Perforce'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/packaging/convenience-functions.py
+===================================================================
+--- test/packaging/convenience-functions.py	(revision 4715)
++++ test/packaging/convenience-functions.py	(working copy)
+@@ -43,8 +43,8 @@
+ prog = env.Install( 'bin/', ["f1", "f2"] )
+ env.File( "f3" )
+ 
+-src_files = map(str, env.FindSourceFiles())
+-oth_files = map(str, env.FindInstalledFiles())
++src_files = list(map(str, env.FindSourceFiles()))
++oth_files = list(map(str, env.FindInstalledFiles()))
+ src_files.sort()
+ oth_files.sort()
+ 
+Index: test/QT/manual.py
+===================================================================
+--- test/QT/manual.py	(revision 4715)
++++ test/QT/manual.py	(working copy)
+@@ -56,7 +56,7 @@
+ sources.extend(env.Uic(['include/uic_fff.hpp', 'fff.cpp', 'fff.moc.cpp'],
+                        'ui/fff.ui')[1:])
+ 
+-print map(str,sources)
++print list(map(str,sources))
+ env.Program(target='aaa',
+             source=sources,
+             CPPPATH=['$CPPPATH', './include'],
+Index: test/Climb/explicit-parent-u.py
+===================================================================
+--- test/Climb/explicit-parent-u.py	(revision 4715)
++++ test/Climb/explicit-parent-u.py	(working copy)
+@@ -39,10 +39,9 @@
+ test.write('SConstruct', """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('f1.out', 'f1.in')
+Index: test/Climb/option-u.py
+===================================================================
+--- test/Climb/option-u.py	(revision 4715)
++++ test/Climb/option-u.py	(working copy)
+@@ -43,10 +43,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment()
+ env.Append(BUILDERS = {'Cat' : Builder(action=cat)})
+Index: test/Climb/explicit-parent--D.py
+===================================================================
+--- test/Climb/explicit-parent--D.py	(revision 4715)
++++ test/Climb/explicit-parent--D.py	(working copy)
+@@ -38,10 +38,9 @@
+ test.write('SConstruct', """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('f1.out', 'f1.in')
+Index: test/Climb/explicit-parent--U.py
+===================================================================
+--- test/Climb/explicit-parent--U.py	(revision 4715)
++++ test/Climb/explicit-parent--U.py	(working copy)
+@@ -38,10 +38,9 @@
+ test.write('SConstruct', """\
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('foo.out', 'foo.in')
+Index: test/Subversion.py
+===================================================================
+--- test/Subversion.py	(revision 4715)
++++ test/Subversion.py	(working copy)
+@@ -75,10 +75,9 @@
+ test.write(['work1', 'SConstruct'], """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'foo/aaa.in')
+@@ -123,10 +122,9 @@
+ test.write(['work2', 'SConstruct'], """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+ env.Cat('aaa.out', 'aaa.in')
+Index: test/RCS/diskcheck.py
+===================================================================
+--- test/RCS/diskcheck.py	(revision 4715)
++++ test/RCS/diskcheck.py	(working copy)
+@@ -95,10 +95,9 @@
+        'LOGNAME' : logname}
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ SetOption('diskcheck', None)
+ DefaultEnvironment()['ENV'] = ENV
+Index: test/RCS/RCS_COCOMSTR.py
+===================================================================
+--- test/RCS/RCS_COCOMSTR.py	(revision 4715)
++++ test/RCS/RCS_COCOMSTR.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'RCS'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/RCS/transparent.py
+===================================================================
+--- test/RCS/transparent.py	(revision 4715)
++++ test/RCS/transparent.py	(working copy)
+@@ -95,10 +95,9 @@
+        'LOGNAME' : logname}
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ DefaultEnvironment()['ENV'] = ENV
+ DefaultEnvironment()['RCS_COFLAGS'] = '-l'
+Index: test/RCS/explicit.py
+===================================================================
+--- test/RCS/explicit.py	(revision 4715)
++++ test/RCS/explicit.py	(working copy)
+@@ -95,10 +95,9 @@
+        'LOGNAME' : logname}
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(ENV=ENV,
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/RCS/RCS_COCOM.py
+===================================================================
+--- test/RCS/RCS_COCOM.py	(revision 4715)
++++ test/RCS/RCS_COCOM.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'RCS'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/Scanner/generated.py
+===================================================================
+--- test/Scanner/generated.py	(revision 4715)
++++ test/Scanner/generated.py	(working copy)
+@@ -91,7 +91,7 @@
+         env.SConscript(file, "env")
+ 
+ def _subconf_list(dirlist):
+-    return map(lambda x: os.path.join(x, "SConscript"), dirlist.split())
++    return [os.path.join(x, "SConscript") for x in dirlist.split()]
+ 
+ def StaticLibMergeMembers(local_env, libname, hackpath, files):
+     for file in files.split():
+@@ -243,7 +243,7 @@
+ lib_fullname = env.subst("${LIBPREFIX}g${LIBSUFFIX}")
+ lib_srcs = "libg_1.c libg_2.c libg_3.c".split()
+ import re
+-lib_objs = map(lambda x: re.sub("\.c$", ".o", x), lib_srcs)
++lib_objs = [re.sub("\.c$", ".o", x) for x in lib_srcs]
+ 
+ Mylib.ExportHeader(env, exported_hdrs)
+ Mylib.ExportLib(env, lib_fullname)
+Index: test/Scanner/exception.py
+===================================================================
+--- test/Scanner/exception.py	(revision 4715)
++++ test/Scanner/exception.py	(working copy)
+@@ -67,11 +67,9 @@
+ 
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+-
+     outf = open(target, 'wb')
+     for src in source:
+-        process(outf, open(src, 'rb'))
++        process(outf, open(str(src), 'rb'))
+     outf.close()
+ 
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+Index: test/NodeOps.py
+===================================================================
+--- test/NodeOps.py	(revision 4715)
++++ test/NodeOps.py	(working copy)
+@@ -66,10 +66,10 @@
+ SConscript('bld/SConscript', ['Nodes'])
+ if %(_E)s:
+   import os
+-  derived = map(lambda N: N.is_derived(), Nodes)
+-  real1 = map(lambda N: os.path.exists(str(N)), Nodes)
+-  exists = map(lambda N: N.exists(), Nodes)
+-  real2 = map(lambda N: os.path.exists(str(N)), Nodes)
++  derived = [N.is_derived() for N in Nodes]
++  real1 = [os.path.exists(str(N)) for N in Nodes]
++  exists = [N.exists() for N in Nodes]
++  real2 = [os.path.exists(str(N)) for N in Nodes]
+   for N,D,R,E,F in map(None, Nodes, derived, real1, exists, real2):
+     print '%%s: %%s %%s %%s %%s'%%(N,D,R,E,F)
+ foo.SharedLibrary(target = 'foo', source = 'foo%(_obj)s')
+Index: test/CVSCOMSTR.py
+===================================================================
+--- test/CVSCOMSTR.py	(revision 4715)
++++ test/CVSCOMSTR.py	(working copy)
+@@ -58,10 +58,9 @@
+ test.write('SConstruct', """
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ env = Environment(TOOLS = ['default', 'CVS'],
+                   BUILDERS={'Cat':Builder(action=cat)},
+Index: test/Fortran/FORTRANMODDIR.py
+===================================================================
+--- test/Fortran/FORTRANMODDIR.py	(revision 4715)
++++ test/Fortran/FORTRANMODDIR.py	(working copy)
+@@ -40,7 +40,7 @@
+ mod_regex = "(?im)^\\s*MODULE\\s+(?!PROCEDURE)(\\w+)"
+ contents = open(sys.argv[2]).read()
+ modules = re.findall(mod_regex, contents)
+-modules = map(lambda m: os.path.join(sys.argv[1], m.lower()+'.mod'), modules)
++modules = [os.path.join(sys.argv[1], m.lower()+'.mod') for m in modules]
+ for t in sys.argv[3:] + modules:
+     open(t, 'wb').write('myfortran.py wrote %s\n' % os.path.split(t)[1])
+ sys.exit(0)
+Index: test/Fortran/USE-MODULE.py
+===================================================================
+--- test/Fortran/USE-MODULE.py	(revision 4715)
++++ test/Fortran/USE-MODULE.py	(working copy)
+@@ -40,7 +40,7 @@
+ mod_regex = "(?im)^\\s*MODULE\\s+(?!PROCEDURE)(\\w+)"
+ contents = open(sys.argv[1]).read()
+ modules = re.findall(mod_regex, contents)
+-modules = map(lambda m: m.lower()+'.mod', modules)
++modules = [m.lower()+'.mod' for m in modules]
+ for t in sys.argv[2:] + modules:
+     open(t, 'wb').write('myfortran.py wrote %s\n' % os.path.split(t)[1])
+ sys.exit(0)
+Index: test/Mkdir.py
+===================================================================
+--- test/Mkdir.py	(revision 4715)
++++ test/Mkdir.py	(working copy)
+@@ -41,10 +41,9 @@
+ Execute(Mkdir(Dir('#d1-Dir')))
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Action(cat)
+ env = Environment()
+@@ -127,13 +126,13 @@
+ import os
+ def catdir(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     outfp = open(target, "wb")
+     for src in source:
+-        l = os.listdir(src)
++        s = str(src)
++        l = os.listdir(s)
+         l.sort()
+         for f in l:
+-            f = os.path.join(src, f)
++            f = os.path.join(s, f)
+             if os.path.isfile(f):
+                 outfp.write(open(f, "rb").read())
+     outfp.close()
+Index: test/Exit.py
+===================================================================
+--- test/Exit.py	(revision 4715)
++++ test/Exit.py	(working copy)
+@@ -104,10 +104,9 @@
+ test.write(['subdir', 'SConscript'], """\
+ def exit_builder(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+     Exit(27)
+ env = Environment(BUILDERS = {'my_exit' : Builder(action=exit_builder)})
+@@ -134,11 +133,9 @@
+ 
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+-
+     outf = open(target, 'wb')
+     for src in source:
+-        outf.write(open(src, "rb").read())
++        outf.write(open(str(src), "rb").read())
+     outf.close()
+ 
+ env = Environment(BUILDERS={'Cat':Builder(action=cat)})
+Index: test/Touch.py
+===================================================================
+--- test/Touch.py	(revision 4715)
++++ test/Touch.py	(working copy)
+@@ -39,10 +39,9 @@
+ Execute(Touch(File('f1-File')))
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Action(cat)
+ env = Environment()
+Index: test/Copy-Action.py
+===================================================================
+--- test/Copy-Action.py	(revision 4715)
++++ test/Copy-Action.py	(working copy)
+@@ -43,10 +43,9 @@
+ Execute(Copy('d3.out', File('f3.in')))
+ def cat(env, source, target):
+     target = str(target[0])
+-    source = map(str, source)
+     f = open(target, "wb")
+     for src in source:
+-        f.write(open(src, "rb").read())
++        f.write(open(str(src), "rb").read())
+     f.close()
+ Cat = Action(cat)
+ env = Environment()
+Index: src/engine/SCons/Subst.py
+===================================================================
+--- src/engine/SCons/Subst.py	(revision 4716)
++++ src/engine/SCons/Subst.py	(working copy)
+@@ -152,7 +152,7 @@
+         else:
+             return self.data
+ 
+-def escape_list(list, escape_func):
++def escape_list(mylist, escape_func):
+     """Escape a list of arguments by running the specified escape_func
+     on every object in the list that has an escape() method."""
+     def escape(obj, escape_func=escape_func):
+@@ -162,7 +162,7 @@
+             return obj
+         else:
+             return e(escape_func)
+-    return map(escape, list)
++    return map(escape, mylist)
+ 
+ class NLWrapper:
+     """A wrapper class that delays turning a list of sources or targets
+@@ -183,14 +183,14 @@
+     def _return_nodelist(self):
+         return self.nodelist
+     def _gen_nodelist(self):
+-        list = self.list
+-        if list is None:
+-            list = []
+-        elif not is_Sequence(list):
+-            list = [list]
++        mylist = self.list
++        if mylist is None:
++            mylist = []
++        elif not is_Sequence(mylist):
++            mylist = [mylist]
+         # The map(self.func) call is what actually turns
+         # a list into appropriate proxies.
+-        self.nodelist = SCons.Util.NodeList(map(self.func, list))
++        self.nodelist = SCons.Util.NodeList(map(self.func, mylist))
+         self._create_nodelist = self._return_nodelist
+         return self.nodelist
+     _create_nodelist = _gen_nodelist
+Index: src/engine/SCons/Defaults.py
+===================================================================
+--- src/engine/SCons/Defaults.py	(revision 4715)
++++ src/engine/SCons/Defaults.py	(working copy)
+@@ -314,16 +314,16 @@
+ 
+     return result
+ 
+-def _stripixes(prefix, list, suffix, stripprefixes, stripsuffixes, env, c=None):
++def _stripixes(prefix, itms, suffix, stripprefixes, stripsuffixes, env, c=None):
+     """
+-    This is a wrapper around _concat()/_concat_ixes() that checks for the
+-    existence of prefixes or suffixes on list elements and strips them
++    This is a wrapper around _concat()/_concat_ixes() that checks for
++    the existence of prefixes or suffixes on list items and strips them
+     where it finds them.  This is used by tools (like the GNU linker)
+     that need to turn something like 'libfoo.a' into '-lfoo'.
+     """
+     
+-    if not list:
+-        return list
++    if not itms:
++        return itms
+ 
+     if not callable(c):
+         env_c = env['_concat']
+@@ -340,7 +340,7 @@
+     stripsuffixes = map(env.subst, SCons.Util.flatten(stripsuffixes))
+ 
+     stripped = []
+-    for l in SCons.PathList.PathList(list).subst_path(env, None, None):
++    for l in SCons.PathList.PathList(itms).subst_path(env, None, None):
+         if isinstance(l, SCons.Node.FS.File):
+             stripped.append(l)
+             continue
+Index: src/engine/SCons/Action.py
+===================================================================
+--- src/engine/SCons/Action.py	(revision 4716)
++++ src/engine/SCons/Action.py	(working copy)
+@@ -1093,13 +1093,13 @@
+ 
+ class ListAction(ActionBase):
+     """Class for lists of other actions."""
+-    def __init__(self, list):
++    def __init__(self, actionlist):
+         if __debug__: logInstanceCreation(self, 'Action.ListAction')
+         def list_of_actions(x):
+             if isinstance(x, ActionBase):
+                 return x
+             return Action(x)
+-        self.list = map(list_of_actions, list)
++        self.list = map(list_of_actions, actionlist)
+         # our children will have had any varlist
+         # applied; we don't need to do it again
+         self.varlist = ()
+Index: src/engine/SCons/Tool/PharLapCommon.py
+===================================================================
+--- src/engine/SCons/Tool/PharLapCommon.py	(revision 4715)
++++ src/engine/SCons/Tool/PharLapCommon.py	(working copy)
+@@ -98,7 +98,7 @@
+         if not SCons.Util.is_List(env_dict[key]):
+             paths = paths.split(sep)
+             is_list = 0
+-        if not os.path.normcase(path) in map(os.path.normcase, paths):
++        if os.path.normcase(path) not in map(os.path.normcase, paths):
+             paths = [ path ] + paths
+         if is_list:
+             env_dict[key] = paths
+Index: SConstruct
+===================================================================
+--- SConstruct	(revision 4716)
++++ SConstruct	(working copy)
+@@ -1048,8 +1048,7 @@
+             if s[:len(old)] == old:
+                 s = new + s[len(old):]
+             return os.path.join('usr', s)
+-        dfiles = map(lambda x: os.path.join(test_deb_dir, x),
+-                     map(xxx, dst_files))
++        dfiles = [os.path.join(test_deb_dir, xxx(x)) for x in dst_files]
+         env.Command(dfiles,
+                     deb,
+                     "dpkg --fsys-tarfile $SOURCES | (cd $TEST_DEB_DIR && tar -xf -)")
+Index: bin/scons-doc.py
+===================================================================
+--- bin/scons-doc.py	(revision 4716)
++++ bin/scons-doc.py	(working copy)
+@@ -303,7 +303,7 @@
+     #   public class FooBar
+     # lines in the source file(s) and spits those out
+     # to .class files named after the class.
+-    tlist = map(str, target)
++    tlist = list(map(str, target))
+     not_copied = {}
+     for t in tlist:
+        not_copied[t] = 1
+@@ -311,7 +311,7 @@
+         contents = open(src, "rb").read()
+         classes = public_class_re.findall(contents)
+         for c in classes:
+-            for t in filter(lambda x: string.find(x, c) != -1, tlist):
++            for t in [x for x in tlist if x.find(c) != -1]:
+                 open(t, "wb").write(contents)
+                 del not_copied[t]
+     for t in not_copied.keys():
+@@ -381,9 +381,9 @@
+ toollist = ToolList[platform]
+ filter_tools = string.split('%(tools)s')
+ if filter_tools:
+-    toollist = filter(lambda x: x[0] in filter_tools, toollist)
++    toollist = [x for x in toollist if x[0] in filter_tools]
+ 
+-toollist = map(lambda t: ToolSurrogate(*t), toollist)
++toollist = [ToolSurrogate(*t) for t in toollist]
+ 
+ toollist.append('install')
+ 
+Index: QMTest/unittest.py
+===================================================================
+--- QMTest/unittest.py	(revision 4716)
++++ QMTest/unittest.py	(working copy)
+@@ -596,9 +596,10 @@
+         self.stream.writeln()
+         if not result.wasSuccessful():
+             self.stream.write("FAILED (")
+-            failed, errored = map(len, (result.failures, result.errors))
++            failed = len(result.failures)
+             if failed:
+                 self.stream.write("failures=%d" % failed)
++            errored = len(result.errors)
+             if errored:
+                 if failed: self.stream.write(", ")
+                 self.stream.write("errors=%d" % errored)
