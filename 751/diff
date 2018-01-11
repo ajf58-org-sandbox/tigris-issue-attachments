@@ -1,0 +1,2760 @@
+Index: test/implicit/changed-node.py
+===================================================================
+*** test/implicit/changed-node.py	(revision 4922)
+--- test/implicit/changed-node.py	(working copy)
+***************
+*** 43,49 ****
+  test.write('SConstruct', """\
+  SetOption('implicit_cache', 1)
+  SetOption('max_drift', 1)
+- SourceCode('.', None)
+  
+  def lister(target, source, env):
+      import os
+--- 42,47 ----
+***************
+*** 78,88 ****
+  test.run('--debug=stacktrace')
+  
+  
+  test.write('SConstruct', """\
+  SetOption('implicit_cache', 1)
+  SetOption('max_drift', 1)
+- SourceCode('.', None)
+  
+  def lister(target, source, env):
+      import os.path
+--- 76,84 ----
+Index: test/Deprecated/Copy-Method.py
+===================================================================
+*** test/Deprecated/Copy-Method.py	(revision 4922)
+--- test/Deprecated/Copy-Method.py	(working copy)
+***************
+*** 33,39 ****
+  
+  test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+  
+! test.write('SConstruct', """
+  env = Environment().Copy()
+  env.Copy()
+  """)
+--- 33,39 ----
+  
+  test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+  
+! test.write('SConscript', """
+  env = Environment().Copy()
+  env.Copy()
+  """)
+Index: test/Deprecated/BuildDir.py
+===================================================================
+*** test/Deprecated/BuildDir.py	(revision 4922)
+--- test/Deprecated/BuildDir.py	(working copy)
+***************
+*** 35,41 ****
+  
+  test = TestSCons.TestSCons()
+  
+! test.write('SConstruct', """
+  BuildDir('build', 'src')
+  """)
+  
+--- 35,41 ----
+  
+  test = TestSCons.TestSCons()
+  
+! test.write('SConscript', """
+  BuildDir('build', 'src')
+  """)
+  
+Index: test/Deprecated/TaskmasterNeedsExecute.py
+===================================================================
+*** test/Deprecated/TaskmasterNeedsExecute.py	(revision 4922)
+--- test/Deprecated/TaskmasterNeedsExecute.py	(working copy)
+***************
+*** 33,39 ****
+  
+  test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+  
+! test.write('SConstruct', """
+  import SCons.Taskmaster
+  tm = SCons.Taskmaster.Taskmaster()
+  task = SCons.Taskmaster.Task(tm, [], True, None)
+--- 33,39 ----
+  
+  test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+  
+! test.write('SConscript', """
+  import SCons.Taskmaster
+  tm = SCons.Taskmaster.Taskmaster()
+  task = SCons.Taskmaster.Task(tm, [], True, None)
+Index: test/Deprecated/SConscript-build_dir.py
+===================================================================
+*** test/Deprecated/SConscript-build_dir.py	(revision 4922)
+--- test/Deprecated/SConscript-build_dir.py	(working copy)
+***************
+*** 32,42 ****
+  
+  test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+  
+! test.write('SConstruct', """
+! SConscript('SConscript', build_dir = 'build')
+  """)
+  
+! test.write('SConscript', """
+  """)
+  
+  msg = """The build_dir keyword has been deprecated; use the variant_dir keyword instead."""
+--- 32,42 ----
+  
+  test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+  
+! test.write('SConscript', """
+! SConscript('DummyScript', build_dir = 'build')
+  """)
+  
+! test.write('DummyScript', """
+  """)
+  
+  msg = """The build_dir keyword has been deprecated; use the variant_dir keyword instead."""
+Index: test/Deprecated/SourceCode/SourceCode.py
+===================================================================
+*** test/Deprecated/SourceCode/SourceCode.py	(revision 4922)
+--- test/Deprecated/SourceCode/SourceCode.py	(working copy)
+***************
+*** 32,42 ****
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('sub', 'sub2')
+  
+  test.write('SConstruct', """\
+  import os
+  
+  def cat(env, source, target):
+--- 31,50 ----
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! SourceCode('.', None)
+! """)
+! 
+! msg = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warning = test.deprecated_warning('deprecated-source-code', msg)
+  
+  test.subdir('sub', 'sub2')
+  
+  test.write('SConstruct', """\
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  
+  def cat(env, source, target):
+***************
+*** 74,84 ****
+  
+  test.write(['sub', 'sc-SConscript'], "'sub/sc-SConscript'\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  sc_cat(["%s"], [])
+! """ % (os.path.join('sub', 'SConscript')),
+!                                    build_str = """\
+  sc_cat(["%s"], [])
+  cat(["aaa.out"], ["%s"])
+  sc_cat(["%s"], [])
+--- 82,92 ----
+  
+  test.write(['sub', 'sc-SConscript'], "'sub/sc-SConscript'\n")
+  
+! read_str = """\
+  sc_cat(["%s"], [])
+! """ % (os.path.join('sub', 'SConscript'))
+! 
+! build_str = """\
+  sc_cat(["%s"], [])
+  cat(["aaa.out"], ["%s"])
+  sc_cat(["%s"], [])
+***************
+*** 95,101 ****
+         os.path.join('sub', 'ccc.in'),
+         os.path.join('sub', 'ccc.in'),
+         os.path.join('sub2', 'ddd.in'),
+!        os.path.join('sub2', 'ddd.in'))))
+  
+  test.must_match(['sub', 'SConscript'], "'sub/sc-SConscript'\n")
+  test.must_match('all', "sub/sc-aaa.in\nsub/sc-bbb.in\nsub/sc-ccc.in\n")
+--- 103,114 ----
+         os.path.join('sub', 'ccc.in'),
+         os.path.join('sub', 'ccc.in'),
+         os.path.join('sub2', 'ddd.in'),
+!        os.path.join('sub2', 'ddd.in'))
+! 
+! stdout = TestSCons.re_escape(test.wrap_stdout(read_str = read_str,
+!                                               build_str = build_str))
+! 
+! test.run(arguments = '.', stdout = stdout, stderr = 2*warning)
+  
+  test.must_match(['sub', 'SConscript'], "'sub/sc-SConscript'\n")
+  test.must_match('all', "sub/sc-aaa.in\nsub/sc-bbb.in\nsub/sc-ccc.in\n")
+Index: test/Deprecated/SourceCode/Perforce/P4COMSTR.py
+===================================================================
+*** test/Deprecated/SourceCode/Perforce/P4COMSTR.py	(revision 4922)
+--- test/Deprecated/SourceCode/Perforce/P4COMSTR.py	(working copy)
+***************
+*** 35,40 ****
+--- 34,50 ----
+  _python_ = TestSCons._python_
+  
+  test = TestSCons.TestSCons()
++ test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
++ 
++ test.write('SConscript', """
++ Environment(tools = ['Perforce']).Perforce()
++ """)
++ 
++ msg_p4 = """The Perforce() factory is deprecated and there is no replacement."""
++ warn_p4 = test.deprecated_fatal('deprecated-build-dir', msg_p4)
++ msg_sc = """SourceCode() has been deprecated and there is no replacement.
++ \tIf you need this function, please contact dev@scons.tigris.org."""
++ warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('Perforce', ['Perforce', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 66,72 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 90,100 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['Perforce', 'sub', 'fff.in'], "Perforce/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  Checking out %(sub_SConscript)s from our fake Perforce
+! """ % locals(),
+!                                    build_str = """\
+  Checking out aaa.in from our fake Perforce
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 101,111 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['Perforce', 'sub', 'fff.in'], "Perforce/sub/fff.in\n")
+  
+! read_str = """\
+  Checking out %(sub_SConscript)s from our fake Perforce
+! """ % locals()
+! 
+! build_str = """\
+  Checking out aaa.in from our fake Perforce
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 107,113 ****
+  Checking out %(sub_fff_in)s from our fake Perforce
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "Perforce/aaa.in\nchecked-out bbb.in\nPerforce/ccc.in\n")
+--- 118,130 ----
+  Checking out %(sub_fff_in)s from our fake Perforce
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_p4 + warn_sc)
+  
+  test.must_match('all',
+                  "Perforce/aaa.in\nchecked-out bbb.in\nPerforce/ccc.in\n")
+Index: test/Deprecated/SourceCode/Perforce/P4COM.py
+===================================================================
+*** test/Deprecated/SourceCode/Perforce/P4COM.py	(revision 4922)
+--- test/Deprecated/SourceCode/Perforce/P4COM.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('Perforce', ['Perforce', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['Perforce']).Perforce()
+! """)
+! 
+! msg_p4 = """The Perforce() factory is deprecated and there is no replacement."""
+! warn_p4 = test.deprecated_fatal('deprecated-build-dir', msg_p4)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('Perforce', ['Perforce', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 65,71 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 89,99 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['Perforce', 'sub', 'fff.in'], "Perforce/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  %(_python_)s my-p4.py %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  %(_python_)s my-p4.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 99,109 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['Perforce', 'sub', 'fff.in'], "Perforce/sub/fff.in\n")
+  
+! read_str = """\
+  %(_python_)s my-p4.py %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  %(_python_)s my-p4.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 106,112 ****
+  %(_python_)s my-p4.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "Perforce/aaa.in\nchecked-out bbb.in\nPerforce/ccc.in\n")
+--- 116,128 ----
+  %(_python_)s my-p4.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_p4 + warn_sc)
+  
+  test.must_match('all',
+                  "Perforce/aaa.in\nchecked-out bbb.in\nPerforce/ccc.in\n")
+Index: test/Deprecated/SourceCode/Perforce/Perforce.py
+===================================================================
+*** test/Deprecated/SourceCode/Perforce/Perforce.py	(revision 4922)
+--- test/Deprecated/SourceCode/Perforce/Perforce.py	(working copy)
+***************
+*** 35,40 ****
+--- 34,53 ----
+  
+  import TestSCons
+  
++ test = TestSCons.TestSCons()
++ 
++ test.write('SConscript', """
++ Environment(tools = ['Perforce']).Perforce()
++ """)
++ 
++ msg_p4 = """The Perforce() factory is deprecated and there is no replacement."""
++ warn_p4 = test.deprecated_fatal('deprecated-build-dir', msg_p4)
++ msg_sc = """SourceCode() has been deprecated and there is no replacement.
++ \tIf you need this function, please contact dev@scons.tigris.org."""
++ warn_sc = test.deprecated_wrap(msg_sc)
++ 
++ test.skip_test("Need Perforce to debug these tests.\n")
++ 
+  class TestPerforce(TestSCons.TestSCons):
+      def __init__(self, *args, **kw):
+          TestSCons.TestSCons.__init__(self, *args, **kw)
+***************
+*** 237,242 ****
+--- 250,256 ----
+  test.p4('-c testclient1 submit -i', stdin=changespec)
+  
+  SConstruct_contents = test.substitute("""
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 263,269 ****
+  test.subdir(['work', 'foo', 'sub'])
+  test.write(['work', 'foo', 'sub', 'eee.in'], "work/foo/sub/eee.in\n")
+  
+! test.run(chdir = 'work', arguments = '.')
+  
+  test.fail_test(test.read(['work', 'all']) != "import/aaa.in\nwork/foo/bbb.in\nimport/ccc.in\n")
+  test.fail_test(test.read(['work', 'foo', 'sub', 'all']) != "import/sub/ddd.in\nwork/foo/sub/eee.in\nimport/sub/fff.in\n")
+--- 277,283 ----
+  test.subdir(['work', 'foo', 'sub'])
+  test.write(['work', 'foo', 'sub', 'eee.in'], "work/foo/sub/eee.in\n")
+  
+! test.run(chdir = 'work', arguments = '.', stderr = warn_p4 + warn_sc)
+  
+  test.fail_test(test.read(['work', 'all']) != "import/aaa.in\nwork/foo/bbb.in\nimport/ccc.in\n")
+  test.fail_test(test.read(['work', 'foo', 'sub', 'all']) != "import/sub/ddd.in\nwork/foo/sub/eee.in\nimport/sub/fff.in\n")
+Index: test/Deprecated/SourceCode/Subversion.py
+===================================================================
+*** test/Deprecated/SourceCode/Subversion.py	(revision 4922)
+--- test/Deprecated/SourceCode/Subversion.py	(working copy)
+***************
+*** 32,37 ****
+--- 32,47 ----
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['Subversion']).Subversion('')
++ """)
++ 
++ msg_svn = """The Subversion() factory is deprecated and there is no replacement."""
++ warn_svn = test.deprecated_fatal('deprecated-build-dir', msg_svn)
++ msg_sc = """SourceCode() has been deprecated and there is no replacement.
++ \tIf you need this function, please contact dev@scons.tigris.org."""
++ warn_sc = test.deprecated_wrap(msg_sc)
++ 
+  svn = test.where_is('svn')
+  if not svn:
+      test.skip_test("Could not find 'svn'; skipping test(s).\n")
+***************
+*** 73,78 ****
+--- 83,89 ----
+  
+  # Test the most straightforward Subversion checkouts, using the module name.
+  test.write(['work1', 'SConstruct'], """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 120,125 ****
+--- 131,137 ----
+  
+  # Test Subversion checkouts when the module name is specified.
+  test.write(['work2', 'SConstruct'], """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+Index: test/Deprecated/SourceCode/RCS/diskcheck.py
+===================================================================
+*** test/Deprecated/SourceCode/RCS/diskcheck.py	(revision 4922)
+--- test/Deprecated/SourceCode/RCS/diskcheck.py	(working copy)
+***************
+*** 34,39 ****
+--- 33,45 ----
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['RCS']).RCS()
++ """)
++ 
++ msg_rcs = """The RCS() factory is deprecated and there is no replacement."""
++ test.deprecated_fatal('deprecated-build-dir', msg_rcs)
++ 
+  rcs = test.where_is('rcs')
+  if not rcs:
+      test.skip_test("Could not find 'rcs'; skipping test(s).\n")
+***************
+*** 87,92 ****
+--- 92,98 ----
+  test.no_result(os.path.exists(test.workpath('sub', 'ccc.in')))
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  for key in ['LOGNAME', 'USERNAME', 'USER']:
+      logname = os.environ.get(key)
+***************
+*** 115,121 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+  sub_SConscript = os.path.join('sub', 'SConscript')
+! SConstruct_file_line = test.python_file_line(test.workpath('SConstruct'), 22)[:-1]
+  
+  expect = """\
+  
+--- 121,127 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+  sub_SConscript = os.path.join('sub', 'SConscript')
+! SConstruct_file_line = test.python_file_line(test.workpath('SConstruct'), 23)[:-1]
+  
+  expect = """\
+  
+***************
+*** 128,138 ****
+  
+  test.run(arguments = '--diskcheck=match,sccs', status=2, stderr=expect)
+  
+! test.run(arguments = '--diskcheck=rcs',
+!          stdout = test.wrap_stdout(read_str = """\
+  co -l %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  co -l aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 134,144 ----
+  
+  test.run(arguments = '--diskcheck=match,sccs', status=2, stderr=expect)
+  
+! read_str = """\
+  co -l %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  co -l aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 145,152 ****
+  co -l %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()),
+!          stderr = """\
+  %(sub_RCS)s/SConscript,v  -->  %(sub_SConscript)s
+  revision 1.1 (locked)
+  done
+--- 151,161 ----
+  co -l %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! stderr = """\
+  %(sub_RCS)s/SConscript,v  -->  %(sub_SConscript)s
+  revision 1.1 (locked)
+  done
+***************
+*** 162,168 ****
+  %(sub_RCS)s/fff.in,v  -->  %(sub_fff_in)s
+  revision 1.1 (locked)
+  done
+! """ % locals())
+  
+  # Checking things back out of RCS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+--- 171,179 ----
+  %(sub_RCS)s/fff.in,v  -->  %(sub_fff_in)s
+  revision 1.1 (locked)
+  done
+! """ % locals()
+! 
+! test.run(arguments = '--diskcheck=rcs', stdout = stdout, stderr = stderr)
+  
+  # Checking things back out of RCS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+Index: test/Deprecated/SourceCode/RCS/changed.py
+===================================================================
+*** test/Deprecated/SourceCode/RCS/changed.py	(revision 4922)
+--- test/Deprecated/SourceCode/RCS/changed.py	(working copy)
+***************
+*** 30,36 ****
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons()
+  
+  rcs = test.where_is('rcs')
+  if not rcs:
+--- 29,45 ----
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['RCS']).RCS()
+! """)
+! 
+! msg_rcs = """The RCS() factory is deprecated and there is no replacement."""
+! warn_rcs = test.deprecated_fatal('deprecated-build-dir', msg_rcs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  rcs = test.where_is('rcs')
+  if not rcs:
+***************
+*** 62,69 ****
+  test.run(program = ci, arguments = '-f -tmain.c main.c', stderr = None)
+  
+  
+  test.write('SConstruct', """
+  import os
+  for key in ['LOGNAME', 'USERNAME', 'USER']:
+      logname = os.environ.get(key)
+--- 70,77 ----
+  test.run(program = ci, arguments = '-f -tmain.c main.c', stderr = None)
+  
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  for key in ['LOGNAME', 'USERNAME', 'USER']:
+      logname = os.environ.get(key)
+***************
+*** 76,97 ****
+  env2.Program('main.exe', 'main.c')
+  """)
+  
+! test.run()
+  
+  test.run(program = test.workpath('main.exe'), stdout = "main.c 1\n")
+  
+  test.run(program = co, arguments = '-l main.c', stderr = None)
+  
+  test.write('main.c', main_cpp_contents % 2)
+  
+! test.not_up_to_date(arguments = 'main.exe')
+  
+  test.run(program = test.workpath('main.exe'), stdout = "main.c 2\n")
+  
+  
+  test.pass_test()
+  
+  # Local Variables:
+--- 84,103 ----
+  env2.Program('main.exe', 'main.c')
+  """)
+  
+! test.run(stderr = warn_rcs + warn_sc)
+  
+  test.run(program = test.workpath('main.exe'), stdout = "main.c 1\n")
+  
+  test.run(program = co, arguments = '-l main.c', stderr = None)
+  
++ 
+  test.write('main.c', main_cpp_contents % 2)
+  
+! test.not_up_to_date(arguments = 'main.exe', stderr = warn_rcs + warn_sc)
+  
+  test.run(program = test.workpath('main.exe'), stdout = "main.c 2\n")
+  
+  
+  test.pass_test()
+  
+  # Local Variables:
+Index: test/Deprecated/SourceCode/RCS/implicit.py
+===================================================================
+*** test/Deprecated/SourceCode/RCS/implicit.py	(revision 4922)
+--- test/Deprecated/SourceCode/RCS/implicit.py	(working copy)
+***************
+*** 32,37 ****
+--- 31,43 ----
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['RCS']).RCS()
++ """)
++ 
++ msg_rcs = """The RCS() factory is deprecated and there is no replacement."""
++ test.deprecated_fatal('deprecated-build-dir', msg_rcs)
++ 
+  rcs = test.where_is('rcs')
+  if not rcs:
+      test.skip_test("Could not find 'rcs'; skipping test(s).\n")
+***************
+*** 70,75 ****
+--- 75,81 ----
+           stderr = None)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  DefaultEnvironment(RCS_CO = r'%s')
+  env = Environment()
+  env.Program('foo.c')
+Index: test/Deprecated/SourceCode/RCS/RCS_COCOMSTR.py
+===================================================================
+*** test/Deprecated/SourceCode/RCS/RCS_COCOMSTR.py	(revision 4922)
+--- test/Deprecated/SourceCode/RCS/RCS_COCOMSTR.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('RCS', ['RCS', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['RCS']).RCS()
+! """)
+! 
+! msg_rcs = """The RCS() factory is deprecated and there is no replacement."""
+! warn_rcs = test.deprecated_fatal('deprecated-build-dir', msg_rcs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('RCS', ['RCS', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 65,71 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 90,100 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['RCS', 'sub', 'fff.in'], "RCS/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  Checking out %(sub_SConscript)s from our fake RCS
+! """ % locals(),
+!                                    build_str = """\
+  Checking out aaa.in from our fake RCS
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 100,110 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['RCS', 'sub', 'fff.in'], "RCS/sub/fff.in\n")
+  
+! read_str = """\
+  Checking out %(sub_SConscript)s from our fake RCS
+! """ % locals()
+! 
+! build_str = """\
+  Checking out aaa.in from our fake RCS
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 107,113 ****
+  Checking out %(sub_fff_in)s from our fake RCS
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "RCS/aaa.in\nchecked-out bbb.in\nRCS/ccc.in\n")
+--- 117,129 ----
+  Checking out %(sub_fff_in)s from our fake RCS
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_rcs + warn_sc)
+  
+  test.must_match('all',
+                  "RCS/aaa.in\nchecked-out bbb.in\nRCS/ccc.in\n")
+Index: test/Deprecated/SourceCode/RCS/transparent.py
+===================================================================
+*** test/Deprecated/SourceCode/RCS/transparent.py	(revision 4922)
+--- test/Deprecated/SourceCode/RCS/transparent.py	(working copy)
+***************
+*** 34,39 ****
+--- 33,45 ----
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['RCS']).RCS()
++ """)
++ 
++ msg_rcs = """The RCS() factory is deprecated and there is no replacement."""
++ test.deprecated_fatal('deprecated-build-dir', msg_rcs)
++ 
+  rcs = test.where_is('rcs')
+  if not rcs:
+      test.skip_test("Could not find 'rcs'; skipping test(s).\n")
+***************
+*** 87,92 ****
+--- 92,98 ----
+  test.no_result(os.path.exists(test.workpath('sub', 'ccc.in')))
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  for key in ['LOGNAME', 'USERNAME', 'USER']:
+      logname = os.environ.get(key)
+***************
+*** 113,123 ****
+  
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  co -l %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  co -l aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 119,129 ----
+  
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+! read_str = """\
+  co -l %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  co -l aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 130,137 ****
+  co -l %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()),
+!          stderr = """\
+  %(sub_RCS)s/SConscript,v  -->  %(sub_SConscript)s
+  revision 1.1 (locked)
+  done
+--- 136,146 ----
+  co -l %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! stderr = """\
+  %(sub_RCS)s/SConscript,v  -->  %(sub_SConscript)s
+  revision 1.1 (locked)
+  done
+***************
+*** 147,153 ****
+  %(sub_RCS)s/fff.in,v  -->  %(sub_fff_in)s
+  revision 1.1 (locked)
+  done
+! """ % locals())
+  
+  # Checking things back out of RCS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+--- 156,164 ----
+  %(sub_RCS)s/fff.in,v  -->  %(sub_fff_in)s
+  revision 1.1 (locked)
+  done
+! """ % locals()
+! 
+! test.run(arguments = '.', stdout = stdout, stderr = stderr)
+  
+  # Checking things back out of RCS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+Index: test/Deprecated/SourceCode/RCS/explicit.py
+===================================================================
+*** test/Deprecated/SourceCode/RCS/explicit.py	(revision 4922)
+--- test/Deprecated/SourceCode/RCS/explicit.py	(working copy)
+***************
+*** 32,38 ****
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons()
+  
+  rcs = test.where_is('rcs')
+  if not rcs:
+--- 31,47 ----
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['RCS']).RCS()
+! """)
+! 
+! msg_rcs = """The RCS() factory is deprecated and there is no replacement."""
+! warn_rcs = test.deprecated_fatal('deprecated-build-dir', msg_rcs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  rcs = test.where_is('rcs')
+  if not rcs:
+***************
+*** 87,92 ****
+--- 95,101 ----
+  test.no_result(os.path.exists(test.workpath('sub', 'fff.in')))
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  for key in ['LOGNAME', 'USERNAME', 'USER']:
+      logname = os.environ.get(key)
+***************
+*** 115,125 ****
+  
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  co -q %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  co -q aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 124,134 ----
+  
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+! read_str = """\
+  co -q %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  co -q aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 132,138 ****
+  co -q %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  # Checking things back out of RCS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+--- 141,153 ----
+  co -q %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_rcs + warn_sc)
+  
+  # Checking things back out of RCS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+Index: test/Deprecated/SourceCode/RCS/RCS_COCOM.py
+===================================================================
+*** test/Deprecated/SourceCode/RCS/RCS_COCOM.py	(revision 4922)
+--- test/Deprecated/SourceCode/RCS/RCS_COCOM.py	(working copy)
+***************
+*** 28,40 ****
+  Test setting the $RCS_COCOM variable.
+  """
+  
+! import os.path
+  
+  import TestSCons
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('RCS', ['RCS', 'sub'], 'sub')
+  
+--- 27,49 ----
+  Test setting the $RCS_COCOM variable.
+  """
+  
+! import os
+  
+  import TestSCons
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['RCS']).RCS()
+! """)
+! 
+! msg_rcs = """The RCS() factory is deprecated and there is no replacement."""
+! warn_rcs = test.deprecated_fatal('deprecated-build-dir', msg_rcs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('RCS', ['RCS', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 65,71 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 89,99 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['RCS', 'sub', 'fff.in'], "RCS/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  %(_python_)s my-rcs-co.py %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  %(_python_)s my-rcs-co.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 99,109 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['RCS', 'sub', 'fff.in'], "RCS/sub/fff.in\n")
+  
+! read_str = """\
+  %(_python_)s my-rcs-co.py %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  %(_python_)s my-rcs-co.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 106,112 ****
+  %(_python_)s my-rcs-co.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "RCS/aaa.in\nchecked-out bbb.in\nRCS/ccc.in\n")
+--- 116,128 ----
+  %(_python_)s my-rcs-co.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_rcs + warn_sc)
+  
+  test.must_match('all',
+                  "RCS/aaa.in\nchecked-out bbb.in\nRCS/ccc.in\n")
+Index: test/Deprecated/SourceCode/BitKeeper/BITKEEPERCOM.py
+===================================================================
+*** test/Deprecated/SourceCode/BitKeeper/BITKEEPERCOM.py	(revision 4922)
+--- test/Deprecated/SourceCode/BitKeeper/BITKEEPERCOM.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('BitKeeper', ['BitKeeper', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['BitKeeper']).BitKeeper()
+! """)
+! 
+! msg_bk = """The BitKeeper() factory is deprecated and there is no replacement."""
+! warn_bk = test.deprecated_fatal('deprecated-build-dir', msg_bk)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('BitKeeper', ['BitKeeper', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 65,71 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 89,99 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['BitKeeper', 'sub', 'fff.in'], "BitKeeper/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  %(_python_)s my-bk-get.py %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  %(_python_)s my-bk-get.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 99,109 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['BitKeeper', 'sub', 'fff.in'], "BitKeeper/sub/fff.in\n")
+  
+! read_str = """\
+  %(_python_)s my-bk-get.py %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  %(_python_)s my-bk-get.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 106,112 ****
+  %(_python_)s my-bk-get.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "BitKeeper/aaa.in\nchecked-out bbb.in\nBitKeeper/ccc.in\n")
+--- 116,128 ----
+  %(_python_)s my-bk-get.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_bk + warn_sc)
+  
+  test.must_match('all',
+                  "BitKeeper/aaa.in\nchecked-out bbb.in\nBitKeeper/ccc.in\n")
+Index: test/Deprecated/SourceCode/BitKeeper/BitKeeper.py
+===================================================================
+*** test/Deprecated/SourceCode/BitKeeper/BitKeeper.py	(revision 4922)
+--- test/Deprecated/SourceCode/BitKeeper/BitKeeper.py	(working copy)
+***************
+*** 33,42 ****
+  import TestSCons
+  
+  test = TestSCons.TestSCons()
+  
+  bk = test.where_is('bk')
+  if not bk:
+!     test.skip_test("Could not find 'bk'; skipping test(s).\n")
+  
+  try:
+      login = os.getlogin()
+--- 32,54 ----
+  import TestSCons
+  
+  test = TestSCons.TestSCons()
++ test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
++ 
++ test.write('SConscript', """
++ Environment(tools = ['BitKeeper']).BitKeeper()
++ """)
++ 
++ msg_bk = """The BitKeeper() factory is deprecated and there is no replacement."""
++ warn_bk = test.deprecated_fatal('deprecated-build-dir', msg_bk)
++ msg_sc = """SourceCode() has been deprecated and there is no replacement.
++ \tIf you need this function, please contact dev@scons.tigris.org."""
++ warn_sc = test.deprecated_wrap(msg_sc)
++ 
++ test.skip_test("Need BitKeeper to debug these tests.\n")
+  
+  bk = test.where_is('bk')
+  if not bk:
+!     test.skip_test("Could not find 'bk'; skipping remaining tests.\n")
+  
+  try:
+      login = os.getlogin()
+***************
+*** 69,81 ****
+          test.unlink(['work1', file])
+          test.unlink(['work1', ','+file])
+      
+!     test.write(['work1', 'sub', 'SConscript'], """\
+! Import("env")
+! env.Cat('ddd.out', 'ddd.in')
+! env.Cat('eee.out', 'eee.in')
+! env.Cat('fff.out', 'fff.in')
+! env.Cat('all', ['ddd.out', 'eee.out', 'fff.out'])
+! """)
+      args = "create SConscript"
+      test.run(chdir = 'work1/sub', program = sccs, arguments = args, stderr = None)
+      test.unlink(['work1', 'sub', 'SConscript'])
+--- 81,93 ----
+          test.unlink(['work1', file])
+          test.unlink(['work1', ','+file])
+      
+!     test.write(['work1', 'sub', 'SConscript'], """if True:
+!         Import("env")
+!         env.Cat('ddd.out', 'ddd.in')
+!         env.Cat('eee.out', 'eee.in')
+!         env.Cat('fff.out', 'fff.in')
+!         env.Cat('all', ['ddd.out', 'eee.out', 'fff.out'])
+!     """)
+      args = "create SConscript"
+      test.run(chdir = 'work1/sub', program = sccs, arguments = args, stderr = None)
+      test.unlink(['work1', 'sub', 'SConscript'])
+***************
+*** 88,120 ****
+          test.unlink(['work1', 'sub', file])
+          test.unlink(['work1', 'sub', ','+file])
+  
+!     test.write(['work1', 'SConstruct'], """
+! def cat(env, source, target):
+!     target = str(target[0])
+!     f = open(target, "wb")
+!     for src in source:
+!         f.write(open(str(src), "rb").read())
+!     f.close()
+! env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+!                   BITKEEPERGETFLAGS='-e')
+! env.Cat('aaa.out', 'aaa.in')
+! env.Cat('bbb.out', 'bbb.in')
+! env.Cat('ccc.out', 'ccc.in')
+! env.Cat('all', ['aaa.out', 'bbb.out', 'ccc.out'])
+! env.SourceCode('.', env.BitKeeper())
+! SConscript('sub/SConscript', "env")
+! """)
+  
+      test.write(['work1', 'bbb.in'], "checked-out work1/bbb.in\n")
+  
+      test.write(['work1', 'sub', 'eee.in'], "checked-out work1/sub/eee.in\n")
+  
+!     test.run(chdir = 'work1',
+!              arguments = '.',
+!              stdout = test.wrap_stdout(read_str = """\
+  bk get -e sub/SConscript
+! """,
+!                                        build_str = """\
+  bk get -e aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 100,132 ----
+          test.unlink(['work1', 'sub', file])
+          test.unlink(['work1', 'sub', ','+file])
+  
+!     test.write(['work1', 'SConstruct'], """if True:
+!         SetOption('warn', 'deprecated-source-code')
+!         def cat(env, source, target):
+!             target = str(target[0])
+!             f = open(target, "wb")
+!             for src in source:
+!                 f.write(open(str(src), "rb").read())
+!             f.close()
+!         env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+!                           BITKEEPERGETFLAGS='-e')
+!         env.Cat('aaa.out', 'aaa.in')
+!         env.Cat('bbb.out', 'bbb.in')
+!         env.Cat('ccc.out', 'ccc.in')
+!         env.Cat('all', ['aaa.out', 'bbb.out', 'ccc.out'])
+!         env.SourceCode('.', env.BitKeeper())
+!         SConscript('sub/SConscript', "env")
+!     """)
+  
+      test.write(['work1', 'bbb.in'], "checked-out work1/bbb.in\n")
+  
+      test.write(['work1', 'sub', 'eee.in'], "checked-out work1/sub/eee.in\n")
+  
+!     read_str = """\
+  bk get -e sub/SConscript
+! """
+! 
+!     build_str = """\
+  bk get -e aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 127,140 ****
+  bk get -e sub/fff.in
+  cat(["sub/fff.out"], ["sub/fff.in"])
+  cat(["sub/all"], ["sub/ddd.out", "sub/eee.out", "sub/fff.out"])
+! """),
+!              stderr = """\
+  sub/SConscript 1.1 -> 1.2: 5 lines
+  aaa.in 1.1 -> 1.2: 1 lines
+  ccc.in 1.1 -> 1.2: 1 lines
+  sub/ddd.in 1.1 -> 1.2: 1 lines
+  sub/fff.in 1.1 -> 1.2: 1 lines
+! """)
+  
+      test.must_match(['work1', 'all'], "work1/aaa.in\nchecked-out work1/bbb.in\nwork1/ccc.in\n")
+  
+--- 139,159 ----
+  bk get -e sub/fff.in
+  cat(["sub/fff.out"], ["sub/fff.in"])
+  cat(["sub/all"], ["sub/ddd.out", "sub/eee.out", "sub/fff.out"])
+! """
+! 
+!     stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+!     stderr = """\
+  sub/SConscript 1.1 -> 1.2: 5 lines
+  aaa.in 1.1 -> 1.2: 1 lines
+  ccc.in 1.1 -> 1.2: 1 lines
+  sub/ddd.in 1.1 -> 1.2: 1 lines
+  sub/fff.in 1.1 -> 1.2: 1 lines
+! """
+! 
+!     test.run(arguments = '.',
+!              stdout = TestSCons.re_escape(stdout),
+!              stderr = warn_bk + warn_sc + TestSCons.re_escape(stderr))
+  
+      test.must_match(['work1', 'all'], "work1/aaa.in\nchecked-out work1/bbb.in\nwork1/ccc.in\n")
+  
+***************
+*** 187,220 ****
+      test.no_result(os.path.exists(test.workpath('work2', 'sub', 'eee.in')))
+      test.no_result(os.path.exists(test.workpath('work2', 'sub', 'fff.in')))
+  
+!     test.write(['work2', 'SConstruct'], """\
+! def cat(env, source, target):
+!     target = str(target[0])
+!     f = open(target, "wb")
+!     for src in source:
+!         f.write(open(str(src), "rb").read())
+!     f.close()
+! env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+!                   BITKEEPERGET='$BITKEEPER co',
+!                   BITKEEPERGETFLAGS='-q')
+! env.Cat('aaa.out', 'aaa.in')
+! env.Cat('bbb.out', 'bbb.in')
+! env.Cat('ccc.out', 'ccc.in')
+! env.Cat('all', ['aaa.out', 'bbb.out', 'ccc.out'])
+! env.SourceCode('.', env.BitKeeper())
+! SConscript('sub/SConscript', "env")
+! """)
+  
+      test.write(['work2', 'bbb.in'], "checked-out work2/bbb.in\n")
+  
+      test.write(['work2', 'sub', 'eee.in'], "checked-out work2/sub/eee.in\n")
+  
+!     test.run(chdir = 'work2',
+!              arguments = '.',
+!              stdout = test.wrap_stdout(read_str = """\
+  bk co -q sub/SConscript
+! """,
+!                                        build_str = """\
+  bk co -q aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 206,239 ----
+      test.no_result(os.path.exists(test.workpath('work2', 'sub', 'eee.in')))
+      test.no_result(os.path.exists(test.workpath('work2', 'sub', 'fff.in')))
+  
+!     test.write(['work2', 'SConstruct'], """if True:
+!         SetOption('warn', 'deprecated-source-code')
+!         def cat(env, source, target):
+!             target = str(target[0])
+!             f = open(target, "wb")
+!             for src in source:
+!                 f.write(open(str(src), "rb").read())
+!             f.close()
+!         env = Environment(BUILDERS={'Cat':Builder(action=cat)},
+!                           BITKEEPERGET='$BITKEEPER co',
+!                           BITKEEPERGETFLAGS='-q')
+!         env.Cat('aaa.out', 'aaa.in')
+!         env.Cat('bbb.out', 'bbb.in')
+!         env.Cat('ccc.out', 'ccc.in')
+!         env.Cat('all', ['aaa.out', 'bbb.out', 'ccc.out'])
+!         env.SourceCode('.', env.BitKeeper())
+!         SConscript('sub/SConscript', "env")
+!     """)
+  
+      test.write(['work2', 'bbb.in'], "checked-out work2/bbb.in\n")
+  
+      test.write(['work2', 'sub', 'eee.in'], "checked-out work2/sub/eee.in\n")
+  
+!     read_str = """\
+  bk co -q sub/SConscript
+! """
+! 
+!     build_str = """\
+  bk co -q aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 227,233 ****
+  bk co -q sub/fff.in
+  cat(["sub/fff.out"], ["sub/fff.in"])
+  cat(["sub/all"], ["sub/ddd.out", "sub/eee.out", "sub/fff.out"])
+! """))
+  
+      test.must_match(['work2', 'all'], "work2/aaa.in\nchecked-out work2/bbb.in\nwork2/ccc.in\n")
+  
+--- 246,258 ----
+  bk co -q sub/fff.in
+  cat(["sub/fff.out"], ["sub/fff.in"])
+  cat(["sub/all"], ["sub/ddd.out", "sub/eee.out", "sub/fff.out"])
+! """
+! 
+!     stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+!     test.run(arguments = '.',
+!              stdout = TestSCons.re_escape(stdout),
+!              stderr = warn_bk + warn_sc)
+  
+      test.must_match(['work2', 'all'], "work2/aaa.in\nchecked-out work2/bbb.in\nwork2/ccc.in\n")
+  
+***************
+*** 283,288 ****
+--- 308,314 ----
+           arguments = 'import -q -f -tplain . %s' % test.workpath('work3'))
+  
+  test.write(['work3', 'SConstruct'], """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 303,314 ****
+  test.subdir(['work3', 'sub'])
+  test.write(['work3', 'sub', 'eee.in'], "work3/sub/eee.in\n")
+  
+! test.run(chdir = 'work3',
+!          arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  %s get sub/SConscript
+! """ % bk,
+!                                    build_str = """\
+  %s get aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 329,339 ----
+  test.subdir(['work3', 'sub'])
+  test.write(['work3', 'sub', 'eee.in'], "work3/sub/eee.in\n")
+  
+! read_str = """\
+  %s get sub/SConscript
+! """ % bk
+! 
+! build_str = """\
+  %s get aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 321,334 ****
+  %s get sub/fff.in
+  cat(["sub/fff.out"], ["sub/fff.in"])
+  cat(["sub/all"], ["sub/ddd.out", "sub/eee.out", "sub/fff.out"])
+! """ % (bk, bk, bk, bk)),
+!          stderr = """\
+  sub/SConscript 1.1: 5 lines
+  aaa.in 1.1: 1 lines
+  ccc.in 1.1: 1 lines
+  sub/ddd.in 1.1: 1 lines
+  sub/fff.in 1.1: 1 lines
+! """)
+  
+  test.must_match(['work3', 'all'], "import/aaa.in\nwork3/bbb.in\nimport/ccc.in\n")
+  
+--- 346,367 ----
+  %s get sub/fff.in
+  cat(["sub/fff.out"], ["sub/fff.in"])
+  cat(["sub/all"], ["sub/ddd.out", "sub/eee.out", "sub/fff.out"])
+! """ % (bk, bk, bk, bk)
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! stderr = """\
+  sub/SConscript 1.1: 5 lines
+  aaa.in 1.1: 1 lines
+  ccc.in 1.1: 1 lines
+  sub/ddd.in 1.1: 1 lines
+  sub/fff.in 1.1: 1 lines
+! """
+! 
+! test.run(chdir = 'work3',
+!          arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = TestSCons.re_escape(stderr))
+  
+  test.must_match(['work3', 'all'], "import/aaa.in\nwork3/bbb.in\nimport/ccc.in\n")
+  
+Index: test/Deprecated/SourceCode/BitKeeper/BITKEEPERCOMSTR.py
+===================================================================
+*** test/Deprecated/SourceCode/BitKeeper/BITKEEPERCOMSTR.py	(revision 4922)
+--- test/Deprecated/SourceCode/BitKeeper/BITKEEPERCOMSTR.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('BitKeeper', ['BitKeeper', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['BitKeeper']).BitKeeper()
+! """)
+! 
+! msg_bk = """The BitKeeper() factory is deprecated and there is no replacement."""
+! warn_bk = test.deprecated_fatal('deprecated-build-dir', msg_bk)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('BitKeeper', ['BitKeeper', 'sub'], 'sub')
+  
+***************
+*** 56,68 ****
+  """)
+  
+  test.write('SConstruct', """
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+      for src in source:
+          f.write(open(str(src), "rb").read())
+      f.close()
+! env = Environment(TOOLS = ['default', 'BitKeeper'],
+                    BUILDERS={'Cat':Builder(action=cat)},
+                    BITKEEPERCOM='%(_python_)s my-bk-get.py $TARGET',
+                    BITKEEPERCOMSTR='Checking out $TARGET from our fake BitKeeper')
+--- 65,78 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+      for src in source:
+          f.write(open(str(src), "rb").read())
+      f.close()
+! env = Environment(tools = ['default', 'BitKeeper'],
+                    BUILDERS={'Cat':Builder(action=cat)},
+                    BITKEEPERCOM='%(_python_)s my-bk-get.py $TARGET',
+                    BITKEEPERCOMSTR='Checking out $TARGET from our fake BitKeeper')
+***************
+*** 90,100 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['BitKeeper', 'sub', 'fff.in'], "BitKeeper/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  Checking out %(sub_SConscript)s from our fake BitKeeper
+! """ % locals(),
+!                                    build_str = """\
+  Checking out aaa.in from our fake BitKeeper
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 100,110 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['BitKeeper', 'sub', 'fff.in'], "BitKeeper/sub/fff.in\n")
+  
+! read_str = """\
+  Checking out %(sub_SConscript)s from our fake BitKeeper
+! """ % locals()
+! 
+! build_str = """\
+  Checking out aaa.in from our fake BitKeeper
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 107,113 ****
+  Checking out %(sub_fff_in)s from our fake BitKeeper
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "BitKeeper/aaa.in\nchecked-out bbb.in\nBitKeeper/ccc.in\n")
+--- 117,129 ----
+  Checking out %(sub_fff_in)s from our fake BitKeeper
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_bk + warn_sc)
+  
+  test.must_match('all',
+                  "BitKeeper/aaa.in\nchecked-out bbb.in\nBitKeeper/ccc.in\n")
+Index: test/Deprecated/SourceCode/SCCS/diskcheck.py
+===================================================================
+*** test/Deprecated/SourceCode/SCCS/diskcheck.py	(revision 4922)
+--- test/Deprecated/SourceCode/SCCS/diskcheck.py	(working copy)
+***************
+*** 28,45 ****
+  Test transparent checkouts from SCCS files in an SCCS subdirectory.
+  """
+  
+! import os.path
+  
+  import TestSCons
+  
+  test = TestSCons.TestSCons()
+  
+  sccs = test.where_is('sccs')
+  if not sccs:
+      test.skip_test("Could not find 'sccs'; skipping test(s).\n")
+  
+  
+  test.subdir('SCCS', 'sub', ['sub', 'SCCS'])
+  
+  for f in ['aaa.in', 'bbb.in', 'ccc.in']:
+--- 27,55 ----
+  Test transparent checkouts from SCCS files in an SCCS subdirectory.
+  """
+  
+! import os
+  
+  import TestSCons
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['SCCS']).SCCS()
++ """)
++ 
++ msg_sccs = """The SCCS() factory is deprecated and there is no replacement."""
++ warn_sccs = test.deprecated_fatal('deprecated-build-dir', msg_sccs)
++ msg_sc = """SourceCode() has been deprecated and there is no replacement.
++ \tIf you need this function, please contact dev@scons.tigris.org."""
++ warn_sc = test.deprecated_wrap(msg_sc)
++ 
++ test.skip_test("Need SCCS to debug these tests.\n")
++ 
+  sccs = test.where_is('sccs')
+  if not sccs:
+      test.skip_test("Could not find 'sccs'; skipping test(s).\n")
+  
+  
+  test.subdir('SCCS', 'sub', ['sub', 'SCCS'])
+  
+  for f in ['aaa.in', 'bbb.in', 'ccc.in']:
+***************
+*** 70,75 ****
+--- 80,86 ----
+      test.unlink(['sub', ','+f])
+  
+  test.write(['SConstruct'], """
++ SetOption('warn', 'deprecated-source-code')
+  DefaultEnvironment()['SCCSCOM'] = 'cd ${TARGET.dir} && $SCCS get ${TARGET.file}'
+  def cat(env, source, target):
+      target = str(target[0])
+***************
+*** 92,98 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+  sub_SConscript = os.path.join('sub', 'SConscript')
+! SConstruct_file_line = test.python_file_line(test.workpath('SConstruct'), 16)[:-1]
+  
+  expect = """\
+  
+--- 103,109 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  
+  sub_SConscript = os.path.join('sub', 'SConscript')
+! SConstruct_file_line = test.python_file_line(test.workpath('SConstruct'), 17)[:-1]
+  
+  expect = """\
+  
+Index: test/Deprecated/SourceCode/SCCS/SCCSCOM.py
+===================================================================
+*** test/Deprecated/SourceCode/SCCS/SCCSCOM.py	(revision 4922)
+--- test/Deprecated/SourceCode/SCCS/SCCSCOM.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('SCCS', ['SCCS', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['SCCS']).SCCS()
+! """)
+! 
+! msg_sccs = """The SCCS() factory is deprecated and there is no replacement."""
+! warn_sccs = test.deprecated_fatal('deprecated-build-dir', msg_sccs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('SCCS', ['SCCS', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 65,71 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 89,99 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['SCCS', 'sub', 'fff.in'], "SCCS/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  %(_python_)s my-sccs-get.py %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  %(_python_)s my-sccs-get.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 99,109 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['SCCS', 'sub', 'fff.in'], "SCCS/sub/fff.in\n")
+  
+! read_str = """\
+  %(_python_)s my-sccs-get.py %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  %(_python_)s my-sccs-get.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 106,112 ****
+  %(_python_)s my-sccs-get.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "SCCS/aaa.in\nchecked-out bbb.in\nSCCS/ccc.in\n")
+--- 116,128 ----
+  %(_python_)s my-sccs-get.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_sccs + warn_sc)
+  
+  test.must_match('all',
+                  "SCCS/aaa.in\nchecked-out bbb.in\nSCCS/ccc.in\n")
+Index: test/Deprecated/SourceCode/SCCS/implicit.py
+===================================================================
+*** test/Deprecated/SourceCode/SCCS/implicit.py	(revision 4922)
+--- test/Deprecated/SourceCode/SCCS/implicit.py	(working copy)
+***************
+*** 32,43 ****
+--- 31,48 ----
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['SCCS']).SCCS()
++ """)
++ 
++ msg_sccs = """The SCCS() factory is deprecated and there is no replacement."""
++ test.deprecated_fatal('deprecated-build-dir', msg_sccs)
++ 
+  sccs = test.where_is('sccs')
+  if not sccs:
+      test.skip_test("Could not find 'sccs'; skipping test(s).\n")
+  
+  
+  test.subdir('SCCS')
+  
+  test.write('foo.c', """\
+Index: test/Deprecated/SourceCode/SCCS/explicit.py
+===================================================================
+*** test/Deprecated/SourceCode/SCCS/explicit.py	(revision 4922)
+--- test/Deprecated/SourceCode/SCCS/explicit.py	(working copy)
+***************
+*** 32,43 ****
+--- 31,48 ----
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['SCCS']).SCCS()
++ """)
++ 
++ msg_sccs = """The SCCS() factory is deprecated and there is no replacement."""
++ test.deprecated_fatal('deprecated-build-dir', msg_sccs)
++ 
+  sccs = test.where_is('sccs')
+  if not sccs:
+      test.skip_test("Could not find 'sccs'; skipping test(s).\n")
+  
+  
+  test.subdir('SCCS', 'sub', ['sub', 'SCCS'])
+  
+  for f in ['aaa.in', 'bbb.in', 'ccc.in']:
+***************
+*** 67,72 ****
+--- 72,78 ----
+      test.unlink(['sub', ','+f])
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+Index: test/Deprecated/SourceCode/SCCS/transparent.py
+===================================================================
+*** test/Deprecated/SourceCode/SCCS/transparent.py	(revision 4922)
+--- test/Deprecated/SourceCode/SCCS/transparent.py	(working copy)
+***************
+*** 32,43 ****
+--- 31,48 ----
+  
+  test = TestSCons.TestSCons()
+  
++ test.write('SConscript', """
++ Environment(tools = ['SCCS']).SCCS()
++ """)
++ 
++ msg_sccs = """The SCCS() factory is deprecated and there is no replacement."""
++ test.deprecated_fatal('deprecated-build-dir', msg_sccs)
++ 
+  sccs = test.where_is('sccs')
+  if not sccs:
+      test.skip_test("Could not find 'sccs'; skipping test(s).\n")
+  
+  
+  test.subdir('SCCS', 'sub', ['sub', 'SCCS'])
+  
+  for f in ['aaa.in', 'bbb.in', 'ccc.in']:
+Index: test/Deprecated/SourceCode/SCCS/SCCSCOMSTR.py
+===================================================================
+*** test/Deprecated/SourceCode/SCCS/SCCSCOMSTR.py	(revision 4922)
+--- test/Deprecated/SourceCode/SCCS/SCCSCOMSTR.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('SCCS', ['SCCS', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['SCCS']).SCCS()
+! """)
+! 
+! msg_sccs = """The SCCS() factory is deprecated and there is no replacement."""
+! warn_sccs = test.deprecated_fatal('deprecated-build-dir', msg_sccs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('SCCS', ['SCCS', 'sub'], 'sub')
+  
+***************
+*** 56,68 ****
+  """)
+  
+  test.write('SConstruct', """
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+      for src in source:
+          f.write(open(str(src), "rb").read())
+      f.close()
+! env = Environment(TOOLS = ['default', 'SCCS'],
+                    BUILDERS={'Cat':Builder(action=cat)},
+                    SCCSCOM='%(_python_)s my-sccs-get.py $TARGET',
+                    SCCSCOMSTR='Checking out $TARGET from our fake SCCS')
+--- 65,78 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+      for src in source:
+          f.write(open(str(src), "rb").read())
+      f.close()
+! env = Environment(tools = ['default', 'SCCS'],
+                    BUILDERS={'Cat':Builder(action=cat)},
+                    SCCSCOM='%(_python_)s my-sccs-get.py $TARGET',
+                    SCCSCOMSTR='Checking out $TARGET from our fake SCCS')
+***************
+*** 90,100 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['SCCS', 'sub', 'fff.in'], "SCCS/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  Checking out %(sub_SConscript)s from our fake SCCS
+! """ % locals(),
+!                                    build_str = """\
+  Checking out aaa.in from our fake SCCS
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 100,110 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['SCCS', 'sub', 'fff.in'], "SCCS/sub/fff.in\n")
+  
+! read_str = """\
+  Checking out %(sub_SConscript)s from our fake SCCS
+! """ % locals()
+! 
+! build_str = """\
+  Checking out aaa.in from our fake SCCS
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 107,113 ****
+  Checking out %(sub_fff_in)s from our fake SCCS
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "SCCS/aaa.in\nchecked-out bbb.in\nSCCS/ccc.in\n")
+--- 117,129 ----
+  Checking out %(sub_fff_in)s from our fake SCCS
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_sccs + warn_sc)
+  
+  test.must_match('all',
+                  "SCCS/aaa.in\nchecked-out bbb.in\nSCCS/ccc.in\n")
+Index: test/Deprecated/SourceCode/CVS/CVSCOM.py
+===================================================================
+*** test/Deprecated/SourceCode/CVS/CVSCOM.py	(revision 4922)
+--- test/Deprecated/SourceCode/CVS/CVSCOM.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('CVS', ['CVS', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['CVS']).CVS('')
+! """)
+! 
+! msg_cvs = """The CVS() factory is deprecated and there is no replacement."""
+! warn_cvs = test.deprecated_fatal('deprecated-build-dir', msg_cvs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('CVS', ['CVS', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 65,71 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 89,99 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['CVS', 'sub', 'fff.in'], "CVS/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  %(_python_)s my-cvs-co-.py %(sub_SConscript)s
+! """ % locals(),
+!                                    build_str = """\
+  %(_python_)s my-cvs-co-.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 99,109 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['CVS', 'sub', 'fff.in'], "CVS/sub/fff.in\n")
+  
+! read_str = """\
+  %(_python_)s my-cvs-co-.py %(sub_SConscript)s
+! """ % locals()
+! 
+! build_str = """\
+  %(_python_)s my-cvs-co-.py aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 106,112 ****
+  %(_python_)s my-cvs-co-.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "CVS/aaa.in\nchecked-out bbb.in\nCVS/ccc.in\n")
+--- 116,128 ----
+  %(_python_)s my-cvs-co-.py %(sub_fff_in)s
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_cvs + warn_sc)
+  
+  test.must_match('all',
+                  "CVS/aaa.in\nchecked-out bbb.in\nCVS/ccc.in\n")
+Index: test/Deprecated/SourceCode/CVS/CVS.py
+===================================================================
+*** test/Deprecated/SourceCode/CVS/CVS.py	(revision 4922)
+--- test/Deprecated/SourceCode/CVS/CVS.py	(working copy)
+***************
+*** 32,42 ****
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons()
+  
+  cvs = test.where_is('cvs')
+  if not cvs:
+!     test.skip_test("Could not find 'cvs'; skipping test(s).\n")
+  
+  test.subdir('CVS', 'import', ['import', 'sub'], 'work1', 'work2')
+  
+--- 31,51 ----
+  
+  import TestSCons
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['CVS']).CVS('')
+! """)
+! 
+! msg_cvs = """The CVS() factory is deprecated and there is no replacement."""
+! warn_cvs = test.deprecated_fatal('deprecated-build-dir', msg_cvs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  cvs = test.where_is('cvs')
+  if not cvs:
+!     test.skip_test("Could not find 'cvs'; skipping remaining tests.\n")
+  
+  test.subdir('CVS', 'import', ['import', 'sub'], 'work1', 'work2')
+  
+***************
+*** 88,93 ****
+--- 97,103 ----
+  
+  # Test the most straightforward CVS checkouts, using the module name.
+  test.write(['work1', 'SConstruct'], """
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  def cat(env, source, target):
+      target = str(target[0])
+***************
+*** 113,124 ****
+  test.subdir(['work1', 'foo', 'sub',])
+  test.write(['work1', 'foo', 'sub', 'eee.in'], "work1/foo/sub/eee.in\n")
+  
+! test.run(chdir = 'work1',
+!          arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  cvs -Q -d %(cvsroot)s co foo/sub/SConscript
+! """ % locals(),
+!                                    build_str = """\
+  cvs -Q -d %(cvsroot)s co foo/aaa.in
+  cat(["aaa.out"], ["%(foo_aaa_in)s"])
+  cat(["bbb.out"], ["%(foo_bbb_in)s"])
+--- 123,133 ----
+  test.subdir(['work1', 'foo', 'sub',])
+  test.write(['work1', 'foo', 'sub', 'eee.in'], "work1/foo/sub/eee.in\n")
+  
+! read_str = """\
+  cvs -Q -d %(cvsroot)s co foo/sub/SConscript
+! """ % locals()
+! 
+! build_str = """\
+  cvs -Q -d %(cvsroot)s co foo/aaa.in
+  cat(["aaa.out"], ["%(foo_aaa_in)s"])
+  cat(["bbb.out"], ["%(foo_bbb_in)s"])
+***************
+*** 131,137 ****
+  cvs -Q -d %(cvsroot)s co foo/sub/fff.in
+  cat(["%(foo_sub_fff_out)s"], ["%(foo_sub_fff_in)s"])
+  cat(["%(foo_sub_all)s"], ["%(foo_sub_ddd_out)s", "%(foo_sub_eee_out)s", "%(foo_sub_fff_out)s"])
+! """ % locals()))
+  
+  # Checking things back out of CVS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+--- 140,153 ----
+  cvs -Q -d %(cvsroot)s co foo/sub/fff.in
+  cat(["%(foo_sub_fff_out)s"], ["%(foo_sub_fff_in)s"])
+  cat(["%(foo_sub_all)s"], ["%(foo_sub_ddd_out)s", "%(foo_sub_eee_out)s", "%(foo_sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(chdir = 'work1',
+!          arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_cvs + warn_sc)
+  
+  # Checking things back out of CVS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+***************
+*** 152,157 ****
+--- 168,174 ----
+  
+  # Test CVS checkouts when the module name is specified.
+  test.write(['work2', 'SConstruct'], """
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  def cat(env, source, target):
+      target = str(target[0])
+***************
+*** 176,188 ****
+  test.subdir(['work2', 'sub'])
+  test.write(['work2', 'sub', 'eee.in'], "work2/sub/eee.in\n")
+  
+! test.run(chdir = 'work2',
+!          arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  cvs -q -d %(cvsroot)s co -d sub foo/sub/SConscript
+  U sub/SConscript
+! """ % locals(),
+!                                    build_str = """\
+  cvs -q -d %(cvsroot)s co -d . foo/aaa.in
+  U ./aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+--- 193,204 ----
+  test.subdir(['work2', 'sub'])
+  test.write(['work2', 'sub', 'eee.in'], "work2/sub/eee.in\n")
+  
+! read_str = """\
+  cvs -q -d %(cvsroot)s co -d sub foo/sub/SConscript
+  U sub/SConscript
+! """ % locals()
+! 
+! build_str = """\
+  cvs -q -d %(cvsroot)s co -d . foo/aaa.in
+  U ./aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+***************
+*** 199,205 ****
+  U sub/fff.in
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  # Checking things back out of CVS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+--- 215,228 ----
+  U sub/fff.in
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(chdir = 'work2',
+!          arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_cvs + warn_sc)
+  
+  # Checking things back out of CVS apparently messes with the line
+  # endings, so read the result files in non-binary mode.
+***************
+*** 223,228 ****
+--- 246,252 ----
+  test.subdir(['work3'])
+  
+  test.write(['work3', 'SConstruct'], """\
++ SetOption('warn', 'deprecated-source-code')
+  import os
+  def cat(env, source, target):
+      target = str(target[0])
+***************
+*** 240,254 ****
+  env.Cat('ccc.out', 'ccc.in')
+  env.Cat('all', ['aaa.out', 'bbb.out', 'ccc.out'])
+  cvs = env.CVS('$CVSROOT', 'foo')
+- #env.SourceCode('.', cvs)
+  env.SourceCode('aaa.in', cvs)
+  env.SourceCode('bbb.in', cvs)
+  env.SourceCode('ccc.in', cvs)
+  """ % cvsroot)
+  
+! test.run(chdir = 'work3',
+!          arguments = '.',
+!          stdout = test.wrap_stdout(build_str = """\
+  cvs -q -d %(cvsroot)s co -d . foo/aaa.in
+  U ./aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+--- 264,275 ----
+  env.Cat('ccc.out', 'ccc.in')
+  env.Cat('all', ['aaa.out', 'bbb.out', 'ccc.out'])
+  cvs = env.CVS('$CVSROOT', 'foo')
+  env.SourceCode('aaa.in', cvs)
+  env.SourceCode('bbb.in', cvs)
+  env.SourceCode('ccc.in', cvs)
+  """ % cvsroot)
+  
+! build_str = """\
+  cvs -q -d %(cvsroot)s co -d . foo/aaa.in
+  U ./aaa.in
+  cat(["aaa.out"], ["aaa.in"])
+***************
+*** 259,265 ****
+  U ./ccc.in
+  cat(["ccc.out"], ["ccc.in"])
+  cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+! """ % locals()))
+  
+  test.must_match(['work3', 'aaa.out'],
+                  "import/aaa.in\n",
+--- 280,293 ----
+  U ./ccc.in
+  cat(["ccc.out"], ["ccc.in"])
+  cat(["all"], ["aaa.out", "bbb.out", "ccc.out"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(build_str = build_str)
+! 
+! test.run(chdir = 'work3',
+!          arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_cvs + 3*warn_sc)
+  
+  test.must_match(['work3', 'aaa.out'],
+                  "import/aaa.in\n",
+***************
+*** 278,283 ****
+--- 306,312 ----
+  #test.subdir(['work4'])
+  #
+  #test.write(['work4', 'SConstruct'], """\
++ #SetOption('warn', 'deprecated-source-code')
+  #import os
+  #env = Environment(ENV = { 'PATH' : os.environ['PATH'] })
+  ## We used to use the SourceForge server, but SourceForge has restrictions
+Index: test/Deprecated/SourceCode/CVS/CVSCOMSTR.py
+===================================================================
+*** test/Deprecated/SourceCode/CVS/CVSCOMSTR.py	(revision 4922)
+--- test/Deprecated/SourceCode/CVS/CVSCOMSTR.py	(working copy)
+***************
+*** 34,40 ****
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons()
+  
+  test.subdir('CVS', ['CVS', 'sub'], 'sub')
+  
+--- 33,49 ----
+  
+  _python_ = TestSCons._python_
+  
+! test = TestSCons.TestSCons(match = TestSCons.match_re_dotall)
+! 
+! test.write('SConscript', """
+! Environment(tools = ['CVS']).CVS('')
+! """)
+! 
+! msg_cvs = """The CVS() factory is deprecated and there is no replacement."""
+! warn_cvs = test.deprecated_fatal('deprecated-build-dir', msg_cvs)
+! msg_sc = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+! warn_sc = test.deprecated_wrap(msg_sc)
+  
+  test.subdir('CVS', ['CVS', 'sub'], 'sub')
+  
+***************
+*** 56,61 ****
+--- 65,71 ----
+  """)
+  
+  test.write('SConstruct', """
++ SetOption('warn', 'deprecated-source-code')
+  def cat(env, source, target):
+      target = str(target[0])
+      f = open(target, "wb")
+***************
+*** 90,100 ****
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['CVS', 'sub', 'fff.in'], "CVS/sub/fff.in\n")
+  
+! test.run(arguments = '.',
+!          stdout = test.wrap_stdout(read_str = """\
+  Checking out %(sub_SConscript)s from our fake CVS
+! """ % locals(),
+!                                    build_str = """\
+  Checking out aaa.in from our fake CVS
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+--- 100,110 ----
+  test.write(['sub', 'eee.in'], "checked-out sub/eee.in\n")
+  test.write(['CVS', 'sub', 'fff.in'], "CVS/sub/fff.in\n")
+  
+! read_str = """\
+  Checking out %(sub_SConscript)s from our fake CVS
+! """ % locals()
+! 
+! build_str = """\
+  Checking out aaa.in from our fake CVS
+  cat(["aaa.out"], ["aaa.in"])
+  cat(["bbb.out"], ["bbb.in"])
+***************
+*** 107,113 ****
+  Checking out %(sub_fff_in)s from our fake CVS
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()))
+  
+  test.must_match('all',
+                  "CVS/aaa.in\nchecked-out bbb.in\nCVS/ccc.in\n")
+--- 117,129 ----
+  Checking out %(sub_fff_in)s from our fake CVS
+  cat(["%(sub_fff_out)s"], ["%(sub_fff_in)s"])
+  cat(["%(sub_all)s"], ["%(sub_ddd_out)s", "%(sub_eee_out)s", "%(sub_fff_out)s"])
+! """ % locals()
+! 
+! stdout = test.wrap_stdout(read_str = read_str, build_str = build_str)
+! 
+! test.run(arguments = '.',
+!          stdout = TestSCons.re_escape(stdout),
+!          stderr = warn_cvs + warn_sc)
+  
+  test.must_match('all',
+                  "CVS/aaa.in\nchecked-out bbb.in\nCVS/ccc.in\n")
+Index: src/engine/SCons/Environment.py
+===================================================================
+*** src/engine/SCons/Environment.py	(revision 4922)
+--- src/engine/SCons/Environment.py	(working copy)
+***************
+*** 2045,2053 ****
+  
+      def SourceCode(self, entry, builder):
+          """Arrange for a source code builder for (part of) a tree."""
+!         #msg = """SourceCode() has been deprecated and there is no replacement.
+! #\tIf you need this function, please contact dev@scons.tigris.org."""
+!         #SCons.Warnings.warn(SCons.Warnings.DeprecatedBuildDirWarning, msg)
+          entries = self.arg2nodes(entry, self.fs.Entry)
+          for entry in entries:
+              entry.set_src_builder(builder)
+--- 2045,2053 ----
+  
+      def SourceCode(self, entry, builder):
+          """Arrange for a source code builder for (part of) a tree."""
+!         msg = """SourceCode() has been deprecated and there is no replacement.
+! \tIf you need this function, please contact dev@scons.tigris.org."""
+!         SCons.Warnings.warn(SCons.Warnings.DeprecatedSourceCodeWarning, msg)
+          entries = self.arg2nodes(entry, self.fs.Entry)
+          for entry in entries:
+              entry.set_src_builder(builder)
+Index: src/engine/SCons/Tool/RCS.py
+===================================================================
+*** src/engine/SCons/Tool/RCS.py	(revision 4922)
+--- src/engine/SCons/Tool/RCS.py	(working copy)
+***************
+*** 43,48 ****
+--- 41,48 ----
+  
+      def RCSFactory(env=env):
+          """ """
++         import SCons.Warnings as W
++         W.warn(W.DeprecatedSourceCodeWarning, """The RCS() factory is deprecated and there is no replacement.""")
+          act = SCons.Action.Action('$RCS_COCOM', '$RCS_COCOMSTR')
+          return SCons.Builder.Builder(action = act, env = env)
+  
+Index: src/engine/SCons/Tool/SCCS.py
+===================================================================
+*** src/engine/SCons/Tool/SCCS.py	(revision 4922)
+--- src/engine/SCons/Tool/SCCS.py	(working copy)
+***************
+*** 43,48 ****
+--- 41,48 ----
+  
+      def SCCSFactory(env=env):
+          """ """
++         import SCons.Warnings as W
++         W.warn(W.DeprecatedSourceCodeWarning, """The SCCS() factory is deprecated and there is no replacement.""")
+          act = SCons.Action.Action('$SCCSCOM', '$SCCSCOMSTR')
+          return SCons.Builder.Builder(action = act, env = env)
+  
+Index: src/engine/SCons/Tool/CVS.py
+===================================================================
+*** src/engine/SCons/Tool/CVS.py	(revision 4922)
+--- src/engine/SCons/Tool/CVS.py	(working copy)
+***************
+*** 43,48 ****
+--- 41,48 ----
+  
+      def CVSFactory(repos, module='', env=env):
+          """ """
++         import SCons.Warnings as W
++         W.warn(W.DeprecatedSourceCodeWarning, """The CVS() factory is deprecated and there is no replacement.""")
+          # fail if repos is not an absolute path name?
+          if module != '':
+             # Don't use os.path.join() because the name we fetch might
+Index: src/engine/SCons/Tool/Perforce.py
+===================================================================
+*** src/engine/SCons/Tool/Perforce.py	(revision 4922)
+--- src/engine/SCons/Tool/Perforce.py	(working copy)
+***************
+*** 57,62 ****
+--- 54,61 ----
+  
+      def PerforceFactory(env=env):
+          """ """
++         import SCons.Warnings as W
++         W.warn(W.DeprecatedSourceCodeWarning, """The Perforce() factory is deprecated and there is no replacement.""")
+          return SCons.Builder.Builder(action = PerforceAction, env = env)
+  
+      #setattr(env, 'Perforce', PerforceFactory)
+Index: src/engine/SCons/Tool/Subversion.py
+===================================================================
+*** src/engine/SCons/Tool/Subversion.py	(revision 4922)
+--- src/engine/SCons/Tool/Subversion.py	(working copy)
+***************
+*** 46,51 ****
+--- 44,51 ----
+      def SubversionFactory(repos, module='', env=env):
+          """ """
+          # fail if repos is not an absolute path name?
++         import SCons.Warnings as W
++         W.warn(W.DeprecatedSourceCodeWarning, """The Subversion() factory is deprecated and there is no replacement.""")
+          if module != '':
+              module = os.path.join(module, '')
+          act = SCons.Action.Action('$SVNCOM', '$SVNCOMSTR')
+Index: src/engine/SCons/Tool/BitKeeper.py
+===================================================================
+*** src/engine/SCons/Tool/BitKeeper.py	(revision 4922)
+--- src/engine/SCons/Tool/BitKeeper.py	(working copy)
+***************
+*** 44,49 ****
+--- 44,51 ----
+  
+      def BitKeeperFactory(env=env):
+          """ """
++         import SCons.Warnings as W
++         W.warn(W.DeprecatedSourceCodeWarning, """The BitKeeper() factory is deprecated and there is no replacement.""")
+          act = SCons.Action.Action("$BITKEEPERCOM", "$BITKEEPERCOMSTR")
+          return SCons.Builder.Builder(action = act, env = env)
+  
+Index: QMTest/TestSCons.py
+===================================================================
+*** QMTest/TestSCons.py	(revision 4922)
+--- QMTest/TestSCons.py	(working copy)
+***************
+*** 424,454 ****
+                  kw['arguments'] = option + ' ' + arguments
+          return self.run(**kw)
+  
+      def deprecated_warning(self, warn, msg):
+          """
+          Verifies the expected behavior occurs for deprecation warnings.
+!         TODO: Need something else for deprecation errors.
+!         """
+          # all warnings off, should get no output
+!         self.run(arguments = '--warn=no-deprecated .', stderr='')
+  
+          # warning enabled, should get expected output
+!         stderr = '\nscons: warning: ' + re_escape(msg) + '\n' + file_expr
+!         self.run(arguments = '--warn=%s .' % warn,
+!                  stderr=stderr,
+!                  match = match_re_dotall)
+! 
+!         # no --warn option, should get either nothing or expected output
+!         expect = """()|(%s)""" % (stderr)
+!         self.run(arguments = '--warn=no-%s .' % warn,
+!                  stderr=expect,
+!                  match = match_re_dotall)
+  
+          # warning disabled, should get either nothing or mandatory message
+!         expect = """()|(Can not disable mandataory warning: 'no-%s'\n\n%s)""" % (warn, stderr)
+!         self.run(arguments = '--warn=no-%s .' % warn,
+!                  stderr=expect,
+!                  match = match_re_dotall)
+  
+      def diff_substr(self, expect, actual, prelen=20, postlen=40):
+          i = 0
+--- 424,515 ----
+                  kw['arguments'] = option + ' ' + arguments
+          return self.run(**kw)
+  
++     def deprecated_wrap(self, msg):
++         """
++         Calculate the pattern that matches a deprecation warning.
++         """
++         return '\nscons: warning: ' + re_escape(msg) + '\n' + file_expr
++ 
++     def deprecated_fatal(self, warn, msg):
++         """
++         Determines if the warning has turned into a fatal error.  If so,
++         passes the test, as any remaining runs are now moot.
++ 
++         This method expects a SConscript to be present that will causes
++         the warning.  The method writes a SConstruct that calls the
++         SConsscript and looks to see what type of result occurs.
++ 
++         The pattern that matches the warning is returned.
++ 
++         TODO: Actually detect that it's now an error.  We don't have any
++         cases yet, so there's no way to test it.
++         """
++         self.write('SConstruct', """if True:
++             WARN = ARGUMENTS.get('WARN')
++             if WARN: SetOption('warn', WARN)
++             SConscript('SConscript')
++         """)
++ 
++         def err_out():
++             # TODO calculate stderr for fatal error
++             return re_escape('put something here')
++ 
++         # no option, should get one of nothing, warning, or error
++         warning = self.deprecated_wrap(msg)
++         self.run(arguments = '.', stderr = None)
++         stderr = self.stderr()
++         if stderr:
++             # most common case done first
++             if match_re_dotall(stderr, warning):
++                # expected output
++                pass
++             elif match_re_dotall(stderr, err_out()):
++                # now a fatal error; skip the rest of the tests
++                self.pass_test()
++             else:
++                # test failed; have to do this by hand...
++                print self.banner('STDOUT ')
++                print self.stdout()
++                print self.diff(warning, stderr, 'STDERR ')
++                self.fail_test()
++ 
++         return warning
++ 
+      def deprecated_warning(self, warn, msg):
+          """
+          Verifies the expected behavior occurs for deprecation warnings.
+!         This method expects a SConscript to be present that will causes
+!         the warning.  The method writes a SConstruct and exercises various
+!         combinations of command-line options and SetOption parameters to
+!         validate that it performs correctly.
+! 
+!         The pattern that matches the warning is returned.
+!         """
+!         warning = self.deprecated_fatal(warn, msg)
+! 
+!         def RunPair(option, expected):
+!             # run the same test with the option on the command line and
+!             # then with the option passed via SetOption().
+!             self.run(options = '--warn=' + option,
+!                      arguments = '.',
+!                      stderr = expected,
+!                      match = match_re_dotall)
+!             self.run(options = 'WARN=' + option,
+!                      arguments = '.',
+!                      stderr = expected,
+!                      match = match_re_dotall)
+! 
+          # all warnings off, should get no output
+!         RunPair('no-deprecated', '')
+  
+          # warning enabled, should get expected output
+!         RunPair(warn, warning)
+  
+          # warning disabled, should get either nothing or mandatory message
+!         expect = """()|(Can not disable mandataory warning: 'no-%s'\n\n%s)""" % (warn, warning)
+!         RunPair('no-' + warn, expect)
+! 
+!         return warning
+  
+      def diff_substr(self, expect, actual, prelen=20, postlen=40):
+          i = 0
+Index: doc/man/scons.1
+===================================================================
+*** doc/man/scons.1	(revision 4922)
+--- doc/man/scons.1	(working copy)
+***************
+*** 2786,2791 ****
+--- 2786,2795 ----
+  .B SourceCode
+  function.
+  
++ This function is deprecated.  For details, see the entry for the
++ .B SourceCode
++ function.
++ 
+  Example:
+  
+  .ES
+***************
+*** 3168,3173 ****
+--- 3172,3181 ----
+  directory hierarchy in your
+  local build directory.
+  
++ This function is deprecated.  For details, see the entry for the
++ .B SourceCode
++ function.
++ 
+  Examples:
+  
+  .ES
+***************
+*** 3735,3741 ****
+  .IR dirs .
+  .I dirs
+  may be a list of directory names or a single directory name.
+! In addition to searching for files that exist in the filesytem,
+  this function also searches for derived files
+  that have not yet been built.
+  
+--- 3743,3749 ----
+  .IR dirs .
+  .I dirs
+  may be a list of directory names or a single directory name.
+! In addition to searching for files that exist in the filesystem,
+  this function also searches for derived files
+  that have not yet been built.
+  
+***************
+*** 4719,4724 ****
+--- 4727,4736 ----
+  .B SourceCode
+  function.
+  
++ This function is deprecated.  For details, see the entry for the
++ .B SourceCode
++ function.
++ 
+  Example:
+  
+  .ES
+***************
+*** 5012,5017 ****
+--- 5024,5033 ----
+  .B SourceCode
+  function:
+  
++ This function is deprecated.  For details, see the entry for the
++ .B SourceCode
++ function.
++ 
+  Examples:
+  
+  .ES
+***************
+*** 5180,5185 ****
+--- 5196,5205 ----
+  .B SourceCode
+  function.
+  
++ This function is deprecated.  For details, see the entry for the
++ .B SourceCode
++ function.
++ 
+  Example:
+  
+  .ES
+***************
+*** 5638,5643 ****
+--- 5658,5670 ----
+  .RI SourceCode( entries ", " builder )
+  .TP
+  .RI env.SourceCode( entries ", " builder )
++ This function and its associate factory functions are deprecated.
++ There is no replacement.
++ The intended use was to keep a local tree in sync with an archive,
++ but in actuality the function only causes the archive
++ to be fetched on the first run.
++ Synchronizing with the archive is best done external to SCons.
++ 
+  Arrange for non-existent source files to
+  be fetched from a source code management system
+  using the specified
+***************
+*** 5826,5831 ****
+--- 5853,5862 ----
+  '\"directory hierarchy in your
+  '\"local build directory.
+  '\"
++ '\"This function is deprecated.  For details, see the entry for the
++ '\".B SourceCode
++ '\"function.
++ '\"
+  '\"Example:
+  '\"
+  '\".ES
