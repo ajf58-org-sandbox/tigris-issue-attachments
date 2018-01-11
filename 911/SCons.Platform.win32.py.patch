@@ -1,0 +1,11 @@
+--- ./scons-2.2.0/SCons/Platform/win32.old.py	Mon Feb 04 08:49:45 2013
++++ ./scons-2.2.0/SCons/Platform/win32.py	Mon Feb 04 09:53:34 2013
+@@ -339,7 +339,7 @@
+     # for SystemDrive because it's related.
+     #
+     # Weigh the impact carefully before adding other variables to this list.
+-    import_env = [ 'SystemDrive', 'SystemRoot', 'TEMP', 'TMP' ]
++    import_env = [ 'SystemDrive', 'SystemRoot', 'TEMP', 'TMP', 'PATH', ]
+     for var in import_env:
+         v = os.environ.get(var)
+         if v:
