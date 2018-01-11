@@ -1,0 +1,13 @@
+Index: src/third_party/scons-2.0.1/engine/SCons/Tool/intelc.py
+===================================================================
+--- src/third_party/scons-2.0.1/engine/SCons/Tool/intelc.py	(Revision 5580)
++++ src/third_party/scons-2.0.1/engine/SCons/Tool/intelc.py	(Arbeitskopie)
+@@ -40,7 +40,7 @@
+ is_win64 = is_windows and (os.environ['PROCESSOR_ARCHITECTURE'] == 'AMD64' or 
+                            ('PROCESSOR_ARCHITEW6432' in os.environ and
+                             os.environ['PROCESSOR_ARCHITEW6432'] == 'AMD64'))
+-is_linux = sys.platform == 'linux2'
++is_linux = sys.platform.startswith('linux')
+ is_mac     = sys.platform == 'darwin'
+ 
+ if is_windows:
