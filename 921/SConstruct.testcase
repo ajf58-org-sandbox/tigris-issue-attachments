@@ -1,0 +1,4 @@
+env = Environment()
+env.Tool("textfile")
+env.Textfile("Foo", unichr(0xe7).encode('utf-8'))
+
