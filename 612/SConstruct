@@ -1,0 +1,11 @@
+def ShowVar(self):
+    print '\t%s (from %s)' % (self['Foo'], self)
+
+def action(target, source, env):
+    print 'the following two lines should be identical:'
+    ShowVar(env)
+    env.ShowVar()
+
+env = Environment(Foo='set in real environment')
+env.AddMethod(ShowVar)
+env.Command('outfile-1', Value(''), action, Foo='local override in builder call')
