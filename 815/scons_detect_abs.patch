@@ -1,0 +1,12 @@
+diff -ru scons-2.0.1.base/scons-local-2.0.1/SCons/Environment.py scons-2.0.1.patch/scons-local-2.0.1/SCons/Environment.py
+--- scons-2.0.1.base/scons-local-2.0.1/SCons/Environment.py	2010-08-17 07:02:51.000000000 +0100
++++ scons-2.0.1.patch/scons-local-2.0.1/SCons/Environment.py	2010-11-17 11:58:57.743408000 +0000
+@@ -1394,6 +1394,8 @@
+         for prog in progs:
+             path = self.WhereIs(prog)
+             if path: return prog
++            path = self.WhereIs(prog, [''])
++            if path: return path
+         return None
+ 
+     def Dictionary(self, *args):
