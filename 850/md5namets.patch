@@ -1,0 +1,92 @@
+Index: SCons/Node/FS.py
+===================================================================
+--- SCons/Node/FS.py	(revision 69816)
++++ SCons/Node/FS.py	(revision 69817)
+@@ -2141,7 +2141,7 @@
+ class FileNodeInfo(SCons.Node.NodeInfoBase):
+     current_version_id = 1
+ 
+-    field_list = ['csig', 'timestamp', 'size']
++    field_list = ['csig', 'timestamp', 'size', 'path']
+ 
+     # This should get reset by the FS initialization.
+     fs = None
+@@ -2620,6 +2620,7 @@
+ 
+         ninfo.timestamp = self.get_timestamp()
+         ninfo.size      = self.get_size()
++        ninfo.path      = self.path
+ 
+         if not self.has_builder():
+             # This is a source file, but it might have been a target file
+@@ -2778,13 +2779,15 @@
+             if (time.time() - mtime) > max_drift:
+                 try:
+                     n = old.ninfo
+-                    if n.timestamp and n.csig and n.timestamp == mtime:
++                    if n.timestamp and n.csig and n.timestamp == mtime and n.path == self.path:
+                         return n.csig
+                 except AttributeError:
+                     pass
+         elif max_drift == 0:
+             try:
+-                return old.ninfo.csig
++                n = old.ninfo
++                if n.path == self.path:
++                    return n.csig
+             except AttributeError:
+                 pass
+ 
+@@ -2854,6 +2857,16 @@
+             return False
+         return self.changed_content(target, prev_ni)
+ 
++    def changed_timestamp_then_name_then_content(self, target, prev_ni):
++        if not (self.changed_timestamp_match(target, prev_ni)
++                or self.changed_name(target, prev_ni)):
++            try:
++                self.get_ninfo().csig = prev_ni.csig
++            except AttributeError:
++                pass
++            return False
++        return self.changed_content(target, prev_ni)
++
+     def changed_timestamp_newer(self, target, prev_ni):
+         try:
+             return self.get_timestamp() > target.get_timestamp()
+@@ -2866,6 +2879,12 @@
+         except AttributeError:
+             return 1
+ 
++    def changed_name(self, target, prev_ni):
++        try:
++            return self.path != prev_ni.path
++        except AttributeError:
++            return 1
++
+     def decide_source(self, target, prev_ni):
+         return target.get_build_env().decide_source(self, target, prev_ni)
+ 
+Index: SCons/Environment.py
+===================================================================
+--- SCons/Environment.py	(revision 69816)
++++ SCons/Environment.py	(revision 69817)
+@@ -1350,6 +1350,9 @@
+     def _changed_timestamp_then_content(self, dependency, target, prev_ni):
+         return dependency.changed_timestamp_then_content(target, prev_ni)
+ 
++    def _changed_timestamp_then_name_then_content(self, dependency, target, prev_ni):
++        return dependency.changed_timestamp_then_name_then_content(target, prev_ni)
++
+     def _changed_timestamp_newer(self, dependency, target, prev_ni):
+         return dependency.changed_timestamp_newer(target, prev_ni)
+ 
+@@ -1370,6 +1373,8 @@
+             function = self._changed_content
+         elif function == 'MD5-timestamp':
+             function = self._changed_timestamp_then_content
++        elif function == 'MD5-name-timestamp':
++            function = self._changed_timestamp_then_name_then_content
+         elif function in ('timestamp-newer', 'make'):
+             function = self._changed_timestamp_newer
+             copy_function = self._copy_from_cache
