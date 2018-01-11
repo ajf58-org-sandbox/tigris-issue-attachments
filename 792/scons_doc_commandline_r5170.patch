@@ -1,0 +1,133 @@
+Index: bin/scons-doc.py
+===================================================================
+--- bin/scons-doc.py	(revision 5170)
++++ bin/scons-doc.py	(working copy)
+@@ -26,6 +26,23 @@
+ #                   and inserting it into examples in our DocBook
+ #                   documentation
+ #
++# Synopsis:
++#
++#  scons-doc [OPTIONS] [.in files]
++#
++#   When no input files are given, the folder doc/user/* is searched for .in files.
++#
++# Available options:
++#
++#   -d, --diff_examples   create examples for the .in file and output a unified
++#                         diff against the related .xml file
++#   -r, --run_examples    create examples for the .in file, but do not change
++#                         any files
++#   -s, --simple_diff     use a simpler output for the diff mode (no unified
++#                         diff!)
++#   -u, --update_examples create examples for the .in file and update the
++#                         related .xml file
++#
+ # This script looks for some SGML tags that describe SCons example
+ # configurations and commands to execute in those configurations, and
+ # uses TestCmd.py to execute the commands and insert the output from
+@@ -95,6 +112,7 @@
+ import sgmllib
+ import sys
+ import time
++import glob
+ 
+ sys.path.append(os.path.join(os.getcwd(), 'QMTest'))
+ sys.path.append(os.path.join(os.getcwd(), 'build', 'QMTest'))
+@@ -811,7 +829,7 @@
+         delattr(self, 'f')
+         self.afunclist = self.afunclist[:-1]
+ 
+-def process(filename):
++def process(filename, fout=sys.stdout):
+     if filename == '-':
+         f = sys.stdin
+     else:
+@@ -829,7 +847,7 @@
+         first_line, data = data.split('\n', 1)
+         sys.stdout.write(first_line + '\n')
+ 
+-    x = MySGML(sys.stdout)
++    x = MySGML(fout)
+     for c in data:
+         x.feed(c)
+     x.close()
+@@ -841,13 +859,73 @@
+         argv = sys.argv
+ 
+     parser = optparse.OptionParser()
+-    opts, args = parser.parse_args(argv[1:])
++    parser.add_option('-d', '--diff_examples',
++                  action='store_true', dest='diff', default=False,
++                  help='create examples for the .in file and output a unified diff against the related .xml file')
++    parser.add_option('-r', '--run_examples',
++                  action='store_true', dest='run', default=False,
++                  help='create examples for the .in file, but do not change any files')
++    parser.add_option('-s', '--simple_diff',
++                  action='store_true', dest='simple', default=False,
++                  help='use a simpler output for the diff mode (no unified diff!)')
++    parser.add_option('-u', '--update_examples',
++                  action='store_true', dest='update', default=False,
++                  help='create examples for the .in file and update the related .xml file')
+ 
+-    if not args:
+-        args = ['-']
++    opts, args = parser.parse_args(argv[1:])
+ 
+-    for arg in args:
+-        process(arg)
++    if opts.diff:
++        import StringIO
++        import difflib
++        
++        if not args:
++            args = glob.glob('doc/user/*.in')
++        for arg in sorted(args):
++            s = StringIO.StringIO()
++            process(arg,s)
++            xmlcontent = ""
++            try:
++                fxml = open(arg[:-2]+'xml', 'r')
++            except EnvironmentError, e:
++                sys.stderr.write('%s: %s\n' % (filename, e))
++            xmlcontent = fxml.read()
++            fxml.close()
++            if opts.simple:
++                diff = list(difflib.context_diff(xmlcontent.splitlines(), 
++                                                 s.getvalue().splitlines(),
++                                                 fromfile=arg, tofile=arg[:-2]+'xml'))
++            else:
++                diff = list(difflib.unified_diff(xmlcontent.splitlines(), 
++                                                 s.getvalue().splitlines(),
++                                                 fromfile=arg, tofile=arg[:-2]+'xml', 
++                                                 lineterm=''))
++            s.close()
++            if diff:
++                print "%s:" % arg
++                print '\n'.join(diff)
++    elif opts.run:
++        if not args:
++            args = glob.glob('doc/user/*.in')
++        for arg in sorted(args):
++            print "%s:" % arg
++            process(arg)
++    elif opts.update:
++        if not args:
++            args = glob.glob('doc/user/*.in')
++        for arg in sorted(args):
++            print "%s:" % arg
++            try:
++                fxml = open(arg[:-2]+'xml', 'w')
++            except EnvironmentError, e:
++                sys.stderr.write('%s: %s\n' % (filename, e))
++            process(arg,fxml)
++            fxml.close()
++    else:
++        if not args:
++            args = ['-']
++    
++        for arg in args:
++            process(arg)
+ 
+ if __name__ == "__main__":
+     sys.exit(main())
