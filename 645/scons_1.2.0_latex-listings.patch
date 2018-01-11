@@ -1,0 +1,22 @@
+diff -ru SCons.orig/Scanner/LaTeX.py SCons/Scanner/LaTeX.py
+--- SCons.orig/Scanner/LaTeX.py	2009-11-01 00:25:31.000000000 +0100
++++ SCons/Scanner/LaTeX.py	2009-11-01 00:15:15.000000000 +0100
+@@ -162,7 +162,8 @@
+                      'includegraphics': 'TEXINPUTS',
+                      'bibliography': 'BIBINPUTS',
+                      'bibliographystyle': 'BSTINPUTS',
+-                     'usepackage': 'TEXINPUTS'}
++                     'usepackage': 'TEXINPUTS',
++		     'lstinputlisting': 'TEXINPUTS'}
+     env_variables = SCons.Util.unique(keyword_paths.values())
+ 
+     def __init__(self, name, suffixes, graphics_extensions, *args, **kw):
+@@ -172,7 +173,7 @@
+         # Without the \n,  the ^ could match the beginning of a *previous*
+         # line followed by one or more newline characters (i.e. blank
+         # lines), interfering with a match on the next line.
+-        regex = r'^[^%\n]*\\(include|includegraphics(?:\[[^\]]+\])?|input|bibliography|usepackage){([^}]*)}'
++        regex = r'^[^%\n]*\\(include|includegraphics(?:\[[^\]]+\])?|lstinputlisting(?:\[[^\]]+\])?|input|bibliography|usepackage){([^}]*)}'
+         self.cre = re.compile(regex, re.M)
+         self.graphics_extensions = graphics_extensions
+ 
