@@ -1,0 +1,8 @@
+Import( 'env' )
+
+env.Object(
+	target = '#main.o',
+	source = ['main.cpp'],
+	FRAMEWORKS = ['Ogre'],
+	FRAMEWORKPATH = ['#frameworks']
+)
