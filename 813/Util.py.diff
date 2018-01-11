@@ -1,0 +1,4 @@
+467c467
+<         if hasattr(x, '__semi_deepcopy__'):
+---
+>         if hasattr(x, '__semi_deepcopy__') and callable(x.__semi_deepcopy__):
