@@ -1,0 +1,32 @@
+Index: src/engine/SCons/Tool/msvc.py
+===================================================================
+--- src/engine/SCons/Tool/msvc.py	(revision 3803)
++++ src/engine/SCons/Tool/msvc.py	(working copy)
+@@ -129,9 +129,18 @@
+             raise SCons.Errors.InternalError, "Unable to find MSVC paths in the registry."
+     return dirs
+ 
++_parse_msvc8_overrides_cache = {}
++
+ def _parse_msvc8_overrides(version,platform,suite):
+     """ Parse any overridden defaults for MSVC directory locations
+     in MSVC 2005. """
++    # Checks if the user's settings extracted from the XML file were already parsed
++    # This function is called 18 times during default environment initialization
++    global _parse_msvc8_overrides_cache
++    cache_key = (version,platform,suite)
++    cached_paths = _parse_msvc8_overrides_cache.get( cache_key )
++    if cached_paths is not None:
++        return cached_paths.copy()
+ 
+     # In VS8 the user can change the location of the settings file that
+     # contains the include, lib and binary paths. Try to get the location
+@@ -239,6 +248,8 @@
+     else:
+         # There are no default directories in the registry for VS8 Express :(
+         raise SCons.Errors.InternalError, "Unable to find MSVC paths in the registry."
++    # Adds paths to cache for later look-up
++    _parse_msvc8_overrides_cache[cache_key] = dirs.copy()
+     return dirs
+ 
+ def _get_msvc7_path(path, version, platform):
