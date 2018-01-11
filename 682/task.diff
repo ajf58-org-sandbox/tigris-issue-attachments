@@ -1,0 +1,60 @@
+Index: test/TEX/subdir_variantdir_include2.py
+===================================================================
+--- test/TEX/subdir_variantdir_include2.py	(revision 4647)
++++ test/TEX/subdir_variantdir_include2.py	(working copy)
+@@ -85,9 +85,13 @@
+ """)
+ 
+ #test.run(arguments = '.')
+-test.run(arguments = '.', stderr=None, stdout=None)
+-#test.run(arguments = 'build/main.pdf', stderr=None, stdout=None)
++#test.run(arguments = '.', stderr=None, stdout=None)
+ 
++# next line tests that side effect nodes get disambiguated 
++# and their directories created in a variantDir before 
++# the builder tries to populate them and fails
++test.run(arguments = 'build/main.pdf', stderr=None, stdout=None)
++
+ test.must_exist(['build', 'main.aux'])
+ test.must_exist(['build', 'main.fls'])
+ test.must_exist(['build', 'main.idx'])
+Index: src/CHANGES.txt
+===================================================================
+--- src/CHANGES.txt	(revision 4647)
++++ src/CHANGES.txt	(working copy)
+@@ -25,6 +25,11 @@
+       file foo.tex. The builder now ignores a directory and continues
+       searching to find the correct file. Thanks to Lennart Sauerbeck
+       for the test case and initial patch
++      
++      Also allow the \include of files in subdirectories when variantDir
++      is used with duplicate=0. Previously latex would crash since 
++      the directory in which the .aux file is written was not created.
++      Thanks to Stefan Hepp for finding this and part of the solution.
+ 
+ 
+ RELEASE 1.2.0.d20100117 - Sun, 17 Jan 2010 14:26:59 -0800  
+Index: src/engine/SCons/Taskmaster.py
+===================================================================
+--- src/engine/SCons/Taskmaster.py	(revision 4647)
++++ src/engine/SCons/Taskmaster.py	(working copy)
+@@ -359,7 +359,8 @@
+         for t in self.targets:
+             t.disambiguate().set_state(NODE_EXECUTING)
+             for s in t.side_effects:
+-                s.set_state(NODE_EXECUTING)
++                # add disambiguate here to mirror the call on targets above
++                s.disambiguate().set_state(NODE_EXECUTING)
+ 
+     def make_ready_current(self):
+         """
+@@ -390,7 +391,8 @@
+             for t in self.targets:
+                 t.set_state(NODE_EXECUTING)
+                 for s in t.side_effects:
+-                    s.set_state(NODE_EXECUTING)
++                    # add disambiguate here to mirror the call on targets in first loop above
++                    s.disambiguate().set_state(NODE_EXECUTING)
+         else:
+             for t in self.targets:
+                 # We must invoke visited() to ensure that the node
