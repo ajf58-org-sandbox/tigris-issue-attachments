@@ -1,0 +1,65 @@
+diff -ru scons-2.0.1.base.2/scons-local-2.0.1/SCons/Node/FS.py scons-2.0.1.base/scons-local-2.0.1/SCons/Node/FS.py
+--- scons-2.0.1.base.2/scons-local-2.0.1/SCons/Node/FS.py	2010-09-28 20:15:28.423765000 +0100
++++ scons-2.0.1.base/scons-local-2.0.1/SCons/Node/FS.py	2010-09-28 21:32:55.699604000 +0100
+@@ -164,24 +164,42 @@
+                 src = link
+             else:
+                 src = os.path.join(os.path.dirname(src), link)
++        if fs.exists(dst):
++            fs.unlink(dst)
+         fs.link(src, dst)
+ else:
+     _hardlink_func = None
+ 
+ if hasattr(os, 'symlink'):
+     def _softlink_func(fs, src, dst):
++        if fs.exists(dst):
++            fs.unlink(dst)
+         fs.symlink(src, dst)
+ else:
+     _softlink_func = None
+ 
+ def _copy_func(fs, src, dest):
++    if fs.exists(dest):
++        fs.unlink(dest)
+     shutil.copy2(src, dest)
+     st = fs.stat(src)
+     fs.chmod(dest, stat.S_IMODE(st[stat.ST_MODE]) | stat.S_IWRITE)
+ 
++def _copytimestamp_func(fs, src, dest):
++    destexists = fs.exists(dest)
++    if (not destexists) or (str(fs.getmtime(src)) != str(fs.getmtime(dest))):
++        print "_copytimestamp(%s, %s)" % (src, dest)
++        if destexists:
++            fs.unlink(dest)
++        shutil.copy2(src, dest)
++        st = fs.stat(src)
++        fs.chmod(dest, stat.S_IMODE(st[stat.ST_MODE]) | stat.S_IWRITE)
++
+ 
+ Valid_Duplicates = ['hard-soft-copy', 'soft-hard-copy',
+-                    'hard-copy', 'soft-copy', 'copy']
++                    'hard-copy', 'soft-copy', 'copy',
++                    'hard-soft-copytimestamp', 'soft-hard-copytimestamp',
++                    'hard-copytimestamp', 'soft-copytimestamp', 'copytimestamp']
+ 
+ Link_Funcs = [] # contains the callables of the specified duplication style
+ 
+@@ -196,7 +214,8 @@
+     link_dict = {
+         'hard' : _hardlink_func,
+         'soft' : _softlink_func,
+-        'copy' : _copy_func
++        'copy' : _copy_func,
++        'copytimestamp' : _copytimestamp_func
+     }
+ 
+     if not duplicate in Valid_Duplicates:
+@@ -2678,7 +2697,6 @@
+ 
+     def do_duplicate(self, src):
+         self._createDir()
+-        Unlink(self, None, None)
+         e = Link(self, src, None)
+         if isinstance(e, SCons.Errors.BuildError):
+             desc = "Cannot duplicate `%s' in `%s': %s." % (src.path, self.dir.path, e.errstr)
