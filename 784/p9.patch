@@ -1,0 +1,566 @@
+Index: QMTest/TestSConsMSVS.py
+===================================================================
+--- QMTest/TestSConsMSVS.py	(revision 5130)
++++ QMTest/TestSConsMSVS.py	(working copy)
+@@ -454,6 +454,26 @@
+ EndGlobal
+ """
+ 
++expected_slnfile_9_0 = """\
++Microsoft Visual Studio Solution File, Format Version 10.00
++# Visual Studio 2008
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcproj", "<PROJECT_GUID>"
++EndProject
++Global
++<SCC_SLN_INFO>
++\tGlobalSection(SolutionConfigurationPlatforms) = preSolution
++\t\tRelease|Win32 = Release|Win32
++\tEndGlobalSection
++\tGlobalSection(ProjectConfigurationPlatforms) = postSolution
++\t\t<PROJECT_GUID>.Release|Win32.ActiveCfg = Release|Win32
++\t\t<PROJECT_GUID>.Release|Win32.Build.0 = Release|Win32
++\tEndGlobalSection
++\tGlobalSection(SolutionProperties) = preSolution
++\t\tHideSolutionNode = FALSE
++\tEndGlobalSection
++EndGlobal
++"""
++
+ expected_vcprojfile_8_0 = """\
+ <?xml version="1.0" encoding="Windows-1252"?>
+ <VisualStudioProject
+@@ -542,6 +562,94 @@
+ </VisualStudioProject>
+ """
+ 
++expected_vcprojfile_9_0 = """\
++<?xml version="1.0" encoding="Windows-1252"?>
++<VisualStudioProject
++\tProjectType="Visual C++"
++\tVersion="9.00"
++\tName="Test"
++\tProjectGUID="<PROJECT_GUID>"
++\tRootNamespace="Test"
++<SCC_VCPROJ_INFO>
++\tKeyword="MakeFileProj">
++\t<Platforms>
++\t\t<Platform
++\t\t\tName="Win32"/>
++\t</Platforms>
++\t<ToolFiles>
++\t</ToolFiles>
++\t<Configurations>
++\t\t<Configuration
++\t\t\tName="Release|Win32"
++\t\t\tConfigurationType="0"
++\t\t\tUseOfMFC="0"
++\t\t\tATLMinimizesCRunTimeLibraryUsage="false"
++\t\t\t>
++\t\t\t<Tool
++\t\t\t\tName="VCNMakeTool"
++\t\t\t\tBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
++\t\t\t\tReBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
++\t\t\t\tCleanCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct -c &quot;Test.exe&quot;"
++\t\t\t\tOutput="Test.exe"
++\t\t\t\tPreprocessorDefinitions="DEF1;DEF2;DEF3=1234"
++\t\t\t\tIncludeSearchPath="inc1;inc2"
++\t\t\t\tForcedIncludes=""
++\t\t\t\tAssemblySearchPath=""
++\t\t\t\tForcedUsingAssemblies=""
++\t\t\t\tCompileAsManaged=""
++\t\t\t/>
++\t\t</Configuration>
++\t</Configurations>
++\t<References>
++\t</References>
++\t<Files>
++\t\t<Filter
++\t\t\tName="Header Files"
++\t\t\tFilter="h;hpp;hxx;hm;inl">
++\t\t\t<File
++\t\t\t\tRelativePath="sdk.h">
++\t\t\t</File>
++\t\t</Filter>
++\t\t<Filter
++\t\t\tName="Local Headers"
++\t\t\tFilter="h;hpp;hxx;hm;inl">
++\t\t\t<File
++\t\t\t\tRelativePath="test.h">
++\t\t\t</File>
++\t\t</Filter>
++\t\t<Filter
++\t\t\tName="Other Files"
++\t\t\tFilter="">
++\t\t\t<File
++\t\t\t\tRelativePath="readme.txt">
++\t\t\t</File>
++\t\t</Filter>
++\t\t<Filter
++\t\t\tName="Resource Files"
++\t\t\tFilter="r;rc;ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe">
++\t\t\t<File
++\t\t\t\tRelativePath="test.rc">
++\t\t\t</File>
++\t\t</Filter>
++\t\t<Filter
++\t\t\tName="Source Files"
++\t\t\tFilter="cpp;c;cxx;l;y;def;odl;idl;hpj;bat">
++\t\t\t<File
++\t\t\t\tRelativePath="test1.cpp">
++\t\t\t</File>
++\t\t\t<File
++\t\t\t\tRelativePath="test2.cpp">
++\t\t\t</File>
++\t\t</Filter>
++\t\t<File
++\t\t\tRelativePath="<SCONSCRIPT>">
++\t\t</File>
++\t</Files>
++\t<Globals>
++\t</Globals>
++</VisualStudioProject>
++"""
++
+ SConscript_contents_8_0 = """\
+ env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='8.0',
+                 CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
+@@ -565,8 +673,31 @@
+                 variant = 'Release')
+ """
+ 
++SConscript_contents_9_0 = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='9.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                HOST_ARCH='%(HOST_ARCH)s')
+ 
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
+ 
++env.MSVSProject(target = 'Test.vcproj',
++                slnguid = '{SLNGUID}',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++
++
+ class TestSConsMSVS(TestSCons):
+     """Subclass for testing MSVS-specific portions of SCons."""
+ 
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+--- src/engine/SCons/Tool/msvs.py	(revision 5130)
++++ src/engine/SCons/Tool/msvs.py	(working copy)
+@@ -620,7 +620,11 @@
+         _DSPGenerator.__init__(self, dspfile, source, env)
+         self.version = env['MSVS_VERSION']
+         self.version_num, self.suite = msvs_parse_version(self.version)
+-        if self.version_num >= 8.0:
++        if self.version_num >= 9.0:
++            self.versionstr = '9.00'
++            self.dspheader = V8DSPHeader
++            self.dspconfiguration = V8DSPConfiguration
++        elif self.version_num >= 8.0:
+             self.versionstr = '8.00'
+             self.dspheader = V8DSPHeader
+             self.dspconfiguration = V8DSPConfiguration
+@@ -892,12 +896,12 @@
+         self.version = self.env['MSVS_VERSION']
+         self.version_num, self.suite = msvs_parse_version(self.version)
+         self.versionstr = '7.00'
+-        if self.version_num >= 8.0:
++        if self.version_num >= 9.0:
++            self.versionstr = '10.00'
++        elif self.version_num >= 8.0:
+             self.versionstr = '9.00'
+         elif self.version_num >= 7.1:
+             self.versionstr = '8.00'
+-        if self.version_num >= 8.0:
+-            self.versionstr = '9.00'
+ 
+         if 'slnguid' in env and env['slnguid']:
+             self.slnguid = env['slnguid']
+@@ -994,7 +998,9 @@
+     def PrintSolution(self):
+         """Writes a solution file"""
+         self.file.write('Microsoft Visual Studio Solution File, Format Version %s\n' % self.versionstr )
+-        if self.version_num >= 8.0:
++        if self.version_num >= 9.0:
++            self.file.write('# Visual Studio 2008\n')
++        elif self.version_num >= 8.0:
+             self.file.write('# Visual Studio 2005\n')
+         for dspinfo in self.dspfiles_info:
+             name = dspinfo['NAME']
+Index: test/MSVS/vs-9.0-exec.py
+===================================================================
+--- test/MSVS/vs-9.0-exec.py	(revision 5130)
++++ test/MSVS/vs-9.0-exec.py	(working copy)
+@@ -43,10 +43,6 @@
+ 
+ msvs_version = '9.0'
+ 
+-# TODO:  remove when we add support
+-msg = "Generating Visual Studio %s project files is not supported yet; skipping test.\n"
+-test.skip_test(msg % msvs_version)
+-
+ if not msvs_version in test.msvs_versions():
+     msg = "Visual Studio %s not installed; skipping test.\n" % msvs_version
+     test.skip_test(msg)
+Index: test/MSVS/vs-9.0-files.py
+===================================================================
+--- test/MSVS/vs-9.0-files.py	(revision 0)
++++ test/MSVS/vs-9.0-files.py	(revision 0)
+@@ -0,0 +1,106 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 9.0 project (.vcproj) and
++solution (.sln) files that look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++host_arch = test.get_vs_host_arch()
++
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['9.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_9_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_9_0
++SConscript_contents = TestSConsMSVS.SConscript_contents_9_0
++
++
++
++test.write('SConstruct', SConscript_contents%{'HOST_ARCH': host_arch})
++
++test.run(arguments="Test.vcproj")
++
++test.must_exist(test.workpath('Test.vcproj'))
++vcproj = test.read('Test.vcproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '9.0', None, 'SConstruct')
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '9.0', None, 'SConstruct')
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++test.run(arguments='-c .')
++
++test.must_not_exist(test.workpath('Test.vcproj'))
++test.must_not_exist(test.workpath('Test.sln'))
++
++test.run(arguments='Test.vcproj')
++
++test.must_exist(test.workpath('Test.vcproj'))
++test.must_exist(test.workpath('Test.sln'))
++
++test.run(arguments='-c Test.sln')
++
++test.must_not_exist(test.workpath('Test.vcproj'))
++test.must_not_exist(test.workpath('Test.sln'))
++
++
++
++# Test that running SCons with $PYTHON_ROOT in the environment
++# changes the .vcproj output as expected.
++os.environ['PYTHON_ROOT'] = 'xyzzy'
++python = os.path.join('$(PYTHON_ROOT)', os.path.split(TestSConsMSVS.python)[1])
++
++test.run(arguments='Test.vcproj')
++
++test.must_exist(test.workpath('Test.vcproj'))
++vcproj = test.read('Test.vcproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '9.0', None, 'SConstruct',
++                              python=python)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-9.0-scc-files.py
+===================================================================
+--- test/MSVS/vs-9.0-scc-files.py	(revision 0)
++++ test/MSVS/vs-9.0-scc-files.py	(revision 0)
+@@ -0,0 +1,115 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 9.0 project (.vcproj) and
++solution (.sln) files that contain SCC information and look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['9.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_9_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_9_0
++SConscript_contents = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='9.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                MSVS_SCC_CONNECTION_ROOT='.',
++                MSVS_SCC_PROVIDER='MSSCCI:Perforce SCM',
++                MSVS_SCC_PROJECT_NAME='Perforce Project')
++
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
++
++env.MSVSProject(target = 'Test.vcproj',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++expected_sln_sccinfo = """\
++\tGlobalSection(SourceCodeControl) = preSolution
++\t\tSccNumberOfProjects = 2
++\t\tSccProjectName0 = Perforce\u0020Project
++\t\tSccLocalPath0 = .
++\t\tSccProvider0 = MSSCCI:Perforce\u0020SCM
++\t\tCanCheckoutShared = true
++\t\tSccProjectUniqueName1 = Test.vcproj
++\t\tSccLocalPath1 = .
++\t\tCanCheckoutShared = true
++\t\tSccProjectFilePathRelativizedFromConnection1 = .\\\\
++\tEndGlobalSection
++"""
++
++expected_vcproj_sccinfo = """\
++\tSccProjectName="Perforce Project"
++\tSccLocalPath="."
++\tSccProvider="MSSCCI:Perforce SCM"
++"""
++
++
++test.write('SConstruct', SConscript_contents)
++
++test.run(arguments="Test.vcproj")
++
++test.must_exist(test.workpath('Test.vcproj'))
++vcproj = test.read('Test.vcproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '9.0', None, 'SConstruct',
++                              vcproj_sccinfo=expected_vcproj_sccinfo)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '9.0', None, 'SConstruct',
++                              sln_sccinfo=expected_sln_sccinfo)
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-9.0-scc-legacy-files.py
+===================================================================
+--- test/MSVS/vs-9.0-scc-legacy-files.py	(revision 0)
++++ test/MSVS/vs-9.0-scc-legacy-files.py	(revision 0)
+@@ -0,0 +1,98 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 9.0 project (.vcproj) and
++solution (.sln) files that contain SCC information and look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['9.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_9_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_9_0
++SConscript_contents = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='9.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                MSVS_SCC_LOCAL_PATH='C:\\MyMsVsProjects',
++                MSVS_SCC_PROJECT_NAME='Perforce Project')
++
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
++
++env.MSVSProject(target = 'Test.vcproj',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++expected_vcproj_sccinfo = """\
++\tSccProjectName="Perforce Project"
++\tSccLocalPath="C:\\MyMsVsProjects"
++"""
++
++
++test.write('SConstruct', SConscript_contents)
++
++test.run(arguments="Test.vcproj")
++
++test.must_exist(test.workpath('Test.vcproj'))
++vcproj = test.read('Test.vcproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '9.0', None, 'SConstruct',
++                              vcproj_sccinfo=expected_vcproj_sccinfo)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '9.0', None, 'SConstruct')
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-9.0Exp-exec.py
+===================================================================
+--- test/MSVS/vs-9.0Exp-exec.py	(revision 5130)
++++ test/MSVS/vs-9.0Exp-exec.py	(working copy)
+@@ -43,10 +43,6 @@
+ 
+ msvs_version = '9.0Exp'
+ 
+-# TODO:  remove when we add support
+-msg = "Generating Visual Studio %s project files is not supported yet; skipping test.\n"
+-test.skip_test(msg % msvs_version)
+-
+ if not msvs_version in test.msvs_versions():
+     msg = "Visual Studio %s not installed; skipping test.\n" % msvs_version
+     test.skip_test(msg)
