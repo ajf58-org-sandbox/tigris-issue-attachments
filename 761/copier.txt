@@ -1,0 +1,555 @@
+scons: Reading SConscript files ...
+<type 'dict'> OK
+<type 'function'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'type'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'dict'> OK
+<type 'str'> no copier!!!
+<type 'function'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'function'> no copier!!!
+<type 'dict'> OK
+<type 'dict'> OK
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'function'> no copier!!!
+<type 'dict'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'dict'> OK
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'instance'> OK
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'NoneType'> no copier!!!
+<type 'function'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'NoneType'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'function'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'function'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'function'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'function'> no copier!!!
+<type 'function'> no copier!!!
+<type 'list'> OK
+<type 'function'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'int'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<class 'SCons.Action.FunctionAction'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'type'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'int'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'type'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'function'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'NoneType'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'NoneType'> no copier!!!
+<type 'str'> no copier!!!
+<type 'int'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'NoneType'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<class 'SCons.Util.CLVar'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'dict'> OK
+<type 'dict'> OK
+<type 'dict'> OK
+<type 'dict'> OK
+env1 $__RPATH
+env2 $__RPATH
+env1 $__RPATH
+env2 $__RPATH 2
+scons: done reading SConscript files.
+<type 'dict'> OK
+<type 'function'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'type'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'dict'> OK
+<type 'str'> no copier!!!
+<type 'function'> no copier!!!
+<class 'SCons.Defaults.Variable_Method_Caller'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'function'> no copier!!!
+<type 'dict'> OK
+<type 'dict'> OK
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'function'> no copier!!!
+<type 'dict'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'dict'> OK
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<class 'SCons.Builder.BuilderBase'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+<type 'dict'> OK
+<type 'list'> OK
+<type 'str'> no copier!!!
+scons: Building targets ...
+<type 'dict'> OK
+<type 'NoneType'> no copier!!!
+<type 'dict'> OK
+<type 'NoneType'> no copier!!!
+scons: `.' is up to date.
+scons: done building targets.
