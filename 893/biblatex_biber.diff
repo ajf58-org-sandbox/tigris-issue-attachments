@@ -1,0 +1,401 @@
+diff -r 1c28012c00ef src/engine/SCons/Scanner/LaTeX.py
+--- a/src/engine/SCons/Scanner/LaTeX.py	Sun May 27 12:23:07 2012 -0400
++++ b/src/engine/SCons/Scanner/LaTeX.py	Wed Jun 13 16:13:14 2012 -0700
+@@ -159,6 +159,7 @@
+                      'includegraphics': 'TEXINPUTS',
+                      'bibliography': 'BIBINPUTS',
+                      'bibliographystyle': 'BSTINPUTS',
++                     'addbibresource': 'BIBINPUTS',
+                      'makeindex': 'INDEXSTYLE',
+                      'usepackage': 'TEXINPUTS',
+                      'lstinputlisting': 'TEXINPUTS'}
+@@ -172,7 +173,7 @@
+         # line followed by one or more newline characters (i.e. blank
+         # lines), interfering with a match on the next line.
+         # add option for whitespace before the '[options]' or the '{filename}'
+-        regex = r'^[^%\n]*\\(include|includegraphics(?:\s*\[[^\]]+\])?|lstinputlisting(?:\[[^\]]+\])?|input|bibliography|usepackage)\s*{([^}]*)}'
++        regex = r'^[^%\n]*\\(include|includegraphics(?:\s*\[[^\]]+\])?|lstinputlisting(?:\[[^\]]+\])?|input|bibliography|addbibresource|addglobalbib|addsectionbib|usepackage)\s*{([^}]*)}'
+         self.cre = re.compile(regex, re.M)
+         self.comment_re = re.compile(r'^((?:(?:\\%)|[^%\n])*)(.*)$', re.M)
+ 
+diff -r 1c28012c00ef src/engine/SCons/Tool/tex.py
+--- a/src/engine/SCons/Tool/tex.py	Sun May 27 12:23:07 2012 -0400
++++ b/src/engine/SCons/Tool/tex.py	Wed Jun 13 16:13:14 2012 -0700
+@@ -55,14 +55,18 @@
+ check_suffixes = ['.toc', '.lof', '.lot', '.out', '.nav', '.snm']
+ 
+ # these are files that require bibtex or makeindex to be run when they change
+-all_suffixes = check_suffixes + ['.bbl', '.idx', '.nlo', '.glo', '.acn']
++all_suffixes = check_suffixes + ['.bbl', '.idx', '.nlo', '.glo', '.acn', '.bcf']
+ 
+ #
+ # regular expressions used to search for Latex features
+ # or outputs that require rerunning latex
+ #
+ # search for all .aux files opened by latex (recorded in the .fls file)
+-openout_aux_re = re.compile(r"INPUT *(.*\.aux)")
++openout_aux_re = re.compile(r"OUTPUT *(.*\.aux)")
++
++# search for all .bcf files opened by latex (recorded in the .fls file)
++# for use by biber
++openout_bcf_re = re.compile(r"OUTPUT *(.*\.bcf)")
+ 
+ #printindex_re = re.compile(r"^[^%]*\\printindex", re.MULTILINE)
+ #printnomenclature_re = re.compile(r"^[^%]*\\printnomenclature", re.MULTILINE)
+@@ -87,6 +91,7 @@
+ bibliography_re = re.compile(r"^[^%\n]*\\bibliography", re.MULTILINE)
+ bibunit_re = re.compile(r"^[^%\n]*\\begin\{bibunit\}", re.MULTILINE)
+ multibib_re = re.compile(r"^[^%\n]*\\newcites\{([^\}]*)\}", re.MULTILINE)
++addbibresource_re = re.compile(r"^[^%\n]*\\(addbibresource|addglobalbib|addsectionbib)", re.MULTILINE)
+ listoffigures_re = re.compile(r"^[^%\n]*\\listoffigures", re.MULTILINE)
+ listoftables_re = re.compile(r"^[^%\n]*\\listoftables", re.MULTILINE)
+ hyperref_re = re.compile(r"^[^%\n]*\\usepackage.*\{hyperref\}", re.MULTILINE)
+@@ -295,8 +300,19 @@
+                 dups[x] = 1
+             auxfiles = list(dups.keys())
+ 
++        bcffiles = []
++        if os.path.isfile(flsfilename):
++            flsContent = open(flsfilename, "rb").read()
++            bcffiles = openout_bcf_re.findall(flsContent)
++            # remove duplicates
++            dups = {}
++            for x in bcffiles:
++                dups[x] = 1
++            bcffiles = list(dups.keys())
++
+         if Verbose:
+             print "auxfiles ",auxfiles
++            print "bcffiles ",bcffiles
+ 
+         # Now decide if bibtex will need to be run.
+         # The information that bibtex reads from the .aux file is
+@@ -317,8 +333,29 @@
+                         result = BibTeXAction(bibfile, bibfile, env)
+                         if result != 0:
+                             check_file_error_message(env['BIBTEX'], 'blg')
+-                        #must_rerun_latex = must_rerun_latex or check_MD5(suffix_nodes['.bbl'],'.bbl')
+                         must_rerun_latex = True
++
++        # Now decide if biber will need to be run.
++        # The information that bibtex reads from the .bcf file is
++        # pass-independent. If we find (below) that the .bbl file is unchanged,
++        # then the last latex saw a correct bibliography.
++        # Therefore only do this once
++        # Go through all .bcf files and remember the files already done.
++        for bcffilename in bcffiles:
++            if bcffilename not in already_bibtexed:
++                already_bibtexed.append(bcffilename)
++                target_bcf = os.path.join(targetdir, bcffilename)
++                if os.path.isfile(target_bcf):
++                    content = open(target_bcf, "rb").read()
++                    if content.find("bibdata") != -1:
++                        if Verbose:
++                            print "Need to run bibtex on ",bcffilename
++                        bibfile = env.fs.File(SCons.Util.splitext(target_bcf)[0])
++                        result = BibTeXAction(bibfile, bibfile, env)
++                        if result != 0:
++                            check_file_error_message(env['BIBTEX'], 'blg')
++                        must_rerun_latex = True
++
+         # Now decide if latex will need to be run again due to index.
+         if check_MD5(suffix_nodes['.idx'],'.idx') or (count == 1 and run_makeindex):
+             # We must run makeindex
+@@ -630,6 +667,7 @@
+                          bibliography_re,
+                          bibunit_re,
+                          multibib_re,
++                         addbibresource_re,
+                          tableofcontents_re,
+                          listoffigures_re,
+                          listoftables_re,
+@@ -646,6 +684,7 @@
+                   ['.bbl', '.blg','bibliography'],
+                   ['.bbl', '.blg','bibunit'],
+                   ['.bbl', '.blg','multibib'],
++                  ['.bbl', '.blg','.bcf','addbibresource'],
+                   ['.toc','contents'],
+                   ['.lof','figures'],
+                   ['.lot','tables'],
+@@ -698,10 +737,9 @@
+                 file_list = glob.glob(file_basename)
+                 # remove the suffix '.aux'
+                 for i in range(len(file_list)):
+-                    file_list[i] = SCons.Util.splitext(file_list[i])[0]
++                    file_list.append(SCons.Util.splitext(file_list[i])[0])
+             # for multibib we need a list of files
+             if suffix_list[-1] == 'multibib':
+-                file_list = []
+                 for multibibmatch in multibib_re.finditer(content):
+                     if Verbose:
+                         print "multibib match ",multibibmatch.group(1)
+@@ -716,14 +754,14 @@
+                 for suffix in suffix_list[:-1]:
+                     env.SideEffect(file_name + suffix,target[0])
+                     if Verbose:
+-                        print "side effect :",file_name + suffix
++                        print "side effect tst :",file_name + suffix, " target is ",str(target[0])
+                     env.Clean(target[0],file_name + suffix)
+ 
+     for aFile in aux_files:
+         aFile_base = SCons.Util.splitext(aFile)[0]
+         env.SideEffect(aFile_base + '.aux',target[0])
+         if Verbose:
+-            print "side effect :",aFile_base + '.aux'
++            print "side effect aux :",aFile_base + '.aux'
+         env.Clean(target[0],aFile_base + '.aux')
+     # read fls file to get all other files that latex creates and will read on the next pass
+     # remove files from list that we explicitly dealt with above
+@@ -736,7 +774,7 @@
+                 out_files.remove(filename)
+         env.SideEffect(out_files,target[0])
+         if Verbose:
+-            print "side effect :",out_files
++            print "side effect fls :",out_files
+         env.Clean(target[0],out_files)
+ 
+     return (target, source)
+diff -r 1c28012c00ef test/TEX/biber_biblatex.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/TEX/biber_biblatex.py	Wed Jun 13 16:13:14 2012 -0700
+@@ -0,0 +1,121 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test creation of a Tex document that uses the multibib oackage
++
++Test courtesy Rob Managan.
++"""
++
++import TestSCons
++import os
++
++test = TestSCons.TestSCons()
++
++latex = test.where_is('pdflatex')
++if not latex:
++    test.skip_test("Could not find 'pdflatex'; skipping test.\n")
++
++biber = test.where_is('biber')
++if not latex:
++    test.skip_test("Could not find 'biber'; skipping test.\n")
++
++gloss = os.system('kpsewhich biblatex.sty')
++if not gloss==0:
++    test.skip_test("biblatex.sty not installed; skipping test(s).\n")
++
++
++test.write(['SConstruct'], """\
++#!/usr/bin/env python
++
++import os
++env = Environment(ENV=os.environ)
++env['BIBTEX'] = 'biber'
++main_output = env.PDF('bibertest.tex')
++""")
++
++
++sources_bib_content = r"""
++@book{mybook,
++  title={Title},
++  author={Author, A},
++  year={%s},
++  publisher={Publisher},
++}
++"""
++test.write(['ref.bib'],sources_bib_content % '2013' )
++
++test.write(['bibertest.tex'],r"""
++\documentclass{article}
++
++\usepackage[backend=biber]{biblatex}
++\addbibresource{ref.bib}
++
++\begin{document}
++
++Hello. This is boring.
++\cite{mybook}
++And even more boring.
++
++\printbibliography
++\end{document}
++""")
++
++
++test.run()
++
++
++# All (?) the files we expect will get created in the docs directory
++files = [
++    'bibertest.aux',
++    'bibertest.bbl',
++    'bibertest.bcf',
++    'bibertest.blg',
++    'bibertest.fls',
++    'bibertest.log',
++    'bibertest.pdf',
++    'bibertest.run.xml',
++]
++
++
++for f in files:
++    test.must_exist([ f])
++
++pdf_output_1 = test.read('bibertest.pdf')
++
++
++
++test.write(['ref.bib'],sources_bib_content % '1982')
++
++test.run()
++
++pdf_output_2 = test.read('bibertest.pdf')
++
++# If the PDF file is the same as it was previously, then it didn't
++# pick up the change from 1981 to 1982, so fail.
++test.fail_test(pdf_output_1 == pdf_output_2)
++
++test.pass_test()
+diff -r 1c28012c00ef test/TEX/biblatex.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/test/TEX/biblatex.py	Wed Jun 13 16:13:14 2012 -0700
+@@ -0,0 +1,115 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test creation of a Tex document that uses the multibib oackage
++
++Test courtesy Rob Managan.
++"""
++
++import TestSCons
++import os
++
++test = TestSCons.TestSCons()
++
++latex = test.where_is('pdflatex')
++if not latex:
++    test.skip_test("Could not find 'pdflatex'; skipping test.\n")
++
++gloss = os.system('kpsewhich biblatex.sty')
++if not gloss==0:
++    test.skip_test("biblatex.sty not installed; skipping test(s).\n")
++
++
++test.write(['SConstruct'], """\
++#!/usr/bin/env python
++
++import os
++env = Environment(ENV=os.environ)
++main_output = env.PDF(target='biblatextest.pdf', source='biblatextest.tex')
++""")
++
++
++sources_bib_content = r"""
++@book{mybook,
++  title={Title},
++  author={Author, A},
++  year={%s},
++  publisher={Publisher},
++}
++"""
++test.write(['ref.bib'],sources_bib_content % '2013' )
++
++test.write(['biblatextest.tex'],r"""
++\documentclass{article}
++
++\usepackage{biblatex}
++\addbibresource{ref.bib}
++
++\begin{document}
++
++Hello. This is boring.
++\cite{mybook}
++And even more boring.
++
++\printbibliography
++\end{document}
++""")
++
++
++test.run()
++
++
++# All (?) the files we expect will get created in the docs directory
++files = [
++    'biblatextest.aux',
++    'biblatextest.bbl',
++    'biblatextest.blg',
++    'biblatextest-blx.bib',
++    'biblatextest.fls',
++    'biblatextest.log',
++    'biblatextest.pdf',
++    'biblatextest.run.xml',
++]
++
++for f in files:
++    test.must_exist([ f])
++
++pdf_output_1 = test.read('biblatextest.pdf')
++
++
++
++test.write(['ref.bib'],sources_bib_content % '1982')
++
++test.run()
++
++pdf_output_2 = test.read('biblatextest.pdf')
++
++# If the PDF file is the same as it was previously, then it didn't
++# pick up the change from 1981 to 1982, so fail.
++test.fail_test(pdf_output_1 == pdf_output_2)
++
++test.pass_test()
