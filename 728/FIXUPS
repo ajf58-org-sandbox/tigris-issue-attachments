@@ -1,0 +1,490 @@
+Index: test/Subst/AllowSubstExceptions.py
+===================================================================
+--- test/Subst/AllowSubstExceptions.py	(revision 4783)
++++ test/Subst/AllowSubstExceptions.py	(working copy)
+@@ -49,37 +49,37 @@
+ 
+ try: env.subst('$NAME')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ try: env.subst('${NAME}')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ try: env.subst('${INDEX[999]}')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ try: env.subst_list('$NAME')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ try: env.subst_list('${NAME}')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ try: env.subst_list('${INDEX[999]}')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ 
+ 
+ try: env.subst('${1/0}')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ try: env.subst_list('${1/0}')
+ except SCons.Errors.UserError, e: print e
+-else: raise Exception, "did not catch expected SCons.Errors.UserError"
++else: raise Exception("did not catch expected SCons.Errors.UserError")
+ 
+ AllowSubstExceptions(ZeroDivisionError)
+ 
+Index: test/Script-import.py
+===================================================================
+--- test/Script-import.py	(revision 4783)
++++ test/Script-import.py	(working copy)
+@@ -86,7 +86,7 @@
+     except AttributeError:
+         pass
+     else:
+-        raise Exception, "unexpected variable SCons.Script.%s" % var
++        raise Exception("unexpected variable SCons.Script.%s" % var)
+ """)
+ 
+ test.write("m4.py", """\
+Index: test/Errors/UserError.py
+===================================================================
+--- test/Errors/UserError.py	(revision 4783)
++++ test/Errors/UserError.py	(working copy)
+@@ -36,7 +36,7 @@
+ test.write('SConstruct', """
+ assert "UserError" not in globals()
+ import SCons.Errors
+-raise SCons.Errors.UserError, 'Depends() requires both sources and targets.'
++raise SCons.Errors.UserError('Depends() requires both sources and targets.')
+ """)
+ 
+ expect = """
+Index: test/Errors/InternalError.py
+===================================================================
+--- test/Errors/InternalError.py	(revision 4783)
++++ test/Errors/InternalError.py	(working copy)
+@@ -37,7 +37,7 @@
+ test.write('SConstruct', """
+ assert "InternalError" not in globals()
+ from SCons.Errors import InternalError
+-raise InternalError, 'error inside'
++raise InternalError('error inside')
+ """)
+ 
+ test.run(stdout = "scons: Reading SConscript files ...\ninternal error\n",
+@@ -46,7 +46,7 @@
+   File ".+", line \d+, in .+
+   File ".+", line \d+, in .+
+   File ".+SConstruct", line \d+, in .+
+-    raise InternalError, 'error inside'
++    raise InternalError\('error inside'\)
+ InternalError: error inside
+ """, status=2)
+ 
+Index: test/exceptions.py
+===================================================================
+--- test/exceptions.py	(revision 4783)
++++ test/exceptions.py	(working copy)
+@@ -36,7 +36,7 @@
+ 
+ test.write(SConstruct_path, """\
+ def func(source = None, target = None, env = None):
+-    raise Exception, "func exception"
++    raise Exception("func exception")
+ B = Builder(action = func)
+ env = Environment(BUILDERS = { 'B' : B })
+ env.B(target = 'foo.out', source = 'foo.in')
+@@ -44,7 +44,7 @@
+ 
+ test.write('foo.in', "foo.in\n")
+ 
+-expected_stderr = """scons: \*\*\* \[foo.out\] Exception : func exception
++expected_stderr = r"""scons: \*\*\* \[foo.out\] Exception : func exception
+ Traceback \((most recent call|innermost) last\):
+ (  File ".+", line \d+, in \S+
+     [^\n]+
+@@ -52,7 +52,7 @@
+ )*(  File ".+", line \d+, in \S+
+     [^\n]+
+ )*  File "%s", line 2, in func
+-    raise Exception, "func exception"
++    raise Exception\("func exception"\)
+ Exception: func exception
+ """ % re.escape(SConstruct_path)
+ 
+Index: test/option/debug-stacktrace.py
+===================================================================
+--- test/option/debug-stacktrace.py	(revision 4783)
++++ test/option/debug-stacktrace.py	(working copy)
+@@ -34,7 +34,7 @@
+ 
+ test.write('SConstruct', """\
+ def kfile_scan(node, env, target):
+-    raise Exception, "kfile_scan error"
++    raise Exception("kfile_scan error")
+ 
+ kscan = Scanner(name = 'kfile',
+                 function = kfile_scan,
+@@ -57,7 +57,7 @@
+ lines = [
+     "scons: *** [foo] Exception : kfile_scan error",
+     "scons: internal stack trace:",
+-    'raise Exception, "kfile_scan error"',
++    'raise Exception("kfile_scan error")',
+ ]
+ 
+ test.must_contain_all_lines(test.stderr(), lines)
+@@ -69,7 +69,7 @@
+ 
+ test.write('SConstruct', """\
+ import SCons.Errors
+-raise SCons.Errors.UserError, "explicit UserError!"
++raise SCons.Errors.UserError("explicit UserError!")
+ """)
+ 
+ test.run(arguments = '--debug=stacktrace',
+Index: test/Scanner/exception.py
+===================================================================
+--- test/Scanner/exception.py	(revision 4783)
++++ test/Scanner/exception.py	(working copy)
+@@ -47,7 +47,7 @@
+     contents = node.get_text_contents()
+     exceptions = exception_re.findall(contents)
+     if exceptions:
+-        raise Exception, "kfile_scan error:  %s" % exceptions[0]
++        raise Exception("kfile_scan error:  %s" % exceptions[0])
+     includes = include_re.findall(contents)
+     return includes
+ 
+Index: src/engine/SCons/Node/NodeTests.py
+===================================================================
+--- src/engine/SCons/Node/NodeTests.py	(revision 4783)
++++ src/engine/SCons/Node/NodeTests.py	(working copy)
+@@ -54,7 +54,7 @@
+         elif isinstance(curr_a, list):
+             all.extend(curr_a)
+         else:
+-            raise 'Cannot Combine Actions'
++            raise Exception('Cannot Combine Actions')
+     return MyListAction(all)
+ 
+ class MyActionBase:
+@@ -178,7 +178,7 @@
+ 
+ class ExceptBuilder2:
+     def execute(self, target, source, env):
+-        raise "foo"
++        raise Exception("foo")
+ 
+ class Scanner:
+     called = None
+@@ -787,7 +787,7 @@
+         except:
+             pass
+         else:
+-            raise "did not catch expected exception"
++            raise Exception("did not catch expected exception")
+         assert node.depends == [zero, one, two, three, four]
+ 
+ 
+@@ -819,7 +819,7 @@
+         except:
+             pass
+         else:
+-            raise "did not catch expected exception"
++            raise Exception("did not catch expected exception")
+         assert node.sources == [zero, one, two, three, four], node.sources
+ 
+     def test_add_ignore(self):
+@@ -850,7 +850,7 @@
+         except:
+             pass
+         else:
+-            raise "did not catch expected exception"
++            raise Exception("did not catch expected exception")
+         assert node.ignore == [zero, one, two, three, four]
+ 
+     def test_get_found_includes(self):
+Index: src/engine/SCons/Node/FS.py
+===================================================================
+--- src/engine/SCons/Node/FS.py	(revision 4783)
++++ src/engine/SCons/Node/FS.py	(working copy)
+@@ -989,7 +989,7 @@
+     def rel_path(self, other):
+         d = self.disambiguate()
+         if d.__class__ is Entry:
+-            raise "rel_path() could not disambiguate File/Dir"
++            raise Exception("rel_path() could not disambiguate File/Dir")
+         return d.rel_path(other)
+ 
+     def new_ninfo(self):
+Index: src/engine/SCons/SConsignTests.py
+===================================================================
+--- src/engine/SCons/SConsignTests.py	(revision 4783)
++++ src/engine/SCons/SConsignTests.py	(working copy)
+@@ -143,14 +143,14 @@
+         except KeyError:
+             pass
+         else:
+-            raise "unexpected entry %s" % e
++            raise Exception("unexpected entry %s" % e)
+ 
+         try:
+             e = f.get_entry('bbb')
+         except KeyError:
+             pass
+         else:
+-            raise "unexpected entry %s" % e
++            raise Exception("unexpected entry %s" % e)
+ 
+         f.merge()
+ 
+Index: src/engine/SCons/EnvironmentTests.py
+===================================================================
+--- src/engine/SCons/EnvironmentTests.py	(revision 4783)
++++ src/engine/SCons/EnvironmentTests.py	(working copy)
+@@ -1610,7 +1610,7 @@
+             def __str__(self):
+                 return self.name
+             def __cmp__(self, other):
+-                raise "should not compare"
++                raise Exception("should not compare")
+ 
+         ccc = C('ccc')
+ 
+Index: src/engine/SCons/BuilderTests.py
+===================================================================
+--- src/engine/SCons/BuilderTests.py	(revision 4783)
++++ src/engine/SCons/BuilderTests.py	(working copy)
+@@ -344,7 +344,7 @@
+         except SCons.Errors.UserError, e:
+             pass
+         else:
+-            raise "Did not catch expected UserError."
++            raise Exception("Did not catch expected UserError.")
+ 
+         builder = SCons.Builder.Builder(action="foo")
+         target = builder(env, None, source='n22', srcdir='src_dir')[0]
+Index: src/engine/SCons/Variables/PathVariableTests.py
+===================================================================
+--- src/engine/SCons/Variables/PathVariableTests.py	(revision 4783)
++++ src/engine/SCons/Variables/PathVariableTests.py	(working copy)
+@@ -68,7 +68,7 @@
+         except SCons.Errors.UserError, e:
+             assert str(e) == 'Path for option X does not exist: %s' % dne, e
+         except:
+-            raise "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+     def test_PathIsDir(self):
+         """Test the PathIsDir validator"""
+@@ -92,7 +92,7 @@
+         except SCons.Errors.UserError, e:
+             assert str(e) == 'Directory path for option X is a file: %s' % f, e
+         except:
+-            raise "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+         dne = test.workpath('does_not_exist')
+         try:
+@@ -100,7 +100,7 @@
+         except SCons.Errors.UserError, e:
+             assert str(e) == 'Directory path for option X does not exist: %s' % dne, e
+         except:
+-            raise "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+     def test_PathIsDirCreate(self):
+         """Test the PathIsDirCreate validator"""
+@@ -125,7 +125,7 @@
+         except SCons.Errors.UserError, e:
+             assert str(e) == 'Path for option X is a file, not a directory: %s' % f, e
+         except:
+-            raise "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+     def test_PathIsFile(self):
+         """Test the PathIsFile validator"""
+@@ -149,7 +149,7 @@
+         except SCons.Errors.UserError, e:
+             assert str(e) == 'File path for option X does not exist: %s' % d, e
+         except:
+-            raise "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+         dne = test.workpath('does_not_exist')
+         try:
+@@ -157,7 +157,7 @@
+         except SCons.Errors.UserError, e:
+             assert str(e) == 'File path for option X does not exist: %s' % dne, e
+         except:
+-            raise "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+     def test_PathAccept(self):
+         """Test the PathAccept validator"""
+@@ -202,7 +202,7 @@
+             expect = 'Path for option X does not exist: %s' % dne
+             assert str(e) == expect, e
+         else:
+-            raise "did not catch expected UserError"
++            raise Exception("did not catch expected UserError")
+ 
+         def my_validator(key, val, env):
+             raise Exception, "my_validator() got called for %s, %s!" % (key, val)
+@@ -220,7 +220,7 @@
+         except Exception, e:
+             assert str(e) == 'my_validator() got called for Y, value!', e
+         else:
+-            raise "did not catch expected exception from my_validator()"
++            raise Exception("did not catch expected exception from my_validator()")
+ 
+ 
+ 
+Index: src/engine/SCons/ExecutorTests.py
+===================================================================
+--- src/engine/SCons/ExecutorTests.py	(revision 4783)
++++ src/engine/SCons/ExecutorTests.py	(working copy)
+@@ -119,7 +119,7 @@
+         except SCons.Errors.UserError:
+             pass
+         else:
+-            raise "Did not catch expected UserError"
++            raise Exception("Did not catch expected UserError")
+ 
+     def test__action_list(self):
+         """Test the {get,set}_action_list() methods"""
+Index: doc/man/scons.1
+===================================================================
+--- doc/man/scons.1	(revision 4783)
++++ doc/man/scons.1	(working copy)
+@@ -7393,7 +7393,7 @@
+ 
+ def validate_color(key, val, env):
+     if not val in ['red', 'blue', 'yellow']:
+-        raise "Invalid color value '%s'" % val
++        raise Exception("Invalid color value '%s'" % val)
+ vars.Add('COLOR', validator=valid_color)
+ .EE
+ 
+Index: bin/xmlagenda.py
+===================================================================
+--- bin/xmlagenda.py	(revision 4783)
++++ bin/xmlagenda.py	(working copy)
+@@ -21,19 +21,19 @@
+ 
+ # The elements to be picked out of the issue
+ PickList = [
+-	# sort key -- these are used to sort the entry
+-	'target_milestone', 'priority', 'votes_desc', 'creation_ts',
+-	# payload -- these are displayed
+-	'issue_id', 'votes', 'issue_type', 'target_milestone',
+-	'priority', 'assigned_to', 'short_desc',
+-	]
++    # sort key -- these are used to sort the entry
++    'target_milestone', 'priority', 'votes_desc', 'creation_ts',
++    # payload -- these are displayed
++    'issue_id', 'votes', 'issue_type', 'target_milestone',
++    'priority', 'assigned_to', 'short_desc',
++    ]
+ 
+ # Conbert a leaf element into its value as a text string
+ # We assume it's "short enough" that there's only one substring
+ def Value(element):
+-	v = element.firstChild
+-	if v is None: return ''
+-	return v.nodeValue
++    v = element.firstChild
++    if v is None: return ''
++    return v.nodeValue
+ 
+ # Parse the XML issues file and produce a DOM for it
+ import sys
+@@ -46,26 +46,26 @@
+ # and put them in our list of issues.
+ issues = []
+ for issuezilla in xml.childNodes:
+-	# The Issuezilla element contains the issues
+-	if issuezilla.nodeType != issuezilla.ELEMENT_NODE: continue
+-	for issue in issuezilla.childNodes:
+-		# The issue elements contain the info for an issue
+-		if issue.nodeType != issue.ELEMENT_NODE: continue
+-		# Accumulate the pieces we want to include
+-		d = {}
+-		for element in issue.childNodes:
+-			if element.nodeName in PickList:
+-				d[element.nodeName] = Value(element)
+-		# convert 'votes' to numeric, ascending and descending
+-		try:
+-			v = int('0' + d['votes'])
+-		except KeyError:
+-			pass
+-		else:
+-			d['votes_desc'] = -v
+-			d['votes'] = v
+-		# Marshal the elements and add them to the list
+-		issues.append([ d[ix] for ix in PickList ])
++    # The Issuezilla element contains the issues
++    if issuezilla.nodeType != issuezilla.ELEMENT_NODE: continue
++    for issue in issuezilla.childNodes:
++        # The issue elements contain the info for an issue
++        if issue.nodeType != issue.ELEMENT_NODE: continue
++        # Accumulate the pieces we want to include
++        d = {}
++        for element in issue.childNodes:
++            if element.nodeName in PickList:
++                d[element.nodeName] = Value(element)
++        # convert 'votes' to numeric, ascending and descending
++        try:
++            v = int('0' + d['votes'])
++        except KeyError:
++            pass
++        else:
++            d['votes_desc'] = -v
++            d['votes'] = v
++        # Marshal the elements and add them to the list
++        issues.append([ d[ix] for ix in PickList ])
+ issues.sort()
+ 
+ # Transcribe the issues into comma-separated values.
+@@ -74,16 +74,16 @@
+ writer = csv.writer(open('editlist.csv', 'w'))
+ # header
+ writer.writerow(['ID', 'Votes', 'Type/Member', 'Milestone',
+-		'Pri', 'Owner', 'Summary/Comments'])
++        'Pri', 'Owner', 'Summary/Comments'])
+ for issue in issues:
+-	row = issue[4:]		# strip off sort key
+-	#row[0] = """=hyperlink("http://scons.tigris.org/issues/show_bug.cgi?id=%s","%s")""" % (row[0],row[0])
+-	if row[3] == '-unspecified-': row[3] = 'triage'
+-	writer.writerow(['','','','','','',''])
+-	writer.writerow(row)
+-	writer.writerow(['','','consensus','','','',''])
+-	writer.writerow(['','','','','','',''])
+-	for member in team: writer.writerow(['','',member,'','','',''])
++    row = issue[4:]        # strip off sort key
++    #row[0] = """=hyperlink("http://scons.tigris.org/issues/show_bug.cgi?id=%s","%s")""" % (row[0],row[0])
++    if row[3] == '-unspecified-': row[3] = 'triage'
++    writer.writerow(['','','','','','',''])
++    writer.writerow(row)
++    writer.writerow(['','','consensus','','','',''])
++    writer.writerow(['','','','','','',''])
++    for member in team: writer.writerow(['','',member,'','','',''])
+ 
+ # Local Variables:
+ # tab-width:4
