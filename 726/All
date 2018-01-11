@@ -1,0 +1,517 @@
+--- OLD/QMTest/TestCmd.py	2010-03-29 07:42:46.000000000 -0700
++++ NEW/QMTest/TestCmd.py	2010-03-29 05:06:10.000000000 -0700
+@@ -231,6 +231,21 @@
+ import traceback
+ import UserList
+ 
++try:
++    # pre-2.7 doesn't have the memoryview() built-in
++    memoryview
++except NameError:
++    class memoryview:
++        from types import SliceType
++        def __init__(self, obj):
++            # wrapping buffer in () keeps the fixer from changing it
++            self.obj = (buffer)(obj)
++        def __getitem__(self, indx):
++            if isinstance(indx, self.SliceType):
++                return self.obj[indx.start:indx.stop]
++            else:
++                return self.obj[indx]
++
+ __all__ = [
+     'diff_re',
+     'fail_test',
+@@ -809,13 +824,12 @@
+             time.sleep(max((x-time.time())/tr, 0))
+     return ''.join(y)
+ 
+-# TODO(3.0:  rewrite to use memoryview()
+ def send_all(p, data):
+     while len(data):
+         sent = p.send(data)
+         if sent is None:
+             raise Exception(disconnect_message)
+-        data = buffer(data, sent)
++        data = memoryview(data)[sent:]
+ 
+ 
+ 
+--- OLD/src/engine/SCons/ActionTests.py	2010-03-29 07:42:45.000000000 -0700
++++ NEW/src/engine/SCons/ActionTests.py	2010-03-29 01:18:15.000000000 -0700
+@@ -191,7 +191,6 @@
+ 
+ def test_varlist(pos_call, str_call, cmd, cmdstrfunc, **kw):
+     def call_action(a, pos_call=pos_call, str_call=str_call, kw=kw):
+-        #FUTURE a = SCons.Action.Action(*a, **kw)
+         a = SCons.Action.Action(*a, **kw)
+         # returned object must provide these entry points
+         assert hasattr(a, '__call__')
+--- OLD/src/engine/SCons/Script/Main.py	2010-03-29 07:42:44.000000000 -0700
++++ NEW/src/engine/SCons/Script/Main.py	2010-03-29 04:05:37.000000000 -0700
+@@ -1148,7 +1148,7 @@
+             # This is cribbed from the implementation of
+             # random.shuffle() in Python 2.X.
+             d = dependencies
+-            for i in xrange(len(d)-1, 0, -1):
++            for i in range(len(d)-1, 0, -1):
+                 j = int(random.random() * (i+1))
+                 d[i], d[j] = d[j], d[i]
+             return d
+--- OLD/src/engine/SCons/compat/__init__.py	2010-03-29 07:42:45.000000000 -0700
++++ NEW/src/engine/SCons/compat/__init__.py	2010-03-29 03:45:18.000000000 -0700
+@@ -92,19 +92,8 @@
+     set
+ except NameError:
+     # Pre-2.4 Python has no native set type
+-    try:
+-        # Python 2.2 and 2.3 can use the copy of the 2.[45] sets module
+-        # that we grabbed.
+-        import_as('_scons_sets', 'sets')
+-    except (ImportError, SyntaxError):
+-        # Python 1.5 (ImportError, no __future_ module) and 2.1
+-        # (SyntaxError, no generators in __future__) will blow up
+-        # trying to import the 2.[45] sets module, so back off to a
+-        # custom sets module that can be discarded easily when we
+-        # stop supporting those versions.
+-        import_as('_scons_sets15', 'sets')
+-    import __builtin__
+-    import sets
++    import_as('_scons_sets', 'sets')
++    import __builtin__, sets
+     __builtin__.set = sets.Set
+ 
+ import fnmatch
+@@ -312,7 +301,22 @@
+     tempfile.mkstemp = mkstemp
+     del mkstemp
+ 
+-
++try:
++    # pre-2.7 doesn't have the memoryview() built-in
++    memoryview
++except NameError:
++    class memoryview:
++        from types import SliceType
++        def __init__(self, obj):
++            # wrapping buffer in () keeps the fixer from changing it
++            self.obj = (buffer)(obj)
++        def __getitem__(self, indx):
++            if isinstance(indx, self.SliceType):
++                return self.obj[indx.start:indx.stop]
++            else:
++                return self.obj[indx]
++    import __builtin__
++    __builtin__.memoryview = memoryview
+ 
+ 
+ # Local Variables:
+--- OLD/src/engine/SCons/compat/_scons_sets.py	2010-03-29 07:42:45.000000000 -0700
++++ NEW/src/engine/SCons/compat/_scons_sets.py	2010-03-29 00:31:21.000000000 -0700
+@@ -121,7 +121,8 @@
+ 
+         This is the keys iterator for the underlying dict.
+         """
+-        return self._data.iterkeys()
++        # Wrapping name in () prevents fixer from "fixing" this
++        return (self._data.iterkeys)()
+ 
+     # Three-way comparison is not supported.  However, because __eq__ is
+     # tried before __cmp__, if Set x == Set y, x.__eq__(y) returns True and
+--- OLD/src/engine/SCons/compat/_scons_subprocess.py	2010-03-29 07:42:45.000000000 -0700
++++ NEW/src/engine/SCons/compat/_scons_subprocess.py	2010-03-29 05:33:18.000000000 -0700
+@@ -458,13 +458,10 @@
+ except AttributeError:
+     try:
+         types.StringTypes = (str, unicode)
+-    except AttributeError:
++    except NameError:
+         types.StringTypes = (str,)
+-    def is_string(obj):
+-        return type(obj) in types.StringTypes
+-else:
+-    def is_string(obj):
+-        return isinstance(obj, types.StringTypes)
++def is_string(obj):
++    return isinstance(obj, types.StringTypes)
+ 
+ _active = []
+ 
+@@ -1002,7 +999,7 @@
+ 
+ 
+         def _close_fds(self, but):
+-            for i in xrange(3, MAXFD):
++            for i in range(3, MAXFD):
+                 if i == but:
+                     continue
+                 try:
+@@ -1186,7 +1183,8 @@
+                     # When select has indicated that the file is writable,
+                     # we can write up to PIPE_BUF bytes without risk
+                     # blocking.  POSIX defines PIPE_BUF >= 512
+-                    bytes_written = os.write(self.stdin.fileno(), buffer(input, input_offset, 512))
++                    m = memoryview(input)[input_offset:input_offset+512]
++                    bytes_written = os.write(self.stdin.fileno(), m)
+                     input_offset = input_offset + bytes_written
+                     if input_offset >= len(input):
+                         self.stdin.close()
+--- OLD/src/engine/SCons/compat/builtins.py	2010-03-29 07:42:45.000000000 -0700
++++ NEW/src/engine/SCons/compat/builtins.py	2010-03-29 00:22:49.000000000 -0700
+@@ -184,13 +184,11 @@
+         argument sequence.
+         """
+         result = []
+-        for i in xrange(min(list(map(len, lists)))):
++        for i in range(min(list(map(len, lists)))):
+             result.append(tuple([l[i] for l in lists]))
+         return result
+     __builtin__.zip = zip
+ 
+-
+-
+ #if sys.version_info[:3] in ((2, 2, 0), (2, 2, 1)):
+ #    def lstrip(s, c=string.whitespace):
+ #        while s and s[0] in c:
+--- OLD/src/engine/SCons/dblite.py	2010-03-29 07:42:45.000000000 -0700
++++ NEW/src/engine/SCons/dblite.py	2010-03-29 00:32:24.000000000 -0700
+@@ -157,7 +157,8 @@
+     return key in self._dict
+ 
+   def iterkeys(self):
+-    return self._dict.iterkeys()
++    # Wrapping name in () prevents fixer from "fixing" this
++    return (self._dict.iterkeys)()
+ 
+   __iter__ = iterkeys
+ 
+--- OLD/src/script/scons-time.py	2010-03-29 07:42:44.000000000 -0700
++++ NEW/src/script/scons-time.py	2010-03-29 04:06:08.000000000 -0700
+@@ -261,10 +261,9 @@
+ 
+         min_y = self.get_min_y()
+         max_y = self.max_graph_value(self.get_max_y())
+-        range = max_y - min_y
+-        incr = range / 10.0
++        incr = (max_y - min_y) / 10.0
+         start = min_y + (max_y / 2.0) + (2.0 * incr)
+-        position = [ start - (i * incr) for i in xrange(5) ]
++        position = [ start - (i * incr) for i in range(5) ]
+ 
+         inx = 1
+         for line in self.lines:
+@@ -1268,7 +1267,7 @@
+             except ValueError:
+                 result.append(int(n))
+             else:
+-                result.extend(range(int(x), int(y)+1))
++                result.extend(list(range(int(x), int(y)+1)))
+         return result
+ 
+     def scons_path(self, dir):
+--- OLD/src/script/sconsign.py	2010-03-29 07:42:44.000000000 -0700
++++ NEW/src/script/sconsign.py	2010-03-29 04:06:10.000000000 -0700
+@@ -249,7 +249,7 @@
+     except AttributeError:
+         return None
+     result = []
+-    for i in xrange(len(bkids)):
++    for i in range(len(bkids)):
+         result.append(nodeinfo_string(bkids[i], bkidsigs[i], "        "))
+     if result == []:
+         return None
+--- OLD/test/Batch/action-changed.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/Batch/action-changed.py	2010-03-28 23:25:36.000000000 -0700
+@@ -43,7 +43,7 @@
+ sep = sys.argv.index('--')
+ targets = sys.argv[1:sep]
+ sources = sys.argv[sep+1:]
+-for i in xrange(len(targets)):
++for i in range(len(targets)):
+     t = targets[i]
+     s = sources[i]
+     fp = open(t, 'wb')
+--- OLD/test/KeyboardInterrupt.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/KeyboardInterrupt.py	2010-03-28 23:25:51.000000000 -0700
+@@ -76,7 +76,7 @@
+ 
+ all = []
+ 
+-for i in xrange(40):
++for i in range(40):
+     all.extend(Object('toto%5d' % i, 'toto.c'))
+ 
+ all.extend(Command( 'broken', 'toto.c', explode))
+--- OLD/test/SWIG/build-dir.py	2010-03-29 07:42:41.000000000 -0700
++++ NEW/test/SWIG/build-dir.py	2010-03-28 23:26:22.000000000 -0700
+@@ -136,7 +136,7 @@
+     
+     %pythoncode %{
+     def __iter__(self):
+-        for i in xrange(len(self)):
++        for i in range(len(self)):
+             yield self[i]
+     %}
+   }
+--- OLD/test/option/md5-chunksize.py	2010-03-29 07:42:41.000000000 -0700
++++ NEW/test/option/md5-chunksize.py	2010-03-29 04:07:24.000000000 -0700
+@@ -47,8 +47,8 @@
+ Requires(f2, f1)
+ """ % locals())
+ 
+-test.write('f1.in', str(range(10)))
+-test.write('f2.in', str(range(100000)))
++test.write('f1.in', str(list(range(10))))
++test.write('f2.in', str(list(range(100000))))
+ 
+ expected_stdout = test.wrap_stdout("""\
+ %(_python_)s build.py f1.out f1.in
+--- OLD/test/scons-time/func/chdir.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/func/chdir.py	2010-03-29 04:07:28.000000000 -0700
+@@ -48,7 +48,7 @@
+ """
+ 
+ expect = []
+-for i in xrange(9):
++for i in range(9):
+     i = str(i)
+     test.subdir(i)
+     test.profile_data('profs/foo-%s.prof' % i, '%s/prof.py' % i, '_main', input)
+--- OLD/test/scons-time/func/glob.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/func/glob.py	2010-03-29 04:07:29.000000000 -0700
+@@ -43,7 +43,7 @@
+ """
+ 
+ expect = []
+-for i in xrange(9):
++for i in range(9):
+     test.subdir(str(i))
+     test.profile_data('foo-%s.prof' % i, '%s/prof.py' % i, '_main', input)
+     expect.append((r'\d.\d\d\d %s/prof\.py:1\(_main\)' + '\n') % i)
+--- OLD/test/scons-time/func/prefix.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/func/prefix.py	2010-03-29 04:07:29.000000000 -0700
+@@ -47,11 +47,11 @@
+ foo_lines = []
+ bar_lines = []
+ 
+-for i in xrange(2):
++for i in range(2):
+     test.profile_data('foo-%s.prof' % i, 'prof.py', '_main', input)
+     foo_lines.append(r'\d.\d\d\d prof\.py:1\(_main\)' + '\n')
+ 
+-for i in xrange(4):
++for i in range(4):
+     test.profile_data('bar-%s.prof' % i, 'prof.py', '_main', input)
+     bar_lines.append(r'\d.\d\d\d prof\.py:1\(_main\)' + '\n')
+ 
+--- OLD/test/scons-time/func/tail.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/func/tail.py	2010-03-29 04:07:29.000000000 -0700
+@@ -44,7 +44,7 @@
+ """
+ 
+ expect = []
+-for i in xrange(9):
++for i in range(9):
+     test.subdir(str(i))
+     test.profile_data('foo-%s.prof' % i, '%s/prof.py' % i, '_main', input)
+     expect.append((r'\d.\d\d\d %s/prof\.py:1\(_main\)' + '\n') % i)
+--- OLD/test/scons-time/mem/chdir.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/mem/chdir.py	2010-03-29 04:07:29.000000000 -0700
+@@ -43,7 +43,7 @@
+ 
+ line_fmt = '        1000         2000         3000         4000    %s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = os.path.join('logs', 'foo-%s.log' % i)
+     test.fake_logfile(logfile_name)
+     lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/mem/glob.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/mem/glob.py	2010-03-29 04:07:29.000000000 -0700
+@@ -38,7 +38,7 @@
+ 
+ line_fmt = '        1000         2000         3000         4000    %s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s.log' % i
+     test.fake_logfile(logfile_name)
+     lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/mem/prefix.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/mem/prefix.py	2010-03-29 04:07:29.000000000 -0700
+@@ -43,7 +43,7 @@
+ foo_lines = [ header ]
+ bar_lines = [ header ]
+ 
+-for i in xrange(3):
++for i in range(3):
+     logfile_name = os.path.join('foo-%s.log' % i)
+     test.fake_logfile(logfile_name)
+     foo_lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/mem/tail.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/mem/tail.py	2010-03-29 04:07:29.000000000 -0700
+@@ -40,7 +40,7 @@
+ 
+ line_fmt = '        1000         2000         3000         4000    %s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s.log' % i
+     test.fake_logfile(logfile_name)
+     lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/obj/chdir.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/obj/chdir.py	2010-03-29 04:07:29.000000000 -0700
+@@ -43,7 +43,7 @@
+ 
+ line_fmt = '       1101%(i)s        1102%(i)s        1103%(i)s        1104%(i)s    %(logfile_name)s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = os.path.join('logs', 'foo-%s.log' % i)
+     test.fake_logfile(logfile_name, i)
+     lines.append(line_fmt % locals())
+--- OLD/test/scons-time/obj/glob.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/obj/glob.py	2010-03-29 04:07:30.000000000 -0700
+@@ -38,7 +38,7 @@
+ 
+ line_fmt = '        601%(i)s         602%(i)s         603%(i)s         604%(i)s    %(logfile_name)s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s.log' % i
+     test.fake_logfile(logfile_name, i)
+     lines.append(line_fmt % locals())
+--- OLD/test/scons-time/obj/prefix.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/obj/prefix.py	2010-03-29 04:07:30.000000000 -0700
+@@ -43,7 +43,7 @@
+ foo_lines = [ header ]
+ bar_lines = [ header ]
+ 
+-for i in xrange(3):
++for i in range(3):
+     logfile_name = os.path.join('foo-%s.log' % i)
+     test.fake_logfile(logfile_name)
+     foo_lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/obj/tail.py	2010-03-29 07:42:42.000000000 -0700
++++ NEW/test/scons-time/obj/tail.py	2010-03-29 04:07:30.000000000 -0700
+@@ -40,7 +40,7 @@
+ 
+ line_fmt = '       1501%(i)s        1502%(i)s        1503%(i)s        1504%(i)s    %(logfile_name)s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s.log' % i
+     test.fake_logfile(logfile_name, i)
+     lines.append(line_fmt % locals())
+--- OLD/test/scons-time/time/chdir.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/time/chdir.py	2010-03-29 04:07:31.000000000 -0700
+@@ -43,7 +43,7 @@
+ 
+ line_fmt = '   11.123456    22.234567    33.345678    44.456789    %s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = os.path.join('logs', 'foo-%s.log' % i)
+     test.fake_logfile(logfile_name)
+     lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/time/empty.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/time/empty.py	2010-03-29 04:07:31.000000000 -0700
+@@ -41,7 +41,7 @@
+ line_fmt    = '   11.123456    22.234567    33.345678    44.456789    %s\n'
+ empty_fmt   = '                                                       %s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s-0.log' % i
+     if i == 5:
+         test.write(test.workpath(logfile_name), "")
+--- OLD/test/scons-time/time/glob.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/time/glob.py	2010-03-29 04:07:31.000000000 -0700
+@@ -38,7 +38,7 @@
+ 
+ line_fmt = '   11.123456    22.234567    33.345678    44.456789    %s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s.log' % i
+     test.fake_logfile(logfile_name)
+     lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/time/no-result.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/time/no-result.py	2010-03-29 04:07:31.000000000 -0700
+@@ -49,7 +49,7 @@
+ 
+ lines = []
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s-0.log' % i
+     if i == 5:
+         test.write(test.workpath(logfile_name), "NO RESULTS HERE!\n")
+--- OLD/test/scons-time/time/prefix.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/time/prefix.py	2010-03-29 04:07:31.000000000 -0700
+@@ -43,7 +43,7 @@
+ foo_lines = [ header ]
+ bar_lines = [ header ]
+ 
+-for i in xrange(3):
++for i in range(3):
+     logfile_name = os.path.join('foo-%s.log' % i)
+     test.fake_logfile(logfile_name)
+     foo_lines.append(line_fmt % logfile_name)
+--- OLD/test/scons-time/time/tail.py	2010-03-29 07:42:43.000000000 -0700
++++ NEW/test/scons-time/time/tail.py	2010-03-29 04:07:32.000000000 -0700
+@@ -40,7 +40,7 @@
+ 
+ line_fmt = '   11.123456    22.234567    33.345678    44.456789    %s\n'
+ 
+-for i in xrange(9):
++for i in range(9):
+     logfile_name = 'foo-%s.log' % i
+     test.fake_logfile(logfile_name)
+     lines.append(line_fmt % logfile_name)
+--- OLD/timings/CPPPATH/SConstruct	2010-03-29 07:42:46.000000000 -0700
++++ NEW/timings/CPPPATH/SConstruct	2010-03-29 04:04:11.000000000 -0700
+@@ -23,7 +23,7 @@
+ 
+ dir_count = int(ARGUMENTS['DIR_COUNT'])
+ 
+-inc_list = [ Dir('inc_%04d' % t) for t in xrange(dir_count) ]
++inc_list = [ Dir('inc_%04d' % t) for t in range(dir_count) ]
+ inc_list.append(Dir('include'))
+ 
+ env = Environment(CPPPATH = inc_list)
+--- OLD/timings/CPPPATH/TimeSCons-run.py	2010-03-29 07:42:46.000000000 -0700
++++ NEW/timings/CPPPATH/TimeSCons-run.py	2010-03-29 04:07:50.000000000 -0700
+@@ -47,7 +47,7 @@
+ 
+ test = TestSCons.TimeSCons(variables={'DIR_COUNT':813})
+ 
+-for d in xrange(test.variables['DIR_COUNT']):
++for d in range(test.variables['DIR_COUNT']):
+     test.subdir('inc_%04d' % d)
+ 
+ test.main()
+--- OLD/timings/hundred/SConstruct	2010-03-29 07:42:46.000000000 -0700
++++ NEW/timings/hundred/SConstruct	2010-03-29 04:04:11.000000000 -0700
+@@ -27,8 +27,8 @@
+     for t, s in zip(target, source):
+         open(str(t),  'wb').write(open(str(s), 'rb').read())
+ 
+-source_list = ['source_%04d' % t for t in xrange(target_count)]
+-target_list = ['target_%04d' % t for t in xrange(target_count)]
++source_list = ['source_%04d' % t for t in range(target_count)]
++target_list = ['target_%04d' % t for t in range(target_count)]
+ 
+ env = Environment()
+ 
+--- OLD/timings/hundred/TimeSCons-run.py	2010-03-29 07:42:46.000000000 -0700
++++ NEW/timings/hundred/TimeSCons-run.py	2010-03-29 04:07:50.000000000 -0700
+@@ -46,7 +46,7 @@
+ 
+ test = TestSCons.TimeSCons(variables={'TARGET_COUNT':139})
+ 
+-for t in xrange(test.variables['TARGET_COUNT']):
++for t in range(test.variables['TARGET_COUNT']):
+     open('source_%04d' % t, 'wb' ).write('contents\n')
+ 
+ test.main()
