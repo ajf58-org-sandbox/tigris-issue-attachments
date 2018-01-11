@@ -1,0 +1,732 @@
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'all'> and its children:
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/tests/allocatorTest.exe'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/tests/mainTest.exe'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/tests/statsHeap.exe'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/tests/libcommonTestLib.so'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/libprofiler.so'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/liballocatorStub.so'>
+Taskmaster:      adjusted ref count: <pending    1   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/tests/allocatorTest.exe'
+Taskmaster:      adjusted ref count: <pending    2   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/tests/mainTest.exe'
+Taskmaster:      adjusted ref count: <pending    3   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/tests/statsHeap.exe'
+Taskmaster:      adjusted ref count: <pending    4   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/tests/libcommonTestLib.so'
+Taskmaster:      adjusted ref count: <pending    5   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'
+Taskmaster:      adjusted ref count: <pending    6   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'
+Taskmaster:      adjusted ref count: <pending    7   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/libprofiler.so'
+Taskmaster:      adjusted ref count: <pending    8   'all'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/liballocatorStub.so'
+Taskmaster:     Considering node <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'> and its children:
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>
+Taskmaster:        <no_state   0   '/opt/icecream/bin/g++-4.1'>
+Taskmaster:        <no_state   0   '/usr/lib/libtcmalloc_patch_20080904.a'>
+Taskmaster:        <no_state   0   '/usr/lib/libtcmalloc_patch_20080904.so'>
+Taskmaster:        <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>
+Taskmaster:      adjusted ref count: <pending    1   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'
+Taskmaster:      adjusted ref count: <pending    2   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>, child '/opt/icecream/bin/g++-4.1'
+Taskmaster:      adjusted ref count: <pending    3   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>, child '/usr/lib/libtcmalloc_patch_20080904.a'
+Taskmaster:      adjusted ref count: <pending    4   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>, child '/usr/lib/libtcmalloc_patch_20080904.so'
+Taskmaster:      adjusted ref count: <pending    5   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>, child 'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'
+Taskmaster:     Considering node <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'> and its children:
+Taskmaster:        <no_state   0   'src/utils/corrupt.cpp'>
+Taskmaster:        <no_state   0   '/opt/icecream/bin/g++-4.1'>
+Taskmaster:      adjusted ref count: <pending    1   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>, child 'src/utils/corrupt.cpp'
+Taskmaster:      adjusted ref count: <pending    2   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>, child '/opt/icecream/bin/g++-4.1'
+Taskmaster:     Considering node <no_state   0   'src/utils/corrupt.cpp'> and its children:
+Taskmaster: Evaluating <pending    0   'src/utils/corrupt.cpp'>
+
+Task.make_ready_current(): node <pending    0   'src/utils/corrupt.cpp'>
+Task.prepare():      node <up_to_date 0   'src/utils/corrupt.cpp'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/utils/corrupt.cpp'>
+Task.postprocess():  node <up_to_date 0   'src/utils/corrupt.cpp'>
+Task.postprocess():  removing <up_to_date 0   'src/utils/corrupt.cpp'>
+Task.postprocess():  adjusted parent ref count <pending    1   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   '/opt/icecream/bin/g++-4.1'> and its children:
+Taskmaster: Evaluating <pending    0   '/opt/icecream/bin/g++-4.1'>
+
+Task.make_ready_current(): node <pending    0   '/opt/icecream/bin/g++-4.1'>
+Task.prepare():      node <up_to_date 0   '/opt/icecream/bin/g++-4.1'>
+Task.executed_with_callbacks(): node <up_to_date 0   '/opt/icecream/bin/g++-4.1'>
+Task.postprocess():  node <up_to_date 0   '/opt/icecream/bin/g++-4.1'>
+Task.postprocess():  removing <up_to_date 0   '/opt/icecream/bin/g++-4.1'>
+Task.postprocess():  adjusted parent ref count <pending    4   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>
+Task.postprocess():  adjusted parent ref count <pending    0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <pending    0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'> and its children:
+Taskmaster:        <up_to_date 0   'src/utils/corrupt.cpp'>
+Taskmaster:        <up_to_date 0   '/opt/icecream/bin/g++-4.1'>
+Taskmaster: Evaluating <pending    0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>
+
+Task.make_ready_current(): node <pending    0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>
+Task.prepare():      node <executing  0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <up_to_date 0   '/opt/icecream/bin/g++-4.1'> and its children:
+Taskmaster:        already handled (executed)
+Taskmaster:     Considering node <no_state   0   '/usr/lib/libtcmalloc_patch_20080904.a'> and its children:
+Taskmaster: Evaluating <pending    0   '/usr/lib/libtcmalloc_patch_20080904.a'>
+
+Task.make_ready_current(): node <pending    0   '/usr/lib/libtcmalloc_patch_20080904.a'>
+Task.prepare():      node <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.a'>
+Task.executed_with_callbacks(): node <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.a'>
+Task.postprocess():  node <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.a'>
+Task.postprocess():  removing <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.a'>
+Task.postprocess():  adjusted parent ref count <pending    3   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   '/usr/lib/libtcmalloc_patch_20080904.so'> and its children:
+Taskmaster: Evaluating <pending    0   '/usr/lib/libtcmalloc_patch_20080904.so'>
+
+Task.make_ready_current(): node <pending    0   '/usr/lib/libtcmalloc_patch_20080904.so'>
+Task.prepare():      node <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.so'>
+Task.executed_with_callbacks(): node <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.so'>
+Task.postprocess():  node <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.so'>
+Task.postprocess():  removing <up_to_date 0   '/usr/lib/libtcmalloc_patch_20080904.so'>
+Task.postprocess():  adjusted parent ref count <pending    2   'bin/debug_noSym_dll_prod_noGlibcxx/utils.exe'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'> and its children:
+Task.execute():      node <executing  0   'obj/debug_noSym_dll_prod_noGlibcxx/src/utils/utilscorrupt.o'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormalloc_hook.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstatic_vars.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorinternal_logging.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormalloc_extension.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatordynamic_annotations.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorthread_cache.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorheap.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorpage_heap.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorsampler.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorcentral_freelist.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorcommon.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstats_heap.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc_heap.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorspinlock.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorsysinfo.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorlogging.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatoratomicops-internals-x86.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorspan.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstack_trace_table.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormaybe_threads.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorsystem-alloc.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstacktrace.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorvdso_support.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorallocator_utils.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorlogging.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormark_stats.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorallocator.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorheap-profiler.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorheap-profile-table.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormemory_region_map.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorraw_printer.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorlow_level_alloc.os'>
+Taskmaster:        <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorchecking_heap.os'>
+Taskmaster:        <up_to_date 0   '/opt/icecream/bin/g++-4.1'>
+Taskmaster:      adjusted ref count: <pending    1   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'
+Taskmaster:      adjusted ref count: <pending    2   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormalloc_hook.os'
+Taskmaster:      adjusted ref count: <pending    3   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstatic_vars.os'
+Taskmaster:      adjusted ref count: <pending    4   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorinternal_logging.os'
+Taskmaster:      adjusted ref count: <pending    5   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormalloc_extension.os'
+Taskmaster:      adjusted ref count: <pending    6   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatordynamic_annotations.os'
+Taskmaster:      adjusted ref count: <pending    7   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorthread_cache.os'
+Taskmaster:      adjusted ref count: <pending    8   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorheap.os'
+Taskmaster:      adjusted ref count: <pending    9   'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorpage_heap.os'
+Taskmaster:      adjusted ref count: <pending    10  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorsampler.os'
+Taskmaster:      adjusted ref count: <pending    11  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorcentral_freelist.os'
+Taskmaster:      adjusted ref count: <pending    12  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorcommon.os'
+Taskmaster:      adjusted ref count: <pending    13  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstats_heap.os'
+Taskmaster:      adjusted ref count: <pending    14  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc_heap.os'
+Taskmaster:      adjusted ref count: <pending    15  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorspinlock.os'
+Taskmaster:      adjusted ref count: <pending    16  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorsysinfo.os'
+Taskmaster:      adjusted ref count: <pending    17  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorlogging.os'
+Taskmaster:      adjusted ref count: <pending    18  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatoratomicops-internals-x86.os'
+Taskmaster:      adjusted ref count: <pending    19  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorspan.os'
+Taskmaster:      adjusted ref count: <pending    20  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstack_trace_table.os'
+Taskmaster:      adjusted ref count: <pending    21  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormaybe_threads.os'
+Taskmaster:      adjusted ref count: <pending    22  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorsystem-alloc.os'
+Taskmaster:      adjusted ref count: <pending    23  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorstacktrace.os'
+Taskmaster:      adjusted ref count: <pending    24  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorvdso_support.os'
+Taskmaster:      adjusted ref count: <pending    25  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorallocator_utils.os'
+Taskmaster:      adjusted ref count: <pending    26  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorlogging.os'
+Taskmaster:      adjusted ref count: <pending    27  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormark_stats.os'
+Taskmaster:      adjusted ref count: <pending    28  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorallocator.os'
+Taskmaster:      adjusted ref count: <pending    29  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorheap-profiler.os'
+Taskmaster:      adjusted ref count: <pending    30  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorheap-profile-table.os'
+Taskmaster:      adjusted ref count: <pending    31  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatormemory_region_map.os'
+Taskmaster:      adjusted ref count: <pending    32  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorraw_printer.os'
+Taskmaster:      adjusted ref count: <pending    33  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/base/allocatorlow_level_alloc.os'
+Taskmaster:      adjusted ref count: <pending    34  'bin/debug_noSym_dll_prod_noGlibcxx/liballocator.so'>, child 'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatorchecking_heap.os'
+Taskmaster:     Considering node <no_state   0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'> and its children:
+Taskmaster:        <no_state   0   'src/allocator/tcmalloc.cc'>
+Taskmaster:        <no_state   0   'src/allocator/base/basictypes.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/commandlineflags.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/cycleclock.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/spinlock.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/sysinfo.h'>
+Taskmaster:        <no_state   0   'src/allocator/central_freelist.h'>
+Taskmaster:        <no_state   0   'src/allocator/checker.h'>
+Taskmaster:        <no_state   0   'src/allocator/common.h'>
+Taskmaster:        <no_state   0   'src/allocator/config.h'>
+Taskmaster:        <no_state   0   'src/allocator/heap.h'>
+Taskmaster:        <no_state   0   'src/allocator/internal_logging.h'>
+Taskmaster:        <no_state   0   'src/allocator/linked_list.h'>
+Taskmaster:        <no_state   0   'src/allocator/malloc_hook-inl.h'>
+Taskmaster:        <no_state   0   'src/allocator/maybe_threads.h'>
+Taskmaster:        <no_state   0   'src/allocator/page_heap.h'>
+Taskmaster:        <no_state   0   'src/allocator/page_heap_allocator.h'>
+Taskmaster:        <no_state   0   'src/allocator/pagemap.h'>
+Taskmaster:        <no_state   0   'src/allocator/span.h'>
+Taskmaster:        <no_state   0   'src/allocator/static_vars.h'>
+Taskmaster:        <no_state   0   'src/allocator/system-alloc.h'>
+Taskmaster:        <no_state   0   'src/allocator/tcmalloc_guard.h'>
+Taskmaster:        <no_state   0   'src/allocator/thread_cache.h'>
+Taskmaster:        <no_state   0   'src/include/allocator/malloc_extension.h'>
+Taskmaster:        <no_state   0   'src/include/allocator/malloc_hook.h'>
+Taskmaster:        <no_state   0   'src/include/allocator/spinlockStats.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/atomicops.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/dynamic_annotations.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/thread_annotations.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/logging.h'>
+Taskmaster:        <no_state   0   'src/allocator/unused_parameter.h'>
+Taskmaster:        <no_state   0   'src/allocator/stats_heap_allocator.h'>
+Taskmaster:        <no_state   0   'src/include/allocator/stacktrace.h'>
+Taskmaster:        <no_state   0   'src/allocator/packed-cache-inl.h'>
+Taskmaster:        <no_state   0   'src/allocator/stack_trace_table.h'>
+Taskmaster:        <no_state   0   'src/allocator/logging.h'>
+Taskmaster:        <no_state   0   'src/allocator/sampler.h'>
+Taskmaster:        <no_state   0   'src/include/allocator/malloc_hook_c.h'>
+Taskmaster:        <no_state   0   'src/allocator/base/atomicops-internals-x86.h'>
+Taskmaster:        <no_state   0   'src/allocator/allocator_utils.h'>
+Taskmaster:        <no_state   0   'src/allocator/logging_debug.h'>
+Taskmaster:        <up_to_date 0   '/opt/icecream/bin/g++-4.1'>
+Taskmaster:      adjusted ref count: <pending    1   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/tcmalloc.cc'
+Taskmaster:      adjusted ref count: <pending    2   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/basictypes.h'
+Taskmaster:      adjusted ref count: <pending    3   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/commandlineflags.h'
+Taskmaster:      adjusted ref count: <pending    4   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/cycleclock.h'
+Taskmaster:      adjusted ref count: <pending    5   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/spinlock.h'
+Taskmaster:      adjusted ref count: <pending    6   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/sysinfo.h'
+Taskmaster:      adjusted ref count: <pending    7   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/central_freelist.h'
+Taskmaster:      adjusted ref count: <pending    8   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/checker.h'
+Taskmaster:      adjusted ref count: <pending    9   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/common.h'
+Taskmaster:      adjusted ref count: <pending    10  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/config.h'
+Taskmaster:      adjusted ref count: <pending    11  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/heap.h'
+Taskmaster:      adjusted ref count: <pending    12  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/internal_logging.h'
+Taskmaster:      adjusted ref count: <pending    13  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/linked_list.h'
+Taskmaster:      adjusted ref count: <pending    14  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/malloc_hook-inl.h'
+Taskmaster:      adjusted ref count: <pending    15  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/maybe_threads.h'
+Taskmaster:      adjusted ref count: <pending    16  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/page_heap.h'
+Taskmaster:      adjusted ref count: <pending    17  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/page_heap_allocator.h'
+Taskmaster:      adjusted ref count: <pending    18  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/pagemap.h'
+Taskmaster:      adjusted ref count: <pending    19  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/span.h'
+Taskmaster:      adjusted ref count: <pending    20  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/static_vars.h'
+Taskmaster:      adjusted ref count: <pending    21  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/system-alloc.h'
+Taskmaster:      adjusted ref count: <pending    22  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/tcmalloc_guard.h'
+Taskmaster:      adjusted ref count: <pending    23  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/thread_cache.h'
+Taskmaster:      adjusted ref count: <pending    24  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/include/allocator/malloc_extension.h'
+Taskmaster:      adjusted ref count: <pending    25  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/include/allocator/malloc_hook.h'
+Taskmaster:      adjusted ref count: <pending    26  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/include/allocator/spinlockStats.h'
+Taskmaster:      adjusted ref count: <pending    27  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/atomicops.h'
+Taskmaster:      adjusted ref count: <pending    28  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/dynamic_annotations.h'
+Taskmaster:      adjusted ref count: <pending    29  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/thread_annotations.h'
+Taskmaster:      adjusted ref count: <pending    30  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/logging.h'
+Taskmaster:      adjusted ref count: <pending    31  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/unused_parameter.h'
+Taskmaster:      adjusted ref count: <pending    32  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/stats_heap_allocator.h'
+Taskmaster:      adjusted ref count: <pending    33  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/include/allocator/stacktrace.h'
+Taskmaster:      adjusted ref count: <pending    34  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/packed-cache-inl.h'
+Taskmaster:      adjusted ref count: <pending    35  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/stack_trace_table.h'
+Taskmaster:      adjusted ref count: <pending    36  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/logging.h'
+Taskmaster:      adjusted ref count: <pending    37  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/sampler.h'
+Taskmaster:      adjusted ref count: <pending    38  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/include/allocator/malloc_hook_c.h'
+Taskmaster:      adjusted ref count: <pending    39  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/base/atomicops-internals-x86.h'
+Taskmaster:      adjusted ref count: <pending    40  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/allocator_utils.h'
+Taskmaster:      adjusted ref count: <pending    41  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>, child 'src/allocator/logging_debug.h'
+Taskmaster:     Considering node <no_state   0   'src/allocator/linked_list.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/linked_list.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/linked_list.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/linked_list.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/linked_list.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/linked_list.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/linked_list.h'>
+Task.postprocess():  adjusted parent ref count <pending    40  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/dynamic_annotations.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/dynamic_annotations.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/dynamic_annotations.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/dynamic_annotations.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/dynamic_annotations.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/dynamic_annotations.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/dynamic_annotations.h'>
+Task.postprocess():  adjusted parent ref count <pending    39  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/atomicops-internals-x86.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/atomicops-internals-x86.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/atomicops-internals-x86.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/atomicops-internals-x86.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/atomicops-internals-x86.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/atomicops-internals-x86.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/atomicops-internals-x86.h'>
+Task.postprocess():  adjusted parent ref count <pending    38  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/page_heap.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/page_heap.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/page_heap.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/page_heap.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/page_heap.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/page_heap.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/page_heap.h'>
+Task.postprocess():  adjusted parent ref count <pending    37  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/span.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/span.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/span.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/span.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/span.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/span.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/span.h'>
+Task.postprocess():  adjusted parent ref count <pending    36  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/atomicops.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/atomicops.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/atomicops.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/atomicops.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/atomicops.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/atomicops.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/atomicops.h'>
+Task.postprocess():  adjusted parent ref count <pending    35  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/heap.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/heap.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/heap.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/heap.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/heap.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/heap.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/heap.h'>
+Task.postprocess():  adjusted parent ref count <pending    34  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/config.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/config.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/config.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/config.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/config.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/config.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/config.h'>
+Task.postprocess():  adjusted parent ref count <pending    33  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/common.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/common.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/common.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/common.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/common.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/common.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/common.h'>
+Task.postprocess():  adjusted parent ref count <pending    32  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/stats_heap_allocator.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/stats_heap_allocator.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/stats_heap_allocator.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/stats_heap_allocator.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/stats_heap_allocator.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/stats_heap_allocator.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/stats_heap_allocator.h'>
+Task.postprocess():  adjusted parent ref count <pending    31  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/allocator_utils.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/allocator_utils.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/allocator_utils.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/allocator_utils.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/allocator_utils.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/allocator_utils.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/allocator_utils.h'>
+Task.postprocess():  adjusted parent ref count <pending    30  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/include/allocator/stacktrace.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/include/allocator/stacktrace.h'>
+
+Task.make_ready_current(): node <pending    0   'src/include/allocator/stacktrace.h'>
+Task.prepare():      node <up_to_date 0   'src/include/allocator/stacktrace.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/include/allocator/stacktrace.h'>
+Task.postprocess():  node <up_to_date 0   'src/include/allocator/stacktrace.h'>
+Task.postprocess():  removing <up_to_date 0   'src/include/allocator/stacktrace.h'>
+Task.postprocess():  adjusted parent ref count <pending    29  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/pagemap.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/pagemap.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/pagemap.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/pagemap.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/pagemap.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/pagemap.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/pagemap.h'>
+Task.postprocess():  adjusted parent ref count <pending    28  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/page_heap_allocator.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/page_heap_allocator.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/page_heap_allocator.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/page_heap_allocator.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/page_heap_allocator.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/page_heap_allocator.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/page_heap_allocator.h'>
+Task.postprocess():  adjusted parent ref count <pending    27  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/static_vars.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/static_vars.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/static_vars.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/static_vars.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/static_vars.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/static_vars.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/static_vars.h'>
+Task.postprocess():  adjusted parent ref count <pending    26  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/basictypes.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/basictypes.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/basictypes.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/basictypes.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/basictypes.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/basictypes.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/basictypes.h'>
+Task.postprocess():  adjusted parent ref count <pending    25  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/sysinfo.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/sysinfo.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/sysinfo.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/sysinfo.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/sysinfo.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/sysinfo.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/sysinfo.h'>
+Task.postprocess():  adjusted parent ref count <pending    24  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/maybe_threads.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/maybe_threads.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/maybe_threads.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/maybe_threads.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/maybe_threads.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/maybe_threads.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/maybe_threads.h'>
+Task.postprocess():  adjusted parent ref count <pending    23  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/thread_cache.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/thread_cache.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/thread_cache.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/thread_cache.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/thread_cache.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/thread_cache.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/thread_cache.h'>
+Task.postprocess():  adjusted parent ref count <pending    22  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/include/allocator/malloc_extension.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/include/allocator/malloc_extension.h'>
+
+Task.make_ready_current(): node <pending    0   'src/include/allocator/malloc_extension.h'>
+Task.prepare():      node <up_to_date 0   'src/include/allocator/malloc_extension.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/include/allocator/malloc_extension.h'>
+Task.postprocess():  node <up_to_date 0   'src/include/allocator/malloc_extension.h'>
+Task.postprocess():  removing <up_to_date 0   'src/include/allocator/malloc_extension.h'>
+Task.postprocess():  adjusted parent ref count <pending    21  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/spinlock.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/spinlock.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/spinlock.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/spinlock.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/spinlock.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/spinlock.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/spinlock.h'>
+Task.postprocess():  adjusted parent ref count <pending    20  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/internal_logging.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/internal_logging.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/internal_logging.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/internal_logging.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/internal_logging.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/internal_logging.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/internal_logging.h'>
+Task.postprocess():  adjusted parent ref count <pending    19  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/tcmalloc_guard.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/tcmalloc_guard.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/tcmalloc_guard.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/tcmalloc_guard.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/tcmalloc_guard.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/tcmalloc_guard.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/tcmalloc_guard.h'>
+Task.postprocess():  adjusted parent ref count <pending    18  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/malloc_hook-inl.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/malloc_hook-inl.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/malloc_hook-inl.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/malloc_hook-inl.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/malloc_hook-inl.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/malloc_hook-inl.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/malloc_hook-inl.h'>
+Task.postprocess():  adjusted parent ref count <pending    17  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/packed-cache-inl.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/packed-cache-inl.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/packed-cache-inl.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/packed-cache-inl.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/packed-cache-inl.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/packed-cache-inl.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/packed-cache-inl.h'>
+Task.postprocess():  adjusted parent ref count <pending    16  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/stack_trace_table.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/stack_trace_table.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/stack_trace_table.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/stack_trace_table.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/stack_trace_table.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/stack_trace_table.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/stack_trace_table.h'>
+Task.postprocess():  adjusted parent ref count <pending    15  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/unused_parameter.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/unused_parameter.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/unused_parameter.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/unused_parameter.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/unused_parameter.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/unused_parameter.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/unused_parameter.h'>
+Task.postprocess():  adjusted parent ref count <pending    14  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/sampler.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/sampler.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/sampler.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/sampler.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/sampler.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/sampler.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/sampler.h'>
+Task.postprocess():  adjusted parent ref count <pending    13  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/central_freelist.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/central_freelist.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/central_freelist.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/central_freelist.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/central_freelist.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/central_freelist.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/central_freelist.h'>
+Task.postprocess():  adjusted parent ref count <pending    12  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/system-alloc.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/system-alloc.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/system-alloc.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/system-alloc.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/system-alloc.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/system-alloc.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/system-alloc.h'>
+Task.postprocess():  adjusted parent ref count <pending    11  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/logging.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/logging.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/logging.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/logging.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/logging.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/logging.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/logging.h'>
+Task.postprocess():  adjusted parent ref count <pending    10  'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/commandlineflags.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/commandlineflags.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/commandlineflags.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/commandlineflags.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/commandlineflags.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/commandlineflags.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/commandlineflags.h'>
+Task.postprocess():  adjusted parent ref count <pending    9   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/logging_debug.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/logging_debug.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/logging_debug.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/logging_debug.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/logging_debug.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/logging_debug.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/logging_debug.h'>
+Task.postprocess():  adjusted parent ref count <pending    8   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/include/allocator/spinlockStats.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/include/allocator/spinlockStats.h'>
+
+Task.make_ready_current(): node <pending    0   'src/include/allocator/spinlockStats.h'>
+Task.prepare():      node <up_to_date 0   'src/include/allocator/spinlockStats.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/include/allocator/spinlockStats.h'>
+Task.postprocess():  node <up_to_date 0   'src/include/allocator/spinlockStats.h'>
+Task.postprocess():  removing <up_to_date 0   'src/include/allocator/spinlockStats.h'>
+Task.postprocess():  adjusted parent ref count <pending    7   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/logging.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/logging.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/logging.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/logging.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/logging.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/logging.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/logging.h'>
+Task.postprocess():  adjusted parent ref count <pending    6   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/cycleclock.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/cycleclock.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/cycleclock.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/cycleclock.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/cycleclock.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/cycleclock.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/cycleclock.h'>
+Task.postprocess():  adjusted parent ref count <pending    5   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/include/allocator/malloc_hook_c.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/include/allocator/malloc_hook_c.h'>
+
+Task.make_ready_current(): node <pending    0   'src/include/allocator/malloc_hook_c.h'>
+Task.prepare():      node <up_to_date 0   'src/include/allocator/malloc_hook_c.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/include/allocator/malloc_hook_c.h'>
+Task.postprocess():  node <up_to_date 0   'src/include/allocator/malloc_hook_c.h'>
+Task.postprocess():  removing <up_to_date 0   'src/include/allocator/malloc_hook_c.h'>
+Task.postprocess():  adjusted parent ref count <pending    4   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/checker.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/checker.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/checker.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/checker.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/checker.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/checker.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/checker.h'>
+Task.postprocess():  adjusted parent ref count <pending    3   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/include/allocator/malloc_hook.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/include/allocator/malloc_hook.h'>
+
+Task.make_ready_current(): node <pending    0   'src/include/allocator/malloc_hook.h'>
+Task.prepare():      node <up_to_date 0   'src/include/allocator/malloc_hook.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/include/allocator/malloc_hook.h'>
+Task.postprocess():  node <up_to_date 0   'src/include/allocator/malloc_hook.h'>
+Task.postprocess():  removing <up_to_date 0   'src/include/allocator/malloc_hook.h'>
+Task.postprocess():  adjusted parent ref count <pending    2   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/base/thread_annotations.h'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/base/thread_annotations.h'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/base/thread_annotations.h'>
+Task.prepare():      node <up_to_date 0   'src/allocator/base/thread_annotations.h'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/base/thread_annotations.h'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/base/thread_annotations.h'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/base/thread_annotations.h'>
+Task.postprocess():  adjusted parent ref count <pending    1   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <no_state   0   'src/allocator/tcmalloc.cc'> and its children:
+Taskmaster: Evaluating <pending    0   'src/allocator/tcmalloc.cc'>
+
+Task.make_ready_current(): node <pending    0   'src/allocator/tcmalloc.cc'>
+Task.prepare():      node <up_to_date 0   'src/allocator/tcmalloc.cc'>
+Task.executed_with_callbacks(): node <up_to_date 0   'src/allocator/tcmalloc.cc'>
+Task.postprocess():  node <up_to_date 0   'src/allocator/tcmalloc.cc'>
+Task.postprocess():  removing <up_to_date 0   'src/allocator/tcmalloc.cc'>
+Task.postprocess():  adjusted parent ref count <pending    0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'>
+
+Taskmaster: Looking for a node to evaluate
+Taskmaster:     Considering node <pending    0   'obj/debug_noSym_dll_prod_noGlibcxx/src/allocator/allocatortcmalloc.os'> and its children:
+Taskmaster:        <up_to_date 0   'src/allocator/tcmalloc.cc'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/basictypes.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/commandlineflags.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/cycleclock.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/spinlock.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/sysinfo.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/central_freelist.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/checker.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/common.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/config.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/heap.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/internal_logging.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/linked_list.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/malloc_hook-inl.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/maybe_threads.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/page_heap.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/page_heap_allocator.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/pagemap.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/span.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/static_vars.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/system-alloc.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/tcmalloc_guard.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/thread_cache.h'>
+Taskmaster:        <up_to_date 0   'src/include/allocator/malloc_extension.h'>
+Taskmaster:        <up_to_date 0   'src/include/allocator/malloc_hook.h'>
+Taskmaster:        <up_to_date 0   'src/include/allocator/spinlockStats.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/atomicops.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/dynamic_annotations.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/thread_annotations.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/base/logging.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/unused_parameter.h'>
+Taskmaster:        <up_to_date 0   'src/allocator/stats_heap_allocator.h'>
+Taskmaster:        <up_to_date 0   'src/include/allocator/stacktrace.h'>
+Taskmaster
