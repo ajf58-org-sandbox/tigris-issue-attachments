@@ -1,0 +1,68 @@
+diff --git a/scons-local-2.3.0/SCons/Node/__init__.py b/scons-local-2.3.0/SCons/Node/__init__.py
+index ece4a5a..b2ccc60 100644
+--- a/scons-local-2.3.0/SCons/Node/__init__.py
++++ b/scons-local-2.3.0/SCons/Node/__init__.py
+@@ -1015,6 +1015,38 @@ class Node(object):
+     def Decider(self, function):
+         SCons.Util.AddMethod(self, function, 'changed_since_last_build')
+ 
++    def _build_dependency_map(self, binfo):
++        """
++        Dependency name -> node info object
++        """
++
++        # For an "empty" binfo properties like bsources
++        # do not exist: check this to avoid exception.
++        if (len(binfo.bsourcesigs) + len(binfo.bdependsigs) + \
++                len(binfo.bimplicitsigs)) == 0:
++            return {}
++
++        pairs = [
++            (binfo.bsources, binfo.bsourcesigs),
++            (binfo.bdepends, binfo.bdependsigs),
++            (binfo.bimplicit, binfo.bimplicitsigs)
++            ]
++
++        m = {}
++        for children, signatures in pairs:
++            for child, signature in zip(children, signatures):
++                schild = str(child)
++                m[schild] = signature
++        return m
++
++    def _get_previous_signatures(self, dmap, children):
++        prev = []
++        for c in map(str, children):
++            # If there is no previous signature,
++            # we place None in the corresponding position.
++            prev.append(dmap.get(c))
++        return prev
++
+     def changed(self, node=None):
+         """
+         Returns if the node is up-to-date with respect to the BuildInfo
+@@ -1037,20 +1069,17 @@ class Node(object):
+         result = False
+ 
+         bi = node.get_stored_info().binfo
+-        then = bi.bsourcesigs + bi.bdependsigs + bi.bimplicitsigs
++        dmap = self._build_dependency_map(bi)
+         children = self.children()
+ 
+-        diff = len(children) - len(then)
++        diff = len(children) - len(dmap)
+         if diff:
+             # The old and new dependency lists are different lengths.
+             # This always indicates that the Node must be rebuilt.
+-            # We also extend the old dependency list with enough None
+-            # entries to equal the new dependency list, for the benefit
+-            # of the loop below that updates node information.
+-            then.extend([None] * diff)
+-            if t: Trace(': old %s new %s' % (len(then), len(children)))
+             result = True
+ 
++        then = self._get_previous_signatures(dmap, children)
++
+         for child, prev_ni in zip(children, then):
+             if child.changed_since_last_build(self, prev_ni):
+                 if t: Trace(': %s changed' % child)
