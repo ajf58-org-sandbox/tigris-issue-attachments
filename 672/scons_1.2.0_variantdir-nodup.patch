@@ -1,0 +1,32 @@
+diff -ru -x '*.pyc' SCons.patched/Tool/tex.py SCons/Tool/tex.py
+--- SCons.patched/Tool/tex.py	2009-12-29 00:59:47.000000000 +0100
++++ SCons/Tool/tex.py	2009-12-29 01:58:09.000000000 +0100
+@@ -227,6 +227,18 @@
+     if Verbose:
+         print "hashes: ",saved_hashes
+ 
++    # Check if we are inside a variant-dir and duplication is disabled
++    variant_nodup = (targetdir != basedir and target[0].duplicate == 0)
++
++    # if we build in a variant dir without duplication, we need to create subdirs for .aux
++    # files of \includes if they do not exist
++    for sFile in target[0].side_effects:
++	if os.path.splitext(str(sFile))[1] != ".aux":
++	    continue
++	aFile_dir = os.path.split(str(sFile))[0]
++	if variant_nodup and not os.path.exists(aFile_dir):
++	    os.makedirs(aFile_dir)
++
+     must_rerun_latex = True
+ 
+     #
+@@ -677,7 +689,8 @@
+         env.SideEffect(aFile_base + '.aux',target[0])
+         if Verbose:
+             print "side effect :",aFile_base + '.aux'
+-        env.Clean(aFile_base + '.aux',target[0])
++        env.Clean(target[0],aFile_base + '.aux')
++
+     # read fls file to get all other files that latex creates and will read on the next pass
+     # remove files from list that we explicitly dealt with above
+     if os.path.exists(flsfilename):
