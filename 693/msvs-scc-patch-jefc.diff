@@ -1,0 +1,1028 @@
+Index: test/MSVS/vs-7.0-variant_dir.py
+===================================================================
+--- test/MSVS/vs-7.0-variant_dir.py	(r‚vision 4679)
++++ test/MSVS/vs-7.0-variant_dir.py	(copie de travail)
+@@ -54,14 +54,17 @@
+ 
+ test.run(arguments=".")
+ 
++project_guid = "{25F6CE89-8E22-2910-8B6E-FFE6DC1E2792}"
+ vcproj = test.read(['src', 'Test.vcproj'], 'r')
+-expect = test.msvs_substitute(expected_vcprojfile, '7.0', None, 'SConstruct')
++expect = test.msvs_substitute(expected_vcprojfile, '7.0', None, 'SConstruct',
++                              project_guid=project_guid)
+ # don't compare the pickled data
+ assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
+ 
+ test.must_exist(test.workpath('src', 'Test.sln'))
+ sln = test.read(['src', 'Test.sln'], 'r')
+-expect = test.msvs_substitute(expected_slnfile, '7.0', 'src')
++expect = test.msvs_substitute(expected_slnfile, '7.0', 'src',
++                              project_guid=project_guid)
+ # don't compare the pickled data
+ assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
+ 
+Index: test/MSVS/vs-7.1-variant_dir.py
+===================================================================
+--- test/MSVS/vs-7.1-variant_dir.py	(r‚vision 4679)
++++ test/MSVS/vs-7.1-variant_dir.py	(copie de travail)
+@@ -54,14 +54,17 @@
+ 
+ test.run(arguments=".")
+ 
++project_guid = "{25F6CE89-8E22-2910-8B6E-FFE6DC1E2792}"
+ vcproj = test.read(['src', 'Test.vcproj'], 'r')
+-expect = test.msvs_substitute(expected_vcprojfile, '7.0', None, 'SConstruct')
++expect = test.msvs_substitute(expected_vcprojfile, '7.0', None, 'SConstruct',
++                              project_guid=project_guid)
+ # don't compare the pickled data
+ assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
+ 
+ test.must_exist(test.workpath('src', 'Test.sln'))
+ sln = test.read(['src', 'Test.sln'], 'r')
+-expect = test.msvs_substitute(expected_slnfile, '7.0', 'src')
++expect = test.msvs_substitute(expected_slnfile, '7.0', 'src',
++                              project_guid=project_guid)
+ # don't compare the pickled data
+ assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
+ 
+Index: test/MSVS/vs-8.0-variant_dir.py
+===================================================================
+--- test/MSVS/vs-8.0-variant_dir.py	(r‚vision 4679)
++++ test/MSVS/vs-8.0-variant_dir.py	(copie de travail)
+@@ -54,18 +54,17 @@
+ 
+ test.run(arguments=".")
+ 
++project_guid = "{25F6CE89-8E22-2910-8B6E-FFE6DC1E2792}"
+ vcproj = test.read(['src', 'Test.vcproj'], 'r')
+-expect = test.msvs_substitute(expected_vcprojfile,
+-                              '8.0',
+-                              None,
+-                              'SConstruct',
+-                              project_guid="{25F6CE89-8E22-2910-8B6E-FFE6DC1E2792}")
++expect = test.msvs_substitute(expected_vcprojfile, '8.0', None, 'SConstruct',
++                              project_guid=project_guid)
+ # don't compare the pickled data
+ assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
+ 
+ test.must_exist(test.workpath('src', 'Test.sln'))
+ sln = test.read(['src', 'Test.sln'], 'r')
+-expect = test.msvs_substitute(expected_slnfile, '8.0', 'src')
++expect = test.msvs_substitute(expected_slnfile, '8.0', 'src',
++                              project_guid=project_guid)
+ # don't compare the pickled data
+ assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
+ 
+Index: test/MSVS/vs-7.0-scc-files.py
+===================================================================
+--- test/MSVS/vs-7.0-scc-files.py	(r‚vision 0)
++++ test/MSVS/vs-7.0-scc-files.py	(r‚vision 0)
+@@ -0,0 +1,119 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 7.0 project (.vcproj) and
++solution (.sln) files that contain SCC information and look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['7.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_7_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_7_0
++SConscript_contents = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='7.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                MSVS_SCC_CONNECTION_ROOT='.',
++                MSVS_SCC_PROVIDER='MSSCCI:Perforce SCM',
++                MSVS_SCC_PROJECT_NAME='Perforce Project',
++                MSVS_SCC_AUX_PATH='AUX')
++
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
++
++env.MSVSProject(target = 'Test.vcproj',
++                slnguid = '{SLNGUID}',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++expected_sln_sccinfo = """\
++\tGlobalSection(SourceCodeControl) = preSolution
++\t\tSccNumberOfProjects = 2
++\t\tSccProjectName0 = Perforce\u0020Project
++\t\tSccLocalPath0 = .
++\t\tSccProvider0 = MSSCCI:Perforce\u0020SCM
++\t\tCanCheckoutShared = true
++\t\tSolutionUniqueID = {SLNGUID}
++\t\tSccProjectUniqueName1 = Test.vcproj
++\t\tSccLocalPath1 = .
++\t\tCanCheckoutShared = true
++\t\tSccProjectFilePathRelativizedFromConnection1 = .\\\\
++\tEndGlobalSection
++"""
++
++expected_vcproj_sccinfo = """\
++\tSccProjectName="Perforce Project"
++\tSccAuxPath="AUX"
++\tSccLocalPath="."
++\tSccProvider="MSSCCI:Perforce SCM"
++"""
++
++
++test.write('SConstruct', SConscript_contents)
++
++test.run(arguments="Test.vcproj")
++
++test.must_exist(test.workpath('Test.vcproj'))
++vcproj = test.read('Test.vcproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '7.0', None, 'SConstruct',
++                              vcproj_sccinfo=expected_vcproj_sccinfo)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '7.0', None, 'SConstruct',
++                              sln_sccinfo=expected_sln_sccinfo)
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-7.1-scc-files.py
+===================================================================
+--- test/MSVS/vs-7.1-scc-files.py	(r‚vision 0)
++++ test/MSVS/vs-7.1-scc-files.py	(r‚vision 0)
+@@ -0,0 +1,119 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 7.1 project (.vcproj) and
++solution (.sln) files that contain SCC information and look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['7.1']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_7_1
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_7_1
++SConscript_contents = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='7.1',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                MSVS_SCC_CONNECTION_ROOT='.',
++                MSVS_SCC_PROVIDER='MSSCCI:Perforce SCM',
++                MSVS_SCC_PROJECT_NAME='Perforce Project',
++                MSVS_SCC_AUX_PATH='AUX')
++
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
++
++env.MSVSProject(target = 'Test.vcproj',
++                slnguid = '{SLNGUID}',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++expected_sln_sccinfo = """\
++\tGlobalSection(SourceCodeControl) = preSolution
++\t\tSccNumberOfProjects = 2
++\t\tSccProjectName0 = Perforce\u0020Project
++\t\tSccLocalPath0 = .
++\t\tSccProvider0 = MSSCCI:Perforce\u0020SCM
++\t\tCanCheckoutShared = true
++\t\tSolutionUniqueID = {SLNGUID}
++\t\tSccProjectUniqueName1 = Test.vcproj
++\t\tSccLocalPath1 = .
++\t\tCanCheckoutShared = true
++\t\tSccProjectFilePathRelativizedFromConnection1 = .\\\\
++\tEndGlobalSection
++"""
++
++expected_vcproj_sccinfo = """\
++\tSccProjectName="Perforce Project"
++\tSccAuxPath="AUX"
++\tSccLocalPath="."
++\tSccProvider="MSSCCI:Perforce SCM"
++"""
++
++
++test.write('SConstruct', SConscript_contents)
++
++test.run(arguments="Test.vcproj")
++
++test.must_exist(test.workpath('Test.vcproj'))
++vcproj = test.read('Test.vcproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '7.1', None, 'SConstruct',
++                              vcproj_sccinfo=expected_vcproj_sccinfo)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '7.1', None, 'SConstruct',
++                              sln_sccinfo=expected_sln_sccinfo)
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/vs-8.0-scc-files.py
+===================================================================
+--- test/MSVS/vs-8.0-scc-files.py	(r‚vision 0)
++++ test/MSVS/vs-8.0-scc-files.py	(r‚vision 0)
+@@ -0,0 +1,115 @@
++#!/usr/bin/env python
++#
++# __COPYRIGHT__
++#
++# Permission is hereby granted, free of charge, to any person obtaining
++# a copy of this software and associated documentation files (the
++# "Software"), to deal in the Software without restriction, including
++# without limitation the rights to use, copy, modify, merge, publish,
++# distribute, sublicense, and/or sell copies of the Software, and to
++# permit persons to whom the Software is furnished to do so, subject to
++# the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
++# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
++# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
++# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
++# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++
++__revision__ = "__FILE__ __REVISION__ __DATE__ __DEVELOPER__"
++
++"""
++Test that we can generate Visual Studio 8.0 project (.vcproj) and
++solution (.sln) files that contain SCC information and look correct.
++"""
++
++import os
++
++import TestSConsMSVS
++
++test = TestSConsMSVS.TestSConsMSVS()
++
++# Make the test infrastructure think we have this version of MSVS installed.
++test._msvs_versions = ['8.0']
++
++
++
++expected_slnfile = TestSConsMSVS.expected_slnfile_8_0
++expected_vcprojfile = TestSConsMSVS.expected_vcprojfile_8_0
++SConscript_contents = """\
++env=Environment(platform='win32', tools=['msvs'], MSVS_VERSION='8.0',
++                CPPDEFINES=['DEF1', 'DEF2',('DEF3','1234')],
++                CPPPATH=['inc1', 'inc2'],
++                MSVS_SCC_CONNECTION_ROOT='.',
++                MSVS_SCC_PROVIDER='MSSCCI:Perforce SCM',
++                MSVS_SCC_PROJECT_NAME='Perforce Project')
++
++testsrc = ['test1.cpp', 'test2.cpp']
++testincs = ['sdk.h']
++testlocalincs = ['test.h']
++testresources = ['test.rc']
++testmisc = ['readme.txt']
++
++env.MSVSProject(target = 'Test.vcproj',
++                srcs = testsrc,
++                incs = testincs,
++                localincs = testlocalincs,
++                resources = testresources,
++                misc = testmisc,
++                buildtarget = 'Test.exe',
++                variant = 'Release')
++"""
++
++expected_sln_sccinfo = """\
++\tGlobalSection(SourceCodeControl) = preSolution
++\t\tSccNumberOfProjects = 2
++\t\tSccProjectName0 = Perforce\u0020Project
++\t\tSccLocalPath0 = .
++\t\tSccProvider0 = MSSCCI:Perforce\u0020SCM
++\t\tCanCheckoutShared = true
++\t\tSccProjectUniqueName1 = Test.vcproj
++\t\tSccLocalPath1 = .
++\t\tCanCheckoutShared = true
++\t\tSccProjectFilePathRelativizedFromConnection1 = .\\\\
++\tEndGlobalSection
++"""
++
++expected_vcproj_sccinfo = """\
++\tSccProjectName="Perforce Project"
++\tSccLocalPath="."
++\tSccProvider="MSSCCI:Perforce SCM"
++"""
++
++
++test.write('SConstruct', SConscript_contents)
++
++test.run(arguments="Test.vcproj")
++
++test.must_exist(test.workpath('Test.vcproj'))
++vcproj = test.read('Test.vcproj', 'r')
++expect = test.msvs_substitute(expected_vcprojfile, '8.0', None, 'SConstruct',
++                              vcproj_sccinfo=expected_vcproj_sccinfo)
++# don't compare the pickled data
++assert vcproj[:len(expect)] == expect, test.diff_substr(expect, vcproj)
++
++test.must_exist(test.workpath('Test.sln'))
++sln = test.read('Test.sln', 'r')
++expect = test.msvs_substitute(expected_slnfile, '8.0', None, 'SConstruct',
++                              sln_sccinfo=expected_sln_sccinfo)
++# don't compare the pickled data
++assert sln[:len(expect)] == expect, test.diff_substr(expect, sln)
++
++
++test.pass_test()
++
++# Local Variables:
++# tab-width:4
++# indent-tabs-mode:nil
++# End:
++# vim: set expandtab tabstop=4 shiftwidth=4:
+Index: test/MSVS/runfile.py
+===================================================================
+--- test/MSVS/runfile.py	(r‚vision 4679)
++++ test/MSVS/runfile.py	(copie de travail)
+@@ -48,8 +48,6 @@
+ \tVersion="8.00"
+ \tName="Test"
+ \tProjectGUID="<PROJECT_GUID>"
+-\tSccProjectName=""
+-\tSccLocalPath=""
+ \tRootNamespace="Test"
+ \tKeyword="MakeFileProj">
+ \t<Platforms>
+Index: test/MSVS/common-prefix.py
+===================================================================
+--- test/MSVS/common-prefix.py	(r‚vision 4679)
++++ test/MSVS/common-prefix.py	(copie de travail)
+@@ -48,8 +48,6 @@
+ \tVersion="8.00"
+ \tName="Test"
+ \tProjectGUID="<PROJECT_GUID>"
+-\tSccProjectName=""
+-\tSccLocalPath=""
+ \tRootNamespace="Test"
+ \tKeyword="MakeFileProj">
+ \t<Platforms>
+Index: src/engine/SCons/Tool/msvs.xml
+===================================================================
+--- src/engine/SCons/Tool/msvs.xml	(r‚vision 4679)
++++ src/engine/SCons/Tool/msvs.xml	(copie de travail)
+@@ -287,21 +287,6 @@
+ </summary>
+ </cvar>
+ 
+-<cvar name="MSVS_PROJECT_BASE_PATH">
+-<summary>
+-The string
+-placed in a generated Microsoft Visual Studio solution file
+-as the value of the
+-<literal>SccProjectFilePathRelativizedFromConnection0</literal>
+-and
+-<literal>SccProjectFilePathRelativizedFromConnection1</literal>
+-attributes of the
+-<literal>GlobalSection(SourceCodeControl)</literal>
+-section.
+-There is no default value.
+-</summary>
+-</cvar>
+-
+ <cvar name="MSVS_PROJECT_GUID">
+ <summary>
+ The string
+@@ -309,12 +294,7 @@
+ as the value of the
+ <literal>ProjectGUID</literal>
+ attribute.
+-The string is also placed in the
+-<literal>SolutionUniqueID</literal>
+-attribute of the
+-<literal>GlobalSection(SourceCodeControl)</literal>
+-section of the Microsoft Visual Studio solution file.
+-There is no default value.
++There is no default value. If not defined, a new GUID is generated.
+ </summary>
+ </cvar>
+ 
+@@ -332,24 +312,33 @@
+ </summary>
+ </cvar>
+ 
+-<cvar name="MSVS_SCC_LOCAL_PATH">
++<cvar name="MSVS_SCC_CONNECTION_ROOT">
+ <summary>
+-The path name
+-placed in a generated Microsoft Visual Studio project file
+-as the value of the
++The root path of projects in your SCC workspace, i.e the path under which
++all project and solution files will be generated. It is used as a
++reference path from which the relative paths of the generated
++Microsoft Visual Studio project and solution files are computed.
++The relative project file path is placed as the value of the
+ <literal>SccLocalPath</literal>
+ attribute
++of the project file
++and as the values of the
++<literal>SccProjectFilePathRelativizedFromConnection[i]</literal>
++(where [i] ranges from 0 to the number of projects in the solution)
++attributes of the
++<literal>GlobalSection(SourceCodeControl)</literal>
++section of the Microsoft Visual Studio solution file.
++Similarly the relative solution file path is placed as the values of the
++<literal>SccLocalPath[i]</literal>
++(where [i] ranges from 0 to the number of projects in the solution)
++attributes of the
++<literal>GlobalSection(SourceCodeControl)</literal>
++section of the Microsoft Visual Studio solution file.
++This is used only
+ if the
+ <envar>MSVS_SCC_PROVIDER</envar>
+ construction variable is also set.
+-The path name is also placed in the
+-<literal>SccLocalPath0</literal>
+-and
+-<literal>SccLocalPath1</literal>
+-attributes of the
+-<literal>GlobalSection(SourceCodeControl)</literal>
+-section of the Microsoft Visual Studio solution file.
+-There is no default value.
++The default value is the current working directory.
+ </summary>
+ </cvar>
+ 
+@@ -359,7 +348,15 @@
+ placed in a generated Microsoft Visual Studio project file
+ as the value of the
+ <literal>SccProjectName</literal>
+-attribute.
++attribute
++if the
++<envar>MSVS_SCC_PROVIDER</envar>
++construction variable is also set.
++In this case the string is also placed in the
++<literal>SccProjectName0</literal>
++attribute of the
++<literal>GlobalSection(SourceCodeControl)</literal>
++section of the Microsoft Visual Studio solution file.
+ There is no default value.
+ </summary>
+ </cvar>
+@@ -370,9 +367,12 @@
+ placed in a generated Microsoft Visual Studio project file
+ as the value of the
+ <literal>SccProvider</literal>
+-attribute.
+-The string is also placed in the
+-<literal>SccProvider1</literal>
++attribute
++if the
++<envar>MSVS_SCC_PROVIDER</envar>
++construction variable is also set.
++In this case the string is also placed in the
++<literal>SccProvider0</literal>
+ attribute of the
+ <literal>GlobalSection(SourceCodeControl)</literal>
+ section of the Microsoft Visual Studio solution file.
+Index: src/engine/SCons/Tool/msvs.py
+===================================================================
+--- src/engine/SCons/Tool/msvs.py	(r‚vision 4679)
++++ src/engine/SCons/Tool/msvs.py	(copie de travail)
+@@ -106,6 +106,42 @@
+     num, suite = version_re.match(s).groups()
+     return float(num), suite
+ 
++# os.path.relpath has been introduced in Python 2.6
++# We define it locally for earlier versions of Python
++def relpath(path, start=os.path.curdir):
++    """Return a relative version of a path"""
++    import sys
++    if not path:
++        raise ValueError("no path specified")
++    start_list = os.path.abspath(start).split(os.sep)
++    path_list = os.path.abspath(path).split(os.sep)
++    if 'posix' in sys.builtin_module_names:
++        # Work out how much of the filepath is shared by start and path.
++        i = len(os.path.commonprefix([start_list, path_list]))
++    else:
++        if start_list[0].lower() != path_list[0].lower():
++            unc_path, rest = os.path.splitunc(path)
++            unc_start, rest = os.path.splitunc(start)
++            if bool(unc_path) ^ bool(unc_start):
++                raise ValueError("Cannot mix UNC and non-UNC paths (%s and %s)"
++                                                                    % (path, start))
++            else:
++                raise ValueError("path is on drive %s, start on drive %s"
++                                                    % (path_list[0], start_list[0]))
++        # Work out how much of the filepath is shared by start and path.
++        for i in range(min(len(start_list), len(path_list))):
++            if start_list[i].lower() != path_list[i].lower():
++                break
++        else:
++            i += 1
++    rel_list = [os.pardir] * (len(start_list)-i) + path_list[i:]
++    if not rel_list:
++        return os.path.curdir
++    return os.path.join(*rel_list)
++
++if not "relpath" in os.path.__all__:
++    os.path.relpath = relpath
++
+ # This is how we re-invoke SCons from inside MSVS Project files.
+ # The problem is that we might have been invoked as either scons.bat
+ # or scons.py.  If we were invoked directly as scons.py, then we could
+@@ -546,11 +582,12 @@
+             self.file.close()
+ 
+ V7DSPHeader = """\
+-<?xml version="1.0" encoding = "%(encoding)s"?>
++<?xml version="1.0" encoding="%(encoding)s"?>
+ <VisualStudioProject
+ \tProjectType="Visual C++"
+ \tVersion="%(versionstr)s"
+ \tName="%(name)s"
++\tProjectGUID="%(project_guid)s"
+ %(scc_attrs)s
+ \tKeyword="MakeFileProj">
+ """
+@@ -566,8 +603,8 @@
+ \t\t\t<Tool
+ \t\t\t\tName="VCNMakeTool"
+ \t\t\t\tBuildCommandLine="%(buildcmd)s"
++\t\t\t\tReBuildCommandLine="%(rebuildcmd)s"
+ \t\t\t\tCleanCommandLine="%(cleancmd)s"
+-\t\t\t\tRebuildCommandLine="%(rebuildcmd)s"
+ \t\t\t\tOutput="%(runfile)s"/>
+ \t\t</Configuration>
+ """
+@@ -578,8 +615,9 @@
+ \tProjectType="Visual C++"
+ \tVersion="%(versionstr)s"
+ \tName="%(name)s"
++\tProjectGUID="%(project_guid)s"
++\tRootNamespace="%(name)s"
+ %(scc_attrs)s
+-\tRootNamespace="%(name)s"
+ \tKeyword="MakeFileProj">
+ """
+ 
+@@ -633,20 +671,19 @@
+         scc_provider = env.get('MSVS_SCC_PROVIDER', '')
+         scc_project_name = env.get('MSVS_SCC_PROJECT_NAME', '')
+         scc_aux_path = env.get('MSVS_SCC_AUX_PATH', '')
+-        scc_local_path = env.get('MSVS_SCC_LOCAL_PATH', '')
++        scc_connection_root = env.get('MSVS_SCC_CONNECTION_ROOT', os.curdir)
++        scc_local_path = os.path.relpath(scc_connection_root, os.path.dirname(self.dspabs))
+         project_guid = env.get('MSVS_PROJECT_GUID', '')
+-        if self.version_num >= 8.0 and not project_guid:
++        if not project_guid:
+             project_guid = _generateGUID(self.dspfile, '')
+         if scc_provider != '':
+-            scc_attrs = ('\tProjectGUID="%s"\n'
+-                         '\tSccProjectName="%s"\n'
+-                         '\tSccAuxPath="%s"\n'
+-                         '\tSccLocalPath="%s"\n'
+-                         '\tSccProvider="%s"' % (project_guid, scc_project_name, scc_aux_path, scc_local_path, scc_provider))
++            scc_attrs = '\tSccProjectName="%s"\n' % scc_project_name
++            if scc_aux_path != '':
++                scc_attrs += '\tSccAuxPath="%s"\n' % scc_aux_path
++            scc_attrs += ('\tSccLocalPath="%s"\n'
++                          '\tSccProvider="%s"' % (scc_local_path, scc_provider))
+         else:
+-            scc_attrs = ('\tProjectGUID="%s"\n'
+-                         '\tSccProjectName="%s"\n'
+-                         '\tSccLocalPath="%s"' % (project_guid, scc_project_name, scc_local_path))
++            self.dspheader = string.replace(self.dspheader, '%(scc_attrs)s\n', '')
+ 
+         self.file.write(self.dspheader % locals())
+ 
+@@ -858,6 +895,7 @@
+     """ Base class for DSW generators """
+     def __init__(self, dswfile, source, env):
+         self.dswfile = os.path.normpath(str(dswfile))
++        self.dsw_folder_path = os.path.dirname(os.path.abspath(self.dswfile))
+         self.env = env
+ 
+         if not env.has_key('projects'):
+@@ -942,6 +980,26 @@
+             if not platform in self.platforms:
+                 self.platforms.append(platform)
+ 
++        def GenerateProjectFilesInfo(self):
++            for dspfile in self.dspfiles:
++                dsp_folder_path, name = os.path.split(dspfile)
++                dsp_folder_path = os.path.abspath(dsp_folder_path)
++                dsp_relative_folder_path = os.path.relpath(dsp_folder_path, self.dsw_folder_path)
++                if dsp_relative_folder_path == os.curdir:
++                    dsp_relative_file_path = name
++                else:
++                    dsp_relative_file_path = os.path.join(dsp_relative_folder_path, name)
++                dspfile_info = {'NAME': name,
++                                'GUID': _generateGUID(dspfile, ''),
++                                'FOLDER_PATH': dsp_folder_path,
++                                'FILE_PATH': dspfile,
++                                'SLN_RELATIVE_FOLDER_PATH': dsp_relative_folder_path,
++                                'SLN_RELATIVE_FILE_PATH': dsp_relative_file_path}
++                self.dspfiles_info.append(dspfile_info)
++                
++        self.dspfiles_info = []
++        GenerateProjectFilesInfo(self)
++
+     def Parse(self):
+         try:
+             dswfile = open(self.dswfile,'r')
+@@ -976,14 +1034,13 @@
+         self.file.write('Microsoft Visual Studio Solution File, Format Version %s\n' % self.versionstr )
+         if self.version_num >= 8.0:
+             self.file.write('# Visual Studio 2005\n')
+-        for p in self.dspfiles:
+-            name = os.path.basename(p)
++        for dspinfo in self.dspfiles_info:
++            name = dspinfo['NAME']
+             base, suffix = SCons.Util.splitext(name)
+             if suffix == '.vcproj':
+                 name = base
+-            guid = _generateGUID(p, '')
+             self.file.write('Project("%s") = "%s", "%s", "%s"\n'
+-                            % ( external_makefile_guid, name, p, guid ) )
++                            % (external_makefile_guid, name, dspinfo['SLN_RELATIVE_FILE_PATH'], dspinfo['GUID']))
+             if self.version_num >= 7.1 and self.version_num < 8.0:
+                 self.file.write('\tProjectSection(ProjectDependencies) = postProject\n'
+                                 '\tEndProjectSection\n')
+@@ -993,30 +1050,41 @@
+ 
+         env = self.env
+         if env.has_key('MSVS_SCC_PROVIDER'):
+-            dspfile_base = os.path.basename(self.dspfile)
++            scc_number_of_projects = len(self.dspfiles) + 1
+             slnguid = self.slnguid
+             scc_provider = env.get('MSVS_SCC_PROVIDER', '')
+             scc_provider = string.replace(scc_provider, ' ', r'\u0020')
+             scc_project_name = env.get('MSVS_SCC_PROJECT_NAME', '')
+-            # scc_aux_path = env.get('MSVS_SCC_AUX_PATH', '')
+-            scc_local_path = env.get('MSVS_SCC_LOCAL_PATH', '')
+-            scc_project_base_path = env.get('MSVS_SCC_PROJECT_BASE_PATH', '')
+-            # project_guid = env.get('MSVS_PROJECT_GUID', '')
+-
++            scc_project_name = string.replace(scc_project_name, ' ', r'\u0020')
++            scc_connection_root = env.get('MSVS_SCC_CONNECTION_ROOT', os.curdir)
++            scc_local_path = os.path.relpath(scc_connection_root, self.dsw_folder_path)
++            scc_local_path = string.replace(scc_local_path, '\\', '\\\\')
+             self.file.write('\tGlobalSection(SourceCodeControl) = preSolution\n'
+-                            '\t\tSccNumberOfProjects = 2\n'
+-                            '\t\tSccProjectUniqueName0 = %(dspfile_base)s\n'
++                            '\t\tSccNumberOfProjects = %(scc_number_of_projects)d\n'
++                            '\t\tSccProjectName0 = %(scc_project_name)s\n'
+                             '\t\tSccLocalPath0 = %(scc_local_path)s\n'
+-                            '\t\tCanCheckoutShared = true\n'
+-                            '\t\tSccProjectFilePathRelativizedFromConnection0 = %(scc_project_base_path)s\n'
+-                            '\t\tSccProjectName1 = %(scc_project_name)s\n'
+-                            '\t\tSccLocalPath1 = %(scc_local_path)s\n'
+-                            '\t\tSccProvider1 = %(scc_provider)s\n'
+-                            '\t\tCanCheckoutShared = true\n'
+-                            '\t\tSccProjectFilePathRelativizedFromConnection1 = %(scc_project_base_path)s\n'
+-                            '\t\tSolutionUniqueID = %(slnguid)s\n'
+-                            '\tEndGlobalSection\n' % locals())
+-
++                            '\t\tSccProvider0 = %(scc_provider)s\n'
++                            '\t\tCanCheckoutShared = true\n'  % locals())
++            sln_relative_path_from_scc = os.path.relpath(self.dsw_folder_path, scc_connection_root)
++            if sln_relative_path_from_scc != os.curdir:
++                sln_relative_path_from_scc = string.replace(sln_relative_path_from_scc, '\\', '\\\\')
++                self.file.write('\t\tSccProjectFilePathRelativizedFromConnection0 = %s\\\\\n'
++                                % sln_relative_path_from_scc)
++            if self.version_num < 8.0:
++                # When present, SolutionUniqueID is automatically removed by VS 2005 and later
++                # when the solution is saved, so it is no longer needed for these versions.
++                self.file.write('\t\tSolutionUniqueID = %s\n' % slnguid)
++            for dspinfo in self.dspfiles_info:
++                i = self.dspfiles_info.index(dspinfo) + 1
++                dsp_relative_file_path = string.replace(dspinfo['SLN_RELATIVE_FILE_PATH'], '\\', '\\\\')
++                dsp_scc_relative_folder_path = os.path.relpath(dspinfo['FOLDER_PATH'], scc_connection_root)
++                dsp_scc_relative_folder_path = string.replace(dsp_scc_relative_folder_path, '\\', '\\\\')
++                self.file.write('\t\tSccProjectUniqueName%(i)s = %(dsp_relative_file_path)s\n'
++                                '\t\tSccLocalPath%(i)d = %(scc_local_path)s\n'
++                                '\t\tCanCheckoutShared = true\n'
++                                '\t\tSccProjectFilePathRelativizedFromConnection%(i)s = %(dsp_scc_relative_folder_path)s\\\\\n'
++                                % locals())
++            self.file.write('\tEndGlobalSection\n')
+         if self.version_num >= 8.0:
+             self.file.write('\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\n')
+         else:
+@@ -1034,7 +1102,7 @@
+                 self.file.write('\t\tConfigName.%d = %s\n' % (cnt, variant))
+             cnt = cnt + 1
+         self.file.write('\tEndGlobalSection\n')
+-        if self.version_num < 7.1:
++        if self.version_num <= 7.1:
+             self.file.write('\tGlobalSection(ProjectDependencies) = postSolution\n'
+                             '\tEndGlobalSection\n')
+         if self.version_num >= 8.0:
+@@ -1046,13 +1114,13 @@
+             variant = self.configs[name].variant
+             platform = self.configs[name].platform
+             if self.version_num >= 8.0:
+-                for p in self.dspfiles:
+-                    guid = _generateGUID(p, '')
++                for dspinfo in self.dspfiles_info:
++                    guid = dspinfo['GUID']
+                     self.file.write('\t\t%s.%s|%s.ActiveCfg = %s|%s\n'
+                                     '\t\t%s.%s|%s.Build.0 = %s|%s\n'  % (guid,variant,platform,variant,platform,guid,variant,platform,variant,platform))
+             else:
+-                for p in self.dspfiles:
+-                    guid = _generateGUID(p, '')
++                for dspinfo in self.dspfiles_info:
++                    guid = dspinfo['GUID']
+                     self.file.write('\t\t%s.%s.ActiveCfg = %s|%s\n'
+                                     '\t\t%s.%s.Build.0 = %s|%s\n'  %(guid,variant,variant,platform,guid,variant,variant,platform))
+ 
+@@ -1119,7 +1187,7 @@
+     def PrintWorkspace(self):
+         """ writes a DSW file """
+         name = self.name
+-        dspfile = self.dspfiles[0]
++        dspfile = os.path.relpath(self.dspfiles[0], self.dsw_folder_path)
+         self.file.write(V6DSWHeader % locals())
+ 
+     def Build(self):
+@@ -1165,10 +1233,10 @@
+ ##############################################################################
+ 
+ def GetMSVSProjectSuffix(target, source, env, for_signature):
+-     return env['MSVS']['PROJECTSUFFIX']
++    return env['MSVS']['PROJECTSUFFIX']
+ 
+ def GetMSVSSolutionSuffix(target, source, env, for_signature):
+-     return env['MSVS']['SOLUTIONSUFFIX']
++    return env['MSVS']['SOLUTIONSUFFIX']
+ 
+ def GenerateProject(target, source, env):
+     # generate the dsp file, according to the version of MSVS.
+@@ -1297,7 +1365,7 @@
+     sourcelist = source
+ 
+     if env.get('auto_build_solution', 1):
+-        env['projects'] = targetlist
++        env['projects'] = [env.File(t).srcnode() for t in targetlist]
+         t, s = solutionEmitter(target, target, env)
+         targetlist = targetlist + t
+ 
+Index: QMTest/TestSConsMSVS.py
+===================================================================
+--- QMTest/TestSConsMSVS.py	(r‚vision 4679)
++++ QMTest/TestSConsMSVS.py	(copie de travail)
+@@ -187,17 +187,18 @@
+ 
+ expected_slnfile_7_0 = """\
+ Microsoft Visual Studio Solution File, Format Version 7.00
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcproj", "{E5466E26-0003-F18B-8F8A-BCD76C86388D}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcproj", "<PROJECT_GUID>"
+ EndProject
+ Global
++<SCC_SLN_INFO>
+ \tGlobalSection(SolutionConfiguration) = preSolution
+ \t\tConfigName.0 = Release
+ \tEndGlobalSection
+ \tGlobalSection(ProjectDependencies) = postSolution
+ \tEndGlobalSection
+ \tGlobalSection(ProjectConfiguration) = postSolution
+-\t\t{E5466E26-0003-F18B-8F8A-BCD76C86388D}.Release.ActiveCfg = Release|Win32
+-\t\t{E5466E26-0003-F18B-8F8A-BCD76C86388D}.Release.Build.0 = Release|Win32
++\t\t<PROJECT_GUID>.Release.ActiveCfg = Release|Win32
++\t\t<PROJECT_GUID>.Release.Build.0 = Release|Win32
+ \tEndGlobalSection
+ \tGlobalSection(ExtensibilityGlobals) = postSolution
+ \tEndGlobalSection
+@@ -207,14 +208,13 @@
+ """
+ 
+ expected_vcprojfile_7_0 = """\
+-<?xml version="1.0" encoding = "Windows-1252"?>
++<?xml version="1.0" encoding="Windows-1252"?>
+ <VisualStudioProject
+ \tProjectType="Visual C++"
+ \tVersion="7.00"
+ \tName="Test"
+-\tProjectGUID=""
+-\tSccProjectName=""
+-\tSccLocalPath=""
++\tProjectGUID="<PROJECT_GUID>"
++<SCC_VCPROJ_INFO>
+ \tKeyword="MakeFileProj">
+ \t<Platforms>
+ \t\t<Platform
+@@ -231,8 +231,8 @@
+ \t\t\t<Tool
+ \t\t\t\tName="VCNMakeTool"
+ \t\t\t\tBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
++\t\t\t\tReBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
+ \t\t\t\tCleanCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct -c &quot;Test.exe&quot;"
+-\t\t\t\tRebuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
+ \t\t\t\tOutput="Test.exe"/>
+ \t\t</Configuration>
+ \t</Configurations>
+@@ -308,17 +308,20 @@
+ 
+ expected_slnfile_7_1 = """\
+ Microsoft Visual Studio Solution File, Format Version 8.00
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcproj", "{E5466E26-0003-F18B-8F8A-BCD76C86388D}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcproj", "<PROJECT_GUID>"
+ \tProjectSection(ProjectDependencies) = postProject
+ \tEndProjectSection
+ EndProject
+ Global
++<SCC_SLN_INFO>
+ \tGlobalSection(SolutionConfiguration) = preSolution
+ \t\tConfigName.0 = Release
+ \tEndGlobalSection
++\tGlobalSection(ProjectDependencies) = postSolution
++\tEndGlobalSection
+ \tGlobalSection(ProjectConfiguration) = postSolution
+-\t\t{E5466E26-0003-F18B-8F8A-BCD76C86388D}.Release.ActiveCfg = Release|Win32
+-\t\t{E5466E26-0003-F18B-8F8A-BCD76C86388D}.Release.Build.0 = Release|Win32
++\t\t<PROJECT_GUID>.Release.ActiveCfg = Release|Win32
++\t\t<PROJECT_GUID>.Release.Build.0 = Release|Win32
+ \tEndGlobalSection
+ \tGlobalSection(ExtensibilityGlobals) = postSolution
+ \tEndGlobalSection
+@@ -328,14 +331,13 @@
+ """
+ 
+ expected_vcprojfile_7_1 = """\
+-<?xml version="1.0" encoding = "Windows-1252"?>
++<?xml version="1.0" encoding="Windows-1252"?>
+ <VisualStudioProject
+ \tProjectType="Visual C++"
+ \tVersion="7.10"
+ \tName="Test"
+-\tProjectGUID=""
+-\tSccProjectName=""
+-\tSccLocalPath=""
++\tProjectGUID="<PROJECT_GUID>"
++<SCC_VCPROJ_INFO>
+ \tKeyword="MakeFileProj">
+ \t<Platforms>
+ \t\t<Platform
+@@ -352,8 +354,8 @@
+ \t\t\t<Tool
+ \t\t\t\tName="VCNMakeTool"
+ \t\t\t\tBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
++\t\t\t\tReBuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
+ \t\t\t\tCleanCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct -c &quot;Test.exe&quot;"
+-\t\t\t\tRebuildCommandLine="echo Starting SCons &amp;&amp; &quot;<PYTHON>&quot; -c &quot;<SCONS_SCRIPT_MAIN_XML>&quot; -C &quot;<WORKPATH>&quot; -f SConstruct &quot;Test.exe&quot;"
+ \t\t\t\tOutput="Test.exe"/>
+ \t\t</Configuration>
+ \t</Configurations>
+@@ -432,15 +434,16 @@
+ expected_slnfile_8_0 = """\
+ Microsoft Visual Studio Solution File, Format Version 9.00
+ # Visual Studio 2005
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcproj", "{E5466E26-0003-F18B-8F8A-BCD76C86388D}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcproj", "<PROJECT_GUID>"
+ EndProject
+ Global
++<SCC_SLN_INFO>
+ \tGlobalSection(SolutionConfigurationPlatforms) = preSolution
+ \t\tRelease|Win32 = Release|Win32
+ \tEndGlobalSection
+ \tGlobalSection(ProjectConfigurationPlatforms) = postSolution
+-\t\t{E5466E26-0003-F18B-8F8A-BCD76C86388D}.Release|Win32.ActiveCfg = Release|Win32
+-\t\t{E5466E26-0003-F18B-8F8A-BCD76C86388D}.Release|Win32.Build.0 = Release|Win32
++\t\t<PROJECT_GUID>.Release|Win32.ActiveCfg = Release|Win32
++\t\t<PROJECT_GUID>.Release|Win32.Build.0 = Release|Win32
+ \tEndGlobalSection
+ \tGlobalSection(SolutionProperties) = preSolution
+ \t\tHideSolutionNode = FALSE
+@@ -455,9 +458,8 @@
+ \tVersion="8.00"
+ \tName="Test"
+ \tProjectGUID="<PROJECT_GUID>"
+-\tSccProjectName=""
+-\tSccLocalPath=""
+ \tRootNamespace="Test"
++<SCC_VCPROJ_INFO>
+ \tKeyword="MakeFileProj">
+ \t<Platforms>
+ \t\t<Platform
+@@ -602,7 +604,8 @@
+     def msvs_substitute(self, input, msvs_ver,
+                         subdir=None, sconscript=None,
+                         python=None,
+-                        project_guid=None):
++                        project_guid=None,
++                        vcproj_sccinfo='', sln_sccinfo=''):
+         if not hasattr(self, '_msvs_versions'):
+             self.msvs_versions()
+ 
+@@ -632,6 +635,8 @@
+         result = string.replace(result, r'<SCONS_SCRIPT_MAIN>', exec_script_main)
+         result = string.replace(result, r'<SCONS_SCRIPT_MAIN_XML>', exec_script_main_xml)
+         result = string.replace(result, r'<PROJECT_GUID>', project_guid)
++        result = string.replace(result, '<SCC_VCPROJ_INFO>\n', vcproj_sccinfo)
++        result = string.replace(result, '<SCC_SLN_INFO>\n', sln_sccinfo)
+         return result
+ 
+     def get_msvs_executable(self, version):
